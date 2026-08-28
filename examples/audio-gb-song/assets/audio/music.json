@@ -1,0 +1,393 @@
+{
+  "version": 2,
+  "ppqn": 96,
+  "clips": [
+    {
+      "id": 0,
+      "name": "Intro lead",
+      "kind": "ch1",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 64,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 48,
+          "note": 69,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 48,
+          "note": 64,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 96,
+          "note": 60,
+          "soundId": 0,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Intro harmony",
+      "kind": "ch2",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 192,
+          "note": 55,
+          "soundId": 1,
+          "priority": 110
+        },
+        {
+          "tick": 192,
+          "durationTicks": 192,
+          "note": 52,
+          "soundId": 1,
+          "priority": 110
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Intro bass",
+      "kind": "ch3",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 96,
+          "note": 40,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 96,
+          "durationTicks": 96,
+          "note": 43,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 192,
+          "durationTicks": 96,
+          "note": 36,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 288,
+          "durationTicks": 96,
+          "note": 38,
+          "soundId": 2,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Intro drums",
+      "kind": "ch4",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 39,
+          "soundId": 6,
+          "priority": 120
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 4,
+          "priority": 120
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 3,
+          "priority": 120
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 4,
+          "priority": 120
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Loop lead",
+      "kind": "ch1",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 24,
+          "note": 69,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 72,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 24,
+          "note": 69,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 336,
+          "durationTicks": 48,
+          "note": 64,
+          "soundId": 0,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Loop harmony",
+      "kind": "ch2",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 96,
+          "note": 55,
+          "soundId": 1,
+          "priority": 110
+        },
+        {
+          "tick": 96,
+          "durationTicks": 96,
+          "note": 57,
+          "soundId": 1,
+          "priority": 110
+        },
+        {
+          "tick": 192,
+          "durationTicks": 96,
+          "note": 60,
+          "soundId": 1,
+          "priority": 110
+        },
+        {
+          "tick": 288,
+          "durationTicks": 96,
+          "note": 59,
+          "soundId": 1,
+          "priority": 110
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Loop bass",
+      "kind": "ch3",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 96,
+          "note": 36,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 96,
+          "durationTicks": 96,
+          "note": 41,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 192,
+          "durationTicks": 96,
+          "note": 43,
+          "soundId": 2,
+          "priority": 104
+        },
+        {
+          "tick": 288,
+          "durationTicks": 96,
+          "note": 40,
+          "soundId": 2,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Loop drums",
+      "kind": "ch4",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 3,
+          "priority": 120
+        },
+        {
+          "tick": 48,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 5,
+          "priority": 96
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 4,
+          "priority": 120
+        },
+        {
+          "tick": 144,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 5,
+          "priority": 96
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 3,
+          "priority": 120
+        },
+        {
+          "tick": 240,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 5,
+          "priority": 96
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 4,
+          "priority": 120
+        },
+        {
+          "tick": 336,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 5,
+          "priority": 96
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "Intro",
+      "lengthTicks": 384,
+      "lanes": {
+        "ch1": 0,
+        "ch2": 1,
+        "ch3": 2,
+        "ch4": 3
+      }
+    },
+    {
+      "id": 1,
+      "name": "Adventure",
+      "lengthTicks": 384,
+      "lanes": {
+        "ch1": 4,
+        "ch2": 5,
+        "ch3": 6,
+        "ch4": 7
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "Game Boy Adventure",
+      "tempo": 132,
+      "sequence": [
+        0,
+        1
+      ],
+      "loopStart": 1
+    }
+  ]
+}

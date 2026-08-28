@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "sfx": [
+    {
+      "id": 1,
+      "name": "melody-01",
+      "speed": 8,
+      "steps": [
+        {
+          "pitch": 36,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 40,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 43,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 46,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 45,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 42,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 38,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 33,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 29,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 25,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 20,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 16,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 47,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 49,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 50,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 49,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 46,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 43,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 40,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 36,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 33,
+          "waveform": "pulse",
+          "volume": 7,
+          "effect": "none"
+        }
+      ]
+    },
+    {
+      "id": 0,
+      "name": "bass-01",
+      "speed": 8,
+      "steps": [
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 1,
+          "waveform": "tilted-saw",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 1,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 1,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 1,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        },
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 1,
+          "waveform": "tilted-saw",
+          "volume": 7,
+          "effect": "none"
+        },
+        {
+          "pitch": 35,
+          "waveform": "tilted-saw",
+          "volume": 0,
+          "effect": "none"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "soft-bass-01",
+      "speed": 8,
+      "steps": [
+        {
+          "pitch": 0,
+          "waveform": "tilted-saw",
+          "volume": 7,
+          "effect": "none"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "date": "2026-08-24",
+  "corpus": "Pico-8",
+  "inventory": {
+    "carts": 229,
+    "textCarts": 163,
+    "pngCarts": 66,
+    "distinctEntries": 289,
+    "references": 155,
+    "trackRecords": 156,
+    "pairedReferences": 153,
+    "unpairedReferences": 2,
+    "cartOnlyTracks": 1
+  },
+  "audit": {
+    "exportedCarts": 229,
+    "exportedEntries": 289,
+    "selectedEntries": 254,
+    "excludedAlternateEntries": 35,
+    "complete": true
+  },
+  "comparison": {
+    "effectiveBothAtLeast0.95": 103,
+    "effectiveBothAtLeast0.90": 150,
+    "medianEffectiveChromaSimilarity": 0.9756693289465932,
+    "medianEffectiveBandSimilarity": 0.9677174714348862
+  },
+  "slipways": {
+    "entrySequence": [0, 3, 6, 8, 11, 15, 15, 20],
+    "candidateSeconds": 1956.780517578125,
+    "referenceActiveSeconds": 1956.4140625,
+    "effectiveChromaSimilarity": 0.9031201327645934,
+    "effectiveBandSimilarity": 0.941441295334877
+  },
+  "classifiedAggregateLows": [
+    {
+      "track": "Pico-8 Tunes Vol. 1 (2017)/12",
+      "classification": "supplied MP3 does not match cart",
+      "directPICOToMtileChroma": 0.97465,
+      "directPICOToMtileBands": 0.92791
+    },
+    {
+      "track": "The Last Bot (2016)/04",
+      "classification": "multipart mastering/segment locator artifact",
+      "directPICOToMtileChroma": 0.97497,
+      "directPICOToMtileBands": 0.97615
+    },
+    {
+      "track": "Celeste Soundtrack (Pico-8 Edition) (2019)/09",
+      "classification": "multipart segment locator artifact",
+      "globalChromaSimilarity": 0.9629,
+      "globalBandSimilarity": 0.966
+    }
+  ]
+}

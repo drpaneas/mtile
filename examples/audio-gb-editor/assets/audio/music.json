@@ -1,0 +1,940 @@
+{
+  "version": 2,
+  "ppqn": 96,
+  "clips": [
+    {
+      "id": 0,
+      "name": "My first clip",
+      "kind": "ch1",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 32,
+          "note": 60,
+          "soundId": 2,
+          "priority": 128,
+          "legato": true
+        },
+        {
+          "tick": 48,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 24,
+          "note": 66,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 24,
+          "note": 69,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 71,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 336,
+          "durationTicks": 48,
+          "note": 72,
+          "soundId": 0,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "CH1 effect 01",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 65,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 67,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 108,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 132,
+          "durationTicks": 12,
+          "note": 67,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 12,
+          "note": 67,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 156,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 12,
+          "note": 65,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 180,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 204,
+          "durationTicks": 12,
+          "note": 73,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 228,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 252,
+          "durationTicks": 12,
+          "note": 73,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 12,
+          "note": 72,
+          "soundId": 2,
+          "priority": 128
+        },
+        {
+          "tick": 276,
+          "durationTicks": 36,
+          "note": 71,
+          "soundId": 2,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "CH2 effect 02",
+      "kind": "ch2",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 64,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 67,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 72,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 72,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 108,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 132,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 156,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 12,
+          "note": 65,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 180,
+          "durationTicks": 12,
+          "note": 65,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 204,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 228,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 252,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 276,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 300,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 3,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "CH3 effect 03",
+      "kind": "ch3",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 75,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 108,
+          "durationTicks": 12,
+          "note": 75,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 132,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 12,
+          "note": 73,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 156,
+          "durationTicks": 12,
+          "note": 72,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 12,
+          "note": 70,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 180,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 204,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 228,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 252,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 4,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "CH4 effect 04",
+      "kind": "ch4",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 10,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 10,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 36,
+          "soundId": 10,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 24,
+          "note": 39,
+          "soundId": 6,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 8,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 24,
+          "note": 39,
+          "soundId": 6,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 24,
+          "note": 37,
+          "soundId": 7,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 38,
+          "soundId": 8,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "CH4 clip",
+      "kind": "ch4",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 12,
+          "note": 39,
+          "soundId": 6,
+          "priority": 128
+        },
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 39,
+          "soundId": 6,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 38,
+          "soundId": 8,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 38,
+          "soundId": 8,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 38,
+          "soundId": 8,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 39,
+          "soundId": 6,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 40,
+          "soundId": 9,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 40,
+          "soundId": 9,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 41,
+          "soundId": 11,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "CH2 clip",
+      "kind": "ch2",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 72,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 73,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 76,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 77,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 78,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 78,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 79,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 12,
+          "note": 79,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 108,
+          "durationTicks": 12,
+          "note": 79,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 12,
+          "note": 78,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 132,
+          "durationTicks": 12,
+          "note": 77,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 12,
+          "note": 74,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 156,
+          "durationTicks": 12,
+          "note": 71,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 12,
+          "note": 69,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 180,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        },
+        {
+          "tick": 204,
+          "durationTicks": 24,
+          "note": 68,
+          "soundId": 3,
+          "priority": 128
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "Section 1",
+      "lengthTicks": 384,
+      "lanes": {
+        "ch1": 0,
+        "ch2": 6,
+        "ch3": null,
+        "ch4": 5
+      }
+    },
+    {
+      "id": 1,
+      "name": "Part A",
+      "lengthTicks": 384,
+      "bars": 1,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": null,
+        "ch2": null,
+        "ch3": null,
+        "ch4": null
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "Made in Music Lab",
+      "tempo": 120,
+      "sequence": [
+        0
+      ],
+      "loopStart": 0
+    },
+    {
+      "id": 1,
+      "name": "Song 2",
+      "tempo": 120,
+      "sequence": [
+        1
+      ],
+      "loopStart": null
+    }
+  ]
+}

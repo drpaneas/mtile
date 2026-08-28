@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "engine": "mGBA 0.10.3 internal mAVStream callback",
+  "format": "stereo signed 16-bit PCM",
+  "cases": [
+    {
+      "kind": "ch1",
+      "rom": {
+        "bytes": 10356,
+        "sha256": "84ea20c64c54893f964c5f4835b759d2839dfab3678f98e57386050a5a4f193f"
+      },
+      "capture": {
+        "frames": 789552,
+        "rateHz": 32768,
+        "sha256": "077ef54f6655d124bd556bbe432b2dabe04a1ba69e081bf240c3856b036bbcbe"
+      }
+    },
+    {
+      "kind": "ch2",
+      "rom": {
+        "bytes": 10236,
+        "sha256": "d73fbba917b576d21590d9fb771ab9f069c616ce53c3cc6246506e9becf01c6d"
+      },
+      "capture": {
+        "frames": 657882,
+        "rateHz": 32768,
+        "sha256": "0cbc0dd8641fb2afe7dcf01552093b71da8cce8460a6b3e051010ae2c5026e47"
+      }
+    },
+    {
+      "kind": "ch3",
+      "rom": {
+        "bytes": 10396,
+        "sha256": "e22b5ced7a86a0a08d92bed35b10ec79d33b5f6933a9d15751c9d7f316c53dd1"
+      },
+      "capture": {
+        "frames": 657882,
+        "rateHz": 32768,
+        "sha256": "e19c71fcd5e5b2deb438dcbd8de1c7d72e404c7c9fe62a204eb3fce661d88ad4"
+      }
+    },
+    {
+      "kind": "ch4",
+      "rom": {
+        "bytes": 10228,
+        "sha256": "01e7ee7d4760738151b0569003f56a74bc7814806efa516a093ca36490f4dc41"
+      },
+      "capture": {
+        "frames": 657882,
+        "rateHz": 32768,
+        "sha256": "5b90e075d3f8cadbbe4d28c990a680c6f312b41e81528461d415e4d496f26f3b"
+      }
+    }
+  ]
+}

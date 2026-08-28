@@ -1,0 +1,12 @@
+﻿The FontStruction “PICO-8 wide”
+(https://fontstruct.com/fontstructions/show/1340753) by “RhythmLynx” is
+licensed under a Creative Commons CC0 Public Domain Dedication license
+(http://creativecommons.org/publicdomain/zero/1.0/).
+“PICO-8 wide” was originally cloned (copied) from the FontStruction
+“PICO-8 mono” (https://fontstruct.com/fontstructions/show/1340337) by
+“RhythmLynx”, which is licensed under a Creative Commons CC0 Public Domain
+Dedication license (http://creativecommons.org/publicdomain/zero/1.0/).
+“PICO-8 mono” was in turn cloned (copied) from the FontStruction
+“PICO-8” (https://fontstruct.com/fontstructions/show/1254853) by
+“RhythmLynx”, which is licensed under a Creative Commons CC0 Public Domain
+Dedication license (http://creativecommons.org/publicdomain/zero/1.0/).

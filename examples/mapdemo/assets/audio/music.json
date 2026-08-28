@@ -1,0 +1,265 @@
+{
+  "version": 2,
+  "ppqn": 96,
+  "clips": [
+    {
+      "id": 0,
+      "name": "CH1 clip",
+      "kind": "ch1",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 24,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 36,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 48,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 60,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 72,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 84,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 96,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 108,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 120,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 132,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 144,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 156,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 180,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 204,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 228,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 252,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 264,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 276,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 300,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 312,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 324,
+          "durationTicks": 12,
+          "note": 61,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 336,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 348,
+          "durationTicks": 12,
+          "note": 66,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 360,
+          "durationTicks": 12,
+          "note": 68,
+          "soundId": 0,
+          "priority": 128
+        },
+        {
+          "tick": 372,
+          "durationTicks": 12,
+          "note": 63,
+          "soundId": 0,
+          "priority": 128
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "Part A",
+      "lengthTicks": 384,
+      "bars": 1,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 0,
+        "ch2": null,
+        "ch3": null,
+        "ch4": null
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "New Song",
+      "tempo": 120,
+      "sequence": [
+        0
+      ],
+      "loopStart": null
+    }
+  ]
+}

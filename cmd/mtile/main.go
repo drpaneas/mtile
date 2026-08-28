@@ -1,0 +1,306 @@
+// Command mtile is the user-facing native GBA toolchain.
+package main
+
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+
+	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/build"
+	"github.com/drpaneas/mtile/internal/editor"
+)
+
+var errMissingCommand = errors.New("missing command")
+
+func main() {
+	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
+		if !errors.Is(err, errMissingCommand) {
+			fmt.Fprintln(os.Stderr, "mtile:", err)
+		}
+		os.Exit(1)
+	}
+}
+
+func run(args []string, stdout, stderr io.Writer) error {
+	if len(args) == 0 {
+		_, _ = fmt.Fprintln(stderr, usageText)
+		return errMissingCommand
+	}
+	switch args[0] {
+	case "new":
+		return runNew(args[1:], stdout)
+	case "build":
+		return runBuild(args[1:], stdout)
+	case "edit":
+		return runEdit(args[1:], stdout, stderr)
+	case "render-audio":
+		return runRenderAudio(args[1:], stdout)
+	case "help", "-h", "--help":
+		_, _ = fmt.Fprintln(stdout, usageText)
+		return nil
+	default:
+		return fmt.Errorf("unknown command %q", args[0])
+	}
+}
+
+const usageText = `usage: mtile <new|build|edit|render-audio> [options] project-dir
+
+Commands:
+  new    create a native GBA project
+  build  transpile Lua and assets, link a .gba ROM
+  edit   open the Sprites, Map, Audio, Code, and Play IDE
+  render-audio  render the PSG editor preview to a WAV file
+
+Run mtile <command> -h for flags.`
+
+func runRenderAudio(args []string, out io.Writer) error {
+	flags := flag.NewFlagSet("render-audio", flag.ContinueOnError)
+	output := flags.String("o", "", "output WAV path (default: project-dir/music-preview.wav)")
+	songID := flags.Int("song", 0, "song ID to render")
+	help, err := parseFlags(flags, args, out)
+	if err != nil {
+		return err
+	}
+	if help {
+		return nil
+	}
+	if flags.NArg() != 1 {
+		return errors.New("render-audio requires exactly one project directory")
+	}
+	dir, err := filepath.Abs(flags.Arg(0))
+	if err != nil {
+		return err
+	}
+	assets, err := assetsync.LoadNativeAudio(dir)
+	if err != nil {
+		return fmt.Errorf("load four-channel audio v2: %w", err)
+	}
+	preview, err := editor.RenderNativeMusicPreview(assets.Library, *songID)
+	if err != nil {
+		return err
+	}
+	stats := preview.AudioStats()
+	if stats.Peak == 0 {
+		return errors.New("song preview is silent; place at least one note or drum hit")
+	}
+	wav, err := editor.RenderNativeMusicPreviewWAV(preview)
+	if err != nil {
+		return err
+	}
+	path := *output
+	if path == "" {
+		path = filepath.Join(dir, "music-preview.wav")
+	} else if path, err = filepath.Abs(path); err != nil {
+		return err
+	}
+	if err := os.WriteFile(path, wav, 0o644); err != nil {
+		return fmt.Errorf("write preview WAV: %w", err)
+	}
+	_, _ = fmt.Fprintf(out, "rendered %s (%.2fs, %d Hz mono, peak %d/127, RMS %.2f)\n",
+		path, stats.Duration, editor.NativePreviewSampleRate, stats.Peak, stats.RMS)
+	return nil
+}
+
+func parseFlags(flags *flag.FlagSet, args []string, out io.Writer) (help bool, err error) {
+	flags.SetOutput(out)
+	err = flags.Parse(args)
+	if errors.Is(err, flag.ErrHelp) {
+		return true, nil
+	}
+	return false, err
+}
+
+func runNew(args []string, out io.Writer) error {
+	flags := flag.NewFlagSet("new", flag.ContinueOnError)
+	width := flags.Int("width", 240, "sprite-sheet width in pixels")
+	height := flags.Int("height", 160, "sprite-sheet height in pixels")
+	mapWidth := flags.Int("map-width", 0, "map width in 8x8 cells (default 30, or none when the sheet has no complete 8x8 sprite)")
+	mapHeight := flags.Int("map-height", 0, "map height in 8x8 cells (default 20, or none when the sheet has no complete 8x8 sprite)")
+	help, err := parseFlags(flags, args, out)
+	if err != nil {
+		return err
+	}
+	if help {
+		return nil
+	}
+	if flags.NArg() != 1 {
+		return errors.New("new requires exactly one project directory")
+	}
+	dir := flags.Arg(0)
+	if err := build.CreateProject(dir, build.NewProjectOptions{SheetWidth: *width, SheetHeight: *height, MapWidth: *mapWidth, MapHeight: *mapHeight}); err != nil {
+		return err
+	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	_, _ = fmt.Fprintf(out, "created %s\n", abs)
+	return nil
+}
+
+func runBuild(args []string, out io.Writer) error {
+	flags := flag.NewFlagSet("build", flag.ContinueOnError)
+	output := flags.String("o", "", "output ROM path (default: project-dir/game.gba)")
+	tinygo := flags.String("tinygo", "", "TinyGo executable (default: PATH)")
+	runtimeDir := flags.String("runtime", "", "mtile runtime directory")
+	keepWork := flags.Bool("keep-work", false, "keep the temporary generated build workspace")
+	help, err := parseFlags(flags, args, out)
+	if err != nil {
+		return err
+	}
+	if help {
+		return nil
+	}
+	if flags.NArg() != 1 {
+		return errors.New("build requires exactly one project directory")
+	}
+	service, err := build.NewService(*tinygo, *runtimeDir)
+	if err != nil {
+		return err
+	}
+	service.KeepWork = *keepWork
+	result, err := service.Build(flags.Arg(0), *output)
+	if err != nil {
+		return err
+	}
+	_, _ = fmt.Fprintf(out, "built %s (%d bytes, %d bytes EWRAM free)\n", result.ROMPath, result.ROMSize, result.EWRAMFree)
+	if result.AudioVoices != 0 {
+		if result.AudioProfile == assetsync.NativeAudioProfile {
+			_, _ = fmt.Fprintf(out, "audio: Game Boy PSG CH1-CH4, hardware mix %d%%, %s-byte assets\n",
+				result.AudioPSGRatio, formatInteger(result.AudioROMBytes))
+		} else {
+			_, _ = fmt.Fprintf(out, "audio: %s Hz mono, %d voices, master %d/256, %s-byte assets\n",
+				formatInteger(assetsync.SampleTargetRate), result.AudioVoices, result.AudioMasterVolume, formatInteger(result.AudioROMBytes))
+		}
+	}
+	if result.WorkDir != "" {
+		_, _ = fmt.Fprintf(out, "workdir %s\n", result.WorkDir)
+	}
+	if result.MapPath != "" {
+		_, _ = fmt.Fprintf(out, "map %s\n", result.MapPath)
+	}
+	return nil
+}
+
+func formatInteger(value int) string {
+	digits := fmt.Sprintf("%d", value)
+	for index := len(digits) - 3; index > 0; index -= 3 {
+		digits = digits[:index] + "," + digits[index:]
+	}
+	return digits
+}
+
+func runEdit(args []string, out, errOut io.Writer) error {
+	flags := flag.NewFlagSet("edit", flag.ContinueOnError)
+	editor := flags.String("editor", "", "editor executable (default: MTILE_EDITOR or sibling mtile-editor/editor)")
+	help, err := parseFlags(flags, args, out)
+	if err != nil {
+		return err
+	}
+	if help {
+		return nil
+	}
+	if flags.NArg() != 1 {
+		return errors.New("edit requires exactly one project directory")
+	}
+	dir, err := filepath.Abs(flags.Arg(0))
+	if err != nil {
+		return err
+	}
+	command, commandArgs, workDir, err := editorCommand(*editor, dir)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(command, commandArgs...)
+	cmd.Dir = workDir
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, out, errOut
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("run editor: %w", err)
+	}
+	return nil
+}
+
+// editorCommand resolves how to launch the editor. The returned workDir is
+// the directory cmd.Run should use; it is empty (meaning "inherit the
+// current directory") for every case except the source-checkout fallback,
+// whose "go run ./cmd/editor" package path is relative to the repository
+// root rather than to whatever directory mtile itself was invoked from.
+func editorCommand(explicit, projectDir string) (command string, args []string, workDir string, err error) {
+	if explicit == "" {
+		explicit = os.Getenv("MTILE_EDITOR")
+	}
+	if explicit != "" {
+		return explicit, []string{"-project", projectDir}, "", nil
+	}
+	if self, statErr := os.Executable(); statErr == nil {
+		if candidate, ok := findSiblingEditor(self); ok {
+			return candidate, []string{"-project", projectDir}, "", nil
+		}
+	}
+	if goBin, lookErr := exec.LookPath("go"); lookErr == nil {
+		if root, ok := findSourceCheckout(); ok {
+			return goBin, []string{"run", "./cmd/editor", "-project", projectDir}, root, nil
+		}
+	}
+	return "", nil, "", errors.New("editor executable not found; build mtile-editor or editor, or set MTILE_EDITOR")
+}
+
+func findSiblingEditor(executable string) (string, bool) {
+	directory := filepath.Dir(executable)
+	for _, name := range []string{"mtile-editor", "editor"} {
+		candidate := filepath.Join(directory, name)
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return candidate, true
+		}
+	}
+	return "", false
+}
+
+// findSourceCheckout first walks up from the current directory looking for
+// the repository root (a go.mod next to cmd/editor). For a source-built CLI
+// invoked outside the checkout it also uses this source file's location as a
+// fallback. Either result lets the caller run "go run ./cmd/editor" from the
+// directory that path is actually relative to.
+func findSourceCheckout() (string, bool) {
+	if dir, err := os.Getwd(); err == nil {
+		if root, ok := findCheckoutFrom(dir); ok {
+			return root, true
+		}
+	}
+	// When the CLI is invoked from a project directory outside this checkout,
+	// the current-directory walk cannot find the source tree. In a source
+	// build, runtime.Caller still points at this file, so use that location as
+	// a second anchor. Installed binaries should use a sibling editor or the
+	// MTILE_EDITOR override instead.
+	if _, source, _, ok := runtime.Caller(0); ok && filepath.IsAbs(source) {
+		if root, ok := findCheckoutFrom(filepath.Dir(source)); ok {
+			return root, true
+		}
+	}
+	return "", false
+}
+
+func findCheckoutFrom(start string) (string, bool) {
+	if start == "" {
+		return "", false
+	}
+	absStart, err := filepath.Abs(start)
+	if err != nil {
+		return "", false
+	}
+	start = absStart
+	for dir := start; dir != filepath.Dir(dir); dir = filepath.Dir(dir) {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			if _, err := os.Stat(filepath.Join(dir, "cmd", "editor")); err == nil {
+				return dir, true
+			}
+		}
+	}
+	return "", false
+}

@@ -1,0 +1,19 @@
+runtime/target-gba.json
+gb-studio
+hint:
+runtime/target-gba-smoke.json
+runtime/crt0/gba-smoke.s
+*.gba
+*.elf
+*.map
+*.sav
+*.allocs
+*.tmp
+build/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local editor/tool state
+.idea/
+.vscode/

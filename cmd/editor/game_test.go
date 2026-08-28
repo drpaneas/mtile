@@ -1,0 +1,1238 @@
+package main
+
+import (
+	"math"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/editor"
+)
+
+// newTestGame builds a *Game against a fresh temp project, exercising the
+// exact same newGame/editor.Open path main.go uses - but without touching
+// ebiten's rendering or input, so it can run in `go test` (no display, no
+// running game loop).
+func newTestGame(t *testing.T, sheetW, sheetH, mapW, mapH int) *Game {
+	t.Helper()
+	dir := t.TempDir()
+	if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: sheetW, Height: sheetH}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SaveMap(dir, &assetsync.Map{Width: mapW, Height: mapH, Cells: make([]int, mapW*mapH)}); err != nil {
+		t.Fatal(err)
+	}
+	writeTestEntry(t, dir)
+	g, err := newGame(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return g
+}
+
+func writeTestEntry(t *testing.T, dir string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, "game.lua"), []byte("-- test project\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func wideColors(n int) []assetsync.RGB15 {
+	colors := make([]assetsync.RGB15, n)
+	for i := range colors {
+		colors[i] = assetsync.RGB15{R: i % 32, G: (i * 2) % 32, B: (i * 3) % 32}
+	}
+	return colors
+}
+
+// TestPaintableColorCountMatchesStoredPaletteLength guards the swatch-picker
+// bug found during manual smoke testing: with a 16-color palette, indices
+// 16..255 in the expanded 256-wide preview are all aliases of color 0 (see
+// assetsync.ExpandedPaletteColors) and Model.SetSpritePixel rejects any
+// color index >= len(ActivePalette.Colors). If paintableColorCount ever
+// drifted back to len(preview.Colors) (256), clicking a swatch below row 1
+// would select an index that every paint attempt then fails on.
+func TestPaintableColorCountMatchesStoredPaletteLength(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 10)
+	if got := g.paintableColorCount(); got != 256 {
+		t.Fatalf("canonical palette: paintableColorCount() = %d, want 256", got)
+	}
+
+	narrow := assetsync.Palette{Name: "narrow", Colors: wideColors(16)}
+	if err := g.model.CreatePalette(narrow); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("narrow"); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.paintableColorCount(); got != 16 {
+		t.Fatalf("16-color palette: paintableColorCount() = %d, want 16", got)
+	}
+
+	wide := assetsync.Palette{Name: "wide", Colors: wideColors(256)}
+	if err := g.model.CreatePalette(wide); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("wide"); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.paintableColorCount(); got != 256 {
+		t.Fatalf("256-color palette: paintableColorCount() = %d, want 256", got)
+	}
+
+	// Every paintable index must actually be an accepted color for
+	// SetSpritePixel - the property paintableColorCount exists to guarantee.
+	for _, idx := range []int{0, 255} {
+		if err := g.model.SetSpritePixel(1, 0, 0, idx); err != nil {
+			t.Fatalf("SetSpritePixel with paintable index %d: %v", idx, err)
+		}
+	}
+}
+
+func TestMapCellGetSetRoundTripsAndClampsOutOfBounds(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 8) // 2x2 sprites: valid ids are 0..3
+
+	if got := g.mapCellAt(0, 0); got != 0 {
+		t.Fatalf("fresh cell = %d, want 0", got)
+	}
+	if !g.setMapCell(3, 4, 2) {
+		t.Fatal("setMapCell on a real change reported no change")
+	}
+	if got := g.mapCellAt(3, 4); got != 2 {
+		t.Fatalf("mapCellAt(3,4) = %d, want 2", got)
+	}
+	if g.setMapCell(3, 4, 2) {
+		t.Fatal("setMapCell with an unchanged value reported a change")
+	}
+
+	for _, out := range [][2]int{{-1, 0}, {0, -1}, {10, 0}, {0, 8}} {
+		if got := g.mapCellAt(out[0], out[1]); got != 0 {
+			t.Fatalf("out-of-bounds mapCellAt%v = %d, want 0", out, got)
+		}
+		if g.setMapCell(out[0], out[1], 2) {
+			t.Fatalf("out-of-bounds setMapCell%v reported success", out)
+		}
+	}
+}
+
+func TestEnsureEditableMapCreatesNativeDefaultWhenMapIsEmpty(t *testing.T) {
+	dir := t.TempDir()
+	if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: 16, Height: 16}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SaveMap(dir, &assetsync.Map{Width: 0, Height: 0, Cells: []int{}}); err != nil {
+		t.Fatal(err)
+	}
+	writeTestEntry(t, dir)
+	g, err := newGame(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.prepareMapView()
+	w, h := g.mapBounds()
+	if w != gbaScreenWidthTiles || h != gbaScreenHeightTiles {
+		t.Fatalf("mapBounds() = (%d,%d), want (%d,%d)", w, h, gbaScreenWidthTiles, gbaScreenHeightTiles)
+	}
+	if len(g.model.Map.Cells) != w*h {
+		t.Fatalf("map cells = %d, want %d", len(g.model.Map.Cells), w*h)
+	}
+	if !g.dirty {
+		t.Fatal("creating a default map did not mark the project dirty")
+	}
+
+	layout := newMapLayout(screenWidth, screenHeight)
+	sx, sy := g.mapCam.WorldToScreen(0, 0, layout.Canvas)
+	tx, ty, ok := g.mapTargetTile(layout, int(sx)+1, int(sy)+1)
+	if !ok || tx != 0 || ty != 0 {
+		t.Fatalf("click on fitted map origin = (%d,%d ok=%v), want (0,0 true)", tx, ty, ok)
+	}
+	g.currentSprite = 1
+	g.placeGridSprites(0, 0)
+	if got := g.mapCellAt(0, 0); got != 1 {
+		t.Fatalf("placed sprite = %d, want 1", got)
+	}
+}
+
+func TestEnsureEditableMapLeavesZeroSpriteSheetsEmpty(t *testing.T) {
+	g := leftoverEdgeGame(t)
+	g.ensureEditableMap()
+	if w, h := g.mapBounds(); w != 0 || h != 0 {
+		t.Fatalf("SpriteN=0 map became %dx%d, want 0x0", w, h)
+	}
+}
+
+func TestNudgeMapSizeGrowsAndShrinksByOneGBAScreen(t *testing.T) {
+	g := newTestGame(t, 32, 32, 10, 10)
+	if !g.setMapCell(0, 0, 1) {
+		t.Fatal("setup: setMapCell(0,0,1) failed")
+	}
+	g.nudgeMapSize(1, 0)
+	w, h := g.mapBounds()
+	if w != 10+gbaScreenWidthTiles || h != 10 {
+		t.Fatalf("after ] = %dx%d, want %dx%d", w, h, 10+gbaScreenWidthTiles, 10)
+	}
+	if g.mapCellAt(0, 0) != 1 {
+		t.Fatal("growing the map dropped the existing tile")
+	}
+	g.nudgeMapSize(0, 1)
+	w, h = g.mapBounds()
+	if w != 10+gbaScreenWidthTiles || h != 10+gbaScreenHeightTiles {
+		t.Fatalf("after [ = %dx%d, want %dx%d", w, h, 10+gbaScreenWidthTiles, 10+gbaScreenHeightTiles)
+	}
+	g.nudgeMapSize(-1, 0)
+	g.nudgeMapSize(0, -1)
+	w, h = g.mapBounds()
+	if w != 10 || h != 10 {
+		t.Fatalf("after Cmd shrink = %dx%d, want 10x10", w, h)
+	}
+	if g.mapCellAt(0, 0) != 1 {
+		t.Fatal("shrinking the map dropped the overlapping tile")
+	}
+}
+
+func TestMapScreenCountRoundsUp(t *testing.T) {
+	tests := []struct {
+		name          string
+		tiles, screen int
+		want          int
+	}{
+		{name: "empty", tiles: 0, screen: 30, want: 0},
+		{name: "one screen", tiles: 30, screen: 30, want: 1},
+		{name: "partial extra screen", tiles: 31, screen: 30, want: 2},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mapScreenCount(tt.tiles, tt.screen); got != tt.want {
+				t.Fatalf("mapScreenCount(%d, %d) = %d, want %d", tt.tiles, tt.screen, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMapGuideClipRejectsEmptyMap(t *testing.T) {
+	g := leftoverEdgeGame(t)
+	_, _, _, _, ok := g.mapGuideClip(newMapLayout(screenWidth, screenHeight))
+	if ok {
+		t.Fatal("empty map must not report a guide clip rect")
+	}
+}
+
+// TestPlaceGridSpritesStampsIndependentSpriteIDsPerCell guards the map
+// editor's core placement rule: a 2x2 grid selection places four distinct
+// sprite ids across four adjacent map cells (one per constituent sprite),
+// not the same id repeated four times.
+func TestPlaceGridSpritesStampsIndependentSpriteIDsPerCell(t *testing.T) {
+	g := newTestGame(t, 32, 32, 10, 10) // 4x4 sprites (ids 0..15)
+	g.gridCols = 2
+	g.gridRows = 2
+	g.currentSprite = 0 // top-left of the sheet, so the 2x2 fits
+
+	g.placeGridSprites(2, 3)
+
+	want := map[[2]int]int{
+		{2, 3}: 0, {3, 3}: 1,
+		{2, 4}: 4, {3, 4}: 5,
+	}
+	for pos, id := range want {
+		if got := g.mapCellAt(pos[0], pos[1]); got != id {
+			t.Fatalf("mapCellAt%v = %d, want %d", pos, got, id)
+		}
+	}
+}
+
+// TestPlaceGridSpritesSkipsSelectionsThatRunOffTheSheet ensures a
+// multi-sprite selection anchored near the sheet's edge only stamps the
+// sprite ids that actually exist, rather than wrapping or panicking.
+func TestPlaceGridSpritesSkipsSelectionsThatRunOffTheSheet(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 10) // 2x2 sprites (ids 0..3)
+	g.gridCols = 2
+	g.gridRows = 2
+	g.currentSprite = 3 // bottom-right sprite; block runs off-sheet
+
+	g.placeGridSprites(0, 0)
+
+	if got := g.mapCellAt(0, 0); got != 3 {
+		t.Fatalf("mapCellAt(0,0) = %d, want 3 (the only in-bounds constituent sprite)", got)
+	}
+	for _, pos := range [][2]int{{1, 0}, {0, 1}, {1, 1}} {
+		if got := g.mapCellAt(pos[0], pos[1]); got != 0 {
+			t.Fatalf("mapCellAt%v = %d, want 0 (out-of-sheet constituent must not be placed)", pos, got)
+		}
+	}
+}
+
+func TestColorPickerInfoTextIncludesSelectedID(t *testing.T) {
+	tests := []struct {
+		name   string
+		id     int
+		packed uint16
+		want   string
+	}{
+		{name: "first swatch", id: 0, packed: 0x0000, want: "BGR555 · 0x0000 · ID 0"},
+		{name: "last swatch", id: 255, packed: 0x7fff, want: "BGR555 · 0x7FFF · ID 255"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := colorPickerInfoText(tt.id, tt.packed); got != tt.want {
+				t.Fatalf("colorPickerInfoText(%d, %#04x) = %q, want %q", tt.id, tt.packed, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestColorZeroHintMentionsTransparentEraser(t *testing.T) {
+	if !strings.Contains(colorZeroHint, "0") || !strings.Contains(colorZeroHint, "transparent") || !strings.Contains(colorZeroHint, "eraser") {
+		t.Fatalf("colorZeroHint = %q, want it to say id 0 is transparent (eraser)", colorZeroHint)
+	}
+}
+
+func TestSpriteZeroHintMentionsTransparentEraser(t *testing.T) {
+	if !strings.Contains(spriteZeroHint, "0") || !strings.Contains(spriteZeroHint, "transparent") || !strings.Contains(spriteZeroHint, "eraser") {
+		t.Fatalf("spriteZeroHint = %q, want it to say sprite 0 is transparent (eraser)", spriteZeroHint)
+	}
+}
+
+func TestReservedSpriteZeroCannotBePaintedOrPasted(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	g.paintPixel(editor.ReservedSpriteID, 0, 0, 9)
+	if g.statusMsg != spriteZeroLockedMessage {
+		t.Fatalf("paint status = %q, want %q", g.statusMsg, spriteZeroLockedMessage)
+	}
+	if g.dirty {
+		t.Fatal("painting reserved sprite 0 marked the project dirty")
+	}
+
+	g.hasCopied = true
+	g.copiedSprite[0][0] = 7
+	g.currentSprite = editor.ReservedSpriteID
+	g.statusMsg = ""
+	g.pasteCurrentSprite()
+	if g.statusMsg != spriteZeroLockedMessage {
+		t.Fatalf("paste status = %q, want %q", g.statusMsg, spriteZeroLockedMessage)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.pixelAt(0, 0); got != 0 {
+		t.Fatalf("reserved sprite pixel = %d, want transparent color 0", got)
+	}
+}
+
+func TestEraserIndexIsZeroOnly(t *testing.T) {
+	if !isEraserIndex(0) {
+		t.Fatal("index 0 must be the eraser")
+	}
+	for _, id := range []int{-1, 1, 2, 255} {
+		if isEraserIndex(id) {
+			t.Fatalf("index %d must not be the eraser", id)
+		}
+	}
+}
+
+func TestSnapshotRestoreRoundTrip(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 10)
+	g.currentSprite = 2
+	g.currentColor = 5
+	g.gridCols = 2
+	g.gridRows = 1
+	if err := g.model.SetSpritePixel(2, 1, 1, 5); err != nil {
+		t.Fatal(err)
+	}
+	// snapshot() aliases g.model.Sheet's slice backing arrays (by design - see
+	// undoStack.push/reset, which clone before storing); a test that compares
+	// state across a later mutation must clone explicitly, exactly as the
+	// real undo stack does, or it would silently observe the mutation too.
+	before := g.snapshot().clone()
+
+	if err := g.model.SetSpritePixel(2, 1, 1, 9); err != nil {
+		t.Fatal(err)
+	}
+	g.currentSprite, g.currentColor, g.gridCols, g.gridRows = 0, 0, 1, 1
+
+	g.restore(before)
+
+	if g.currentSprite != 2 || g.currentColor != 5 || g.gridCols != 2 || g.gridRows != 1 {
+		t.Fatalf("restore did not reapply UI state: sprite=%d color=%d grid=%dx%d", g.currentSprite, g.currentColor, g.gridCols, g.gridRows)
+	}
+	// Sprite 2 on this 16x16 (2x2-sprite) sheet sits at col=2%2=0, row=2/2=1.
+	if got := g.pixelAt(0*8+1, 1*8+1); got != 5 {
+		t.Fatalf("restore did not reapply sheet pixel: got %d, want 5", got)
+	}
+}
+
+func TestSpriteCountHelpersMatchSheetDimensions(t *testing.T) {
+	g := newTestGame(t, 32, 16, 5, 5) // 4x2 sprites
+	if got := g.spriteCols(); got != 4 {
+		t.Fatalf("spriteCols() = %d, want 4", got)
+	}
+	if got := g.spriteRows(); got != 2 {
+		t.Fatalf("spriteRows() = %d, want 2", got)
+	}
+	if got := g.spriteN(); got != 8 {
+		t.Fatalf("spriteN() = %d, want 8", got)
+	}
+	if w, h := g.mapBounds(); w != 5 || h != 5 {
+		t.Fatalf("mapBounds() = (%d,%d), want (5,5)", w, h)
+	}
+}
+
+func TestZeroSpriteColumnsRemainSafeInEditor(t *testing.T) {
+	dir := t.TempDir()
+	if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: 7, Height: 16}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SaveMap(dir, &assetsync.Map{Width: 0, Height: 0}); err != nil {
+		t.Fatal(err)
+	}
+	writeTestEntry(t, dir)
+	g, err := newGame(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := g.spriteCols(); got != 0 {
+		t.Fatalf("spriteCols() = %d, want 0", got)
+	}
+	if got := g.spriteN(); got != 0 {
+		t.Fatalf("spriteN() = %d, want 0", got)
+	}
+	if g.setMapCell(0, 0, 99) {
+		t.Fatal("setMapCell accepted an id when SpriteN is zero")
+	}
+	g.copyCurrentSprite()
+	if g.hasCopied {
+		t.Fatal("copyCurrentSprite marked an unavailable sprite as copied")
+	}
+	// These paths are called by normal map-mode drawing and keyboard handling.
+	// They must no-op rather than divide by zero on a valid leftover-edge sheet.
+	g.paintPixel(0, 0, 0, 1)
+	g.drawSpriteThumb(nil, 0, 0, 0, 8, 8)
+	// drawMapTiles is the map-mode loop that invokes drawSpriteThumb for each
+	// cell. A nil screen is safe here because the zero-column guard returns
+	// before any rendering primitive is reached.
+	g.drawMapTiles(nil, newMapLayout(screenWidth, screenHeight))
+}
+
+func TestMapCellRejectsOutOfRangeSpriteID(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 8)
+	if g.setMapCell(0, 0, 4) {
+		t.Fatal("setMapCell accepted id 4 for a four-sprite sheet")
+	}
+	if g.setMapCell(0, 0, -1) {
+		t.Fatal("setMapCell accepted a negative sprite id")
+	}
+	if !g.setMapCell(0, 0, 3) || g.mapCellAt(0, 0) != 3 {
+		t.Fatal("setMapCell rejected the maximum valid sprite id")
+	}
+}
+
+func TestUndoRestorePersistsPaletteAndProjectTogether(t *testing.T) {
+	g := newTestGame(t, 16, 16, 4, 4)
+	before := g.snapshot().clone()
+	original := g.model.ActivePalette.Colors[1]
+	edited := assetsync.RGB15{R: 31, G: 0, B: 0}
+	if err := g.model.SetActiveColor(1, edited); err != nil {
+		t.Fatal(err)
+	}
+	g.persist()
+	if g.statusMsg != "" {
+		t.Fatalf("persist of edited palette failed: %s", g.statusMsg)
+	}
+	g.restore(before)
+	g.persist()
+	if g.statusMsg != "" {
+		t.Fatalf("persist after palette undo failed: %s", g.statusMsg)
+	}
+	p, err := assetsync.LoadPalette(g.model.Dir, assetsync.CanonicalPaletteName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Colors[1] != original {
+		t.Fatalf("palette undo was not persisted: got %#v want %#v", p.Colors[1], original)
+	}
+}
+
+func TestPersistWritesEditedPaletteFileAndReloadsIt(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	path := filepath.Join(g.model.Dir, "assets", "palettes", assetsync.CanonicalPaletteName+".json")
+	if _, err := os.Stat(path); err == nil {
+		t.Fatal("canonical palette file existed before any save")
+	}
+
+	want := assetsync.RGB15{R: 31, G: 0, B: 16}
+	if err := g.model.SetActiveColor(1, want); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); err == nil {
+		t.Fatal("color edit wrote a palette file before persist")
+	}
+
+	g.persist()
+	if g.statusMsg != "" {
+		t.Fatalf("persist after color edit failed: %s", g.statusMsg)
+	}
+	disk, err := assetsync.LoadPalette(g.model.Dir, assetsync.CanonicalPaletteName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if disk.Colors[1] != want {
+		t.Fatalf("saved palette color[1] = %#v, want %#v", disk.Colors[1], want)
+	}
+
+	reopened, err := newGame(g.model.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reopened.model.ActivePalette.Colors[1] != want {
+		t.Fatalf("reopened editor color[1] = %#v, want %#v", reopened.model.ActivePalette.Colors[1], want)
+	}
+}
+
+func TestFlagToggleDoesNotWriteSheetUntilPersist(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	g.toggleFlag(0)
+	if g.model.SpriteFlagByte(0)&1 == 0 {
+		t.Fatal("toggleFlag did not set bit 0 in memory")
+	}
+	sheet, err := assetsync.LoadSpritesheet(g.model.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sheet.Sprites) != 0 {
+		t.Fatal("toggleFlag wrote spritesheet.json before persist")
+	}
+	g.persist()
+	sheet, err = assetsync.LoadSpritesheet(g.model.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, sprite := range sheet.Sprites {
+		if sprite.ID == 0 {
+			found = true
+			if sprite.Flags&1 == 0 {
+				t.Fatal("persist did not write flag bit 0")
+			}
+		}
+	}
+	if !found {
+		t.Fatal("persist did not write sprite 0")
+	}
+}
+
+func TestSelectPaletteClampsCurrentColorToStoredLength(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	wide := assetsync.Palette{Name: "wide", Colors: wideColors(256)}
+	if err := g.model.CreatePalette(wide); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("wide"); err != nil {
+		t.Fatal(err)
+	}
+	g.currentColor = 255
+	g.clampCurrentColor()
+	if g.currentColor != 255 {
+		t.Fatalf("256-color clamp = %d, want 255", g.currentColor)
+	}
+	narrow := assetsync.Palette{Name: "narrow", Colors: wideColors(16)}
+	if err := g.model.CreatePalette(narrow); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("narrow"); err != nil {
+		t.Fatal(err)
+	}
+	g.clampCurrentColor()
+	if g.currentColor < 0 || g.currentColor >= g.paintableColorCount() {
+		t.Fatalf("after switching to 16-color palette, currentColor=%d is not paintable", g.currentColor)
+	}
+}
+
+func leftoverEdgeGame(t *testing.T) *Game {
+	t.Helper()
+	dir := t.TempDir()
+	if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: 7, Height: 16}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SaveMap(dir, &assetsync.Map{Width: 0, Height: 0}); err != nil {
+		t.Fatal(err)
+	}
+	writeTestEntry(t, dir)
+	g, err := newGame(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return g
+}
+
+func TestFlagBitsStayClearWhenSpriteNIsZero(t *testing.T) {
+	g := leftoverEdgeGame(t)
+	all, any := g.flagBitState(0)
+	if all || any {
+		t.Fatalf("leftover-edge sheet drew flag 0 as all=%v any=%v, want both false", all, any)
+	}
+}
+
+func TestToggleFlagNoOpDoesNotRecordUndo(t *testing.T) {
+	g := leftoverEdgeGame(t)
+	past := len(g.undo.past)
+	g.toggleFlag(0)
+	if len(g.undo.past) != past {
+		t.Fatal("no-op flag toggle on a SpriteN==0 sheet recorded an undo step")
+	}
+}
+
+func TestToggleFlagIsIndependentlyUndoable(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	g.toggleFlag(0)
+	g.toggleFlag(1)
+	if g.model.SpriteFlagByte(0)&0b11 != 0b11 {
+		t.Fatal("expected both flag bits 0 and 1 set before undo")
+	}
+
+	s, ok := g.undo.undo()
+	if !ok {
+		t.Fatal("undo after second flag toggle was empty")
+	}
+	g.restore(s)
+	if got := g.model.SpriteFlagByte(0); got != 1 {
+		t.Fatalf("undo of bit 1 left flags=%#b, want bit 0 only", got)
+	}
+
+	s, ok = g.undo.undo()
+	if !ok {
+		t.Fatal("undo after first flag toggle was empty")
+	}
+	g.restore(s)
+	if got := g.model.SpriteFlagByte(0); got != 0 {
+		t.Fatalf("undo of bit 0 left flags=%#b, want 0", got)
+	}
+}
+
+func TestToggleFlagMixedSelectionSetsAll(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	g.gridCols = 2
+	g.gridRows = 2
+	g.currentSprite = 0
+	if err := g.model.SetSpriteFlag(0, 0, true); err != nil {
+		t.Fatal(err)
+	}
+	// Sprite 0 is set while sprite 1 is clear. The tri-state selection must
+	// become all-set; it must not use the top-left sprite as the toggle value
+	// and clear both.
+	g.toggleFlag(0)
+	for _, id := range []int{0, 1, 2, 3} {
+		if got := g.model.SpriteFlagByte(id) & 1; got == 0 {
+			t.Fatalf("mixed selection left sprite %d flag 0 clear", id)
+		}
+	}
+
+	// Once every selected sprite is set, the next toggle clears every one.
+	g.toggleFlag(0)
+	for _, id := range []int{0, 1, 2, 3} {
+		if got := g.model.SpriteFlagByte(id) & 1; got != 0 {
+			t.Fatalf("all-set selection left sprite %d flag 0 set", id)
+		}
+	}
+}
+
+// TestCopyPasteCopiesPixelsToAnotherSprite is the copy/paste happy path:
+// paint a distinctive pattern on one sprite, copy it, select a different
+// sprite, paste, and confirm every pixel landed - the failure-path test
+// below only exercises the rejection branch, not that a normal paste
+// actually writes pixels.
+func TestCopyPasteCopiesPixelsToAnotherSprite(t *testing.T) {
+	g := newTestGame(t, 32, 32, 2, 2) // 4x4 sprites (ids 0..15)
+	g.currentSprite = 1
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			color := (x + y) % 16
+			if err := g.model.SetSpritePixel(1, x, y, color); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	g.copyCurrentSprite()
+	if !g.hasCopied {
+		t.Fatal("copyCurrentSprite did not record the source sprite")
+	}
+
+	g.currentSprite = 5
+	g.pasteCurrentSprite()
+	if g.statusMsg != "" {
+		t.Fatalf("paste of a valid buffer reported an error: %s", g.statusMsg)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	// Sprite 5 on this 4x4-sprite sheet sits at col=5%4=1, row=5/4=1.
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			want := (x + y) % 16
+			if got := g.pixelAt(1*8+x, 1*8+y); got != want {
+				t.Fatalf("pasted pixel (%d,%d) = %d, want %d", x, y, got, want)
+			}
+		}
+	}
+}
+
+// TestPasteRejectsColorsOutsideNarrowerActivePalette guards a gap where
+// pasteCurrentSprite applied its buffer pixel-by-pixel with no preflight.
+// The copy buffer is plain Game UI state, not part of the validated sheet,
+// so it can go stale: copy a pixel painted under a wide (256-color) palette,
+// repaint over it so the sheet is compatible with a 16-color palette again
+// (SelectPalette itself refuses an incompatible switch, so the sheet must
+// already fit before switching), switch palettes, then paste the still-wide
+// buffer. Before this fix, SetSpritePixel would silently reject just the
+// out-of-range pixels mid-loop, leaving the sprite partially overwritten
+// with no clear signal that the paste was incomplete.
+func TestPasteRejectsColorsOutsideNarrowerActivePalette(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	wide := assetsync.Palette{Name: "wide", Colors: wideColors(256)}
+	if err := g.model.CreatePalette(wide); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("wide"); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetSpritePixel(1, 0, 0, 200); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	g.currentSprite = 1
+	g.copyCurrentSprite()
+	if !g.hasCopied || g.copiedSprite[0][0] != 200 {
+		t.Fatalf("copy did not capture color 200: hasCopied=%v pixel=%d", g.hasCopied, g.copiedSprite[0][0])
+	}
+
+	// Undo the out-of-range paint so the sheet is compatible with a
+	// 16-color palette again; the stale copy buffer still holds color 200.
+	// Canonical aurora is 256 colors, so switching back to it would still
+	// accept index 200. A narrower preset is required to make the paste invalid.
+	if err := g.model.SetSpritePixel(1, 0, 0, 0); err != nil {
+		t.Fatal(err)
+	}
+	narrow := assetsync.Palette{Name: "narrow", Colors: wideColors(16)}
+	if err := g.model.CreatePalette(narrow); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SelectPalette("narrow"); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	g.pasteCurrentSprite()
+	if g.statusMsg == "" {
+		t.Fatal("paste of an out-of-range color did not report an error")
+	}
+	if got := g.pixelAt(8, 0); got != 0 {
+		t.Fatalf("paste partially applied an invalid buffer: pixelAt(8,0)=%d, want unchanged 0", got)
+	}
+}
+
+func TestGridSizeZeroDoesNotDivideByZero(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	g.gridCols = 0
+	g.gridRows = 0
+	if g.gridPixelsW() <= 0 || g.gridPixelsH() <= 0 {
+		t.Fatalf("gridPixels = %dx%d, want a positive fallback", g.gridPixelsW(), g.gridPixelsH())
+	}
+	_ = g.canvasPixelScale()
+	g.paintPixel(0, 0, 0, 1)
+}
+
+func TestBracketKeysCycleWidthAndHeightIndependently(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	if g.gridPixelsW() != 8 || g.gridPixelsH() != 8 {
+		t.Fatalf("default grid = %dx%d, want 8x8", g.gridPixelsW(), g.gridPixelsH())
+	}
+
+	g.nudgeGridRows(1)
+	if g.gridPixelsW() != 8 || g.gridPixelsH() != 16 {
+		t.Fatalf("after [ = %dx%d, want 8x16", g.gridPixelsW(), g.gridPixelsH())
+	}
+	g.nudgeGridRows(1)
+	if g.gridPixelsW() != 8 || g.gridPixelsH() != 24 {
+		t.Fatalf("after second [ = %dx%d, want 8x24", g.gridPixelsW(), g.gridPixelsH())
+	}
+	g.nudgeGridRows(-1)
+	if g.gridPixelsW() != 8 || g.gridPixelsH() != 16 {
+		t.Fatalf("after Cmd/Ctrl+[ = %dx%d, want 8x16", g.gridPixelsW(), g.gridPixelsH())
+	}
+
+	g.nudgeGridCols(1)
+	if g.gridPixelsW() != 16 || g.gridPixelsH() != 16 {
+		t.Fatalf("after ] = %dx%d, want 16x16", g.gridPixelsW(), g.gridPixelsH())
+	}
+	g.nudgeGridCols(-1)
+	if g.gridPixelsW() != 8 || g.gridPixelsH() != 16 {
+		t.Fatalf("after Cmd/Ctrl+] = %dx%d, want 8x16", g.gridPixelsW(), g.gridPixelsH())
+	}
+
+	g.gridCols = gridCellsMax
+	g.nudgeGridCols(1)
+	if g.gridPixelsW() != 8 {
+		t.Fatalf("width wrap past 128 = %d, want 8", g.gridPixelsW())
+	}
+	g.gridRows = gridCellsMax
+	g.nudgeGridRows(1)
+	if g.gridPixelsH() != 8 {
+		t.Fatalf("height wrap past 128 = %d, want 8", g.gridPixelsH())
+	}
+
+	g.gridCols = gridCellsMin
+	g.nudgeGridCols(-1)
+	if g.gridPixelsW() != 128 {
+		t.Fatalf("width wrap below 8 = %d, want 128", g.gridPixelsW())
+	}
+	g.gridRows = gridCellsMin
+	g.nudgeGridRows(-1)
+	if g.gridPixelsH() != 128 {
+		t.Fatalf("height wrap below 8 = %d, want 128", g.gridPixelsH())
+	}
+}
+
+func TestResizeShortcutUsesCmdOnMacAndCtrlElsewhere(t *testing.T) {
+	tests := []struct {
+		name string
+		goos string
+		want string
+	}{
+		{name: "darwin", goos: "darwin", want: "CMD+[ / ] RESIZE"},
+		{name: "linux", goos: "linux", want: "CTRL+[ / ] RESIZE"},
+		{name: "windows", goos: "windows", want: "CTRL+[ / ] RESIZE"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resizeShortcutText(tt.goos); got != tt.want {
+				t.Fatalf("resizeShortcutText(%q) = %q, want %q", tt.goos, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSpriteNumberUsesThreeDigits(t *testing.T) {
+	for _, tt := range []struct {
+		id   int
+		want string
+	}{{0, "000"}, {1, "001"}, {37, "037"}, {599, "599"}} {
+		if got := spriteNumberText(tt.id); got != tt.want {
+			t.Errorf("spriteNumberText(%d) = %q, want %q", tt.id, got, tt.want)
+		}
+	}
+}
+
+func TestSpriteCanvasTitleShowsSSprSourceForLargerSelections(t *testing.T) {
+	tests := []struct {
+		name                    string
+		id, cols, width, height int
+		wantText                string
+		wantHighlights          string
+		wantSection             string
+	}{
+		{name: "single tile", id: 33, cols: 30, width: 8, height: 8, wantText: "SPRITE 033", wantHighlights: "033", wantSection: "SPRITE"},
+		{name: "sixteen square", id: 33, cols: 30, width: 16, height: 16, wantText: "METASPRITE (24,8,16,16)", wantHighlights: "24|8|16|16", wantSection: "METASPRITE"},
+		{name: "tall selection", id: 33, cols: 30, width: 8, height: 24, wantText: "METASPRITE (24,8,8,24)", wantHighlights: "24|8|8|24", wantSection: "METASPRITE"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parts := spriteCanvasTitleParts(tt.id, tt.cols, tt.width, tt.height)
+			text := ""
+			highlights := []string{}
+			section := ""
+			for _, part := range parts {
+				text += part.text
+				if part.highlight {
+					highlights = append(highlights, part.text)
+				}
+				if !part.secondary {
+					section += part.text
+				}
+			}
+			if text != tt.wantText {
+				t.Errorf("title text = %q, want %q", text, tt.wantText)
+			}
+			if got := strings.Join(highlights, "|"); got != tt.wantHighlights {
+				t.Errorf("highlighted values = %q, want %q", got, tt.wantHighlights)
+			}
+			if section != tt.wantSection {
+				t.Errorf("section title = %q, want %q", section, tt.wantSection)
+			}
+		})
+	}
+}
+
+func TestCanvasPixelScaleKeepsSquarePixelsForNonSquareGrid(t *testing.T) {
+	g := newTestGame(t, 32, 32, 2, 2)
+	g.gridCols = 4
+	g.gridRows = 1
+	scale := g.canvasPixelScale()
+	want := math.Min(float64(canvasRect.W)/32, float64(canvasRect.H)/8)
+	if diff(scale, want) > 0.001 {
+		t.Fatalf("canvasPixelScale for 32x8 = %g, want %g", scale, want)
+	}
+}
+
+func TestSquarePixelSelectionConsumesEntireCanvas(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := newTestGame(t, 32, 32, 2, 2)
+	g.gridCols, g.gridRows = 4, 4
+
+	if got := g.canvasPixelBounds(0, 0, g.gridPixelsW(), g.gridPixelsH()); got != canvasRect {
+		t.Fatalf("32x32 canvas bounds = %#v, want full canvas %#v", got, canvasRect)
+	}
+	col, row, ok := g.spriteCanvasCellAt(canvasRect.X+canvasRect.W-1, canvasRect.Y+canvasRect.H-1, false)
+	if !ok || col != 31 || row != 31 {
+		t.Fatalf("bottom-right canvas pixel = (%d,%d ok=%t), want (31,31 true)", col, row, ok)
+	}
+}
+
+func TestPlaceGridSpritesNonSquareSelection(t *testing.T) {
+	g := newTestGame(t, 32, 32, 10, 10) // 4x4 sprites
+	g.gridCols = 2
+	g.gridRows = 1
+	g.currentSprite = 0
+	g.placeGridSprites(1, 1)
+	if got := g.mapCellAt(1, 1); got != 0 {
+		t.Fatalf("mapCellAt(1,1) = %d, want 0", got)
+	}
+	if got := g.mapCellAt(2, 1); got != 1 {
+		t.Fatalf("mapCellAt(2,1) = %d, want 1", got)
+	}
+	if got := g.mapCellAt(1, 2); got != 0 {
+		t.Fatalf("mapCellAt(1,2) = %d, want 0 (1-row selection must not stamp the next row)", got)
+	}
+}
+
+func TestSheetCameraFillsEntireAvailableCanvas(t *testing.T) {
+	g := newTestGame(t, 240, 160, 10, 10)
+	canvas := g.sheetGridCanvas()
+	cols, rows := g.spriteCols(), g.spriteRows()
+	sheetW := g.sheetCam.TileSize() * float64(cols)
+	sheetH := g.sheetCam.TileSizeY() * float64(rows)
+	if diff(sheetW, float64(canvas.W)) > 0.001 || diff(sheetH, float64(canvas.H)) > 0.001 {
+		t.Fatalf("30x20 sheet %gx%g, want exact grid canvas %dx%d", sheetW, sheetH, canvas.W, canvas.H)
+	}
+	wantCanvas := editor.Rect{
+		X: sheetPanelRect.X + 10,
+		Y: sheetPanelRect.Y + sheetPanelLabelHeight,
+		W: sheetPanelRect.W - 20,
+		H: sheetPanelRect.H - sheetPanelLabelHeight - 10,
+	}
+	if canvas != wantCanvas {
+		t.Fatalf("grid canvas = %#v, want full panel interior %#v", canvas, wantCanvas)
+	}
+	sheetX, sheetY := g.sheetCam.WorldToScreen(0, 0, canvas)
+	if diff(sheetX, float64(canvas.X)) > 1 || diff(sheetY, float64(canvas.Y)) > 1 {
+		t.Fatalf("fitted sheet starts at %g,%g, want panel origin %d,%d", sheetX, sheetY, canvas.X, canvas.Y)
+	}
+}
+
+func TestTinySheetHonorsComfortableZoomCeiling(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	if diff(g.sheetCam.TileSize(), g.sheetCam.TileSizeY()) > 0.001 {
+		t.Fatalf("tile %gx%g, want square", g.sheetCam.TileSize(), g.sheetCam.TileSizeY())
+	}
+	canvas := g.sheetGridCanvas()
+	sheetW := g.sheetCam.TileSize() * float64(g.spriteCols())
+	sheetH := g.sheetCam.TileSizeY() * float64(g.spriteRows())
+	if sheetW > float64(canvas.W)+0.001 || sheetH > float64(canvas.H)+0.001 {
+		t.Fatalf("fitted sheet %gx%g overflowed panel %dx%d", sheetW, sheetH, canvas.W, canvas.H)
+	}
+	if diff(sheetW, 256) > 0.001 || diff(sheetH, 256) > 0.001 {
+		t.Fatalf("compact 2x2 sheet %gx%g, want a comfortable 256x256 editing area", sheetW, sheetH)
+	}
+}
+
+// TestGraphicsAndAudioExamplesKeepTheSameNativeSheetLayout guards the exact
+// regression reported against mapdemo and audio-sfx: adding audio assets must
+// not collapse an otherwise empty 240x160 spritesheet to one giant tile.
+func TestGraphicsAndAudioExamplesKeepTheSameNativeSheetLayout(t *testing.T) {
+	for _, example := range []string{"mapdemo", "audio-sfx"} {
+		t.Run(example, func(t *testing.T) {
+			g, err := newGame(filepath.Join("..", "..", "examples", example))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got, want := g.spriteCols(), gbaScreenWidthTiles; got != want {
+				t.Fatalf("sprite columns = %d, want %d", got, want)
+			}
+			if got, want := g.spriteRows(), gbaScreenHeightTiles; got != want {
+				t.Fatalf("sprite rows = %d, want %d", got, want)
+			}
+			canvas := g.sheetGridCanvas()
+			sheetW := g.sheetCam.TileSize() * float64(g.spriteCols())
+			sheetH := g.sheetCam.TileSizeY() * float64(g.spriteRows())
+			if diff(sheetW, float64(canvas.W)) > 0.001 || diff(sheetH, float64(canvas.H)) > 0.001 {
+				t.Fatalf("native sheet %gx%g, want full canvas %dx%d", sheetW, sheetH, canvas.W, canvas.H)
+			}
+		})
+	}
+}
+
+func TestMapLayoutSitsAboveStatusBar(t *testing.T) {
+	layout := newMapLayout(screenWidth, screenHeight)
+	if bottom := layout.Strip.Y + layout.Strip.H; bottom > statusBarRect.Y {
+		t.Fatalf("map strip bottom %d overlaps status bar Y=%d", bottom, statusBarRect.Y)
+	}
+	if bottom := layout.SelectedTile.Y + layout.SelectedTile.H; bottom > statusBarRect.Y {
+		t.Fatalf("selected-tile preview bottom %d overlaps status bar Y=%d", bottom, statusBarRect.Y)
+	}
+	if layout.Canvas.Y+layout.Canvas.H > layout.Strip.Y {
+		t.Fatalf("map canvas bottom %d overlaps strip Y=%d", layout.Canvas.Y+layout.Canvas.H, layout.Strip.Y)
+	}
+}
+
+func TestGraphicsWorkspaceKeepsDesktopEditingScale(t *testing.T) {
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	if screenWidth < 1920 || screenHeight < 1200 {
+		t.Fatalf("default editor surface = %dx%d, want at least 1920x1200", screenWidth, screenHeight)
+	}
+	if canvasRect.W < 320 || canvasRect.H < 320 {
+		t.Fatalf("sprite canvas = %dx%d, want at least 320x320", canvasRect.W, canvasRect.H)
+	}
+	if paletteSwatchWidth < 16 || paletteSwatchHeight < 16 {
+		t.Fatalf("palette swatch = %dx%dpx, want at least 16px per axis", paletteSwatchWidth, paletteSwatchHeight)
+	}
+	wantPaletteRight := spritePalettePanelRect.X + spritePalettePanelRect.W - spritePanelPadding
+	if got := paletteRect.X + paletteRect.W; got != wantPaletteRight {
+		t.Fatalf("palette right edge = %d, want panel content edge %d", got, wantPaletteRight)
+	}
+}
+
+func TestPaletteMetaShowsColorCountWithoutDuplicateSpriteID(t *testing.T) {
+	if got, want := paletteMetaText(256), "256 COLORS"; got != want {
+		t.Fatalf("paletteMetaText() = %q, want %q", got, want)
+	}
+}
+
+func TestPaletteColorNumberTracksSelectedColor(t *testing.T) {
+	tests := []struct {
+		colorID int
+		want    string
+	}{
+		{colorID: 0, want: "000"},
+		{colorID: 1, want: "001"},
+		{colorID: 37, want: "037"},
+		{colorID: 255, want: "255"},
+	}
+	for _, tt := range tests {
+		if got := paletteColorNumberText(tt.colorID); got != tt.want {
+			t.Errorf("paletteColorNumberText(%d) = %q, want %q", tt.colorID, got, tt.want)
+		}
+	}
+}
+
+func TestDesktopSpriteInspectorBalancesFlagsAndColorPicker(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+
+	if colorPickerTitle != "CHANGE COLOR" {
+		t.Fatalf("color picker title = %q, want CHANGE COLOR", colorPickerTitle)
+	}
+	if spriteFlagsPanelRect.H != spriteFlagsPanelHeight {
+		t.Fatalf("flags panel height = %d, want %d", spriteFlagsPanelRect.H, spriteFlagsPanelHeight)
+	}
+	lastFlag := flagCheckboxRect(7)
+	if bottomSpace := spriteFlagsPanelRect.Y + spriteFlagsPanelRect.H - (lastFlag.Y + lastFlag.H); bottomSpace < 12 {
+		t.Fatalf("flags panel bottom space = %dpx, want at least 12px", bottomSpace)
+	}
+	if infoBottom := colorPickerInfoY() + uiSmallTextHeight; infoBottom != pickerRect.Y+pickerRect.H {
+		t.Fatalf("color metadata bottom = %d, want picker content bottom %d", infoBottom, pickerRect.Y+pickerRect.H)
+	}
+	preview := colorPickerPreviewRect()
+	titleX, _ := colorPickerTitlePosition()
+	if titleRight := titleX + uiTextWidth(colorPickerTitle); titleRight+8 > preview.X {
+		t.Fatalf("color title ends at %d and crowds preview at %d", titleRight, preview.X)
+	}
+	commonTitleX := spriteRailRect.X + spritePanelTitleInsetX
+	for name, panel := range map[string]editor.Rect{
+		"sprite": spriteCanvasPanelRect, "tools": spriteToolsPanelRect, "palette": spritePalettePanelRect,
+		"flags": spriteFlagsPanelRect, "color": spritePickerPanelRect,
+	} {
+		x, y := spritePanelTitlePosition(panel)
+		if x != commonTitleX || y != panel.Y+spritePanelTitleInsetY {
+			t.Fatalf("%s title origin = (%d,%d), want (%d,%d)", name, x, y, commonTitleX, panel.Y+spritePanelTitleInsetY)
+		}
+	}
+	if uiTextHeight <= uiSmallTextHeight {
+		t.Fatalf("section height %d must exceed secondary height %d", uiTextHeight, uiSmallTextHeight)
+	}
+
+	setEditorLayout(minimumScreenWidth, minimumScreenHeight)
+	lastFlag = flagCheckboxRect(7)
+	if bottomSpace := spriteFlagsPanelRect.Y + spriteFlagsPanelRect.H - (lastFlag.Y + lastFlag.H); bottomSpace < 12 {
+		t.Fatalf("compact flags panel bottom space = %dpx, want at least 12px", bottomSpace)
+	}
+	preview = colorPickerPreviewRect()
+	compactTitleX, compactTitleY := colorPickerTitlePosition()
+	if titleRight := compactTitleX + uiTextWidth(colorPickerTitle); titleRight > pickerRect.X+pickerRect.W {
+		t.Fatalf("compact color title ends at %d outside picker right edge %d", titleRight, pickerRect.X+pickerRect.W)
+	}
+	if preview.Y < compactTitleY+uiTextHeight+8 {
+		t.Fatalf("compact preview Y = %d, want below title ending at %d", preview.Y, compactTitleY+uiTextHeight)
+	}
+	paletteMeta := paletteMetaText(256)
+	if metaRight := paletteMetaX(paletteMeta) + smallTextWidth(paletteMeta); metaRight > paletteRect.X+paletteRect.W {
+		t.Fatalf("compact palette metadata ends at %d outside palette column %d", metaRight, paletteRect.X+paletteRect.W)
+	}
+	lastSlider := pickerSliderRect(2)
+	if got, want := colorPickerInfoY(), lastSlider.Y+lastSlider.H+12; got != want {
+		t.Fatalf("compact color metadata Y = %d, want %d after RGB stack", got, want)
+	}
+}
+
+func TestPaletteSelectionRingSurroundsEntireSwatch(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	swatch := swatchRect(17)
+	ring := paletteSelectionRect(17)
+	if ring.X != swatch.X-1 || ring.Y != swatch.Y-1 ||
+		ring.X+ring.W != swatch.X+swatch.W+1 || ring.Y+ring.H != swatch.Y+swatch.H+1 {
+		t.Fatalf("selection ring %#v does not fully surround swatch %#v", ring, swatch)
+	}
+	if paletteSelectionThickness != 2 {
+		t.Fatalf("selection thickness = %d, want 2px", paletteSelectionThickness)
+	}
+}
+
+func TestEditorLayoutUsesAdditionalLargeWindowSpace(t *testing.T) {
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := newTestGame(t, 240, 160, 30, 20)
+	baseline := newNativeMusicLayout()
+
+	w, h := g.Layout(2560, 1440)
+	if w != 2560 || h != 1440 || screenWidth != w || screenHeight != h {
+		t.Fatalf("expanded layout = returned %dx%d globals %dx%d, want 2560x1440", w, h, screenWidth, screenHeight)
+	}
+	expanded := newNativeMusicLayout()
+	if expanded.Grid.W <= baseline.Grid.W || expanded.Grid.H <= baseline.Grid.H {
+		t.Fatalf("expanded piano roll = %dx%d, baseline %dx%d", expanded.Grid.W, expanded.Grid.H, baseline.Grid.W, baseline.Grid.H)
+	}
+	if expanded.Arrangement.W <= baseline.Arrangement.W {
+		t.Fatalf("expanded arrangement width = %d, baseline %d", expanded.Arrangement.W, baseline.Arrangement.W)
+	}
+	if sheetPanelRect.Y+sheetPanelRect.H > statusBarRect.Y {
+		t.Fatalf("expanded spritesheet bottom %d overlaps status bar %d", sheetPanelRect.Y+sheetPanelRect.H, statusBarRect.Y)
+	}
+}
+
+func TestEditorLayoutNeverFractionallyDownscalesWindow(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := &Game{}
+	for _, size := range [][2]int{{1031, 1080}, {1280, 900}, {1512, 982}} {
+		width, height := g.Layout(size[0], size[1])
+		if width != size[0] || height != size[1] {
+			t.Fatalf("Layout(%d, %d) = %d, %d; whole-frame scaling would blur text", size[0], size[1], width, height)
+		}
+	}
+}
+
+func TestMapOpensAtReadableScaleAndDoesNotRefitLongLevels(t *testing.T) {
+	g := newTestGame(t, 240, 160, 4095, 20)
+	g.prepareMapView()
+	if got := g.mapCam.Zoom; got != editor.MaxZoom {
+		t.Fatalf("map zoom = %g, want readable default %g", got, editor.MaxZoom)
+	}
+	if got := g.mapCam.TileSize(); got != 32 {
+		t.Fatalf("map tile = %gpx, want 32px", got)
+	}
+
+	// Re-entering the map editor must preserve a user's zoom instead of
+	// fitting all 4095 columns into the viewport.
+	g.mapCam.Zoom = 2
+	g.mapCam.ZoomY = 0
+	g.prepareMapView()
+	if got := g.mapCam.Zoom; got != 2 {
+		t.Fatalf("map re-entry changed zoom to %g, want 2", got)
+	}
+}
+
+func TestColorToolsSitUnderSpriteCanvas(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	for _, size := range [][2]int{{minimumScreenWidth, minimumScreenHeight}, {1541, 1058}, {defaultScreenWidth, defaultScreenHeight}} {
+		setEditorLayout(size[0], size[1])
+		panels := []editor.Rect{spriteCanvasPanelRect, spriteToolsPanelRect, spritePalettePanelRect, spriteFlagsPanelRect}
+		if spritePickerPanelRect.W > 0 {
+			panels = append(panels, spritePickerPanelRect)
+		}
+		for i, panel := range panels {
+			if !rectInsideIDE(panel, spriteRailRect) {
+				t.Fatalf("%dx%d panel %d escapes sprite rail: %#v in %#v", size[0], size[1], i, panel, spriteRailRect)
+			}
+			if i > 0 && rectsOverlapIDE(panels[i-1], panel) {
+				t.Fatalf("%dx%d sprite panels overlap: %#v and %#v", size[0], size[1], panels[i-1], panel)
+			}
+		}
+
+		for name, pair := range map[string][2]editor.Rect{
+			"canvas":  {canvasRect, spriteCanvasPanelRect},
+			"tools":   {spriteToolsRect, spriteToolsPanelRect},
+			"palette": {paletteRect, spritePalettePanelRect},
+			"flags":   {flagsRect, spriteFlagsPanelRect},
+		} {
+			if !rectInsideIDE(pair[0], pair[1]) {
+				t.Fatalf("%dx%d %s escapes its panel: %#v in %#v", size[0], size[1], name, pair[0], pair[1])
+			}
+		}
+		pickerParent := spritePickerPanelRect
+		if pickerParent.W == 0 {
+			pickerParent = spritePalettePanelRect
+			if rectsOverlapIDE(paletteRect, pickerRect) {
+				t.Fatalf("%dx%d compact palette overlaps color picker", size[0], size[1])
+			}
+		}
+		if !rectInsideIDE(pickerRect, pickerParent) {
+			t.Fatalf("%dx%d picker escapes its panel: %#v in %#v", size[0], size[1], pickerRect, pickerParent)
+		}
+		lastTool := spriteToolButtonRect(spriteToolButtonCount - 1)
+		if !rectInsideIDE(lastTool, spriteToolsRect) {
+			t.Fatalf("%dx%d last sprite tool escapes toolbar: %#v in %#v", size[0], size[1], lastTool, spriteToolsRect)
+		}
+		if sheetPanelRect.X < spriteRailRect.X+spriteRailRect.W || rectsOverlapIDE(sheetPanelRect, spriteRailRect) {
+			t.Fatalf("%dx%d spritesheet overlaps inspector rail", size[0], size[1])
+		}
+	}
+}
+
+func TestIntermediateHeightUsesCompactSpriteInspector(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(1541, 1058)
+	if spritePickerPanelRect.W != 0 {
+		t.Fatalf("1058px-high inspector kept standalone picker panel %#v; want compact palette composition", spritePickerPanelRect)
+	}
+	if pickerRect.H < 100 {
+		t.Fatalf("compact color picker height = %d, want usable content area", pickerRect.H)
+	}
+}
+
+func diff(a, b float64) float64 {
+	if a > b {
+		return a - b
+	}
+	return b - a
+}
+
+func TestScaledRunAbutsWithoutGaps(t *testing.T) {
+	origin := 10.0
+	scale := 15.0 / 8.0
+	prevEnd := 0
+	for i := 0; i < 8; i++ {
+		start, size := scaledRun(origin, i, scale)
+		if size < 1 {
+			t.Fatalf("run %d has size %d", i, size)
+		}
+		if i > 0 && start != prevEnd {
+			t.Fatalf("run %d starts at %d, want %d (gap or overlap)", i, start, prevEnd)
+		}
+		prevEnd = start + size
+	}
+}

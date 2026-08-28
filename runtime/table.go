@@ -1,0 +1,593 @@
+package runtime
+
+const (
+	defaultTableArrayCap = 16
+	defaultTableHashCap  = 8
+)
+
+func tableLayoutSize(arrayCap, hashCap uint16) (uint32, uint32, bool) {
+	if arrayCap > maxArrayCap || hashCap > maxHashCap {
+		return 0, 0, false
+	}
+	slots := uint32(arrayCap) + 2*uint32(hashCap)
+	return 8 + slots*uint32(valueBytes), slots, true
+}
+
+func tableDataSize(arrayCap, hashCap uint16) uint16 {
+	size, _, ok := tableLayoutSize(arrayCap, hashCap)
+	if !ok || size > 0xFFFF {
+		return 0
+	}
+	return uint16(size)
+}
+
+func (c *Context) NewTable() (Value, HeapError) {
+	return c.NewTableWithCaps(defaultTableArrayCap, defaultTableHashCap)
+}
+
+// NewTableWithCaps allocates a table sized for the caller's expected usage.
+// Generated code should provide compile-time capacity hints; the default
+// NewTable keeps hand-written callers from paying for the maximum table.
+func (c *Context) NewTableWithCaps(arrayCap, hashCap int) (Value, HeapError) {
+	if arrayCap < 0 || arrayCap > maxArrayCap || hashCap < 0 || hashCap > maxHashCap {
+		return NilVal(), HeapOOM
+	}
+	c.ensureHeap()
+	arrayCap16 := uint16(arrayCap)
+	hashCap16 := uint16(hashCap)
+	size := tableDataSize(arrayCap16, hashCap16)
+	ref, err := c.heap.allocObject(ObjTable, size)
+	if err != HeapOK {
+		return NilVal(), err
+	}
+	data, err := c.objectBytes(ref)
+	if err != HeapOK {
+		return NilVal(), err
+	}
+	writeU16(data, 0, 0)
+	writeU16(data, 2, arrayCap16)
+	writeU16(data, 4, 0)
+	writeU16(data, 6, hashCap16)
+	return Value{Kind: KindTable, Ref: ref}, HeapOK
+}
+
+func (c *Context) tableData(t Value) ([]byte, HeapError) {
+	if t.Kind != KindTable {
+		return nil, HeapCorruptRef
+	}
+	data, err := c.objectBytes(t.Ref)
+	if err != HeapOK {
+		return nil, err
+	}
+	if c.heap.handles[t.Ref].Kind() != ObjTable {
+		return nil, HeapCorruptRef
+	}
+	if len(data) < 8 {
+		return nil, HeapCorrupt
+	}
+	arrayCap := readU16(data, 2)
+	hashCap := readU16(data, 6)
+	need, _, ok := tableLayoutSize(arrayCap, hashCap)
+	if !ok || uint32(len(data)) < need || readU16(data, 0) > arrayCap || readU16(data, 4) > hashCap {
+		return nil, HeapCorrupt
+	}
+	return data, HeapOK
+}
+
+func arraySlotOff(i int) uint32 {
+	return 8 + uint32(i)*uint32(valueBytes)
+}
+
+func hashKeyOff(arrayCap uint16, i int) uint32 {
+	return 8 + uint32(arrayCap)*uint32(valueBytes) + uint32(i)*uint32(valueBytes)
+}
+
+func hashValOff(arrayCap, hashCap uint16, i int) uint32 {
+	return 8 + uint32(arrayCap)*uint32(valueBytes) + uint32(hashCap)*uint32(valueBytes) + uint32(i)*uint32(valueBytes)
+}
+
+func integerKey(v Value) (int, bool) {
+	if v.Kind != KindNumber {
+		return 0, false
+	}
+	if v.Num != v.Num.Flr() {
+		return 0, false
+	}
+	n := v.Num.Int()
+	return n, true
+}
+
+func isTombstone(key, val Value) bool {
+	return key.Kind == KindNil && val.Kind == KindBool && val.Num != 0
+}
+
+func (c *Context) TableLen(t Value) int {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return 0
+	}
+	arrayCap := int(readU16(data, 2))
+	n := 0
+	for i := 0; i < arrayCap; i++ {
+		// Value's Kind field is its first byte, so the border scan only needs
+		// one byte per slot instead of copying the full 12-byte Value. On the
+		// GBA's 16-bit EWRAM bus that is the difference between one read and
+		// three word reads per slot, and add()/deli()/#t all pay this scan.
+		if Kind(data[arraySlotOff(i)]) == KindNil {
+			break
+		}
+		n++
+	}
+	return n
+}
+
+func (c *Context) TableGetInt(t Value, i int) Value {
+	return c.TableGet(t, IntVal(i))
+}
+
+func (c *Context) TableGet(t, key Value) Value {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	arrayCap := int(readU16(data, 2))
+	if n, ok := integerKey(key); ok && n >= 1 && n <= arrayCap {
+		return readValue(data, arraySlotOff(n-1))
+	}
+	idx, found := c.hashFind(data, key)
+	if !found {
+		return NilVal()
+	}
+	hashCap := readU16(data, 6)
+	arrayCapU := readU16(data, 2)
+	return readValue(data, hashValOff(arrayCapU, hashCap, idx))
+}
+
+func (c *Context) TableSet(t, key, val Value) HeapError {
+	if key.Kind == KindNil {
+		return HeapOK
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return err
+	}
+	arrayCap := int(readU16(data, 2))
+	if n, ok := integerKey(key); ok && n >= 1 && n <= arrayCap {
+		writeValue(data, arraySlotOff(n-1), val)
+		return HeapOK
+	}
+	idx, found := c.hashFind(data, key)
+	arrayCapU := readU16(data, 2)
+	hashCap := readU16(data, 6)
+	hashLen := readU16(data, 4)
+	if found {
+		if val.Kind == KindNil {
+			writeValue(data, hashKeyOff(arrayCapU, idx), NilVal())
+			writeValue(data, hashValOff(arrayCapU, hashCap, idx), BoolVal(true))
+			if hashLen > 0 {
+				writeU16(data, 4, hashLen-1)
+			}
+			return HeapOK
+		}
+		writeValue(data, hashValOff(arrayCapU, hashCap, idx), val)
+		return HeapOK
+	}
+	if val.Kind == KindNil {
+		return HeapOK
+	}
+	slot, ok := c.hashInsertSlot(data, key)
+	if !ok {
+		newHash, ok := growCap(int(hashCap), int(hashCap)+1, maxHashCap)
+		if !ok {
+			return HeapOOM
+		}
+		if err := c.growTableWithRoots(t, arrayCap, newHash, key, val); err != HeapOK {
+			return err
+		}
+		data, err = c.tableData(t)
+		if err != HeapOK {
+			return err
+		}
+		slot, ok = c.hashInsertSlot(data, key)
+		if !ok {
+			return HeapOOM
+		}
+		arrayCapU = readU16(data, 2)
+		hashCap = readU16(data, 6)
+		hashLen = readU16(data, 4)
+	}
+	writeValue(data, hashKeyOff(arrayCapU, slot), key)
+	writeValue(data, hashValOff(arrayCapU, hashCap, slot), val)
+	writeU16(data, 4, hashLen+1)
+	return HeapOK
+}
+
+func (c *Context) hashFind(data []byte, key Value) (int, bool) {
+	hashCap := int(readU16(data, 6))
+	if hashCap == 0 {
+		return 0, false
+	}
+	arrayCap := readU16(data, 2)
+	start := int(c.hashValue(key) % uint32(hashCap))
+	i := start
+	for {
+		k := readValue(data, hashKeyOff(arrayCap, i))
+		if k.Kind == KindNil {
+			// Only a nil key needs the value slot (tombstone test), so the
+			// common occupied-probe case skips one 12-byte read.
+			v := readValue(data, hashValOff(arrayCap, readU16(data, 6), i))
+			if !isTombstone(k, v) {
+				return 0, false
+			}
+		} else if c.ValuesEqual(k, key) {
+			return i, true
+		}
+		i++
+		if i >= hashCap {
+			i = 0
+		}
+		if i == start {
+			return 0, false
+		}
+	}
+}
+
+func (c *Context) hashInsertSlot(data []byte, key Value) (int, bool) {
+	hashCap := int(readU16(data, 6))
+	if hashCap == 0 {
+		return 0, false
+	}
+	arrayCap := readU16(data, 2)
+	hashCapU := readU16(data, 6)
+	start := int(c.hashValue(key) % uint32(hashCap))
+	i := start
+	tomb := -1
+	for {
+		k := readValue(data, hashKeyOff(arrayCap, i))
+		if k.Kind == KindNil {
+			v := readValue(data, hashValOff(arrayCap, hashCapU, i))
+			if isTombstone(k, v) {
+				if tomb < 0 {
+					tomb = i
+				}
+			} else {
+				if tomb >= 0 {
+					return tomb, true
+				}
+				return i, true
+			}
+		} else if c.ValuesEqual(k, key) {
+			return i, true
+		}
+		i++
+		if i >= hashCap {
+			i = 0
+		}
+		if i == start {
+			if tomb >= 0 {
+				return tomb, true
+			}
+			return 0, false
+		}
+	}
+}
+
+func (c *Context) TableAdd(t, val, index Value) HeapError {
+	n := c.TableLen(t)
+	at := n + 1
+	if index.Kind == KindNumber {
+		i := index.Int()
+		if i >= 1 && i <= n+1 {
+			at = i
+		}
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return err
+	}
+	arrayCap := int(readU16(data, 2))
+	if at > arrayCap {
+		newArray, ok := growCap(arrayCap, at, maxArrayCap)
+		if !ok {
+			return HeapOOM
+		}
+		hashCap := int(readU16(data, 6))
+		if err := c.growTableWithRoots(t, newArray, hashCap, val); err != HeapOK {
+			return err
+		}
+		data, err = c.tableData(t)
+		if err != HeapOK {
+			return err
+		}
+		n = c.TableLen(t)
+	}
+	for i := n; i >= at; i-- {
+		writeValue(data, arraySlotOff(i), readValue(data, arraySlotOff(i-1)))
+	}
+	writeValue(data, arraySlotOff(at-1), val)
+	return HeapOK
+}
+
+func growCap(cur, need, max int) (int, bool) {
+	if need > max {
+		return 0, false
+	}
+	n := cur
+	if n < 1 {
+		n = 1
+	}
+	for n < need {
+		next := n * 2
+		if next > max || next <= n {
+			n = max
+			break
+		}
+		n = next
+	}
+	if n < need {
+		return 0, false
+	}
+	return n, true
+}
+
+// growTableWithRoots keeps values that have not yet been written into the
+// table alive while growTable allocates. The allocator may collect during
+// that allocation, and Go locals are not runtime GC roots by themselves.
+func (c *Context) growTableWithRoots(t Value, newArray, newHash int, values ...Value) HeapError {
+	rooted := 0
+	for _, v := range values {
+		if !c.PushLocal(v) {
+			c.PopLocals(rooted)
+			return HeapOOM
+		}
+		rooted++
+	}
+	err := c.growTable(t, newArray, newHash)
+	c.PopLocals(rooted)
+	return err
+}
+
+// growTable reallocates table t to newArray/newHash while keeping t.Ref.
+// Callers pass t by value, so a new handle would be invisible; the old
+// handle adopts the new storage and the temporary handle is freed.
+func (c *Context) growTable(t Value, newArray, newHash int) HeapError {
+	if newArray < 0 || newArray > maxArrayCap || newHash < 0 || newHash > maxHashCap {
+		return HeapOOM
+	}
+	old, err := c.tableData(t)
+	if err != HeapOK {
+		return err
+	}
+	oldArray := int(readU16(old, 2))
+	oldHash := int(readU16(old, 6))
+	if newArray < oldArray {
+		newArray = oldArray
+	}
+	if newHash < oldHash {
+		newHash = oldHash
+	}
+	if newArray == oldArray && newHash == oldHash {
+		return HeapOOM
+	}
+	if !c.PushLocal(t) {
+		return HeapOOM
+	}
+	size := tableDataSize(uint16(newArray), uint16(newHash))
+	freshRef, err := c.heap.allocObject(ObjTable, size)
+	if err != HeapOK {
+		c.PopLocals(1)
+		return err
+	}
+	old, err = c.tableData(t)
+	if err != HeapOK {
+		return c.dropGrowHandle(freshRef, err)
+	}
+	fresh, err := c.objectBytes(freshRef)
+	if err != HeapOK {
+		return c.dropGrowHandle(freshRef, err)
+	}
+	writeU16(fresh, 0, 0)
+	writeU16(fresh, 2, uint16(newArray))
+	writeU16(fresh, 4, 0)
+	writeU16(fresh, 6, uint16(newHash))
+	copyN := oldArray
+	if copyN > newArray {
+		copyN = newArray
+	}
+	for i := 0; i < copyN; i++ {
+		writeValue(fresh, arraySlotOff(i), readValue(old, arraySlotOff(i)))
+	}
+	hashLen := uint16(0)
+	oldArrayU := uint16(oldArray)
+	oldHashU := uint16(oldHash)
+	for i := 0; i < oldHash; i++ {
+		k := readValue(old, hashKeyOff(oldArrayU, i))
+		v := readValue(old, hashValOff(oldArrayU, oldHashU, i))
+		if k.Kind == KindNil {
+			continue
+		}
+		if n, ok := integerKey(k); ok && n >= 1 && n <= newArray {
+			writeValue(fresh, arraySlotOff(n-1), v)
+			continue
+		}
+		slot, ok := c.hashInsertSlot(fresh, k)
+		if !ok {
+			return c.dropGrowHandle(freshRef, HeapOOM)
+		}
+		freshArray := uint16(newArray)
+		freshHash := uint16(newHash)
+		writeValue(fresh, hashKeyOff(freshArray, slot), k)
+		writeValue(fresh, hashValOff(freshArray, freshHash, slot), v)
+		hashLen++
+	}
+	writeU16(fresh, 4, hashLen)
+	c.adoptTableStorage(t.Ref, freshRef)
+	c.PopLocals(1)
+	return HeapOK
+}
+
+func (c *Context) dropGrowHandle(freshRef Ref, err HeapError) HeapError {
+	c.abandonHandle(freshRef)
+	c.PopLocals(1)
+	return err
+}
+
+func (c *Context) abandonHandle(ref Ref) {
+	hdr := &c.heap.handles[ref]
+	hdr.SetState(HandleFree)
+	hdr.Size = 0
+	hdr.Offset = uint32(c.heap.freeHead)
+	c.heap.freeHead = ref
+}
+
+func (c *Context) adoptTableStorage(keep, drop Ref) {
+	c.heap.handles[keep].Offset = c.heap.handles[drop].Offset
+	c.heap.handles[keep].Size = c.heap.handles[drop].Size
+	c.abandonHandle(drop)
+}
+
+func (c *Context) TableDel(t, val Value) Value {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	arrayCap := int(readU16(data, 2))
+	n := c.TableLen(t)
+	for i := 0; i < n; i++ {
+		got := readValue(data, arraySlotOff(i))
+		if c.ValuesEqual(got, val) {
+			for j := i; j < n-1; j++ {
+				writeValue(data, arraySlotOff(j), readValue(data, arraySlotOff(j+1)))
+			}
+			if n-1 < arrayCap {
+				writeValue(data, arraySlotOff(n-1), NilVal())
+			}
+			return got
+		}
+	}
+	hashCap := int(readU16(data, 6))
+	arrayCapU := readU16(data, 2)
+	hashCapU := readU16(data, 6)
+	hashLen := readU16(data, 4)
+	for i := 0; i < hashCap; i++ {
+		k := readValue(data, hashKeyOff(arrayCapU, i))
+		v := readValue(data, hashValOff(arrayCapU, hashCapU, i))
+		if k.Kind == KindNil {
+			continue
+		}
+		if c.ValuesEqual(v, val) {
+			writeValue(data, hashKeyOff(arrayCapU, i), NilVal())
+			writeValue(data, hashValOff(arrayCapU, hashCapU, i), BoolVal(true))
+			if hashLen > 0 {
+				writeU16(data, 4, hashLen-1)
+			}
+			return v
+		}
+	}
+	return NilVal()
+}
+
+func (c *Context) TableDeli(t, index Value) Value {
+	n := c.TableLen(t)
+	at := n
+	if index.Kind == KindNumber {
+		at = index.Int()
+	}
+	if at < 1 || at > n {
+		return NilVal()
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	got := readValue(data, arraySlotOff(at-1))
+	for i := at - 1; i < n-1; i++ {
+		writeValue(data, arraySlotOff(i), readValue(data, arraySlotOff(i+1)))
+	}
+	writeValue(data, arraySlotOff(n-1), NilVal())
+	return got
+}
+
+func (c *Context) TableCount(t, val Value) int {
+	if val.Kind == KindNil {
+		return c.TableLen(t)
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return 0
+	}
+	n := 0
+	arrayCap := int(readU16(data, 2))
+	for i := 0; i < arrayCap; i++ {
+		got := readValue(data, arraySlotOff(i))
+		if got.Kind != KindNil && c.ValuesEqual(got, val) {
+			n++
+		}
+	}
+	hashCap := int(readU16(data, 6))
+	arrayCapU := readU16(data, 2)
+	hashCapU := readU16(data, 6)
+	for i := 0; i < hashCap; i++ {
+		k := readValue(data, hashKeyOff(arrayCapU, i))
+		v := readValue(data, hashValOff(arrayCapU, hashCapU, i))
+		if k.Kind == KindNil {
+			continue
+		}
+		if c.ValuesEqual(v, val) {
+			n++
+		}
+	}
+	return n
+}
+
+func (c *Context) TableSlotCount(t Value) int {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return 0
+	}
+	return int(readU16(data, 2)) + int(readU16(data, 6))
+}
+
+func (c *Context) TableKeyAt(t Value, idx int) Value {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	arrayCap := int(readU16(data, 2))
+	if idx < 0 {
+		return NilVal()
+	}
+	if idx < arrayCap {
+		v := readValue(data, arraySlotOff(idx))
+		if v.Kind == KindNil {
+			return NilVal()
+		}
+		return IntVal(idx + 1)
+	}
+	hidx := idx - arrayCap
+	hashCap := int(readU16(data, 6))
+	if hidx < 0 || hidx >= hashCap {
+		return NilVal()
+	}
+	return readValue(data, hashKeyOff(readU16(data, 2), hidx))
+}
+
+func (c *Context) TableValueAt(t Value, idx int) Value {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	arrayCap := int(readU16(data, 2))
+	if idx < 0 {
+		return NilVal()
+	}
+	if idx < arrayCap {
+		return readValue(data, arraySlotOff(idx))
+	}
+	hidx := idx - arrayCap
+	hashCap := int(readU16(data, 6))
+	if hidx < 0 || hidx >= hashCap {
+		return NilVal()
+	}
+	return readValue(data, hashValOff(readU16(data, 2), readU16(data, 6), hidx))
+}

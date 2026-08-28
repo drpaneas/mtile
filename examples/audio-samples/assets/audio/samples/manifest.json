@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "samples": [
+    {
+      "id": 0,
+      "name": "impact",
+      "source": "impact.wav",
+      "targetRate": 16384,
+      "gain": 256,
+      "priority": 96,
+      "normalize": true,
+      "trimSilence": true
+    },
+    {
+      "id": 1,
+      "name": "engine-loop",
+      "source": "engine.wav",
+      "targetRate": 16384,
+      "gain": 112,
+      "priority": 48,
+      "loop": {
+        "start": 0,
+        "end": 4096
+      }
+    }
+  ]
+}

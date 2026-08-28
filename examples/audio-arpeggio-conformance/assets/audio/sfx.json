@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "sfx": [
+    {
+      "id": 0,
+      "name": "fast-reference",
+      "speed": 18,
+      "steps": [
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 40, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 43, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 48, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "slow-reference",
+      "speed": 18,
+      "steps": [
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 40, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 43, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 48, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "fast-groups",
+      "speed": 18,
+      "steps": [
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 40, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 43, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 48, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 24, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 28, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 31, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"},
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-fast"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "slow-groups",
+      "speed": 18,
+      "steps": [
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 40, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 43, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 48, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 24, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 28, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 31, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"},
+        {"pitch": 36, "waveform": "square", "volume": 5, "effect": "arpeggio-slow"}
+      ]
+    }
+  ]
+}

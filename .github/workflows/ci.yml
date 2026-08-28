@@ -1,0 +1,160 @@
+---
+name: CI
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # Ebitengine (used by the editor) needs X11/GL/ALSA headers on Linux.
+      # https://ebitengine.org/en/documents/install.html
+      - name: Install Ebitengine build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libc6-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
+            libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
+            libasound2-dev pkg-config xvfb
+
+      - name: Test CLI module (Linux, headless)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a go test ./...
+
+      - name: Test CLI module (macOS)
+        if: runner.os == 'macOS'
+        run: go test ./...
+
+      - name: Test runtime module
+        run: go test ./...
+        working-directory: runtime
+
+      # One-second fuzz smoke for the strict PSG-only asset/runtime boundaries.
+      - name: Audio v2 fuzz smoke (Linux)
+        if: runner.os == 'Linux'
+        run: scripts/audio/fuzz_smoke.sh
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Ebitengine build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libc6-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
+            libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev \
+            libasound2-dev pkg-config
+
+      - name: Check gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed on:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi
+
+      - name: Check audio conformance harness syntax
+        run: |
+          sh -n scripts/audio/*.sh
+          python3 -m py_compile scripts/audio/*.py
+          python3 -m unittest discover -s scripts/audio -p '*_test.py'
+
+      - name: go vet (CLI module)
+        run: go vet ./...
+
+      - name: go vet (runtime module)
+        run: go vet ./...
+        working-directory: runtime
+
+      - name: golangci-lint (CLI module)
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+
+      - name: golangci-lint (runtime module)
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: runtime
+
+  rom:
+    name: ROM build (TinyGo)
+    runs-on: ubuntu-latest
+    env:
+      TINYGO_VERSION: "0.41.1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install TinyGo
+        run: |
+          wget -q \
+            "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo_${TINYGO_VERSION}_amd64.deb"
+          sudo dpkg -i "tinygo_${TINYGO_VERSION}_amd64.deb"
+          tinygo version
+
+      # Full pipeline smoke: Lua + strict four-channel assets -> generated Go
+      # -> TinyGo -> .gba. Legacy PICO and PCM fixtures are intentionally not
+      # release inputs for Audio v2.
+      - name: Build examples
+        run: |
+          go run ./cmd/mtile build -o /tmp/hello.gba examples/hello/
+          go run ./cmd/mtile build -o /tmp/color.gba examples/color/
+          go run ./cmd/mtile build \
+            -o /tmp/audio-gb-melody.gba examples/audio-gb-melody/
+          go run ./cmd/mtile build \
+            -o /tmp/audio-gb-song.gba examples/audio-gb-song/
+          go run ./cmd/mtile build \
+            -o /tmp/audio-gb-editor.gba examples/audio-gb-editor/
+
+      # Fresh-project path a new user hits first.
+      - name: Build a new project
+        run: |
+          go run ./cmd/mtile new /tmp/ci-game
+          go run ./cmd/mtile build /tmp/ci-game
+
+      # Build-pipeline tests that skip without TinyGo on PATH.
+      - name: Test build pipeline with TinyGo
+        run: go test ./internal/build/ ./cmd/mtile/
+
+      # The active release gates link only CH1–CH4. Direct Sound/FIFO/PCM ROMs
+      # remain archived research and are deliberately absent here.
+      - name: Game Boy PSG ROMs (checked allocations)
+        run: make smoke-gba audioref-gba audiopsg-gba audiopsgcoexist-gba
+        working-directory: runtime
+
+      # Compile generated graphics-only and all-audio packages with the same
+      # -gc=none/-opt=2 policy and reject nonzero TinyGo allocation reports.
+      - name: Generated package allocation gates
+        run: >-
+          go test ./internal/transpiler/
+          -run 'TestGenerated(Game|AudioGame)CompilesWithTinyGo' -count=1

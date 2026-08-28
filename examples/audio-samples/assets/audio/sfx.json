@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "sfx": [
+    {
+      "id": 0,
+      "name": "mixed-bass",
+      "speed": 16,
+      "steps": [
+        {"pitch": 24, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 24, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 31, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 31, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 29, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 29, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 31, "waveform": "triangle", "volume": 3, "effect": "none"},
+        {"pitch": 31, "waveform": "triangle", "volume": 2, "effect": "fade-out"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "mixed-lead",
+      "speed": 16,
+      "steps": [
+        {"pitch": 48, "waveform": "square", "volume": 2, "effect": "none"},
+        {"pitch": 52, "waveform": "square", "volume": 2, "effect": "none"},
+        {"pitch": 55, "waveform": "square", "volume": 3, "effect": "none"},
+        {"pitch": 52, "waveform": "square", "volume": 2, "effect": "none"},
+        {"pitch": 50, "waveform": "square", "volume": 2, "effect": "none"},
+        {"pitch": 53, "waveform": "square", "volume": 2, "effect": "none"},
+        {"pitch": 57, "waveform": "square", "volume": 3, "effect": "vibrato"},
+        {"pitch": 53, "waveform": "square", "volume": 2, "effect": "fade-out"}
+      ]
+    }
+  ]
+}

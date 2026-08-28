@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "patterns": [
+    {
+      "id": 0,
+      "name": "section-01",
+      "channels": [
+        1,
+        2,
+        0,
+        -1
+      ],
+      "next": -1
+    }
+  ]
+}

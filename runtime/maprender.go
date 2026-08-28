@@ -1,0 +1,174 @@
+package runtime
+
+// Map draws map cells as 8x8 sprite cells from the native uint16 map and
+// 8bpp sheet. layer is a flag bitmask: 0 draws every sprite, a nonzero
+// value draws a cell only when all bits in layer are present in its flags.
+// Sprite 0 is the empty map cell. cellsW or cellsH <= 0
+// means "cover the current clip" (30x20 cells on the default 240x160 clip).
+//
+// Executes from IWRAM: a full-screen call walks 600 cells, and each cell
+// pays bounds checks plus two software divides (id % cols, id / cols)
+// before any pixel moves. Fetching that walk through the 16-bit ROM bus
+// measurably dominated dense-map frames in benchspike.
+//
+//go:noinline
+//go:section .iwram
+func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	if c == nil || c.cart == nil {
+		return
+	}
+	c.ensureDrawState()
+	if cellsW <= 0 {
+		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
+		// When the first cell starts before the clip left edge (camera not
+		// aligned to an 8-pixel boundary, or a non-zero cellX/screenX), the
+		// default cellsW may not cover the full clip width. Add one extra
+		// cell so the right edge is fully painted instead of leaving a
+		// stale column.
+		if screenX+cellX*8-c.camX < c.clipX0 {
+			cellsW++
+		}
+	}
+	if cellsH <= 0 {
+		cellsH = (c.clipY1 - c.clipY0 + 7) / 8
+		if screenY+cellY*8-c.camY < c.clipY0 {
+			cellsH++
+		}
+	}
+	if cellsW <= 0 || cellsH <= 0 {
+		return
+	}
+	mapW, mapH := c.cart.MapW, c.cart.MapH
+	mapData := c.cart.Map
+	mapStreaming := c.cart.MapStreaming
+	spriteN := c.cart.SpriteN
+	flags := c.cart.Flags
+	var mask byte
+	if layer > 0 && layer <= 255 {
+		mask = byte(layer)
+	}
+
+	sheet := c.cart.Sheet
+	sheetW := c.cart.SheetW
+	sheetH := c.cart.SheetH
+	cols := c.cart.SpriteCols
+	if cols <= 0 {
+		return
+	}
+	// Hoist the id -> cell divide out of the 600-cell loop: one reciprocal
+	// multiply per cell instead of two software divides (see spriteCellRecip).
+	colsRecip := spriteCellRecip(cols)
+	fb := c.framebuffer[:]
+	pal := &c.drawPal
+	transp := &c.transp
+	identity := c.drawPalIdentity
+	key0 := c.transpKey0
+	clipX0, clipY0, clipX1, clipY1 := c.clipX0, c.clipY0, c.clipX1, c.clipY1
+	camX, camY := c.camX, c.camY
+	baseXOrigin := screenX + cellX*8 - camX
+	canPack := identity && key0 && sheetW&3 == 0 && baseXOrigin&3 == 0
+
+	for my := 0; my < cellsH; my++ {
+		mapY := cellY + my
+		if mapY < 0 || mapY >= mapH {
+			continue
+		}
+		baseY := screenY + (cellY+my)*8 - camY
+		if baseY+8 <= clipY0 || baseY >= clipY1 {
+			continue
+		}
+		rowY0 := 0
+		rowY1 := 8
+		if baseY < clipY0 {
+			rowY0 = clipY0 - baseY
+		}
+		if baseY+8 > clipY1 {
+			rowY1 = clipY1 - baseY
+		}
+		mapRowBase := mapY * mapW
+		streamChunkX := -1
+		streamSlot := -1
+
+		for mx := 0; mx < cellsW; mx++ {
+			mapX := cellX + mx
+			if mapX < 0 || mapX >= mapW {
+				continue
+			}
+			baseX := baseXOrigin + mx*8
+			if baseX+8 <= clipX0 || baseX >= clipX1 {
+				continue
+			}
+			var id uint16
+			if mapStreaming {
+				// A visible row crosses at most two 32-cell chunks. Resolve
+				// each chunk once, then read its cache storage directly. Calling
+				// mapStreamingGet here used to scan/touch the cache and probe the
+				// edit overlay for every one of ~600 visible cells, making a
+				// streamed sparse map about twice as expensive as the same EWRAM
+				// map. Loaded chunks already include edits, and Mset updates a
+				// resident chunk, so the direct value is authoritative.
+				chunkX := mapX / MapChunkWidth
+				if chunkX != streamChunkX {
+					streamChunkX = chunkX
+					streamSlot = c.mapChunkSlot(chunkX, mapY/MapChunkHeight)
+					if streamSlot < 0 {
+						streamSlot = c.loadMapChunk(chunkX, mapY/MapChunkHeight)
+					} else {
+						c.touchMapChunk(streamSlot)
+					}
+				}
+				if streamSlot < 0 {
+					continue
+				}
+				localX := mapX % MapChunkWidth
+				localY := mapY % MapChunkHeight
+				id = mapData[streamSlot*MapChunkCells+localY*MapChunkWidth+localX]
+			} else {
+				id = mapData[mapRowBase+mapX]
+			}
+			if id == 0 || int(id) >= spriteN {
+				continue
+			}
+			if mask != 0 && flags[id]&mask != mask {
+				continue
+			}
+			srcX0, srcY0 := 0, 0
+			blitSheet := sheet
+			blitSheetW := sheetW
+			if c.cart.SheetReadOnly {
+				if int(id) >= len(c.cart.SheetIndex) {
+					continue
+				}
+				slot := c.cart.SheetIndex[id]
+				if slot == 0 {
+					if key0 {
+						continue
+					}
+					blitSheet = emptySpriteCell[:]
+					blitSheetW = 8
+					srcY0 = 0
+				} else {
+					blitSheetW = 8
+					srcY0 = (int(slot) - 1) * 8
+				}
+			} else {
+				srcCellX, srcCellY := spriteCellSplit(int(id), cols, colsRecip)
+				srcX0 = srcCellX * 8
+				srcY0 = srcCellY * 8
+				if srcX0+8 > sheetW || srcY0+8 > sheetH {
+					continue
+				}
+			}
+			colX0, colX1 := 0, 8
+			if baseX < clipX0 {
+				colX0 = clipX0 - baseX
+			}
+			if baseX+8 > clipX1 {
+				colX1 = clipX1 - baseX
+			}
+			packed := canPack && colX0 == 0 && colX1 == 8
+			blitUnflippedCell8(blitSheet, fb, pal, transp, blitSheetW, srcX0, srcY0, baseX, baseY,
+				rowY0, rowY1, colX0, colX1, identity, key0, packed)
+		}
+	}
+}

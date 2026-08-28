@@ -1,0 +1,235 @@
+{
+  "version": 2,
+  "sounds": [
+    {
+      "id": 0,
+      "name": "Pulse + sweep",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 0
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    },
+    {
+      "id": 1,
+      "name": "Wave",
+      "kind": "ch3",
+      "route": "both",
+      "wave": {
+        "samples": [
+          8,
+          10,
+          12,
+          14,
+          15,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0,
+          2,
+          4,
+          6,
+          8,
+          10,
+          12,
+          14,
+          15,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0,
+          2,
+          4,
+          6
+        ],
+        "level": 100,
+        "startBank": 0,
+        "length": 0,
+        "useLength": false
+      }
+    },
+    {
+      "id": 2,
+      "name": "Pulse",
+      "kind": "ch2",
+      "route": "both",
+      "pulse": {
+        "duty": 75,
+        "length": 8,
+        "useLength": true,
+        "envelope": {
+          "initial": 8,
+          "direction": "down",
+          "pace": 7
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Kick",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 7,
+        "shift": 7,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 15,
+          "direction": "down",
+          "pace": 2
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Tom 1",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 5,
+        "shift": 6,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 14,
+          "direction": "down",
+          "pace": 2
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Closed hat",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 7,
+        "divisor": 1,
+        "shift": 2,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 10,
+          "direction": "down",
+          "pace": 1
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Snare",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 3,
+        "shift": 4,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 14,
+          "direction": "down",
+          "pace": 3
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Click",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 7,
+        "divisor": 1,
+        "shift": 8,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 11,
+          "direction": "down",
+          "pace": 1
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "FX",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 1,
+        "shift": 3,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 15,
+          "direction": "down",
+          "pace": 6
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Open hat",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 7,
+        "divisor": 2,
+        "shift": 3,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 4
+        }
+      }
+    },
+    {
+      "id": 10,
+      "name": "Pulse + sweep",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    }
+  ]
+}
