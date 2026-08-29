@@ -1,4 +1,26 @@
 {
   "version": 2,
-  "sounds": null
+  "sounds": [
+    {
+      "id": 0,
+      "name": "Pulse + sweep",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 0
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    }
+  ]
 }

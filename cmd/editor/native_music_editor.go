@@ -120,6 +120,25 @@ func nativeSnapBoundaries(start, end int, grid performance.Quantize, swing int) 
 	return boundaries
 }
 
+// nativePianoGridLineStyle keeps the time hierarchy legible at a glance:
+// subdivisions are quiet, beats are stronger, and a bar owns a distinct
+// two-pixel boundary. The piano roll currently pages one bar at a time, so
+// both edges of the viewport are bar boundaries.
+func nativePianoGridLineStyle(column, barSteps, stepsPerBeat int) (color.RGBA, int) {
+	barSteps = max(1, barSteps)
+	stepsPerBeat = max(1, stepsPerBeat)
+	if column%barSteps == 0 {
+		return color.RGBA{R: 164, G: 158, B: 196, A: 255}, 2
+	}
+	if column%stepsPerBeat == 0 {
+		return colorBorder, 1
+	}
+	if column%max(1, stepsPerBeat/2) == 0 {
+		return color.RGBA{R: 85, G: 89, B: 143, A: 255}, 1
+	}
+	return color.RGBA{R: 63, G: 67, B: 119, A: 255}, 1
+}
+
 func (g *Game) nativePartView() (bars, beats, unit, barSteps, partSteps, viewStart int) {
 	if g.nativeSFXMode {
 		steps := editor.NativeStepsPerPart
@@ -2361,20 +2380,15 @@ func (g *Game) drawNativeWorkbench(screen *ebiten.Image, layout nativeMusicLayou
 
 func (g *Game) drawNativePianoGrid(screen *ebiten.Image, grid editor.Rect) {
 	fillRect(screen, grid, color.RGBA{R: 24, G: 27, B: 66, A: 255})
-	strokeRect(screen, grid, colorBorder)
 	_, beats, unit, barSteps, _, viewStart := g.nativePartView()
 	viewEnd := viewStart + barSteps
 	stepsPerBeat := max(1, (editor.NativePartTicks/4*4/unit)/editor.NativeTicksPerStep)
 	rows := nativePianoRows(grid, g.nativeChannel)
 	for column := 0; column <= barSteps; column++ {
 		x := grid.X + column*grid.W/barSteps
-		line := color.RGBA{R: 63, G: 67, B: 119, A: 255}
-		if column%stepsPerBeat == 0 {
-			line = colorBorder
-		} else if column%max(1, stepsPerBeat/2) == 0 {
-			line = color.RGBA{R: 85, G: 89, B: 143, A: 255}
-		}
-		drawLine(screen, x, grid.Y, x, grid.Y+grid.H, line)
+		line, width := nativePianoGridLineStyle(column, barSteps, stepsPerBeat)
+		lineX := min(grid.X+grid.W-width, max(grid.X, x-width/2))
+		fillRect(screen, editor.Rect{X: lineX, Y: grid.Y, W: width, H: grid.H}, line)
 	}
 	viewStartTick := viewStart * editor.NativeTicksPerStep
 	viewEndTick := viewEnd * editor.NativeTicksPerStep
@@ -2388,6 +2402,9 @@ func (g *Game) drawNativePianoGrid(screen *ebiten.Image, grid editor.Rect) {
 		y := grid.Y + row*grid.H/rows
 		drawLine(screen, grid.X, y, grid.X+grid.W, y, color.RGBA{R: 53, G: 57, B: 105, A: 255})
 	}
+	// Paint the outer frame last so the stronger inner bar edge reads as a
+	// deliberate measure boundary instead of replacing the panel border.
+	strokeRect(screen, grid, colorBorder)
 	if g.nativeChannel == 3 {
 		labels := [8]string{"PAD 1", "PAD 2", "PAD 3", "PAD 4", "PAD 5", "PAD 6", "PAD 7", "PAD 8"}
 		if clip, ok := g.nativeCurrentClip(); ok {

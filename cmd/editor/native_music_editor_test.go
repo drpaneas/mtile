@@ -357,6 +357,27 @@ func TestNativePianoShowsMoreOctavesAsWorkspaceGrows(t *testing.T) {
 	}
 }
 
+func TestNativePianoGridMakesBarBoundariesStrongerThanBeats(t *testing.T) {
+	const (
+		barSteps     = 16
+		stepsPerBeat = 4
+	)
+	barColor, barWidth := nativePianoGridLineStyle(0, barSteps, stepsPerBeat)
+	endColor, endWidth := nativePianoGridLineStyle(barSteps, barSteps, stepsPerBeat)
+	beatColor, beatWidth := nativePianoGridLineStyle(stepsPerBeat, barSteps, stepsPerBeat)
+	_, subdivisionWidth := nativePianoGridLineStyle(1, barSteps, stepsPerBeat)
+
+	if barWidth != 2 || endWidth != barWidth {
+		t.Fatalf("bar boundary widths = %d/%d, want 2px at both edges", barWidth, endWidth)
+	}
+	if beatWidth != 1 || subdivisionWidth != 1 || barWidth <= beatWidth {
+		t.Fatalf("grid hierarchy widths bar=%d beat=%d subdivision=%d", barWidth, beatWidth, subdivisionWidth)
+	}
+	if barColor == beatColor || endColor != barColor {
+		t.Fatalf("bar boundary colors are not distinct and consistent: start=%v end=%v beat=%v", barColor, endColor, beatColor)
+	}
+}
+
 func TestNativePitchNavigationUsesRealChannelRange(t *testing.T) {
 	g := newNativeMusicTestGame(t)
 	layout := newNativeMusicLayout()
