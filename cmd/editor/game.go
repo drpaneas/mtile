@@ -17,7 +17,6 @@ import (
 	"github.com/drpaneas/mtile/internal/midicontrol"
 	"github.com/drpaneas/mtile/internal/performance"
 	"github.com/hajimehoshi/ebiten/v2"
-	ebitaudio "github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
@@ -30,6 +29,12 @@ const (
 )
 
 const navDebounce = 150 * time.Millisecond
+
+// Retained rendering handles the truly static editor. Keep only a very slow
+// safety refresh for state changed by an uncommon external source that did not
+// explicitly call requestRender; all normal input and asynchronous paths wake
+// the UI immediately.
+const idleRedrawTicks = 5 * 60
 
 // Game is the editor's ebiten.Game. It owns all UI state; internal/editor's
 // Model owns the actual asset data and its persistence/validation rules.
@@ -52,7 +57,15 @@ type Game struct {
 	spriteShapeEndY   int
 	spriteShapeFilled bool
 
-	hoverX, hoverY int // absolute sheet pixel under the cursor, -1 if none
+	hoverX, hoverY                     int // absolute sheet pixel under the cursor, -1 if none
+	spriteCanvasZoomLevel              int
+	spriteCanvasPanX, spriteCanvasPanY float64
+	spriteCanvasLastMouseX             int
+	spriteCanvasLastMouseY             int
+	spriteCanvasPanning                bool
+	sheetSelectionDragging             bool
+	sheetSelectionAnchorCol            int
+	sheetSelectionAnchorRow            int
 
 	preview *editor.Preview
 	dirty   bool // set by any edit this Update(); triggers a debounced undo push + preview refresh
@@ -68,69 +81,83 @@ type Game struct {
 
 	undo undoStack
 
-	previewPlayer *ebitaudio.Player
+	previewPlayer *editorAudioPlayer
 
 	// Audio v2 presents composition, hardware controls, and song order in one
 	// workspace. No PCM/FIFO state is exposed in this editor.
-	nativeChannel            int
-	nativeSequence           int
-	nativeBar                int
-	nativeSelectedStep       int
-	nativeOctave             int
-	nativeNoteLength         int
-	nativeNoteLengthTicks    int
-	nativeGridQuantize       performance.Quantize
-	nativeInstrument         [4]int
-	nativeAdvanced           bool
-	nativeSFXMode            bool
-	nativeSFXID              int
-	nativeNoteDrag           bool
-	nativeNoteDragMode       int
-	nativeNoteDragDirty      bool
-	nativeNoteDragStep       int
-	nativeNoteDragRow        int
-	nativeNoteDragAnchorStep int
-	nativeNoteDragAnchorRow  int
-	nativeNoteDragTick       int
-	nativeNoteDragAnchorTick int
-	nativeNoteDragEdits      int
-	nativeRangeActive        bool
-	nativeRangeStartTick     int
-	nativeRangeEndTick       int
-	nativeRangeLowNote       int
-	nativeRangeHighNote      int
-	nativeNoteClipboard      []assetsync.NativeEventAsset
-	nativeNoteClipboardKind  int
-	nativeNameTarget         int
-	nativeNameDraft          string
-	nativeClipboardID        int
-	nativeClipboardSet       bool
-	nativePreview            *editor.NativeMusicPreview
-	nativeAudition           bool
-	nativeMuteMask           uint8
-	nativeSoloMask           uint8
-	nativePreviewOffset      int
-	nativeFocus              int
-	nativeStream             *performance.Stream
-	nativeSession            *performance.Session
-	nativeLivePlayer         *ebitaudio.Player
-	nativeClickStream        *performance.ClickStream
-	nativeClickPlayer        *ebitaudio.Player
-	nativeConductor          *performance.Conductor
-	nativeVoiceMode          performance.VoiceMode
-	nativeQuantize           performance.Quantize
-	nativeSwing              int
-	nativeOverdub            bool
-	nativeMetronome          bool
-	nativeCountIn            int
-	nativeKeyboardHeld       [12]bool
-	nativeTakeCount          int
-	nativeTakeSelection      int
-	nativeMIDI               *midicontrol.Manager
-	nativeMIDICommands       chan midicontrol.Command
-	nativeMIDIName           string
-	nativeMIDIParam          string
-	nativeMIDIValue          string
+	nativeChannel               int
+	nativeSequence              int
+	nativeBar                   int
+	nativeSelectedStep          int
+	nativeOctave                int
+	nativeNoteLength            int
+	nativeNoteLengthTicks       int
+	nativeGridQuantize          performance.Quantize
+	nativeInstrument            [4]int
+	nativePerformanceInstrument [4]int
+	nativePresetMenuOpen        bool
+	nativePresetMenuCursor      int
+	nativePresetMenuScroll      int
+	nativeAdvanced              bool
+	nativeSFXMode               bool
+	nativeSFXID                 int
+	nativeNoteDrag              bool
+	nativeNoteDragMode          int
+	nativeNoteDragDirty         bool
+	nativeNoteDragStep          int
+	nativeNoteDragRow           int
+	nativeNoteDragAnchorStep    int
+	nativeNoteDragAnchorRow     int
+	nativeNoteDragTick          int
+	nativeNoteDragAnchorTick    int
+	nativeNoteDragEdits         int
+	nativeRangeActive           bool
+	nativeRangeStartTick        int
+	nativeRangeEndTick          int
+	nativeRangeLowNote          int
+	nativeRangeHighNote         int
+	nativeNoteClipboard         []assetsync.NativeEventAsset
+	nativeNoteClipboardKind     int
+	nativeNameTarget            int
+	nativeNameDraft             string
+	nativeClipboardID           int
+	nativeClipboardSet          bool
+	nativePreview               *editor.NativeMusicPreview
+	nativeAudition              bool
+	nativeMuteMask              uint8
+	nativeSoloMask              uint8
+	nativePreviewOffset         int
+	nativeFocus                 int
+	nativeStream                *performance.Stream
+	nativeSession               *performance.Session
+	nativeLivePlayer            *editorAudioPlayer
+	nativeClickStream           *performance.ClickStream
+	nativeClickPlayer           *editorAudioPlayer
+	nativeConductor             *performance.Conductor
+	nativeCaptureClock          performance.TrackerClock
+	nativeCaptureSequence       int
+	nativeCaptureTick           int
+	nativeCaptureVisible        bool
+	nativeCaptureEvents         []performance.RawEvent
+	nativeCaptureNotes          []performance.TrackerNote
+	nativeCaptureEventCount     int
+	nativeCaptureDropped        uint32
+	nativeCaptureQuantize       performance.Quantize
+	nativeCaptureSwing          int
+	nativeVoiceMode             performance.VoiceMode
+	nativeQuantize              performance.Quantize
+	nativeSwing                 int
+	nativeOverdub               bool
+	nativeMetronome             bool
+	nativeCountIn               int
+	nativeKeyboardHeld          [12]bool
+	nativeTakeCount             int
+	nativeTakeSelection         int
+	nativeMIDI                  *midicontrol.Manager
+	nativeMIDICommands          chan midicontrol.Command
+	nativeMIDIName              string
+	nativeMIDIParam             string
+	nativeMIDIValue             string
 
 	// Source documents are separate from the asset undo stack. Each Lua file
 	// owns independent text history, selection, cursor, scroll, and diagnostics;
@@ -202,7 +229,7 @@ type Game struct {
 	playHistory                *ebiten.Image
 	playLCDUniforms            map[string]any
 	playPCM                    *emulator.PCMStream
-	playAudio                  *ebitaudio.Player
+	playAudio                  *editorAudioPlayer
 	playStart                  time.Time
 	playCount                  int
 	playFPS                    float64
@@ -210,12 +237,29 @@ type Game struct {
 	playTelemetrySeq           uint32
 	playCPULoad                [60]float64
 	playCPUSamples             int
+	playAudioActive            bool
 	playAudioBaselineReady     bool
 	playAudioBaselineUnderruns uint64
 	playAudioBaselineOverruns  uint64
 
 	statusMsg string
 	lastNav   time.Time
+
+	// Ebitengine's retained offscreen is redrawn on demand. At a large Retina
+	// window, rebuilding every vector, glyph and checker cell at 60 Hz consumes
+	// a full CPU core and keeps the GPU permanently busy even when the editor is
+	// untouched. Input gets a short redraw tail; genuinely moving surfaces keep
+	// their full 60 Hz feedback; otherwise a low-rate safety refresh observes
+	// asynchronous build/MIDI status without burning battery.
+	rendered           bool
+	renderRequested    bool
+	renderInputTail    int
+	renderIdleTicks    int
+	renderDynamicTicks int
+	renderCursorX      int
+	renderCursorY      int
+	renderCursorKnown  bool
+	renderKeys         []ebiten.Key
 }
 
 func newGame(dir string) (*Game, error) {
@@ -235,22 +279,23 @@ func newGame(dir string) (*Game, error) {
 		nativeOctave:  4,
 		// Keep the beginner default at 1/32 while the editor itself supports
 		// precise 1/64 notes through the NOTE LENGTH control.
-		nativeNoteLength:         2,
-		nativeNoteLengthTicks:    editor.NativeTicksPerStep * 2,
-		nativeGridQuantize:       performance.QuantizeSixtyFourth,
-		nativeInstrument:         [4]int{-1, -1, -1, -1},
-		nativeSFXID:              -1,
-		nativeNoteDragStep:       -1,
-		nativeNoteDragRow:        -1,
-		nativeNoteDragAnchorStep: -1,
-		nativeNoteDragAnchorRow:  -1,
-		nativeNoteDragTick:       -1,
-		nativeNoteDragAnchorTick: -1,
-		nativeClipboardID:        -1,
-		nativeQuantize:           performance.QuantizeSixteenth,
-		nativeSwing:              50,
-		nativeTakeCount:          len(m.NativeAudio.Music.Takes),
-		sheetCam:                 editor.NewCamera(),
+		nativeNoteLength:            2,
+		nativeNoteLengthTicks:       editor.NativeTicksPerStep * 2,
+		nativeGridQuantize:          performance.QuantizeSixtyFourth,
+		nativeInstrument:            [4]int{-1, -1, -1, -1},
+		nativePerformanceInstrument: [4]int{-2, -2, -2, -2},
+		nativeSFXID:                 -1,
+		nativeNoteDragStep:          -1,
+		nativeNoteDragRow:           -1,
+		nativeNoteDragAnchorStep:    -1,
+		nativeNoteDragAnchorRow:     -1,
+		nativeNoteDragTick:          -1,
+		nativeNoteDragAnchorTick:    -1,
+		nativeClipboardID:           -1,
+		nativeQuantize:              performance.QuantizeSixteenth,
+		nativeSwing:                 50,
+		nativeTakeCount:             len(m.NativeAudio.Music.Takes),
+		sheetCam:                    editor.NewCamera(),
 		// Maps open at a readable 32px-per-tile scale. In particular, do not
 		// fit an entire long level into the window: that can make every tile
 		// less than one pixel wide.
@@ -442,6 +487,7 @@ func (g *Game) persist() {
 
 func (g *Game) Update() error {
 	g.dirty = false
+	g.updateRenderDemand()
 	g.updateTheme()
 	if g.preferencesOpen {
 		g.updatePreferences()
@@ -503,6 +549,11 @@ func (g *Game) handleUndoRedoKeys() {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	if !ebiten.IsScreenClearedEveryFrame() && g.rendered && !g.renderRequested {
+		return
+	}
+	g.rendered = true
+	g.renderRequested = false
 	screen.Fill(colorBackground)
 	g.drawThemeBackdrop(screen)
 	switch g.mode {
@@ -532,7 +583,7 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 	fillRect(screen, editor.Rect{X: 0, Y: statusBarRect.Y, W: statusBarRect.W, H: 1}, separator)
 	mode := g.mode.label()
 	lastSprite := max(0, g.spriteN()-1)
-	msg := fmt.Sprintf("[%s]  sprite:%d/%d  tool:%s  (P/E/F/L/R/C: tools, Shift+H/V: flip, Cmd/Ctrl+S: save, Cmd/Ctrl+Z: undo)", mode, g.currentSprite, lastSprite, g.spriteTool.String())
+	msg := fmt.Sprintf("[%s]  sprite:%d/%d  tool:%s  (M/P/E/F/L/R/C: tools, Shift+H/V: flip, Cmd/Ctrl+S: save, Cmd/Ctrl+Z: undo)", mode, g.currentSprite, lastSprite, g.spriteTool.String())
 	if g.mode == modeMusic {
 		sections := 0
 		if song, ok := g.model.NativeSong(); ok {
@@ -592,9 +643,102 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	width := max(1, outsideWidth)
 	height := max(1, outsideHeight)
 	if setEditorLayout(width, height) && g != nil && g.model != nil {
+		g.requestRender()
 		g.fitSheetCamera()
 		mapW, mapH := g.mapBounds()
 		g.mapCam.Clamp(mapW, mapH, mapCanvasRect())
 	}
 	return width, height
+}
+
+func (g *Game) requestRender() {
+	if g != nil {
+		g.renderRequested = true
+	}
+}
+
+// updateRenderDemand separates Ebitengine's 60 Hz Update cadence from costly
+// full-window rasterization. Audio/MIDI callbacks and the emulator do not use
+// this gate, so reducing idle rendering cannot add audio latency.
+func (g *Game) updateRenderDemand() {
+	if g == nil {
+		return
+	}
+	mx, my := ebiten.CursorPosition()
+	g.renderKeys = inpututil.AppendPressedKeys(g.renderKeys[:0])
+	input := !g.renderCursorKnown || mx != g.renderCursorX || my != g.renderCursorY ||
+		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) ||
+		ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) ||
+		ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) ||
+		len(g.renderKeys) != 0
+	g.renderCursorX, g.renderCursorY, g.renderCursorKnown = mx, my, true
+	if wheelX, wheelY := ebiten.Wheel(); wheelX != 0 || wheelY != 0 {
+		input = true
+	}
+	if input {
+		// Keep one frame after release so tactile buttons and hover treatments
+		// cannot remain painted in their pressed state.
+		g.renderInputTail = 2
+	} else if g.renderInputTail > 0 {
+		g.renderInputTail--
+	}
+
+	if input || g.renderInputTail > 0 {
+		g.renderIdleTicks = 0
+		g.renderDynamicTicks = 0
+		g.requestRender()
+		return
+	}
+	if active, everyTick := g.dynamicSurfaceActivity(); active {
+		g.renderIdleTicks = 0
+		g.renderDynamicTicks++
+		stride := 2 // 30 FPS is smooth for meters, playheads and REC notes.
+		if everyTick {
+			stride = 1 // The embedded GBA display must remain at 59.73 FPS.
+		}
+		if g.renderDynamicTicks >= stride {
+			g.renderDynamicTicks = 0
+			g.requestRender()
+		}
+		return
+	}
+	g.renderDynamicTicks = 0
+	g.renderIdleTicks++
+	if g.renderIdleTicks >= idleRedrawTicks {
+		g.renderIdleTicks = 0
+		g.requestRender()
+	}
+}
+
+func (g *Game) dynamicSurfaceActivity() (active, everyTick bool) {
+	active = g.theme.buildPulse > 0 || g.theme.inkPulse > 0 || g.theme.mapPulse > 0
+	if g.mode == modeMusic {
+		if g.nativeMusicPreviewPlaying() || g.nativeCaptureVisible || g.nativeNoteDrag {
+			return true, false
+		}
+		if g.nativeConductor != nil && g.nativeConductor.Active() {
+			return true, false
+		}
+		if g.nativeSession != nil {
+			snapshot := g.nativeSession.Snapshot()
+			if snapshot.Recording {
+				return true, false
+			}
+			for _, allocated := range snapshot.Allocation.Active {
+				if allocated {
+					return true, false
+				}
+			}
+		}
+	}
+	if g.mode == modeCode {
+		g.runMu.Lock()
+		busy := g.runBusy
+		g.runMu.Unlock()
+		// A running, unpaused mGBA preview publishes a new frame at 59.73 Hz.
+		// Keep its visual surface smooth while allowing a stopped editor to idle.
+		playing := g.playStop != nil && !g.playPaused
+		return active || busy || playing, playing
+	}
+	return active, false
 }

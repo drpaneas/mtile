@@ -30,7 +30,9 @@ gba_stop(channel)
 - The sound kind must match that channel.
 - CH1–CH3 use a MIDI-style note accepted by the channel's frequency range;
   CH3 validation and period selection account for 32- versus 64-sample waves.
-- CH4 ignores pitch and triggers the selected noise configuration.
+- Fixed CH4 sounds trigger their saved noise configuration. Table-driven
+  presets use the note as the base for hUGEDriver-compatible relative
+  polynomial rows.
 - Duration zero sustains; otherwise it is 1–65535 ticks at 96 PPQN.
 - Timed direct notes use the current part's effective tempo, or 120 BPM without
   a song.

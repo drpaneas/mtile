@@ -37,6 +37,12 @@ const (
 	nativeNoteDragSelect
 )
 
+const (
+	nativePresetMenuHeaderHeight = 30
+	nativePresetMenuRowHeight    = 27
+	nativePresetMenuFooterHeight = 24
+)
+
 var (
 	nativeChannelColors = [4]color.RGBA{
 		{R: 255, G: 195, B: 32, A: 255},
@@ -126,9 +132,15 @@ func (g *Game) nativePartView() (bars, beats, unit, barSteps, partSteps, viewSta
 	if !ok {
 		return 1, 4, 4, editor.NativeStepsPerPart, editor.NativeStepsPerPart, 0
 	}
-	bars, beats, unit, _ = editor.NativePartMeter(part)
+	var ticksPerBar int
+	bars, beats, unit, ticksPerBar = editor.NativePartMeter(part)
 	barSteps = g.model.NativePartBarStepCount(g.nativeSequence)
 	partSteps = g.model.NativePartStepCount(g.nativeSequence)
+	if g.nativeCaptureVisible && g.nativeCaptureSequence == g.nativeSequence {
+		captureBars := g.nativeCaptureTick/max(1, ticksPerBar) + 1
+		bars = max(bars, captureBars)
+		partSteps = max(partSteps, bars*barSteps)
+	}
 	bar := min(max(g.nativeBar, 0), bars-1)
 	return bars, beats, unit, barSteps, partSteps, bar * barSteps
 }
@@ -173,13 +185,7 @@ func (g *Game) nativeSetNote(step, note, duration, soundID int) error {
 
 func (g *Game) nativeSetNoteTicks(startTick, note, durationTicks, soundID int) error {
 	if g.nativeSFXMode {
-		if g.nativeChannel == 3 {
-			return g.model.SetNativeSFXNoiseHitTicks(g.nativeSFXID, startTick, note-36, durationTicks)
-		}
 		return g.model.SetNativeSFXNoteTicks(g.nativeSFXID, startTick, note, durationTicks, soundID)
-	}
-	if g.nativeChannel == 3 {
-		return g.model.SetNativeNoiseHitTicks(g.nativeSequence, startTick, note-36, durationTicks)
 	}
 	return g.model.SetNativeNoteTicksWithSound(g.nativeSequence, g.nativeChannel, startTick, note, durationTicks, soundID)
 }
@@ -283,6 +289,30 @@ func nativeInspectorControlRect(layout nativeMusicLayout, channel, index int) ed
 	return layout.InspectorControlRect(channel, index)
 }
 
+func nativePresetMenuVisibleCount(layout nativeMusicLayout, total int) int {
+	available := layout.Inspector.Y + layout.Inspector.H - layout.InstrumentPreset.Y - layout.InstrumentPreset.H - 12
+	rows := (available - nativePresetMenuHeaderHeight - nativePresetMenuFooterHeight) / nativePresetMenuRowHeight
+	return min(total, max(4, min(12, rows)))
+}
+
+func nativePresetMenuRect(layout nativeMusicLayout, total int) editor.Rect {
+	visible := nativePresetMenuVisibleCount(layout, total)
+	width := max(360, layout.Inspector.W)
+	x := max(layout.Main.X+8, layout.Inspector.X+layout.Inspector.W-width)
+	return editor.Rect{
+		X: x, Y: layout.InstrumentPreset.Y + layout.InstrumentPreset.H + 4, W: width,
+		H: nativePresetMenuHeaderHeight + visible*nativePresetMenuRowHeight + nativePresetMenuFooterHeight,
+	}
+}
+
+func nativePresetMenuItemRect(layout nativeMusicLayout, total, visibleIndex int) editor.Rect {
+	menu := nativePresetMenuRect(layout, total)
+	return editor.Rect{
+		X: menu.X + 6, Y: menu.Y + nativePresetMenuHeaderHeight + visibleIndex*nativePresetMenuRowHeight,
+		W: menu.W - 12, H: nativePresetMenuRowHeight - 2,
+	}
+}
+
 func (g *Game) nativeInspectorControlIndices() []int {
 	if g.nativeAdvanced {
 		count := nativeInspectorControlCount(g.nativeChannel)
@@ -370,6 +400,10 @@ func (g *Game) markNativeMusicEdit(message string) {
 
 func (g *Game) updateMusicMode() {
 	g.clampNativeMusicSelection()
+	// Selecting an existing note can select its instrument without going
+	// through an edit action. Keep the armed Launchkey bank identical to the
+	// note/preset currently shown by the editor before dispatching MIDI.
+	g.syncNativePerformanceSounds()
 	g.clampNativeOctave(newNativeMusicLayout())
 	g.updateNativeMusicPreviewLifecycle()
 	g.updateNativeMIDI()
@@ -436,6 +470,27 @@ func (g *Game) updateNativeNameEdit() bool {
 func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	shift := ebiten.IsKeyPressed(ebiten.KeyShift)
+	if g.nativePresetMenuOpen {
+		presets := editor.NativeSoundPresets(g.nativeChannel)
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			g.nativePresetMenuOpen = false
+			return
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
+			g.nativePresetMenuCursor = max(0, g.nativePresetMenuCursor-1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
+			g.nativePresetMenuCursor = min(len(presets)-1, g.nativePresetMenuCursor+1)
+		}
+		visible := nativePresetMenuVisibleCount(newNativeMusicLayout(), len(presets))
+		g.nativePresetMenuScroll = min(g.nativePresetMenuScroll, g.nativePresetMenuCursor)
+		g.nativePresetMenuScroll = max(g.nativePresetMenuScroll, g.nativePresetMenuCursor-visible+1)
+		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && len(presets) != 0 {
+			g.selectNativeSoundPreset(g.nativePresetMenuCursor)
+			g.nativePresetMenuOpen = false
+		}
+		return
+	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) && g.nativeRangeActive {
 		g.nativeRangeActive = false
 		g.statusMsg = "Note selection cleared"
@@ -691,6 +746,45 @@ func (g *Game) nativeKeyboardNote() (int, bool) {
 func (g *Game) updateNativeMusicMouse(layout nativeMusicLayout) {
 	leftPressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	leftJustPressed := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
+	if g.nativePresetMenuOpen {
+		presets := editor.NativeSoundPresets(g.nativeChannel)
+		visible := nativePresetMenuVisibleCount(layout, len(presets))
+		maxScroll := max(0, len(presets)-visible)
+		if _, wheelY := ebiten.Wheel(); wheelY != 0 {
+			g.nativePresetMenuScroll = min(maxScroll, max(0, g.nativePresetMenuScroll-int(wheelY)))
+			g.nativePresetMenuCursor = min(len(presets)-1, max(g.nativePresetMenuScroll, g.nativePresetMenuCursor))
+		}
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			g.nativePresetMenuOpen = false
+			return
+		}
+		mx, my := ebiten.CursorPosition()
+		for row := 0; row < visible; row++ {
+			index := g.nativePresetMenuScroll + row
+			if index < len(presets) && rectContains(nativePresetMenuItemRect(layout, len(presets), row), mx, my) {
+				g.nativePresetMenuCursor = index
+				break
+			}
+		}
+		if !leftJustPressed {
+			return
+		}
+		if rectContains(layout.InstrumentPreset, mx, my) {
+			g.nativePresetMenuOpen = false
+			return
+		}
+		for row := 0; row < visible; row++ {
+			index := g.nativePresetMenuScroll + row
+			if index < len(presets) && rectContains(nativePresetMenuItemRect(layout, len(presets), row), mx, my) {
+				g.nativePresetMenuCursor = index
+				g.selectNativeSoundPreset(index)
+				g.nativePresetMenuOpen = false
+				return
+			}
+		}
+		g.nativePresetMenuOpen = false
+		return
+	}
 	if g.nativeNoteDrag && (!leftPressed || leftJustPressed) {
 		g.finishNativeNoteDrag()
 	}
@@ -1010,6 +1104,17 @@ func (g *Game) updateNativeCreateMouse(layout nativeMusicLayout, mx, my int) {
 		g.duplicateNativeInstrument()
 		return
 	}
+	if rectContains(layout.InstrumentPreset, mx, my) {
+		presets := editor.NativeSoundPresets(g.nativeChannel)
+		g.nativePresetMenuOpen = len(presets) != 0
+		g.nativePresetMenuCursor = 0
+		if sound, ok := g.model.NativeSoundByID(g.nativeInstrument[g.nativeChannel]); ok {
+			g.nativePresetMenuCursor = max(0, editor.NativeSoundPresetIndex(g.nativeChannel, sound))
+		}
+		visible := nativePresetMenuVisibleCount(layout, len(presets))
+		g.nativePresetMenuScroll = min(max(0, len(presets)-visible), max(0, g.nativePresetMenuCursor-visible/2))
+		return
+	}
 	if rectContains(layout.Advanced, mx, my) {
 		g.nativeAdvanced = !g.nativeAdvanced
 		g.statusMsg = "Sound controls: " + map[bool]string{false: "simple", true: "advanced"}[g.nativeAdvanced]
@@ -1298,6 +1403,46 @@ func (g *Game) duplicateNativeInstrument() {
 		}
 	}
 	g.markNativeMusicEdit("Independent instrument copy created")
+}
+
+func (g *Game) selectNativeSoundPreset(index int) {
+	presets := editor.NativeSoundPresets(g.nativeChannel)
+	if index < 0 || index >= len(presets) {
+		g.statusMsg = "Sound preset is unavailable"
+		return
+	}
+	id, created, err := g.model.EnsureNativeSoundPreset(g.nativeChannel, index)
+	if err != nil {
+		g.statusMsg = err.Error()
+		return
+	}
+	changed := created
+	note := 60
+	if g.nativeChannel == 2 {
+		// GB Studio's C5 test note writes the unshifted hUGE period to CH3,
+		// which is one physical octave below CH1/CH2. Mtile labels physical
+		// pitch consistently, so MIDI 48 is the matching audition note.
+		note = 48
+	}
+	if event, _, ok := g.nativeEventAtStep(g.nativeSelectedStep); ok {
+		note = event.Note
+		if event.SoundID != id {
+			if err := g.nativeAssignNoteSound(g.nativeSelectedStep, id); err != nil {
+				g.statusMsg = err.Error()
+				return
+			}
+			changed = true
+		}
+	}
+	g.nativeInstrument[g.nativeChannel] = id
+	message := fmt.Sprintf("CH%d preset: %s", g.nativeChannel+1, presets[index].Name)
+	if changed {
+		g.markNativeMusicEdit(message)
+	} else {
+		g.refreshNativePerformanceSounds()
+		g.statusMsg = message
+	}
+	g.playNativeSoundPreview(id, note)
 }
 
 func (g *Game) beginNativeNoteDrag(layout nativeMusicLayout, mx, my int) {
@@ -1850,7 +1995,7 @@ func (g *Game) nudgeNativeSoundControl(control, delta int) {
 			case 1:
 				sound.Noise.Divisor = min(max(sound.Noise.Divisor+delta, 0), 7)
 			case 2:
-				sound.Noise.Shift = min(max(sound.Noise.Shift+delta, 0), 13)
+				sound.Noise.Shift = min(max(sound.Noise.Shift+delta, 0), 15)
 			case 3:
 				sound.Noise.Envelope.Initial = min(max(sound.Noise.Envelope.Initial+delta, 0), 15)
 			case 4:
@@ -2209,6 +2354,9 @@ func (g *Game) drawNativeWorkbench(screen *ebiten.Image, layout nativeMusicLayou
 	g.drawNativePianoGrid(screen, layout.Grid)
 	g.drawNativeInspector(screen, layout)
 	g.drawNativeArrangement(screen, layout)
+	if g.nativePresetMenuOpen {
+		g.drawNativePresetMenu(screen, layout)
+	}
 }
 
 func (g *Game) drawNativePianoGrid(screen *ebiten.Image, grid editor.Rect) {
@@ -2241,8 +2389,20 @@ func (g *Game) drawNativePianoGrid(screen *ebiten.Image, grid editor.Rect) {
 		drawLine(screen, grid.X, y, grid.X+grid.W, y, color.RGBA{R: 53, G: 57, B: 105, A: 255})
 	}
 	if g.nativeChannel == 3 {
-		labels := [...]string{"KICK", "SNARE", "CL HAT", "OP HAT", "TOM 1", "TOM 2", "CLICK", "FX"}
+		labels := [8]string{"PAD 1", "PAD 2", "PAD 3", "PAD 4", "PAD 5", "PAD 6", "PAD 7", "PAD 8"}
+		if clip, ok := g.nativeCurrentClip(); ok {
+			for _, event := range clip.Events {
+				row := event.Note - 36
+				if row < 0 || row >= len(labels) {
+					continue
+				}
+				if sound, exists := g.model.NativeSoundByID(event.SoundID); exists {
+					labels[row] = sound.Name
+				}
+			}
+		}
 		for row, label := range labels {
+			label = truncateTextToWidth(label, 48, uiSmallFace)
 			drawSmallText(screen, label, grid.X-50, grid.Y+row*grid.H/8+(grid.H/8-uiSmallTextHeight)/2, colorDim)
 		}
 	}
@@ -2330,6 +2490,37 @@ func (g *Game) drawNativePianoGrid(screen *ebiten.Image, grid editor.Rect) {
 			}
 		}
 	}
+	// The recorder owns an unfinished take until STOP. Paint its materialized
+	// notes directly over the piano roll so performance feedback is immediate,
+	// without mutating the project or creating undo entries every frame.
+	if g.nativeCaptureVisible && g.nativeCaptureSequence == g.nativeSequence {
+		viewStartTick := viewStart * editor.NativeTicksPerStep
+		viewEndTick := viewEnd * editor.NativeTicksPerStep
+		barTicks := barSteps * editor.NativeTicksPerStep
+		for _, note := range g.nativeCaptureNotes {
+			if int(note.Channel) != g.nativeChannel+1 {
+				continue
+			}
+			noteEnd := note.StartTick + note.DurationTicks
+			if noteEnd <= viewStartTick || note.StartTick >= viewEndTick {
+				continue
+			}
+			row := 0
+			if g.nativeChannel == 3 {
+				row = min(7, max(0, int(note.Note)-36))
+			} else {
+				row = (g.nativeOctave+3)*12 - 1 - int(note.Note)
+				if row < 0 || row >= rows {
+					continue
+				}
+			}
+			startX := grid.X + (max(note.StartTick, viewStartTick)-viewStartTick)*grid.W/barTicks
+			finishX := grid.X + (min(noteEnd, viewEndTick)-viewStartTick)*grid.W/barTicks
+			r := editor.Rect{X: startX + 3, Y: grid.Y + row*grid.H/rows + 3, W: max(4, finishX-startX-6), H: max(4, grid.H/rows-6)}
+			fillRect(screen, r, nativeChannelColors[g.nativeChannel])
+			strokeRect(screen, r, colorHighlight)
+		}
+	}
 	if step, ok := g.nativePreviewStep(); ok {
 		if step >= viewStart && step < viewEnd {
 			x := grid.X + (step-viewStart)*grid.W/barSteps
@@ -2382,13 +2573,14 @@ func (g *Game) drawNativeInspector(screen *ebiten.Image, layout nativeMusicLayou
 	drawTextCentered(screen, truncateUIText(instrumentName, layout.InstrumentName.W-12), layout.InstrumentName, colorText)
 	drawNativeButton(screen, layout.InstrumentNext, ">", false, nativeChannelColors[g.nativeChannel])
 	drawNativeButton(screen, layout.InstrumentDuplicate, "DUP", false, nativeChannelColors[g.nativeChannel])
+	drawNativeButton(screen, layout.InstrumentPreset, "PRESET LIBRARY  v", g.nativePresetMenuOpen, nativeChannelColors[g.nativeChannel])
 	sound, ok := g.nativeSoundAtStep(g.nativeSelectedStep)
 	if !ok {
 		sound, ok = g.model.NativeSoundByID(g.nativeInstrument[g.nativeChannel])
 	}
 	if !ok {
-		drawSmallText(screen, "Place a note to create", layout.Inspector.X+18, layout.Inspector.Y+104, colorDim)
-		drawSmallText(screen, "this channel's sound.", layout.Inspector.X+18, layout.Inspector.Y+124, colorDim)
+		drawSmallText(screen, "Choose a preset or place a note", layout.Inspector.X+18, layout.Inspector.Y+148, colorDim)
+		drawSmallText(screen, "to create this channel's sound.", layout.Inspector.X+18, layout.Inspector.Y+168, colorDim)
 		return
 	}
 	labels := make([]string, nativeInspectorControlCount(g.nativeChannel))
@@ -2435,6 +2627,38 @@ func (g *Game) drawNativeInspector(screen *ebiten.Image, layout nativeMusicLayou
 			fillRect(screen, editor.Rect{X: x + 1, Y: waveRect.Y + waveRect.H - h, W: max(1, waveRect.W/len(sound.Wave.Samples)-2), H: h}, nativeChannelColors[2])
 		}
 	}
+}
+
+func (g *Game) drawNativePresetMenu(screen *ebiten.Image, layout nativeMusicLayout) {
+	presets := editor.NativeSoundPresets(g.nativeChannel)
+	if len(presets) == 0 {
+		return
+	}
+	visible := nativePresetMenuVisibleCount(layout, len(presets))
+	maxScroll := max(0, len(presets)-visible)
+	g.nativePresetMenuScroll = min(maxScroll, max(0, g.nativePresetMenuScroll))
+	menu := nativePresetMenuRect(layout, len(presets))
+	fillRect(screen, menu, color.RGBA{R: 17, G: 19, B: 48, A: 255})
+	strokeRect(screen, menu, nativeChannelColors[g.nativeChannel])
+	drawSmallText(screen, fmt.Sprintf("CH%d  PRESET LIBRARY", g.nativeChannel+1), menu.X+10, menu.Y+9, nativeChannelColors[g.nativeChannel])
+	for row := 0; row < visible; row++ {
+		index := g.nativePresetMenuScroll + row
+		if index >= len(presets) {
+			break
+		}
+		item := nativePresetMenuItemRect(layout, len(presets), row)
+		if index == g.nativePresetMenuCursor {
+			fillRect(screen, item, color.RGBA{R: 48, G: 51, B: 98, A: 255})
+			strokeRect(screen, item, nativeChannelColors[g.nativeChannel])
+		} else if row%2 != 0 {
+			fillRect(screen, item, color.RGBA{R: 24, G: 27, B: 63, A: 255})
+		}
+		label := fmt.Sprintf("%02d  %s", index+1, presets[index].Name)
+		drawSmallText(screen, truncateTextToWidth(label, item.W-18, uiSmallFace), item.X+9, item.Y+(item.H-uiSmallTextHeight)/2, colorText)
+	}
+	footerY := menu.Y + menu.H - nativePresetMenuFooterHeight
+	footer := fmt.Sprintf("%d-%d / %d   WHEEL OR ARROWS + ENTER", g.nativePresetMenuScroll+1, min(len(presets), g.nativePresetMenuScroll+visible), len(presets))
+	drawSmallText(screen, truncateTextToWidth(footer, menu.W-20, uiSmallFace), menu.X+10, footerY+6, colorDim)
 }
 
 func (g *Game) drawNativeArrangement(screen *ebiten.Image, layout nativeMusicLayout) {

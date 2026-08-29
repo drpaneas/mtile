@@ -105,7 +105,7 @@ func TestNativeAudioStaticNoteValidationUsesCH3WaveDimension(t *testing.T) {
 		t.Fatalf("64-sample CH3 rejected its low hardware note: %v", err)
 	}
 	options.NativeAudio.Sounds.Sounds[1].Wave.Samples = wave[:32]
-	if _, err := Transpile("wave32.lua", `function _init() gba_note(3, 12, 1) end`, options); err == nil || !strings.Contains(err.Error(), "hardware range") {
+	if _, err := Transpile("wave32.lua", `function _init() gba_note(3, 23, 1) end`, options); err == nil || !strings.Contains(err.Error(), "hardware range") {
 		t.Fatalf("32-sample CH3 low-note error = %v, want hardware range", err)
 	}
 }

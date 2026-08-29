@@ -68,7 +68,10 @@ type BuiltinSpec struct {
 
 // Builtins is the Lua-to-runtime mapping table. Functions that are iterator
 // syntax (all/pairs) are included so callers can validate them consistently;
-// their ordinary expression form is rejected by the generator.
+// their ordinary expression form is rejected by the generator. Renderer
+// compatibility is an independent, exhaustive contract in
+// BuiltinRendererCompatibility; adding a builtin requires classifying it there
+// and documenting its Mode 0/Mode 4 semantics in docs/render-modes.md.
 var Builtins = map[string]BuiltinSpec{
 	"cls": {"ClsV", 0, 1}, "pset": {"PsetV", 2, 3}, "pget": {"PgetV", 2, 2},
 	"line": {"LineV", 4, 5}, "rect": {"RectV", 4, 5}, "rectfill": {"RectfillV", 4, 5},

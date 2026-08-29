@@ -1,14 +1,29 @@
-// Package hostclipboard provides a dependency-free bridge to the desktop
-// clipboard. The editor keeps an internal fallback when the host command is
-// unavailable (for example on a minimal Linux installation).
+// Package hostclipboard bridges the editor to the desktop clipboard. Text
+// operations keep their lightweight host-command path, while images use a
+// native cross-platform clipboard implementation that normalizes them to PNG.
 package hostclipboard
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
+
+	systemclipboard "golang.design/x/clipboard"
+)
+
+// ErrNoImage reports the ordinary case where the clipboard is available but
+// does not currently contain a raster image.
+var ErrNoImage = errors.New("system clipboard does not contain an image")
+
+var (
+	imageClipboardInitOnce sync.Once
+	imageClipboardInitErr  error
 )
 
 func Read() (string, error) {
@@ -30,6 +45,32 @@ func Write(value string) error {
 		}
 	}
 	return errors.New("system clipboard is unavailable")
+}
+
+// ReadImagePNG reads the desktop clipboard's image representation. The
+// cross-platform bridge normalizes native clipboard formats (including the
+// TIFF representation commonly used on macOS) to PNG bytes.
+func ReadImagePNG() ([]byte, error) {
+	imageClipboardInitOnce.Do(func() {
+		imageClipboardInitErr = systemclipboard.Init()
+	})
+	if imageClipboardInitErr != nil {
+		return nil, fmt.Errorf("initialize image clipboard: %w", imageClipboardInitErr)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+	data, err := systemclipboard.Read(ctx, systemclipboard.FmtImage)
+	if errors.Is(err, systemclipboard.ErrNoData) {
+		return nil, ErrNoImage
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read image clipboard: %w", err)
+	}
+	if len(data) == 0 {
+		return nil, ErrNoImage
+	}
+	return data, nil
 }
 
 func readCommands() [][]string {

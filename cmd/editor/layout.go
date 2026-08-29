@@ -51,12 +51,23 @@ const (
 	spriteWorkspaceGap     = 12
 	spritePanelPadding     = 12
 	spriteSectionGap       = 10
-	spriteFlagsPanelHeight = 88
-	spritePickerMinHeight  = 132
 	spritePanelTitleInsetX = 14
 	spritePanelTitleInsetY = 10
-	sheetPanelLabelHeight  = 44
+	spritePanelContentGap  = 8
+	spriteButtonHeight     = 30
+	spriteCanvasFooterGap  = 8
 )
+
+// Every section starts its content after the measured heading line and the
+// same breathing room. Panel heights use this offset too, so a larger text
+// preference moves the controls without clipping them or shrinking the gap.
+func spritePanelContentOffset() int {
+	return spritePanelTitleInsetY + uiTextHeight + spritePanelContentGap
+}
+
+func spritePanelContentY(panel editor.Rect) int {
+	return panel.Y + spritePanelContentOffset()
+}
 
 var (
 	editorTabsRect         editor.Rect
@@ -105,23 +116,30 @@ func setEditorLayout(width, height int) bool {
 	// Choose the rail topology from the actual space required by the desktop
 	// stack. A raw 1000px breakpoint let intermediate windows create a nearly
 	// zero-height CHANGE COLOR panel even though the compact composition fits.
-	desktopRailMinHeight := (336 + 74) + spriteSectionGap + 70 + spriteSectionGap +
-		(paletteSwatchColumns*16 + 44) + spriteSectionGap + spriteFlagsPanelHeight +
-		spriteSectionGap + spritePickerMinHeight
-	compactSpriteLayout := spriteRailRect.H < desktopRailMinHeight
-	canvasSize := 336
+	contentOffset := spritePanelContentOffset()
+	canvasFooterHeight := spriteCanvasFooterGap + uiSmallTextHeight + spritePanelPadding
+	buttonPanelHeight := contentOffset + spriteButtonHeight + spritePanelPadding
+	pickerMinHeight := contentOffset + 2*pickerSliderRowHeight + pickerSliderHeight + spritePanelPadding
+	desktopChromeHeight := contentOffset + canvasFooterHeight + 4*spriteSectionGap +
+		2*buttonPanelHeight + (contentOffset + paletteSwatchColumns*16 + spritePanelPadding) + pickerMinHeight
+	compactSpriteLayout := spriteRailRect.H < 320+desktopChromeHeight
+	// Preserve a large desktop canvas at every text size. Use a slightly
+	// smaller whole-tile canvas before falling back to the compact topology.
+	canvasSize := min(336, (spriteRailRect.H-desktopChromeHeight)/8*8)
 	paletteSwatchWidth = 21
 	paletteSwatchHeight = 16
 	if compactSpriteLayout {
-		canvasSize = 240
 		paletteSwatchWidth = 12
 		paletteSwatchHeight = 12
+		compactChromeHeight := contentOffset + canvasFooterHeight + 3*spriteSectionGap +
+			2*buttonPanelHeight + contentOffset + paletteSwatchColumns*paletteSwatchHeight + spritePanelPadding
+		canvasSize = max(8, min(240, (spriteRailRect.H-compactChromeHeight)/8*8))
 	}
 
-	spriteCanvasPanelRect = editor.Rect{X: spriteRailRect.X, Y: spriteRailRect.Y, W: spriteRailRect.W, H: canvasSize + 74}
+	spriteCanvasPanelRect = editor.Rect{X: spriteRailRect.X, Y: spriteRailRect.Y, W: spriteRailRect.W, H: contentOffset + canvasSize + canvasFooterHeight}
 	canvasRect = editor.Rect{
 		X: spriteCanvasPanelRect.X + spritePanelPadding,
-		Y: spriteCanvasPanelRect.Y + 38,
+		Y: spritePanelContentY(spriteCanvasPanelRect),
 		W: canvasSize,
 		H: canvasSize,
 	}
@@ -131,13 +149,13 @@ func setEditorLayout(width, height int) bool {
 		X: spriteRailRect.X,
 		Y: spriteCanvasPanelRect.Y + spriteCanvasPanelRect.H + spriteSectionGap,
 		W: spriteRailRect.W,
-		H: 70,
+		H: buttonPanelHeight,
 	}
 	spriteToolsRect = editor.Rect{
 		X: spriteToolsPanelRect.X + spritePanelPadding,
-		Y: spriteToolsPanelRect.Y + 9,
+		Y: spritePanelContentY(spriteToolsPanelRect),
 		W: spriteToolsPanelRect.W - spritePanelPadding*2,
-		H: 53,
+		H: spriteButtonHeight,
 	}
 
 	paletteGridWidth := paletteSwatchColumns * paletteSwatchWidth
@@ -146,11 +164,11 @@ func setEditorLayout(width, height int) bool {
 		X: spriteRailRect.X,
 		Y: spriteToolsPanelRect.Y + spriteToolsPanelRect.H + spriteSectionGap,
 		W: spriteRailRect.W,
-		H: paletteGridHeight + 44,
+		H: contentOffset + paletteGridHeight + spritePanelPadding,
 	}
 	paletteRect = editor.Rect{
 		X: spritePalettePanelRect.X + spritePanelPadding,
-		Y: spritePalettePanelRect.Y + 32,
+		Y: spritePanelContentY(spritePalettePanelRect),
 		W: paletteGridWidth,
 		H: paletteGridHeight,
 	}
@@ -159,23 +177,23 @@ func setEditorLayout(width, height int) bool {
 		pickerX := paletteRect.X + paletteRect.W + 12
 		pickerRect = editor.Rect{
 			X: pickerX,
-			Y: spritePalettePanelRect.Y + 10,
+			Y: spritePalettePanelRect.Y + spritePanelTitleInsetY,
 			W: max(1, spritePalettePanelRect.X+spritePalettePanelRect.W-pickerX-spritePanelPadding),
-			H: spritePalettePanelRect.H - 20,
+			H: spritePalettePanelRect.H - 2*spritePanelTitleInsetY,
 		}
 		spritePickerPanelRect = editor.Rect{}
 		spriteFlagsPanelRect = editor.Rect{
 			X: spriteRailRect.X,
 			Y: spritePalettePanelRect.Y + spritePalettePanelRect.H + spriteSectionGap,
 			W: spriteRailRect.W,
-			H: max(54, statusBarRect.Y-(spritePalettePanelRect.Y+spritePalettePanelRect.H)-spriteSectionGap-10),
+			H: max(buttonPanelHeight, statusBarRect.Y-(spritePalettePanelRect.Y+spritePalettePanelRect.H)-spriteSectionGap-10),
 		}
 	} else {
 		spriteFlagsPanelRect = editor.Rect{
 			X: spriteRailRect.X,
 			Y: spritePalettePanelRect.Y + spritePalettePanelRect.H + spriteSectionGap,
 			W: spriteRailRect.W,
-			H: spriteFlagsPanelHeight,
+			H: buttonPanelHeight,
 		}
 		spritePickerPanelRect = editor.Rect{
 			X: spriteRailRect.X,
@@ -187,14 +205,14 @@ func setEditorLayout(width, height int) bool {
 			X: spritePickerPanelRect.X + spritePanelTitleInsetX,
 			Y: spritePickerPanelRect.Y + spritePanelTitleInsetY,
 			W: spritePickerPanelRect.W - spritePanelTitleInsetX*2,
-			H: max(1, spritePickerPanelRect.H-20),
+			H: max(1, spritePickerPanelRect.H-2*spritePanelTitleInsetY),
 		}
 	}
 	flagsRect = editor.Rect{
 		X: spriteFlagsPanelRect.X + spritePanelPadding,
-		Y: spriteFlagsPanelRect.Y + 10,
+		Y: spritePanelContentY(spriteFlagsPanelRect),
 		W: spriteFlagsPanelRect.W - spritePanelPadding*2,
-		H: max(1, spriteFlagsPanelRect.H-20),
+		H: max(1, spriteFlagsPanelRect.H-contentOffset-spritePanelPadding),
 	}
 
 	sheetPanelX := spriteRailRect.X + spriteRailRect.W + spriteWorkspaceGap

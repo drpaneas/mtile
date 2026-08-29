@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -15,6 +16,37 @@ func TestEditorPlaybackBufferSurvivesOrdinaryFrameAndGCPauses(t *testing.T) {
 	}
 }
 
+func TestLowLatencyBuffersCoverOneHostMixChunk(t *testing.T) {
+	if editorDeviceBufferSize > 48*time.Millisecond {
+		t.Fatalf("device buffer = %s, want no more than 48ms for live MIDI", editorDeviceBufferSize)
+	}
+	liveBuffer := nativeLiveBufferSize()
+	minimum := editorDeviceBufferSize
+	switch runtime.GOOS {
+	case "darwin":
+		minimum = editorDeviceBufferSize / 2
+	case "linux":
+		minimum = editorDeviceBufferSize / 2
+	}
+	if liveBuffer < minimum {
+		t.Fatalf("native live buffer = %s, want at least %s of host coverage", liveBuffer, minimum)
+	}
+	if runtime.GOOS == "darwin" && liveBuffer > 22*time.Millisecond {
+		t.Fatalf("native live buffer = %s, want at most 22ms for playable latency", liveBuffer)
+	}
+}
+
+func TestEditorAudioByteTimeConversions(t *testing.T) {
+	bytes := editorAudioBufferBytes(time.Second, editorPlaybackSampleRate)
+	if bytes != editorPlaybackSampleRate*editorAudioBytesPerFrame {
+		t.Fatalf("one-second buffer = %d bytes, want %d", bytes, editorPlaybackSampleRate*editorAudioBytesPerFrame)
+	}
+	got := editorAudioDuration(int64(bytes), editorPlaybackSampleRate)
+	if got != time.Second {
+		t.Fatalf("one-second byte duration = %s, want 1s", got)
+	}
+}
+
 func TestEditorPlaybackResamplesTargetPCMToHostRate(t *testing.T) {
 	const targetFrames = 256
 	pcm := targetMonoToHostStereo(make([]int8, targetFrames))
@@ -25,6 +57,18 @@ func TestEditorPlaybackResamplesTargetPCMToHostRate(t *testing.T) {
 	want := targetFrames * editorPlaybackSampleRate / 16_384 * 4
 	if len(host) != want {
 		t.Fatalf("resampled host bytes = %d, want %d", len(host), want)
+	}
+}
+
+func TestEditorPlaybackKeepsNativePSGAtHostRate(t *testing.T) {
+	const nativeFrames = 256
+	pcm := targetMonoToHostStereo(make([]int8, nativeFrames))
+	host, err := io.ReadAll(resampleEditorPCMAtRate(pcm, 48_000))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(host) != len(pcm) {
+		t.Fatalf("native host bytes = %d, want %d", len(host), len(pcm))
 	}
 }
 

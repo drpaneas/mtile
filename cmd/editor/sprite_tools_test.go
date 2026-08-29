@@ -15,6 +15,20 @@ func collectShape(tool spriteTool, x0, y0, x1, y1 int, filled bool) map[[2]int]b
 	return points
 }
 
+func TestMoveToolLeadsToolbarWithoutChangingDefaultPencil(t *testing.T) {
+	if got := spriteTool(0); got != spriteToolPencil {
+		t.Fatalf("zero-value sprite tool = %s, want PENCIL", got)
+	}
+	tool, ok := spriteToolForButton(0)
+	if !ok || tool != spriteToolMove {
+		t.Fatalf("first toolbar tool = %s (ok=%t), want MOVE", tool, ok)
+	}
+	tool, ok = spriteToolForButton(1)
+	if !ok || tool != spriteToolPencil {
+		t.Fatalf("second toolbar tool = %s (ok=%t), want PENCIL", tool, ok)
+	}
+}
+
 func TestSpriteShapeRasterizersCoverExpectedGeometry(t *testing.T) {
 	line := collectShape(spriteToolLine, 1, 1, 4, 4, false)
 	for i := 1; i <= 4; i++ {

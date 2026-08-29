@@ -11,10 +11,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// spriteTool is deliberately small and familiar: the first six entries are
-// persistent drawing modes, while the final two toolbar buttons are immediate
-// transformations. Zero is pencil so a newly opened editor behaves exactly
-// like the original single-tool canvas.
+// spriteTool is deliberately small and familiar. The toolbar combines these
+// persistent modes with two immediate flip transformations. Zero is pencil so
+// a newly opened editor behaves exactly like the original single-tool canvas.
 type spriteTool uint8
 
 const (
@@ -24,17 +23,33 @@ const (
 	spriteToolLine
 	spriteToolRect
 	spriteToolCircle
-	spriteToolCount
+	spriteToolMove
 )
 
+// Move leads the toolbar because it changes how the canvas pointer behaves,
+// while Pencil intentionally remains enum zero and therefore the editor's
+// default tool. Toolbar order and persistent state order are kept separate so
+// adding a navigation tool cannot silently change the startup behavior.
+var spriteToolbarTools = [...]spriteTool{
+	spriteToolMove,
+	spriteToolPencil,
+	spriteToolEraser,
+	spriteToolFill,
+	spriteToolLine,
+	spriteToolRect,
+	spriteToolCircle,
+}
+
 const (
-	spriteToolButtonFlipH = int(spriteToolCount)
-	spriteToolButtonFlipV = int(spriteToolCount) + 1
-	spriteToolButtonCount = int(spriteToolCount) + 2
+	spriteToolButtonFlipH = len(spriteToolbarTools)
+	spriteToolButtonFlipV = len(spriteToolbarTools) + 1
+	spriteToolButtonCount = len(spriteToolbarTools) + 2
 )
 
 func (t spriteTool) String() string {
 	switch t {
+	case spriteToolMove:
+		return "MOVE"
 	case spriteToolEraser:
 		return "ERASER"
 	case spriteToolFill:
@@ -50,9 +65,16 @@ func (t spriteTool) String() string {
 	}
 }
 
+func spriteToolForButton(index int) (spriteTool, bool) {
+	if index < 0 || index >= len(spriteToolbarTools) {
+		return spriteToolPencil, false
+	}
+	return spriteToolbarTools[index], true
+}
+
 func spriteToolButtonName(index int) string {
-	if index >= 0 && index < int(spriteToolCount) {
-		return spriteTool(index).String()
+	if tool, ok := spriteToolForButton(index); ok {
+		return tool.String()
 	}
 	if index == spriteToolButtonFlipH {
 		return "FLIP H · SHIFT+H"
@@ -62,15 +84,15 @@ func spriteToolButtonName(index int) string {
 
 func spriteToolButtonRect(index int) editor.Rect {
 	const (
-		buttonW = 36
-		buttonH = 30
-		gap     = 5
+		sideInset = 5
+		gap       = 4
 	)
+	buttonW := max(1, (spriteToolsRect.W-2*sideInset-gap*(spriteToolButtonCount-1))/spriteToolButtonCount)
 	return editor.Rect{
-		X: spriteToolsRect.X + 5 + index*(buttonW+gap),
-		Y: spriteToolsRect.Y + 23,
+		X: spriteToolsRect.X + sideInset + index*(buttonW+gap),
+		Y: spriteToolsRect.Y,
 		W: buttonW,
-		H: buttonH,
+		H: spriteButtonHeight,
 	}
 }
 
@@ -88,7 +110,11 @@ func (g *Game) updateSpriteTools(mx, my int) {
 		case spriteToolButtonFlipV:
 			g.flipSpriteSelection(false)
 		default:
-			g.spriteTool = spriteTool(i)
+			tool, ok := spriteToolForButton(i)
+			if !ok {
+				return
+			}
+			g.spriteTool = tool
 			g.spriteShapeActive = false
 			g.statusMsg = "Sprite tool: " + g.spriteTool.String()
 		}
@@ -116,6 +142,7 @@ func (g *Game) updateSpriteToolShortcuts() bool {
 		key  ebiten.Key
 		tool spriteTool
 	}{
+		{ebiten.KeyM, spriteToolMove},
 		{ebiten.KeyP, spriteToolPencil},
 		{ebiten.KeyE, spriteToolEraser},
 		{ebiten.KeyF, spriteToolFill},
@@ -148,7 +175,8 @@ func (g *Game) drawSpriteTools(screen *ebiten.Image) {
 	drawSmallText(screen, title, spriteToolsPanelRect.X+spriteToolsPanelRect.W-spritePanelTitleInsetX-smallTextWidth(title), spritePanelMetaY(spriteToolsPanelRect), colorSprite)
 	for i := 0; i < spriteToolButtonCount; i++ {
 		r := spriteToolButtonRect(i)
-		active := i < int(spriteToolCount) && g.spriteTool == spriteTool(i)
+		tool, persistent := spriteToolForButton(i)
+		active := persistent && g.spriteTool == tool
 		drawTactileButton(screen, r, "", active, colorSprite, true)
 		drawSpriteToolIcon(screen, r, i, map[bool]color.Color{false: colorText, true: colorSprite}[active])
 	}
@@ -159,21 +187,28 @@ func drawSpriteToolIcon(screen *ebiten.Image, r editor.Rect, index int, clr colo
 		return
 	}
 	cx, cy := r.X+r.W/2, r.Y+r.H/2
+	if tool, ok := spriteToolForButton(index); ok {
+		switch tool {
+		case spriteToolMove:
+			drawMoveToolIcon(screen, cx, cy, clr)
+		case spriteToolPencil:
+			drawLine(screen, cx-7, cy+6, cx+6, cy-7, clr)
+			drawLine(screen, cx-5, cy+7, cx+8, cy-6, clr)
+			fillRect(screen, editor.Rect{X: cx - 8, Y: cy + 5, W: 4, H: 4}, colorHighlight)
+		case spriteToolEraser:
+			drawEraserToolIcon(screen, cx, cy, clr)
+		case spriteToolFill:
+			drawFillToolIcon(screen, cx, cy, clr)
+		case spriteToolLine:
+			drawLine(screen, cx-8, cy+7, cx+8, cy-7, clr)
+		case spriteToolRect:
+			strokeRoundedRect(screen, editor.Rect{X: cx - 8, Y: cy - 7, W: 16, H: 14}, 2, clr)
+		case spriteToolCircle:
+			vector.StrokeCircle(screen, float32(cx), float32(cy), 8, 1, clr, true)
+		}
+		return
+	}
 	switch index {
-	case int(spriteToolPencil):
-		drawLine(screen, cx-7, cy+6, cx+6, cy-7, clr)
-		drawLine(screen, cx-5, cy+7, cx+8, cy-6, clr)
-		fillRect(screen, editor.Rect{X: cx - 8, Y: cy + 5, W: 4, H: 4}, colorHighlight)
-	case int(spriteToolEraser):
-		drawEraserToolIcon(screen, cx, cy, clr)
-	case int(spriteToolFill):
-		drawFillToolIcon(screen, cx, cy, clr)
-	case int(spriteToolLine):
-		drawLine(screen, cx-8, cy+7, cx+8, cy-7, clr)
-	case int(spriteToolRect):
-		strokeRoundedRect(screen, editor.Rect{X: cx - 8, Y: cy - 7, W: 16, H: 14}, 2, clr)
-	case int(spriteToolCircle):
-		vector.StrokeCircle(screen, float32(cx), float32(cy), 8, 1, clr, true)
 	case spriteToolButtonFlipH:
 		drawLine(screen, cx, cy-8, cx, cy+8, colorDim)
 		drawLine(screen, cx-2, cy, cx-8, cy, clr)
@@ -191,6 +226,19 @@ func drawSpriteToolIcon(screen *ebiten.Image, r editor.Rect, index int, clr colo
 		drawLine(screen, cx, cy+8, cx-3, cy+5, clr)
 		drawLine(screen, cx, cy+8, cx+3, cy+5, clr)
 	}
+}
+
+func drawMoveToolIcon(screen *ebiten.Image, cx, cy int, clr color.Color) {
+	drawLine(screen, cx-8, cy, cx+8, cy, clr)
+	drawLine(screen, cx, cy-8, cx, cy+8, clr)
+	drawLine(screen, cx-8, cy, cx-4, cy-3, clr)
+	drawLine(screen, cx-8, cy, cx-4, cy+3, clr)
+	drawLine(screen, cx+8, cy, cx+4, cy-3, clr)
+	drawLine(screen, cx+8, cy, cx+4, cy+3, clr)
+	drawLine(screen, cx, cy-8, cx-3, cy-4, clr)
+	drawLine(screen, cx, cy-8, cx+3, cy-4, clr)
+	drawLine(screen, cx, cy+8, cx-3, cy+4, clr)
+	drawLine(screen, cx, cy+8, cx+3, cy+4, clr)
 }
 
 func drawFilledIconPath(screen *ebiten.Image, path *vector.Path, fill, outline color.Color) {
@@ -448,7 +496,10 @@ func (g *Game) drawSpriteShapePreview(screen *ebiten.Image) {
 		if _, _, _, ok := g.selectionPixelTarget(x, y); !ok {
 			return
 		}
-		r := g.canvasPixelBounds(x, y, 1, 1)
+		r, visible := intersectEditorRects(g.canvasPixelBounds(x, y, 1, 1), canvasRect)
+		if !visible {
+			return
+		}
 		r = editor.Rect{X: r.X + 1, Y: r.Y + 1, W: max(1, r.W-2), H: max(1, r.H-2)}
 		fillRoundedRect(screen, r, min(3, min(r.W, r.H)/4), preview)
 	})

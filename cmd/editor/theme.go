@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
-	"path/filepath"
 	"sync"
 
 	"github.com/drpaneas/mtile/internal/editor"
@@ -111,14 +109,6 @@ func (g *Game) cycleEffects() {
 		g.savePreferences()
 	}
 	g.statusMsg = "visual effects: " + g.theme.level.String()
-}
-
-func themeEffectsRect() editor.Rect {
-	return editor.Rect{X: screenWidth - 142, Y: 5, W: 130, H: editorTabsHeight - 10}
-}
-
-func themeProjectRect() editor.Rect {
-	return editor.Rect{X: screenWidth - 368, Y: 5, W: 214, H: editorTabsHeight - 10}
 }
 
 func modeSurfaceColor(mode editorMode) color.Color {
@@ -311,11 +301,4 @@ func playLCDShader() (*ebiten.Shader, error) {
 		lcdShader, lcdShaderErr = ebiten.NewShader([]byte(lcdShaderSource))
 	})
 	return lcdShader, lcdShaderErr
-}
-
-func (g *Game) projectBadgeLabel() string {
-	if g == nil || g.model == nil {
-		return "NO CARTRIDGE"
-	}
-	return fmt.Sprintf("CART  %s", truncateMusicEditText(filepath.Base(g.model.Dir), 20))
 }

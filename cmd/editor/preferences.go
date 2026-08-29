@@ -140,7 +140,12 @@ func (g *Game) applyPreferences() {
 	g.preferences = normalizeEditorPreferences(g.preferences)
 	g.theme.level = g.preferences.Effects
 	g.theme.playLCD = g.preferences.LCDPreview
+	previousTextHeight := uiTextHeight
 	setInterfaceTextSize(g.preferences.TextSize)
+	if uiTextHeight != previousTextHeight {
+		g.fitSheetCamera()
+		g.requestRender()
+	}
 	g.applyPreviewVolume()
 }
 
@@ -160,14 +165,14 @@ func (g *Game) applyPreviewVolume() {
 	}
 }
 
-// ebitenAudioPlayer is the small common surface used by every Ebitengine
-// audio player owned by the editor. The adapter keeps preference code easy to
+// editorVolumePlayer is the small common surface used by every host audio
+// player owned by the editor. The interface keeps preference code easy to
 // test without creating a platform audio context.
-type ebitenAudioPlayer interface {
+type editorVolumePlayer interface {
 	SetVolume(float64)
 }
 
-func (g *Game) setPreviewPlayerVolume(player ebitenAudioPlayer) {
+func (g *Game) setPreviewPlayerVolume(player editorVolumePlayer) {
 	if player != nil {
 		player.SetVolume(float64(g.preferences.PreviewVolume) / 100)
 	}

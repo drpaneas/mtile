@@ -2,6 +2,11 @@ package runtime
 
 import "github.com/drpaneas/mtile/runtime/hw"
 
+// Mode 4 is the only shipping renderer. The public API's future Mode 0
+// compatibility contract lives in internal/transpiler/render_modes.go and
+// docs/render-modes.md; CPU telemetry must never switch this hardware state
+// adaptively because tile and bitmap VRAM do not preserve equivalent state.
+
 const (
 	mode4Display = 0x0404 // MODE_4 | BG2_ON; OBJ remains disabled
 	forceBlank   = 0x0080

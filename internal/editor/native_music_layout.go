@@ -17,6 +17,7 @@ type NativeMusicLayout struct {
 	BarPrevious, BarValue, BarNext, GridSnap                  Rect
 	InstrumentPrevious, InstrumentName                        Rect
 	InstrumentNext, InstrumentDuplicate                       Rect
+	InstrumentPreset                                          Rect
 	Advanced                                                  Rect
 	AddSection, ReuseSection, Loop                            Rect
 	PartBarsDown, PartBarsValue, PartBarsUp, Meter            Rect
@@ -138,6 +139,7 @@ func NewNativeMusicLayout(screenWidth, tabsHeight, statusBarY int) NativeMusicLa
 		InstrumentName:      Rect{X: instrumentNameX, Y: inspector.Y + 62, W: instrumentNameWidth, H: 28},
 		InstrumentNext:      Rect{X: instrumentNameX + instrumentNameWidth + 4, Y: inspector.Y + 62, W: 28, H: 28},
 		InstrumentDuplicate: Rect{X: instrumentNameX + instrumentNameWidth + 36, Y: inspector.Y + 62, W: 44, H: 28},
+		InstrumentPreset:    Rect{X: inspector.X + 10, Y: inspector.Y + 100, W: inspector.W - 20, H: 28},
 		Advanced:            Rect{X: inspector.X + inspector.W - 82, Y: inspector.Y + 6, W: 72, H: 22},
 		AddSection:          addSection,
 		ReuseSection:        reuseSection,
@@ -204,7 +206,7 @@ func (l NativeMusicLayout) InspectorControlRect(channel, index int) Rect {
 	width := (l.Inspector.W - 28 - gap) / columns
 	return Rect{
 		X: l.Inspector.X + 10 + index%columns*(width+gap),
-		Y: l.Inspector.Y + 124 + index/columns*55,
+		Y: l.Inspector.Y + 160 + index/columns*55,
 		W: width, H: 31,
 	}
 }

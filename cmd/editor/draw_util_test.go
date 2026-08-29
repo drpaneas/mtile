@@ -37,6 +37,12 @@ func TestSpriteTransparencyCheckerMatchesDarkCanvas(t *testing.T) {
 	}
 }
 
+func TestCheckerboardShaderCompiles(t *testing.T) {
+	if _, err := checkerboardFillShader(); err != nil {
+		t.Fatalf("compile checkerboard shader: %v", err)
+	}
+}
+
 func TestSpritesheetGridKeepsOnlyTileBoundaries(t *testing.T) {
 	if _, visible := spriteGridLineColor(1, false); visible {
 		t.Fatal("spritesheet exposed a minor source-pixel grid line")

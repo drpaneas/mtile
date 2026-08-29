@@ -37,6 +37,32 @@ func (m *Model) applyNativePerformanceTake(sequenceIndex int, raw performance.Ra
 			return errors.New("selected song part does not exist")
 		}
 		part := &candidate.Music.Parts[partIndex]
+		// A performance is not a one-bar loop unless the musician explicitly
+		// stops after one bar. Grow the selected part to the next whole measure
+		// before writing notes so a continuous take remains continuous in both
+		// the editor and target arrangement.
+		bars, beatsPerBar, beatUnit, ticksPerBar := NativePartMeter(*part)
+		recordedEnd := int(clock.TickAt(clock.Origin + raw.Duration))
+		recordedEnd = max(recordedEnd, materialized.EndTick)
+		neededBars := max(1, (max(1, recordedEnd)+ticksPerBar-1)/ticksPerBar)
+		if neededBars > NativeMaxPartBars {
+			return fmt.Errorf("recording is longer than the %d-bar part limit", NativeMaxPartBars)
+		}
+		if neededBars > bars {
+			part.Bars, part.BeatsPerBar, part.BeatUnit = neededBars, beatsPerBar, beatUnit
+			part.LengthTicks = neededBars * ticksPerBar
+			for channel := 0; channel < 4; channel++ {
+				lane := nativeLane(&part.Lanes, channel)
+				if lane == nil || *lane == nil {
+					continue
+				}
+				clipIndex := nativeClipIndexByID(&candidate.Music, **lane)
+				if clipIndex < 0 {
+					return errors.New("selected part references a missing clip")
+				}
+				candidate.Music.Clips[clipIndex].LengthTicks = part.LengthTicks
+			}
+		}
 		if storeRaw {
 			usedTakes := map[int]bool{}
 			for _, take := range candidate.Music.Takes {
@@ -50,7 +76,7 @@ func (m *Model) applyNativePerformanceTake(sequenceIndex int, raw performance.Ra
 			candidate.Music.Takes = append(candidate.Music.Takes, nativeTakeAsset(takeID, part.ID, raw))
 		}
 
-		rangeEnd := int(clock.TickAt(clock.Origin + raw.Duration))
+		rangeEnd := recordedEnd
 		if rangeEnd <= 0 {
 			rangeEnd = 1
 		}
@@ -169,9 +195,16 @@ func recordedNoteSegments(note performance.TrackerNote, parameters []performance
 		if finish <= start {
 			continue
 		}
-		segment := note
-		segment.StartTick, segment.DurationTicks = start, finish-start
-		segments = append(segments, segment)
+		// Target note durations are uint16. Split exceptionally long held notes
+		// into phase-preserving legato segments instead of rejecting an otherwise
+		// valid continuous recording during asset compilation.
+		for start < finish {
+			segmentEnd := min(finish, start+65535)
+			segment := note
+			segment.StartTick, segment.DurationTicks = start, segmentEnd-start
+			segments = append(segments, segment)
+			start = segmentEnd
+		}
 	}
 	return segments
 }
@@ -288,6 +321,15 @@ func cloneNativeSoundAsset(sound assetsync.NativeSoundAsset) assetsync.NativeSou
 	if sound.Noise != nil {
 		noise := *sound.Noise
 		clone.Noise = &noise
+	}
+	if sound.Macro != nil {
+		macro := *sound.Macro
+		macro.Steps = append([]assetsync.NativeMacroStepAsset(nil), sound.Macro.Steps...)
+		if sound.Macro.LoopStart != nil {
+			loopStart := *sound.Macro.LoopStart
+			macro.LoopStart = &loopStart
+		}
+		clone.Macro = &macro
 	}
 	return clone
 }
@@ -412,7 +454,7 @@ func applyRecordedParameter(sound *assetsync.NativeSoundAsset, parameter perform
 		}
 	case performance.ParameterNoiseShift:
 		if sound.Noise != nil {
-			sound.Noise.Shift = clamp(value, 13)
+			sound.Noise.Shift = clamp(value, 15)
 		}
 	}
 }

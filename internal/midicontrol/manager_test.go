@@ -73,9 +73,11 @@ func (f closeFunc) Close() error { return f() }
 
 func TestManagerHotplugInitializesRoutesAndSafelyDisconnects(t *testing.T) {
 	backend := &fakeBackend{endpoints: []Endpoint{
-		{ID: "keys-in", Name: "Launchkey Mini MK4 MIDI", Input: true},
-		{ID: "daw-in", Name: "Launchkey Mini MK4 DAW", Input: true},
-		{ID: "daw-out", Name: "Launchkey Mini MK4 DAW", Output: true},
+		{ID: "keys-in", Name: "Launchkey Mini MK4 25 MIDI Out", Input: true},
+		{ID: "keys-mirror", Name: "Launchkey Mini MK4 25 MIDI Out Mirror", Input: true},
+		{ID: "daw-in", Name: "Launchkey Mini MK4 25 DAW Out", Input: true},
+		{ID: "keys-out", Name: "Launchkey Mini MK4 25 MIDI In", Output: true},
+		{ID: "daw-out", Name: "Launchkey Mini MK4 25 DAW In", Output: true},
 	}}
 	commands := make(chan Command, 16)
 	manager := NewManager(backend, LaunchkeyMini25MK4{}, func(command Command) { commands <- command })
@@ -102,13 +104,17 @@ func TestManagerHotplugInitializesRoutesAndSafelyDisconnects(t *testing.T) {
 			}
 		}
 	}
-	if connected := waitCommand(CommandConnected); connected.Name == "" {
-		t.Fatal("connected command omitted device name")
+	if connected := waitCommand(CommandConnected); connected.Name != "Launchkey Mini MK4 25" || connected.Detail != "" {
+		t.Fatalf("connected command = %#v", connected)
 	}
 	backend.mu.Lock()
 	if len(backend.outputs) != 1 || len(backend.outputs[0].messages) == 0 {
 		backend.mu.Unlock()
 		t.Fatal("hotplug did not initialize the Launchkey output")
+	}
+	if len(backend.listeners) != 2 || backend.listeners["keys-mirror"] != nil {
+		backend.mu.Unlock()
+		t.Fatalf("opened MIDI listeners = %#v, want one keys and one DAW input", backend.listeners)
 	}
 	backend.mu.Unlock()
 	backend.emit("keys-in", []byte{0x90, 64, 100})
@@ -123,4 +129,31 @@ func TestManagerHotplugInitializesRoutesAndSafelyDisconnects(t *testing.T) {
 		t.Fatalf("disconnect performance command = %#v", allOff)
 	}
 	waitCommand(CommandDisconnected)
+}
+
+func TestManagerReportsDegradedConnectionInsteadOfSilentlyFailing(t *testing.T) {
+	backend := &fakeBackend{endpoints: []Endpoint{
+		{ID: "keys-in", Name: "Launchkey Mini MK4 25 MIDI Out", Input: true},
+	}}
+	commands := make(chan Command, 16)
+	manager := NewManager(backend, LaunchkeyMini25MK4{}, func(command Command) { commands <- command })
+	manager.interval = time.Hour
+	if err := manager.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close()
+	deadline := time.After(time.Second)
+	for {
+		select {
+		case command := <-commands:
+			if command.Kind == CommandProblem {
+				if command.Detail == "" {
+					t.Fatal("problem command omitted detail")
+				}
+				return
+			}
+		case <-deadline:
+			t.Fatal("timed out waiting for degraded-connection detail")
+		}
+	}
 }

@@ -1,7 +1,4522 @@
 {
   "version": 2,
   "ppqn": 96,
-  "clips": null,
-  "parts": null,
-  "songs": null
+  "clips": [
+    {
+      "id": 0,
+      "name": "CH1 effect 00",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": null
+    },
+    {
+      "id": 1,
+      "name": "CH2 effect 01",
+      "kind": "ch2",
+      "sfx": true,
+      "lengthTicks": 384,
+      "events": null
+    },
+    {
+      "id": 2,
+      "name": "CH1 clip",
+      "kind": "ch1",
+      "lengthTicks": 5376,
+      "events": [
+        {
+          "tick": 120,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 168,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 216,
+          "durationTicks": 48,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 336,
+          "durationTicks": 72,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 432,
+          "durationTicks": 72,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 528,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 576,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 600,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 624,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 672,
+          "durationTicks": 48,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 744,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 768,
+          "durationTicks": 72,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 840,
+          "durationTicks": 96,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 936,
+          "durationTicks": 48,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1032,
+          "durationTicks": 48,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 48,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1200,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1224,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1248,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1392,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1416,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1440,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1488,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1536,
+          "durationTicks": 48,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1608,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1632,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1656,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1704,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1752,
+          "durationTicks": 96,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1896,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1968,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 1992,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2016,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2040,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2064,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2088,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2112,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2136,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2160,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2184,
+          "durationTicks": 48,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2232,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2256,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2280,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2304,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2352,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2376,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2400,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2424,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2448,
+          "durationTicks": 24,
+          "note": 61,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2472,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2496,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2520,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2544,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2568,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2592,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2616,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2640,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2664,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2688,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2712,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2736,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2760,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2784,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2808,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2832,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2856,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2904,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2928,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2952,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 2976,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3000,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3024,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3048,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3072,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3096,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3120,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3144,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3168,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3192,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3216,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3240,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3264,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3288,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3312,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3336,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3360,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3384,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3408,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3432,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3456,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3480,
+          "durationTicks": 24,
+          "note": 56,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3504,
+          "durationTicks": 48,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3552,
+          "durationTicks": 48,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3624,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3648,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3672,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3696,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3720,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3744,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3768,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3792,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3816,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3840,
+          "durationTicks": 24,
+          "note": 56,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3864,
+          "durationTicks": 24,
+          "note": 50,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3888,
+          "durationTicks": 24,
+          "note": 53,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3912,
+          "durationTicks": 24,
+          "note": 56,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3936,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3960,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 3984,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4008,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4104,
+          "durationTicks": 24,
+          "note": 64,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4128,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4152,
+          "durationTicks": 24,
+          "note": 62,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4176,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4200,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4224,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4248,
+          "durationTicks": 24,
+          "note": 59,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4272,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4296,
+          "durationTicks": 48,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4344,
+          "durationTicks": 24,
+          "note": 56,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4368,
+          "durationTicks": 24,
+          "note": 65,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4392,
+          "durationTicks": 24,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4488,
+          "durationTicks": 24,
+          "note": 52,
+          "soundId": 1,
+          "priority": 128
+        },
+        {
+          "tick": 4584,
+          "durationTicks": 72,
+          "note": 57,
+          "soundId": 1,
+          "priority": 128
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "CH3 clip",
+      "kind": "ch3",
+      "lengthTicks": 5376,
+      "events": null
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "Part A",
+      "lengthTicks": 5376,
+      "bars": 14,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 2,
+        "ch2": null,
+        "ch3": 3,
+        "ch4": null
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "New Song",
+      "tempo": 120,
+      "sequence": [
+        0
+      ],
+      "loopStart": null
+    }
+  ],
+  "takes": [
+    {
+      "id": 0,
+      "name": "Take 1",
+      "partId": 0,
+      "durationNanos": 4183166541,
+      "events": [
+        {
+          "offsetNanos": 1297304541,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1516104250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1516104250,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 1735420458,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 1735420458,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1933459541,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1933459541,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2156143041,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2156143041,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2352411166,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2352411166,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2584222958,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2584222958,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2796388250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2796388250,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 3035322333,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 3035322333,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 3274448708,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Take 2",
+      "partId": 0,
+      "durationNanos": 21683225250,
+      "events": [
+        {
+          "offsetNanos": 1078252708,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 1252952958,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 1508940250,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 1514345333,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 1514345333,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1651935000,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1651935000,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 1659511083,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 1792763000,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 1951461875,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2040469666,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 2167205416,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 2224229541,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2316743166,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 2316743166,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 2399208000,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 2399208000,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2521964250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2521964250,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2653356916,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2680164041,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 3601077291,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 3601077291,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 3921933541,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 3921933541,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 4018519083,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 4018519083,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 4105765958,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 4105765958,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 4237026125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 4260264750,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 4434592375,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 4434592375,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 4671711458,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 4671711458,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 4828808875,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 4828808875,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 4954273083,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 5039735500,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 5153641458,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 5153641458,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 5343032041,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 5369740958,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 6133023958,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 10370318375,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 10621482458,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 10767362208,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 10867055416,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 10867055416,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 10945368333,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 10945368333,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 11013534291,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 11013534291,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11248085708,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11274934125,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 12270830791,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 13573273250,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 13826210875,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 13872510208,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 14049005541,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 14068649166,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14237727125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14237727125,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 14505299875,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 14588990833,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 14817107125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 16320161291,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 16539029375,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 16539029375,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 16690713541,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 16690713541,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 16797552250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 16797552250,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16969482791,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16969482791,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 17663303291,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 17663303291,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 17872012708,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 17872012708,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 18004093083,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 18004093083,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 18249012416,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 18249012416,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 18496527375,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 18539327166,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 18845311416,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 18845311416,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 19139595458,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 19217889375,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 19401624416,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 19479854500,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 20459885333,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Take 3",
+      "partId": 0,
+      "durationNanos": 29183109334,
+      "events": [
+        {
+          "offsetNanos": 964359667,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1163464792,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 1163464792,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 1295739084,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 1295739084,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 1456468625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 1456468625,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1629850417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1663652875,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 1816662459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 1816662459,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1984570084,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 1984570084,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2106090334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 2106090334,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2271997625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 2271997625,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 3021532334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 5402353334,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 5582007959,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 5582007959,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 5731901417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 5731901417,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 5839236959,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 5839236959,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 6009359334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 6030776292,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 6037966459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 6037966459,
+          "kind": "start",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 6165994000,
+          "kind": "stop",
+          "channel": 3,
+          "note": 76
+        },
+        {
+          "offsetNanos": 6165994000,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 6311200584,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 6311200584,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 6405585459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 6405585459,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 6593431417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 6593431417,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 7488651417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 8055498542,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 8203292542,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 8203292542,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 8305262959,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 8305262959,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 8394805167,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 8394805167,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 8523431459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 8523431459,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 8856907417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 9363379667,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 9538142125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 9731866334,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 9901341250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 10047163709,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 10245026167,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 10447628125,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 10643805417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 10805453500,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 11127501292,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 11127501292,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11316941084,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11468077542,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11471739459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 11471739459,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 11477234500,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 11477234500,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12073103459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12281149917,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12443414167,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12612226000,
+          "kind": "start",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12833266917,
+          "kind": "stop",
+          "channel": 3,
+          "note": 74
+        },
+        {
+          "offsetNanos": 12874373917,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 13096557042,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 13096557042,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 13318100125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 13369948000,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 13569360042,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 13587223417,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 13957616834,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 14112262959,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 14218992834,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 14218992834,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 14344048709,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 14344048709,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14476757125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14631521750,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14784830584,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 14857716250,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 15061067584,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 15094904334,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 15303429750,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 15323061167,
+          "kind": "start",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 15598836792,
+          "kind": "stop",
+          "channel": 3,
+          "note": 72
+        },
+        {
+          "offsetNanos": 15598836792,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 15614912625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 15614912625,
+          "kind": "start",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 15697768459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 15697768459,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 15950665417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 16107168250,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 16215771250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 16215771250,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 16330224292,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 16330224292,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16484069000,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16594371667,
+          "kind": "start",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16799370625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 71
+        },
+        {
+          "offsetNanos": 16847447292,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 17064911167,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 17089873125,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 17298390584,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 17445982167,
+          "kind": "start",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 18543356542,
+          "kind": "stop",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 18625252750,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 18881617625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 19009781750,
+          "kind": "start",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 19209074625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 69
+        },
+        {
+          "offsetNanos": 19209074625,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 19354048667,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 19366566459,
+          "kind": "start",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 19541356042,
+          "kind": "stop",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 19561006542,
+          "kind": "start",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 19750024334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 67
+        },
+        {
+          "offsetNanos": 19783902834,
+          "kind": "start",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 20007925334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 20007925334,
+          "kind": "start",
+          "channel": 3,
+          "note": 64
+        },
+        {
+          "offsetNanos": 20323392792,
+          "kind": "stop",
+          "channel": 3,
+          "note": 64
+        },
+        {
+          "offsetNanos": 20323392792,
+          "kind": "start",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 20592759042,
+          "kind": "stop",
+          "channel": 3,
+          "note": 65
+        },
+        {
+          "offsetNanos": 21115872084,
+          "kind": "start",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 21132007167,
+          "kind": "stop",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 21132007167,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 21507833834,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 21507833834,
+          "kind": "start",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 22130616625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 22437954250,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 22818827459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 23133463167,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 23316673917,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 23316673917,
+          "kind": "start",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 24061119250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 24203438834,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 24356476417,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 24356476417,
+          "kind": "start",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 24801253667,
+          "kind": "stop",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 24801253667,
+          "kind": "start",
+          "channel": 3,
+          "note": 57
+        },
+        {
+          "offsetNanos": 25157910459,
+          "kind": "stop",
+          "channel": 3,
+          "note": 57
+        },
+        {
+          "offsetNanos": 25157910459,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 25166918125,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 25166918125,
+          "kind": "start",
+          "channel": 3,
+          "note": 59
+        },
+        {
+          "offsetNanos": 25439592917,
+          "kind": "stop",
+          "channel": 3,
+          "note": 59
+        },
+        {
+          "offsetNanos": 25439592917,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 25455725250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 25455725250,
+          "kind": "start",
+          "channel": 3,
+          "note": 60
+        },
+        {
+          "offsetNanos": 26560663250,
+          "kind": "stop",
+          "channel": 3,
+          "note": 60
+        },
+        {
+          "offsetNanos": 26560663250,
+          "kind": "start",
+          "channel": 3,
+          "note": 59
+        },
+        {
+          "offsetNanos": 26760440625,
+          "kind": "stop",
+          "channel": 3,
+          "note": 59
+        },
+        {
+          "offsetNanos": 26760440625,
+          "kind": "start",
+          "channel": 3,
+          "note": 57
+        },
+        {
+          "offsetNanos": 27037349334,
+          "kind": "stop",
+          "channel": 3,
+          "note": 57
+        },
+        {
+          "offsetNanos": 27037349334,
+          "kind": "start",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 27485849709,
+          "kind": "stop",
+          "channel": 3,
+          "note": 55
+        },
+        {
+          "offsetNanos": 27485849709,
+          "kind": "start",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 27948821750,
+          "kind": "stop",
+          "channel": 3,
+          "note": 53
+        },
+        {
+          "offsetNanos": 27948821750,
+          "kind": "start",
+          "channel": 3,
+          "note": 52
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Take 4",
+      "partId": 0,
+      "durationNanos": 6833349542,
+      "events": [
+        {
+          "offsetNanos": 2730798500,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 2928823875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 3825959292,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 4004339333,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 4523261083,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 4778005625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5288046250,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 5549447458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 5549447458,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 5675009250,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 5851116375,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 6183962958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Take 5",
+      "partId": 0,
+      "durationNanos": 3767666959,
+      "events": [
+        {
+          "offsetNanos": 419062834,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 656201625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 679436084,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 855828459,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 930583500,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1089323959,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1169400625,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 1386756917,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 1422369792,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 1632380167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 1632380167,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1884018834,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1896596375,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 2078349917,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 2137110542,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 2564371584,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Take 6",
+      "partId": 0,
+      "durationNanos": 26900019542,
+      "events": [
+        {
+          "offsetNanos": 647377500,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 768805583,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 921752333,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 1044483292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 1044483292,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 1187273292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 1187273292,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1332339042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 1444450750,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 1619086083,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 1697382167,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 2106867958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 2227753750,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 2631913792,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 2774034250,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 2930979917,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3041187875,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3142649750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3142649750,
+          "kind": "start",
+          "channel": 1,
+          "note": 67
+        },
+        {
+          "offsetNanos": 3276645458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 67
+        },
+        {
+          "offsetNanos": 3276645458,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3398570333,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3542738083,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3754760708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 3818850333,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 4027182958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 4032617333,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 4388516000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 4388516000,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 4826743458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 4926362292,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5116982833,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5220177458,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5262910208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5262910208,
+          "kind": "start",
+          "channel": 1,
+          "note": 67
+        },
+        {
+          "offsetNanos": 5400593750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 67
+        },
+        {
+          "offsetNanos": 5400593750,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 5574041500,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 5694861792,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5810871000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 5944298542,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 6215055417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 6252398083,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 6378746292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 6378746292,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 6468227583,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 6468227583,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 6581302458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 6741295042,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 6891008083,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 7004920792,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 7154706750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 7279268375,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 7382472000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 7382472000,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 7511020458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 7511020458,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 7643714333,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 7800175542,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 7896739750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 8061997083,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 8199292083,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 8338072500,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 8459127417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 8459127417,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 8617789958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 8617789958,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 8723698042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 8855317208,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 9022989125,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 9124368167,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 9604889375,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 9896413500,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10040833583,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10190186917,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 10305728208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 10305728208,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10410023208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10413566958,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 10522594042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 10524461917,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10644198833,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10669165625,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 10733678625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 10744437250,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10860398333,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 10864045667,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 10967265792,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 10967265792,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11072833125,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11072833125,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 11200185458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 11203726250,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11260810708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11260810708,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 11402254208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 11404113000,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11587335667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11587335667,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 11716022375,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 11716022375,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11829117375,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 11829206750,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 11932722875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 11941705375,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12059083875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12059083875,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 12166844417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 12195331625,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12286133792,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12286133792,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 12392166292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 12413583917,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12545551667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12547404750,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 12636782625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 12649311917,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12774321833,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 12779780750,
+          "kind": "start",
+          "channel": 1,
+          "note": 61
+        },
+        {
+          "offsetNanos": 12885228667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 61
+        },
+        {
+          "offsetNanos": 12906659542,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13042445458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13042447542,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 13141890417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 13141890417,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13255054750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13258638167,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 13381580500,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 13381580500,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13504947875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13504947875,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 13610823292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 13626877375,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13731817167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13731817167,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 13855500542,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 13859194875,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13989559542,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 13995053542,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 14110697042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 14110697042,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14219722875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14219722875,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 14346930375,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 14364914708,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14466349458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14466349458,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 14572286875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 14581354750,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14695200625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14695200625,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 14830802708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 14830802708,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14929193042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 14929193042,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 15051160500,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 15065492125,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15168721917,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15168721917,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 15292519458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 15310296833,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15437155292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15438977500,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 15547490292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 15547490292,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15667254708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15667254708,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 15780270625,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 15798274917,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15913755875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 15913755875,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 16023134250,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 16042800042,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16144365458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16144365458,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 16257339167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 16277039833,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16394590667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16394590667,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 16512820708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 16518246917,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16639574208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16648559333,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 16762921667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 16766516208,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16905432417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 16905432417,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 17034421542,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 17038060708,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17139457792,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17139457792,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 17266717250,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 17268541000,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17411072125,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17411072125,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 17522321042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 17531331875,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17645270000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17645270000,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 17763069083,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 17763069083,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17911325167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 17911325167,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 18013296542,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 18013296542,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 18175701083,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 18175701083,
+          "kind": "start",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 18306033583,
+          "kind": "stop",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 18306033583,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 18466690708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 18466690708,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 18768186208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 18917421458,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 19033105000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 19033105000,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 19115606333,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 19115606333,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 19214073708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 19214073708,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 19355162042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 19355162042,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 19478489125,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 19478489125,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 19592889750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 19592889750,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 19715746000,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 19715746000,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 19827147167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 19827147167,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 19961032958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 19961032958,
+          "kind": "start",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 20095048167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 20095048167,
+          "kind": "start",
+          "channel": 1,
+          "note": 53
+        },
+        {
+          "offsetNanos": 20175651292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 53
+        },
+        {
+          "offsetNanos": 20175651292,
+          "kind": "start",
+          "channel": 1,
+          "note": 50
+        },
+        {
+          "offsetNanos": 20254573125,
+          "kind": "stop",
+          "channel": 1,
+          "note": 50
+        },
+        {
+          "offsetNanos": 20254573125,
+          "kind": "start",
+          "channel": 1,
+          "note": 53
+        },
+        {
+          "offsetNanos": 20358405417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 53
+        },
+        {
+          "offsetNanos": 20358405417,
+          "kind": "start",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 20485614708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 20508761750,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 20654622042,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 20654622042,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 20721032500,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 20721032500,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 20833702167,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 20833702167,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 20916257458,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 20916257458,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 21024046708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 21388245917,
+          "kind": "start",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 21502137667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 64
+        },
+        {
+          "offsetNanos": 21502137667,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 21595288292,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 21595288292,
+          "kind": "start",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 21711374542,
+          "kind": "stop",
+          "channel": 1,
+          "note": 62
+        },
+        {
+          "offsetNanos": 21711374542,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 21841741875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 21841741875,
+          "kind": "start",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 21959693958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 60
+        },
+        {
+          "offsetNanos": 21959693958,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22083033750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22083033750,
+          "kind": "start",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 22192138417,
+          "kind": "stop",
+          "channel": 1,
+          "note": 59
+        },
+        {
+          "offsetNanos": 22192138417,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22320642958,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22320642958,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 22420925917,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 22420925917,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22592702875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22603405500,
+          "kind": "start",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 22706783250,
+          "kind": "stop",
+          "channel": 1,
+          "note": 56
+        },
+        {
+          "offsetNanos": 22706783250,
+          "kind": "start",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22862310750,
+          "kind": "stop",
+          "channel": 1,
+          "note": 65
+        },
+        {
+          "offsetNanos": 22865908708,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 23037065708,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 23380170125,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 23563722208,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 23890840625,
+          "kind": "start",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 23899902875,
+          "kind": "stop",
+          "channel": 1,
+          "note": 52
+        },
+        {
+          "offsetNanos": 23899902875,
+          "kind": "start",
+          "channel": 1,
+          "note": 57
+        },
+        {
+          "offsetNanos": 24295735667,
+          "kind": "stop",
+          "channel": 1,
+          "note": 57
+        }
+      ]
+    }
+  ]
 }

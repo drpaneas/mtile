@@ -49,6 +49,7 @@ type Controller struct {
 	clipIndex    [4]int16
 	clipCursor   [4]uint16
 	sfx          [4]nativeSFXPlayback
+	macros       [4]nativeMacroPlayback
 
 	// Clock accumulation is expressed in CPU cycles so both the exact 256 Hz
 	// profiles and the 280,896-cycle display frame profile retain fractional
@@ -78,6 +79,14 @@ type nativeSFXPlayback struct {
 	tick      uint32
 	cursor    uint16
 	priority  uint8
+}
+
+type nativeMacroPlayback struct {
+	active         bool
+	nextStep       uint8
+	period         uint16
+	note           uint8
+	cycleRemainder uint32
 }
 
 func profileCommitCycles(profile Profile) uint32 {
@@ -157,6 +166,18 @@ func validateNativeLibrary(l Library) bool {
 				return false
 			}
 		}
+		if len(sound.Macro.Steps) > NativeMaxMacroSteps || len(sound.Macro.Steps) == 0 && sound.Macro.LoopStart != 0 ||
+			len(sound.Macro.Steps) != 0 && (sound.Macro.LoopStart < -1 || int(sound.Macro.LoopStart) >= len(sound.Macro.Steps)) {
+			return false
+		}
+		for _, step := range sound.Macro.Steps {
+			if step.PeriodDelta < -2047 || step.PeriodDelta > 2047 || step.NoiseDivisor > 7 || step.NoiseShift > 15 ||
+				step.NoiseNoteOffset < -36 || step.NoiseNoteOffset > 35 || step.HasNoise && step.HasNoiseNote ||
+				sound.Kind == SoundCH4 && step.PeriodDelta != 0 || sound.Kind != SoundCH4 && (step.HasNoise || step.HasNoiseNote) ||
+				!step.HasNoise && (step.NoiseDivisor != 0 || step.NoiseShift != 0) || !step.HasNoiseNote && step.NoiseNoteOffset != 0 {
+				return false
+			}
+		}
 		for j := 0; j < i; j++ {
 			if l.Sounds[i].ID == l.Sounds[j].ID {
 				return false
@@ -180,7 +201,7 @@ func validateNativeLibrary(l Library) bool {
 				return false
 			}
 			sound := findSoundIn(l.Sounds, event.SoundID)
-			if sound == nil || sound.Kind != clip.Kind || (clip.Kind != SoundCH4 && !nativeNoteValid(*sound, event.Note)) {
+			if sound == nil || sound.Kind != clip.Kind || !nativeNoteValid(*sound, event.Note) {
 				return false
 			}
 			if clip.Kind == SoundCH4 && event.Legato {
@@ -290,8 +311,7 @@ func findSongIndex(songs []Song, id uint8) int16 {
 }
 
 func nativeNoteValid(sound Sound, note uint8) bool {
-	_, ok := NativeSoundPeriod(sound, note)
-	return ok
+	return NativeSoundNoteValid(sound, note)
 }
 
 func (c *Controller) enqueue(command nativeCommand) bool {
@@ -400,6 +420,7 @@ func (c *Controller) serviceCommit() {
 	cycleStart := hw.ReadFrameCycleCounter()
 	c.serviceCalls++
 	c.applyCommands()
+	c.advanceSoundMacros()
 	if !c.hasTimedWork() || c.tempo == 0 {
 		c.tickRemainder = 0
 		c.finishServiceCycles(cycleStart)
@@ -412,6 +433,98 @@ func (c *Controller) serviceCommit() {
 		c.advanceTick()
 	}
 	c.finishServiceCycles(cycleStart)
+}
+
+func (c *Controller) advanceSoundMacros() {
+	for channel := range c.macros {
+		playback := &c.macros[channel]
+		if !playback.active || !c.channels[channel].Active {
+			continue
+		}
+		playback.cycleRemainder += c.commitCycles
+		if playback.cycleRemainder < NativeMacroClockCycles {
+			continue
+		}
+		playback.cycleRemainder -= NativeMacroClockCycles
+		sound := findSoundIn(c.library.Sounds, c.channels[channel].SoundID)
+		if sound == nil || !c.applySoundMacroStep(channel, *sound, playback) {
+			playback.active = false
+		}
+	}
+}
+
+func (c *Controller) startSoundMacro(channel int, sound Sound, period uint16, note uint8) {
+	playback := &c.macros[channel]
+	*playback = nativeMacroPlayback{period: period, note: note}
+	if len(sound.Macro.Steps) == 0 {
+		return
+	}
+	playback.active = true
+	c.applySoundMacroStep(channel, sound, playback)
+}
+
+func (c *Controller) applySoundMacroStep(channel int, sound Sound, playback *nativeMacroPlayback) bool {
+	if playback == nil || int(playback.nextStep) >= len(sound.Macro.Steps) {
+		return false
+	}
+	step := sound.Macro.Steps[playback.nextStep]
+	ok := true
+	if step.PeriodDelta != 0 {
+		period := int(playback.period) + int(step.PeriodDelta)
+		if period < 0 || period > 2047 {
+			return false
+		}
+		playback.period = uint16(period)
+		switch sound.Kind {
+		case SoundCH1:
+			ok = hw.SetPulse1Period(playback.period, sound.Pulse1.Pulse.UseLength)
+		case SoundCH2:
+			ok = hw.SetPulse2Period(playback.period, sound.Pulse2.UseLength)
+		case SoundCH3:
+			ok = hw.SetWavePeriod(playback.period, sound.Wave.UseLength)
+		}
+	}
+	if step.HasNoise {
+		ok = ok && hw.SetNoisePolynomial(step.NoiseDivisor, step.NoiseShift, sound.Noise.Width)
+	}
+	if step.HasNoiseNote {
+		divisor, shift, valid := NativeGBStudioNoisePolynomial(playback.note, step.NoiseNoteOffset)
+		ok = ok && valid && hw.SetNoisePolynomial(divisor, shift, sound.Noise.Width)
+	}
+	if !ok {
+		return false
+	}
+	next := int(playback.nextStep) + 1
+	if next >= len(sound.Macro.Steps) {
+		if sound.Macro.LoopStart < 0 {
+			playback.active = false
+			return true
+		}
+		next = int(sound.Macro.LoopStart)
+	}
+	playback.nextStep = uint8(next)
+	return true
+}
+
+// nativeNoiseTriggerConfig returns the CH4 state that must exist at the exact
+// trigger edge. hUGEDriver triggers table-driven noise instruments from the
+// played note, then applies subpattern row zero without retriggering. Keeping
+// those two writes distinct preserves the LFSR/timer attack on real hardware.
+func nativeNoiseTriggerConfig(sound Sound, note uint8) (hw.NoiseConfig, bool) {
+	config := sound.Noise
+	for _, step := range sound.Macro.Steps {
+		if !step.HasNoiseNote {
+			continue
+		}
+		divisor, shift, ok := NativeGBStudioNoisePolynomial(note, 0)
+		if !ok {
+			return config, false
+		}
+		config.Divisor = divisor
+		config.Shift = shift
+		return config, true
+	}
+	return config, true
 }
 
 func (c *Controller) finishServiceCycles(start uint32) {
@@ -677,7 +790,7 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 	}
 	sound := findSoundIn(c.library.Sounds, soundID)
 	kind := SoundKind(channel - 1)
-	if sound == nil || sound.Kind != kind || (kind != SoundCH4 && !nativeNoteValid(*sound, note)) {
+	if sound == nil || sound.Kind != kind || !nativeNoteValid(*sound, note) {
 		c.commandsRejected++
 		return false
 	}
@@ -725,13 +838,15 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 		case SoundCH3:
 			triggered = hw.TriggerWave(period, sound.Wave)
 		case SoundCH4:
-			triggered = hw.TriggerNoise(sound.Noise)
+			noise, ok := nativeNoiseTriggerConfig(*sound, note)
+			triggered = ok && hw.TriggerNoise(noise)
 		}
 	}
 	if !triggered {
 		c.commandsRejected++
 		return false
 	}
+	c.startSoundMacro(int(channel-1), *sound, period, note)
 	*state = ChannelState{
 		Active: true, Owner: owner, Priority: priority, Note: note, SoundID: soundID,
 		StartedTick: c.absoluteTick, Replacements: state.Replacements,
@@ -750,6 +865,7 @@ func (c *Controller) stopChannel(channel uint8, owner NativeOwner, force bool) b
 		return false
 	}
 	hw.StopPSGChannel(channel)
+	c.macros[channel-1] = nativeMacroPlayback{}
 	replacements := state.Replacements
 	*state = ChannelState{Replacements: replacements}
 	c.eventsApplied++

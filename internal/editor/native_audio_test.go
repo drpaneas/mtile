@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/performance"
 	"github.com/drpaneas/mtile/runtime/audio"
 	"github.com/drpaneas/mtile/runtime/hw"
 )
@@ -249,9 +250,6 @@ func TestNativeNotePreviewAuditionsEveryHardwareChannel(t *testing.T) {
 		}
 		if len(first) != NativeNotePreviewSamples || !slices.Equal(first, second) {
 			t.Fatalf("CH%d preview length=%d deterministic=%t", channel+1, len(first), slices.Equal(first, second))
-		}
-		if first[0] != 0 || first[len(first)-1] != 0 {
-			t.Fatalf("CH%d audition edges = %d/%d, want click-safe zeroes", channel+1, first[0], first[len(first)-1])
 		}
 		if !slices.ContainsFunc(first, func(sample int8) bool { return sample != 0 }) {
 			t.Fatalf("CH%d audition is silent", channel+1)
@@ -554,8 +552,19 @@ func TestNativeMusicPreviewHonorsSustainedNoteDuration(t *testing.T) {
 	if !slices.ContainsFunc(fifteenthStep, func(sample int8) bool { return sample != 0 }) {
 		t.Fatal("quarter note became silent before its sixteenth 1/64 cell")
 	}
-	if slices.ContainsFunc(afterNote, func(sample int8) bool { return sample != 0 }) {
-		t.Fatal("quarter note remained audible after its scheduled duration")
+	peak := func(samples []int8) int {
+		value := 0
+		for _, sample := range samples {
+			candidate := int(sample)
+			if candidate < 0 {
+				candidate = -candidate
+			}
+			value = max(value, candidate)
+		}
+		return value
+	}
+	if peak(afterNote) >= peak(fifteenthStep) {
+		t.Fatalf("post-note high-pass tail did not decay: active=%d tail=%d", peak(fifteenthStep), peak(afterNote))
 	}
 }
 
@@ -1036,6 +1045,77 @@ func TestNativePreviewNoiseClockMatchesNR43HardwareFormula(t *testing.T) {
 	} {
 		if got := nativeNoiseFrequency(test.divisor, test.shift); math.Abs(got-test.want) > 1e-9 {
 			t.Fatalf("noise divisor=%d shift=%d frequency = %f, want %f", test.divisor, test.shift, got, test.want)
+		}
+	}
+}
+
+func TestNativePreviewBandlimitsPSGEdgesAtHostRate(t *testing.T) {
+	if NativePreviewSampleRate != 48_000 {
+		t.Fatalf("native preview sample rate = %d, want host-rate 48000", NativePreviewSampleRate)
+	}
+	for _, duty := range []float64{0.125, 0.25, 0.5, 0.75} {
+		got := nativePulseAverage(0, 1, duty)
+		want := 2*duty - 1
+		if math.Abs(got-want) > 1e-12 {
+			t.Fatalf("one-cycle %.3f pulse average = %.12f, want %.12f", duty, got, want)
+		}
+	}
+
+	state := nativePreviewVoiceState{lfsr: 0x7fff}
+	got := nativeNoiseAverage(&state, 16, hw.Noise15Bit)
+	if got < -1 || got > 1 || state.lfsr == 0x7fff {
+		t.Fatalf("16-transition noise integration = %.3f state %#04x", got, state.lfsr)
+	}
+}
+
+func TestEveryFactoryPresetMatchesBetweenClickAndLiveAudition(t *testing.T) {
+	m := nativeEditorFixture(t)
+	const note = uint8(60)
+	for channel := 0; channel < 4; channel++ {
+		for preset, factory := range NativeSoundPresets(channel) {
+			id, _, err := m.EnsureNativeSoundPreset(channel, preset)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var sound *audio.Sound
+			for index := range m.NativeAudio.Library.Sounds {
+				if int(m.NativeAudio.Library.Sounds[index].ID) == id {
+					sound = &m.NativeAudio.Library.Sounds[index]
+					break
+				}
+			}
+			if sound == nil {
+				t.Fatalf("CH%d preset %q was not compiled", channel+1, factory.Name)
+			}
+			click, err := RenderNativeNotePreview(m.NativeAudio.Library, id, int(note))
+			if err != nil {
+				t.Fatal(err)
+			}
+			stream := performance.NewStream(NativePreviewSampleRate)
+			if !stream.Start(uint8(channel+1), note, *sound) {
+				t.Fatalf("CH%d preset %q live start rejected", channel+1, factory.Name)
+			}
+			pcm := make([]byte, len(click)*4)
+			if _, err := stream.Read(pcm); err != nil {
+				t.Fatal(err)
+			}
+			var totalDifference float64
+			peakDifference := 0.0
+			peakIndex := 0
+			comparisonSamples := min(len(click), NativePreviewSampleRate/20)
+			for index, want := range click[:comparisonSamples] {
+				live := float64(int16(binary.LittleEndian.Uint16(pcm[index*4:]))) / 250.0
+				difference := math.Abs(live - float64(want))
+				totalDifference += difference
+				if difference > peakDifference {
+					peakDifference = difference
+					peakIndex = index
+				}
+			}
+			meanDifference := totalDifference / float64(comparisonSamples)
+			if meanDifference > 1.5 || peakDifference > 6 {
+				t.Fatalf("CH%d preset %q click/live mismatch: mean %.3f peak %.3f at sample %d", channel+1, factory.Name, meanDifference, peakDifference, peakIndex)
+			}
 		}
 	}
 }

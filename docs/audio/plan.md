@@ -3,8 +3,8 @@
 ## Status
 
 **PSG-only hardware scope locked. The cartridge runtime and single-screen
-desktop Music Lab are implemented. Physical GBA and Launchkey sign-off remain
-external release gates.**
+desktop Music Lab are implemented. Physical GBA and the remaining Launchkey
+transport/hotplug/latency sign-off remain external release gates.**
 
 Audio v2 uses only the four Game Boy sound channels built into the Game Boy
 Advance. Direct Sound A/B, FIFO streaming, PCM samples, and software mixing are
@@ -15,7 +15,7 @@ The old PICO-compatible software mixer is archived under
 [`legacy/v1`](legacy/v1/README.md). Its captures remain engineering evidence,
 but production Audio v2 does not call it.
 
-### Implementation checkpoint — 2026-08-27
+### Implementation checkpoint — 2026-08-28
 
 | Area | State |
 | --- | --- |
@@ -25,8 +25,9 @@ but production Audio v2 does not call it.
 | Strict v2 assets, compiler, and Lua APIs | Implemented; v1/PCM fail closed |
 | Unified MUSIC/SFX composition + arrangement surface | Implemented; same composer, no audio pages |
 | Keyboard performance and automatic tracker recording | Implemented and host-tested |
-| Launchkey Mini 25 MK4 zero-config integration | Implemented with fake-device/golden-byte tests; physical sign-off pending |
+| Launchkey Mini 25 MK4 zero-config integration | Implemented; physical CoreMIDI discovery, outbound OLED/LED handshake, keys, pad, and encoder pass; final transport/hotplug/latency run pending |
 | Native examples and editor round trip | Implemented |
+| GB Studio factory preset register/macro fidelity | 52/52 materialize and audition; exact 72-note hUGE periods and all 14 CH4 NR43 sequences golden-tested |
 | 42-case mGBA truth captures and graphics coexistence soak | Passing |
 | Physical GBA listening/capture matrix | Pending external hardware run |
 
@@ -247,6 +248,10 @@ same document and remain visible at the same time.
   at most 15 ms; the supported-Mac release maximum is 20 ms.
 - Preview and cartridge playback share note periods, waveform tables,
   envelopes, sweep, noise parameters, and channel semantics.
+- Desktop PSG audition renders at the 48 kHz host rate, integrates pulse, Wave
+  RAM, and LFSR transitions over each output sample, and applies the same
+  AC-coupled high-pass behavior as a hardware emulator. It never routes native
+  PSG through the legacy 16,384 Hz Direct Sound preview path.
 
 ### External design reference
 

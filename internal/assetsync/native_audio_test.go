@@ -24,10 +24,11 @@ func nativeAudioFixture() (NativeAudioSettings, NativeSoundLibrary, NativeMusicL
 	sounds := NativeSoundLibrary{Version: NativeAudioSchemaVersion, Sounds: []NativeSoundAsset{
 		{ID: 0, Name: "bright-lead", Kind: "ch1", Route: "both", Pulse: &NativePulseAsset{
 			Duty: 50, Envelope: envelope, Sweep: &NativeSweepAsset{Pace: 2, Direction: "up", Shift: 1},
-		}},
+		}, Macro: &NativeMacroAsset{Steps: []NativeMacroStepAsset{{PeriodDelta: 1}, {PeriodDelta: -1}}, LoopStart: nativeInt(0)}},
 		{ID: 1, Name: "soft-pulse", Kind: "ch2", Route: "both", Pulse: &NativePulseAsset{Duty: 25, Envelope: envelope}},
 		{ID: 2, Name: "round-wave", Kind: "ch3", Route: "both", Wave: &NativeWaveAsset{Samples: wave, Level: 100}},
-		{ID: 3, Name: "short-noise", Kind: "ch4", Route: "both", Noise: &NativeNoiseAsset{Width: 7, Divisor: 3, Shift: 5, Envelope: envelope}},
+		{ID: 3, Name: "short-noise", Kind: "ch4", Route: "both", Noise: &NativeNoiseAsset{Width: 7, Divisor: 3, Shift: 5, Envelope: envelope},
+			Macro: &NativeMacroAsset{Steps: []NativeMacroStepAsset{{NoiseNoteOffset: 32, HasNoiseNote: true}}, LoopStart: nativeInt(0)}},
 	}}
 	music := NativeMusicLibrary{
 		Version: NativeAudioSchemaVersion,
@@ -36,7 +37,7 @@ func nativeAudioFixture() (NativeAudioSettings, NativeSoundLibrary, NativeMusicL
 			{ID: 0, Name: "lead-a", Kind: "ch1", LengthTicks: 96, Events: []NativeEventAsset{{Tick: 0, DurationTicks: 24, Note: 69, SoundID: 0, Priority: 100}}},
 			{ID: 1, Name: "pulse-a", Kind: "ch2", LengthTicks: 96, Events: []NativeEventAsset{{Tick: 0, DurationTicks: 24, Note: 57, SoundID: 1, Priority: 90}}},
 			{ID: 2, Name: "wave-a", Kind: "ch3", LengthTicks: 96, Events: []NativeEventAsset{{Tick: 0, DurationTicks: 24, Note: 57, SoundID: 2, Priority: 80}}},
-			{ID: 3, Name: "noise-a", Kind: "ch4", LengthTicks: 96, Events: []NativeEventAsset{{Tick: 0, DurationTicks: 12, Note: 0, SoundID: 3, Priority: 70}}},
+			{ID: 3, Name: "noise-a", Kind: "ch4", LengthTicks: 96, Events: []NativeEventAsset{{Tick: 0, DurationTicks: 12, Note: 60, SoundID: 3, Priority: 70}}},
 		},
 		Parts: []NativePartAsset{{
 			ID: 0, Name: "intro", LengthTicks: 96,
@@ -65,6 +66,12 @@ func TestCompileNativeAudioMapsAllFourHardwareChannels(t *testing.T) {
 	}
 	if library.Sounds[3].Noise.Width != hw.Noise7Bit || library.Parts[0].PSGClips != [4]int16{0, 1, 2, 3} {
 		t.Fatalf("CH4/part mapping = %+v / %+v", library.Sounds[3].Noise, library.Parts[0])
+	}
+	if got := library.Sounds[0].Macro; len(got.Steps) != 2 || got.LoopStart != 0 || got.Steps[1].PeriodDelta != -1 {
+		t.Fatalf("CH1 macro mapping = %+v", got)
+	}
+	if got := library.Sounds[3].Macro; len(got.Steps) != 1 || !got.Steps[0].HasNoiseNote || got.Steps[0].NoiseNoteOffset != 32 {
+		t.Fatalf("CH4 macro mapping = %+v", got)
 	}
 	if library.Parts[0].Tempo != 180 {
 		t.Fatalf("part tempo = %d, want 180", library.Parts[0].Tempo)
@@ -151,6 +158,26 @@ func TestNativeAudioRejectsWrongChannelReferencesAndOverlap(t *testing.T) {
 	}
 }
 
+func TestNativeAudioRejectsInvalidRelativeNoiseMacros(t *testing.T) {
+	settings, sounds, music := nativeAudioFixture()
+	sounds.Sounds[3].Macro.Steps[0].HasNoise = true
+	if _, err := CompileNativeAudio(settings, sounds, music); err == nil || !strings.Contains(err.Error(), "mixes absolute and note-relative") {
+		t.Fatalf("mixed absolute/relative CH4 macro error = %v", err)
+	}
+
+	settings, sounds, music = nativeAudioFixture()
+	sounds.Sounds[3].Macro.Steps[0].NoiseNoteOffset = 36
+	if _, err := CompileNativeAudio(settings, sounds, music); err == nil || !strings.Contains(err.Error(), "invalid CH4 note offset") {
+		t.Fatalf("out-of-range relative CH4 macro error = %v", err)
+	}
+
+	settings, sounds, music = nativeAudioFixture()
+	music.Clips[3].Events[0].Note = 108
+	if _, err := CompileNativeAudio(settings, sounds, music); err == nil || !strings.Contains(err.Error(), "hardware") {
+		t.Fatalf("out-of-range relative CH4 event error = %v", err)
+	}
+}
+
 func TestDetectAudioVersionDefaultsToV2AndKeepsExplicitLegacySeparate(t *testing.T) {
 	dir := t.TempDir()
 	if got, err := DetectAudioVersion(dir); err != nil || got != NativeAudioSchemaVersion {
@@ -193,7 +220,7 @@ func TestGenerateNativeAudioGoCompilesAgainstRealRuntime(t *testing.T) {
 		t.Fatal(err)
 	}
 	text := string(source)
-	for _, wanted := range []string{"nativeSoundROM", "nativeClipROM", "nativePartROM", "nativeSongROM", "InitNativeAudio"} {
+	for _, wanted := range []string{"nativeSoundMacro0", "nativeSoundMacro3", "nativeSoundROM", "nativeClipROM", "nativePartROM", "nativeSongROM", "InitNativeAudio"} {
 		if !strings.Contains(text, wanted) {
 			t.Fatalf("generated source is missing %s", wanted)
 		}

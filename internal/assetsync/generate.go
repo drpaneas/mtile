@@ -226,9 +226,20 @@ func writeNativePulse(b *strings.Builder, pulse hw.PulseConfig) {
 }
 
 func writeNativeAudioArrays(b *strings.Builder, library audio.Library) {
+	for index, sound := range library.Sounds {
+		if len(sound.Macro.Steps) == 0 {
+			continue
+		}
+		b.WriteString("//go:section .rodata\n")
+		fmt.Fprintf(b, "var nativeSoundMacro%d = [%d]audio.SoundMacroStep{\n", index, len(sound.Macro.Steps))
+		for _, step := range sound.Macro.Steps {
+			fmt.Fprintf(b, "\t{PeriodDelta: %d, NoiseDivisor: %d, NoiseShift: %d, HasNoise: %t, NoiseNoteOffset: %d, HasNoiseNote: %t},\n", step.PeriodDelta, step.NoiseDivisor, step.NoiseShift, step.HasNoise, step.NoiseNoteOffset, step.HasNoiseNote)
+		}
+		b.WriteString("}\n\n")
+	}
 	b.WriteString("//go:section .rodata\n")
 	fmt.Fprintf(b, "var nativeSoundROM = [%d]audio.Sound{\n", len(library.Sounds))
-	for _, sound := range library.Sounds {
+	for index, sound := range library.Sounds {
 		fmt.Fprintf(b, "\t{ID: %d, Kind: %s, ", sound.ID, nativeSoundKindGoName(sound.Kind))
 		switch sound.Kind {
 		case audio.SoundCH1:
@@ -248,6 +259,9 @@ func writeNativeAudioArrays(b *strings.Builder, library audio.Library) {
 			fmt.Fprintf(b, "Noise: hw.NoiseConfig{Width: hw.NoiseWidth(%d), Divisor: %d, Shift: %d, Length: %d, UseLength: %t, Envelope: ", sound.Noise.Width, sound.Noise.Divisor, sound.Noise.Shift, sound.Noise.Length, sound.Noise.UseLength)
 			writeNativeEnvelope(b, sound.Noise.Envelope)
 			fmt.Fprintf(b, ", Route: %s}", nativeRouteGoName(sound.Noise.Route))
+		}
+		if len(sound.Macro.Steps) != 0 {
+			fmt.Fprintf(b, ", Macro: audio.SoundMacro{Steps: nativeSoundMacro%d[:], LoopStart: %d}", index, sound.Macro.LoopStart)
 		}
 		b.WriteString("},\n")
 	}

@@ -16,7 +16,7 @@ var launchkeyMiniHeader = [...]byte{0xF0, 0x00, 0x20, 0x29, 0x02, 0x13}
 
 func (LaunchkeyMini25MK4) Matches(name string) bool {
 	name = strings.ToLower(name)
-	return strings.Contains(name, "launchkey") && (strings.Contains(name, "mk4") || strings.Contains(name, "mini"))
+	return strings.Contains(name, "launchkey") && strings.Contains(name, "mini") && strings.Contains(name, "mk4")
 }
 
 func (LaunchkeyMini25MK4) Role(name string) PortRole {
@@ -25,6 +25,26 @@ func (LaunchkeyMini25MK4) Role(name string) PortRole {
 		return PortDAW
 	}
 	return PortKeys
+}
+
+func (LaunchkeyMini25MK4) DisplayName(endpoints []Endpoint) string {
+	for _, endpoint := range endpoints {
+		name := strings.TrimSpace(endpoint.Name)
+		lower := strings.ToLower(name)
+		if !strings.Contains(lower, "launchkey") {
+			continue
+		}
+		for _, suffix := range []string{" MIDI Out", " MIDI In", " DAW Out", " DAW In", " MIDI", " DAW"} {
+			if strings.HasSuffix(strings.ToLower(name), strings.ToLower(suffix)) {
+				name = strings.TrimSpace(name[:len(name)-len(suffix)])
+				break
+			}
+		}
+		if name != "" {
+			return name
+		}
+	}
+	return "Launchkey Mini 25 MK4"
 }
 
 func (LaunchkeyMini25MK4) Decode(role PortRole, data []byte, at time.Duration) CommandBatch {

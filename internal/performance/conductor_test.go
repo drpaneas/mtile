@@ -68,3 +68,31 @@ func TestConductorLoopCutsTakesOnTrackerBoundaries(t *testing.T) {
 	}
 	_, _ = conductor.Stop()
 }
+
+func TestConductorNonLoopRecordingContinuesPastPartBoundary(t *testing.T) {
+	session := NewSession(nil, testSoundBank())
+	session.Arm(true, 0)
+	conductor := NewConductor(session, nil)
+	clock := NewTrackerClock(400, 4) // one part is 6.25 ms
+	if !conductor.Start(CaptureOptions{Clock: clock, Loop: false}) {
+		t.Fatal("continuous conductor did not start")
+	}
+	select {
+	case <-conductor.Events(): // CaptureStarted
+	case <-time.After(time.Second):
+		t.Fatal("missing capture start event")
+	}
+	time.Sleep(20 * time.Millisecond)
+	snapshot := conductor.Snapshot()
+	if !snapshot.Active || !snapshot.Recording || snapshot.Tick <= int64(clock.PartTicks) {
+		t.Fatalf("capture stopped at part boundary: %#v", snapshot)
+	}
+	select {
+	case event := <-conductor.Events():
+		t.Fatalf("non-loop capture emitted boundary event %#v", event)
+	default:
+	}
+	if _, ok := conductor.Stop(); !ok {
+		t.Fatal("continuous capture did not return its final take")
+	}
+}

@@ -171,3 +171,23 @@ func TestNativePerformanceRejectsDroppedTake(t *testing.T) {
 		t.Fatal("dropped take was committed")
 	}
 }
+
+func TestNativePerformanceTakeExtendsPartToWholeBars(t *testing.T) {
+	m := nativeEditorFixture(t)
+	take := performance.RawPerformanceTake{Duration: 5 * time.Second, Events: []performance.RawEvent{
+		{Offset: 4250 * time.Millisecond, Kind: performance.ActionStart, Channel: 1, Note: 60},
+		{Offset: 4500 * time.Millisecond, Kind: performance.ActionStop, Channel: 1, Note: 60},
+	}}
+	clock := performance.NewTrackerClock(120, NativePartTicks)
+	if _, err := m.ApplyNativePerformanceTake(0, take, clock, performance.QuantizeOff, false); err != nil {
+		t.Fatal(err)
+	}
+	part, ok := m.NativePartAt(0)
+	if !ok || part.Bars != 3 || part.LengthTicks != 3*NativePartTicks {
+		t.Fatalf("extended recorded part = %#v ok=%t", part, ok)
+	}
+	clip, ok := m.NativeClipAt(0, 0)
+	if !ok || clip.LengthTicks != part.LengthTicks || len(clip.Events) != 1 || clip.Events[0].Tick <= NativePartTicks {
+		t.Fatalf("late recorded note was clipped to the first bar: %#v ok=%t", clip, ok)
+	}
+}

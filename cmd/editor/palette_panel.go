@@ -16,6 +16,8 @@ const (
 	paletteSelectionThickness = 2
 	paletteColorHeaderLabel   = "COLOR"
 	colorPickerTitle          = "CHANGE COLOR"
+	pickerSliderHeight        = 14
+	pickerSliderRowHeight     = 24
 )
 
 func swatchRect(index int) editor.Rect {
@@ -120,18 +122,18 @@ func paletteMetaX(meta string) int {
 // --- RGB15 color picker for the currently selected swatch ---
 
 func pickerSliderRect(row int) editor.Rect {
-	top := pickerRect.Y + 28
+	top := pickerRect.Y + uiTextHeight + spritePanelContentGap
 	if spritePickerPanelRect.W == 0 {
 		preview := colorPickerPreviewRect()
-		top = preview.Y + preview.H + 10
+		top = preview.Y + preview.H + spritePanelContentGap
 	}
-	return editor.Rect{X: pickerRect.X + 24, Y: top + row*24, W: max(18, pickerRect.W-58), H: 14}
+	return editor.Rect{X: pickerRect.X + 24, Y: top + row*pickerSliderRowHeight, W: max(18, pickerRect.W-58), H: pickerSliderHeight}
 }
 
 func colorPickerPreviewRect() editor.Rect {
 	y := pickerRect.Y
 	if spritePickerPanelRect.W == 0 {
-		y += uiTextHeight + 8
+		y += uiTextHeight + spritePanelContentGap
 	}
 	return editor.Rect{X: pickerRect.X + pickerRect.W - 30, Y: y, W: 30, H: 18}
 }
@@ -141,18 +143,6 @@ func colorPickerTitlePosition() (int, int) {
 		return spritePanelTitlePosition(spritePickerPanelRect)
 	}
 	return pickerRect.X, pickerRect.Y
-}
-
-func colorPickerInfoY() int {
-	// The standalone desktop panel gives its reclaimed vertical space to the
-	// flags above it, then anchors hardware metadata to the content baseline.
-	// Compact mode shares this panel with the palette, so preserve its tighter
-	// top-aligned rhythm instead of stretching a three-row form arbitrarily.
-	if spritePickerPanelRect.W > 0 {
-		return pickerRect.Y + pickerRect.H - uiSmallTextHeight
-	}
-	lastSlider := pickerSliderRect(2)
-	return lastSlider.Y + lastSlider.H + 12
 }
 
 func (g *Game) editableActiveColor() (assetsync.RGB15, bool) {
@@ -233,17 +223,9 @@ func (g *Game) drawColorPicker(screen *ebiten.Image) {
 			value := fmt.Sprintf("%02d", values[i])
 			drawSmallText(screen, value, pickerRect.X+pickerRect.W-smallTextWidth(value), r.Y+(r.H-uiSmallTextHeight)/2, colorText)
 		}
-		infoY := colorPickerInfoY()
-		if infoY+uiSmallTextHeight <= pickerRect.Y+pickerRect.H {
-			drawSmallText(screen, colorPickerInfoText(g.currentColor, c.Packed()), pickerRect.X, infoY, colorDim)
-		}
 	}
 }
 
 const colorZeroHint = "id 0 is transparent (eraser)"
 const spriteZeroHint = "sprite 0 is reserved (transparent eraser)"
 const spriteZeroLockedMessage = "sprite 0 is locked: it is the transparent map eraser"
-
-func colorPickerInfoText(id int, packed uint16) string {
-	return fmt.Sprintf("BGR555 · 0x%04X · ID %d", packed, id)
-}

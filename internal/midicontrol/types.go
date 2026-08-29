@@ -33,6 +33,7 @@ const (
 	CommandParameterDelta
 	CommandConnected
 	CommandDisconnected
+	CommandProblem
 )
 
 type Command struct {
@@ -42,6 +43,7 @@ type Command struct {
 	Parameter   performance.Parameter
 	Delta       int16
 	Name        string
+	Detail      string
 }
 
 const MaxCommandsPerMessage = 4
@@ -100,4 +102,10 @@ type Profile interface {
 	Initialize() [][]byte
 	Shutdown() [][]byte
 	Feedback(ControllerState) [][]byte
+}
+
+// ProfileDisplayNamer lets a device profile collapse CoreMIDI's separate
+// input/output endpoint names into the product name shown in the UI.
+type ProfileDisplayNamer interface {
+	DisplayName([]Endpoint) string
 }

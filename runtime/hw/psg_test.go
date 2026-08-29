@@ -46,6 +46,34 @@ func TestTypedPSGControlsProgramExactRegisters(t *testing.T) {
 	}
 }
 
+func TestNoiseAcceptsEntireFourBitClockShift(t *testing.T) {
+	ResetForTest()
+	noise := NoiseConfig{Width: Noise15Bit, Divisor: 7, Shift: 15, Envelope: testEnvelope(), Route: SoundRouteBoth}
+	if !TriggerNoise(noise) {
+		t.Fatal("CH4 rejected a valid four-bit clock shift")
+	}
+	if got, want := GetReg16(SOUND4CNT_H), uint16(0x80f7); got != want {
+		t.Fatalf("SOUND4CNT_H = %#04x, want %#04x", got, want)
+	}
+}
+
+func TestSetNoisePolynomialPreservesLengthWithoutRetrigger(t *testing.T) {
+	ResetForTest()
+	config := NoiseConfig{
+		Width: Noise7Bit, Divisor: 3, Shift: 5, Length: 12, UseLength: true,
+		Envelope: testEnvelope(), Route: SoundRouteBoth,
+	}
+	if !TriggerNoise(config) || !SetNoisePolynomial(4, 1, Noise7Bit) {
+		t.Fatal("noise trigger/polynomial update failed")
+	}
+	if got := GetReg16(SOUND4CNT_H); got != 0x401c {
+		t.Fatalf("updated SOUND4CNT_H = %#04x, want length enabled and no trigger", got)
+	}
+	if SetNoisePolynomial(8, 1, Noise7Bit) || SetNoisePolynomial(1, 16, Noise15Bit) {
+		t.Fatal("invalid polynomial update accepted")
+	}
+}
+
 func TestFirstPSGTriggerEnablesMasterBeforeHardwareRegisterWrites(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -178,7 +206,7 @@ func TestPSGControlsRejectInvalidWithoutWrites(t *testing.T) {
 	SetReg16(SOUND1CNT_X, 0x1234)
 	bad := PulseConfig{Duty: PulseDuty(9), Envelope: testEnvelope(), Route: SoundRouteBoth}
 	if TriggerPulse1(1750, Pulse1Config{Pulse: bad}) || TriggerPulse2(2048, PulseConfig{}) ||
-		TriggerNoise(NoiseConfig{Shift: 14}) {
+		TriggerNoise(NoiseConfig{Shift: 16}) {
 		t.Fatal("invalid PSG controls were accepted")
 	}
 	if got := GetReg16(SOUND1CNT_X); got != 0x1234 {
@@ -279,7 +307,7 @@ func TestPSGAcceptedHardwareRangesEncodeEveryDiscreteControl(t *testing.T) {
 
 	for width := uint8(0); width <= 1; width++ {
 		for divisor := uint8(0); divisor <= 7; divisor++ {
-			for shift := uint8(0); shift <= 13; shift++ {
+			for shift := uint8(0); shift <= 15; shift++ {
 				config := NoiseConfig{
 					Width: NoiseWidth(width), Divisor: divisor, Shift: shift,
 					Envelope: envelope, Route: SoundRouteBoth,

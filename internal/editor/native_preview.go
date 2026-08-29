@@ -5,16 +5,21 @@ import (
 	"math"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/gbapu"
 	"github.com/drpaneas/mtile/runtime/audio"
 	"github.com/drpaneas/mtile/runtime/hw"
 )
 
-const NativePreviewSampleRate = 16384
+// NativePreviewSampleRate is intentionally the desktop monitor rate, not a
+// Direct Sound FIFO rate. Native Audio v2 uses the four PSG channels directly;
+// rendering them at 16,384 Hz and then linearly stretching that signal to the
+// host rate aliases narrow pulse waves and high-frequency noise badly. GB
+// Studio likewise asks its Game Boy emulator to render at the browser audio
+// context's rate.
+const NativePreviewSampleRate = 48000
 
-// NativeNotePreviewSamples is a deliberately short desktop audition. It is
-// long enough to identify pitch and envelope, but short enough that repeated
-// note placement still feels immediate.
-const NativeNotePreviewSamples = NativePreviewSampleRate / 4
+// NativeNotePreviewSamples matches GB Studio's half-second instrument test.
+const NativeNotePreviewSamples = NativePreviewSampleRate / 2
 
 type NativePreviewSegment struct {
 	SequenceIndex int
@@ -86,6 +91,7 @@ func RenderNativeMusicPreviewSettings(library audio.Library, songID int, muteMas
 	var previousEnd [4]int
 	var previousSound [4]uint8
 	var previousValid [4]bool
+	var leftFilter, rightFilter nativePreviewHighPass
 	for sequenceIndex, partID := range song.Sequence {
 		part := nativeRuntimePart(library.Parts, partID)
 		if part == nil {
@@ -148,8 +154,8 @@ func RenderNativeMusicPreviewSettings(library audio.Library, songID int, muteMas
 			}
 		}
 		for index := range leftMix {
-			left := nativePreviewTerminalSample(leftMix[index], settings.LeftLevel, settings.PSGRatio)
-			right := nativePreviewTerminalSample(rightMix[index], settings.RightLevel, settings.PSGRatio)
+			left := leftFilter.terminalSample(leftMix[index], settings.LeftLevel, settings.PSGRatio)
+			right := rightFilter.terminalSample(rightMix[index], settings.RightLevel, settings.PSGRatio)
 			preview.LeftSamples[start+index] = left
 			preview.RightSamples[start+index] = right
 			preview.Samples[start+index] = int8((int(left) + int(right)) / 2)
@@ -226,9 +232,10 @@ func RenderNativeSFXPreview(library audio.Library, clipID, tempo int, muteMask u
 			}
 		}
 	}
+	var leftFilter, rightFilter nativePreviewHighPass
 	for index := range leftMix {
-		left := nativePreviewTerminalSample(leftMix[index], settings.LeftLevel, settings.PSGRatio)
-		right := nativePreviewTerminalSample(rightMix[index], settings.RightLevel, settings.PSGRatio)
+		left := leftFilter.terminalSample(leftMix[index], settings.LeftLevel, settings.PSGRatio)
+		right := rightFilter.terminalSample(rightMix[index], settings.RightLevel, settings.PSGRatio)
 		preview.LeftSamples[index] = left
 		preview.RightSamples[index] = right
 		preview.Samples[index] = int8((int(left) + int(right)) / 2)
@@ -245,6 +252,35 @@ func nativePreviewTerminalSample(value int16, level, ratio int) int8 {
 	}
 	scaled := int(value) * (level + 1) * ratio / (4 * 8 * 100)
 	return int8(min(max(scaled, -127), 127))
+}
+
+// nativePreviewHighPass models the AC-coupled output used by Game Boy
+// emulators and hardware. The 511/512 coefficient is the same bass-shift=9
+// integrator leak used by binjgb/mGBA's blip buffer and removes the large DC
+// component of 12.5%, 25%, and 75% pulse waves.
+type nativePreviewHighPass struct {
+	previousInput  float64
+	previousOutput float64
+}
+
+func (f *nativePreviewHighPass) process(value int) int {
+	input := float64(value)
+	output := input - f.previousInput + f.previousOutput*(511.0/512.0)
+	f.previousInput = input
+	f.previousOutput = output
+	return int(math.Round(output))
+}
+
+func (f *nativePreviewHighPass) terminalSample(value int16, level, ratio int) int8 {
+	level = min(max(level, 0), 7)
+	switch ratio {
+	case 25, 50, 100:
+	default:
+		ratio = 100
+	}
+	scaled := int(value) * (level + 1) * ratio / (4 * 8 * 100)
+	filtered := f.process(scaled)
+	return int8(min(max(filtered, -127), 127))
 }
 
 // NativeMonitorMuteMask combines explicit Mute and Solo controls. At least
@@ -273,58 +309,62 @@ func RenderNativeNotePreview(library audio.Library, soundID, note int) ([]int8, 
 	if sound == nil {
 		return nil, errors.New("native note preview sound does not exist")
 	}
-	if sound.Kind != audio.SoundCH4 {
-		if _, ok := audio.NativeSoundPeriod(*sound, uint8(note)); !ok {
-			return nil, errors.New("native note preview pitch is outside the hardware channel range")
-		}
+	if !audio.NativeSoundNoteValid(*sound, uint8(note)) {
+		return nil, errors.New("native note preview pitch is outside the hardware channel range")
 	}
 
-	mix := make([]int16, NativeNotePreviewSamples)
-	nativeRenderEvent(mix, 0, len(mix), uint8(note), *sound)
-	samples := make([]int8, len(mix))
-	for index, value := range mix {
-		value /= 4 // match one channel's level in the four-channel song monitor
-		value = min(max(value, -127), 127)
-		samples[index] = int8(value)
+	monitorSound := nativeSoundWithRoute(*sound, hw.SoundRouteBoth)
+	renderer := gbapu.NewRenderer(NativePreviewSampleRate)
+	if !renderer.Start(uint8(sound.Kind)+1, uint8(note), monitorSound) {
+		return nil, errors.New("native note preview could not start the hardware renderer")
 	}
-	applyNativeNotePreviewEdges(samples)
+	left := make([]int16, NativeNotePreviewSamples)
+	right := make([]int16, NativeNotePreviewSamples)
+	renderer.Render(left, right)
+	samples := make([]int8, len(left))
+	for index, value := range left {
+		samples[index] = int8(min(max(int(value)/256, -127), 127))
+	}
 	return samples, nil
 }
 
 func RenderNativeNotePreviewStereo(library audio.Library, soundID, note int, settings assetsync.NativeAudioSettings) ([]int8, []int8, error) {
-	mono, err := RenderNativeNotePreview(library, soundID, note)
-	if err != nil {
-		return nil, nil, err
+	if !audio.ValidateLibrary(library) || soundID < 0 || soundID > 255 || note < 0 || note > 127 {
+		return nil, nil, errors.New("native note preview selection is invalid")
 	}
 	sound := nativeRuntimeSound(library.Sounds, uint8(soundID))
-	if sound == nil {
+	if sound == nil || !audio.NativeSoundNoteValid(*sound, uint8(note)) {
 		return nil, nil, errors.New("native note preview sound does not exist")
 	}
-	left := make([]int8, len(mono))
-	right := make([]int8, len(mono))
-	route := nativeSoundRoute(*sound)
-	for index, sample := range mono {
-		if route == hw.SoundRouteLeft || route == hw.SoundRouteBoth {
-			left[index] = nativePreviewTerminalSample(int16(sample)*4, settings.LeftLevel, settings.PSGRatio)
-		}
-		if route == hw.SoundRouteRight || route == hw.SoundRouteBoth {
-			right[index] = nativePreviewTerminalSample(int16(sample)*4, settings.RightLevel, settings.PSGRatio)
-		}
+	renderer := gbapu.NewRenderer(NativePreviewSampleRate)
+	renderer.SetOutput(settings.LeftLevel, settings.RightLevel, settings.PSGRatio)
+	if !renderer.Start(uint8(sound.Kind)+1, uint8(note), *sound) {
+		return nil, nil, errors.New("native note preview could not start the hardware renderer")
+	}
+	leftPCM := make([]int16, NativeNotePreviewSamples)
+	rightPCM := make([]int16, NativeNotePreviewSamples)
+	renderer.Render(leftPCM, rightPCM)
+	left := make([]int8, NativeNotePreviewSamples)
+	right := make([]int8, NativeNotePreviewSamples)
+	for index := range left {
+		left[index] = int8(min(max(int(leftPCM[index])/256, -127), 127))
+		right[index] = int8(min(max(int(rightPCM[index])/256, -127), 127))
 	}
 	return left, right, nil
 }
 
-// applyNativeNotePreviewEdges removes host-speaker clicks at the artificial
-// beginning and end of the short audition. It does not alter song rendering
-// or the target's hardware envelope.
-func applyNativeNotePreviewEdges(samples []int8) {
-	const edgeSamples = NativePreviewSampleRate / 250 // about 4 ms
-	edge := min(edgeSamples, len(samples)/2)
-	for index := 0; index < edge; index++ {
-		samples[index] = int8(int(samples[index]) * index / edge)
-		last := len(samples) - 1 - index
-		samples[last] = int8(int(samples[last]) * index / edge)
+func nativeSoundWithRoute(sound audio.Sound, route hw.SoundRoute) audio.Sound {
+	switch sound.Kind {
+	case audio.SoundCH1:
+		sound.Pulse1.Pulse.Route = route
+	case audio.SoundCH2:
+		sound.Pulse2.Route = route
+	case audio.SoundCH3:
+		sound.Wave.Route = route
+	case audio.SoundCH4:
+		sound.Noise.Route = route
 	}
+	return sound
 }
 
 func nativeTicksToSamples(ticks, tempo int) int {
@@ -359,14 +399,20 @@ func nativeRuntimeSound(sounds []audio.Sound, id uint8) *audio.Sound {
 }
 
 type nativePreviewVoiceState struct {
-	initialized  bool
-	tone         bool
-	phase        float64
-	noisePhase   float64
-	lfsr         uint16
-	elapsed      int
-	sweepElapsed int
-	period       int
+	initialized    bool
+	tone           bool
+	phase          float64
+	noisePhase     float64
+	lfsr           uint16
+	elapsed        int
+	sweepElapsed   int
+	period         int
+	noiseDivisor   uint8
+	noiseShift     uint8
+	macroStep      uint8
+	macroRemainder uint64
+	macroActive    bool
+	macroBaseNote  uint8
 }
 
 func nativeRenderEvent(target []int16, start, length int, note uint8, sound audio.Sound) {
@@ -395,11 +441,16 @@ func nativeRenderEventState(target []int16, start, length int, note uint8, sound
 	period, tone := audio.NativeSoundPeriod(sound, note)
 	if !continued || !state.initialized {
 		*state = nativePreviewVoiceState{
-			initialized: true,
-			tone:        tone,
-			lfsr:        0x7fff,
-			period:      int(period),
+			initialized:   true,
+			tone:          tone,
+			lfsr:          0x7fff,
+			period:        int(period),
+			noiseDivisor:  sound.Noise.Divisor,
+			noiseShift:    sound.Noise.Shift,
+			macroActive:   len(sound.Macro.Steps) != 0,
+			macroBaseNote: note,
 		}
+		nativePreviewApplyMacroStep(sound, state)
 	} else if state.tone && tone {
 		// Legato changes pitch but deliberately does not restart phase,
 		// envelope, length, or sweep timing.
@@ -445,13 +496,17 @@ func nativeRenderEventState(target []int16, start, length int, note uint8, sound
 			if !state.tone {
 				break
 			}
-			value = nativePulseValue(phase, nativePulseDutyFraction(sound.Pulse1.Pulse.Duty))
+			advance := frequency / NativePreviewSampleRate
+			value = nativePulseAverage(phase, advance, nativePulseDutyFraction(sound.Pulse1.Pulse.Duty))
+			state.phase = math.Mod(phase+advance, 1)
 			volume = nativeEnvelopeVolume(state.elapsed, sound.Pulse1.Pulse.Envelope.Initial, sound.Pulse1.Pulse.Envelope.Pace, sound.Pulse1.Pulse.Envelope.Direction == hw.EnvelopeUp)
 		case audio.SoundCH2:
 			if !state.tone {
 				break
 			}
-			value = nativePulseValue(phase, nativePulseDutyFraction(sound.Pulse2.Duty))
+			advance := frequency / NativePreviewSampleRate
+			value = nativePulseAverage(phase, advance, nativePulseDutyFraction(sound.Pulse2.Duty))
+			state.phase = math.Mod(phase+advance, 1)
 			volume = nativeEnvelopeVolume(state.elapsed, sound.Pulse2.Envelope.Initial, sound.Pulse2.Envelope.Pace, sound.Pulse2.Envelope.Direction == hw.EnvelopeUp)
 		case audio.SoundCH3:
 			if !state.tone {
@@ -459,35 +514,71 @@ func nativeRenderEventState(target []int16, start, length int, note uint8, sound
 			}
 			wave := sound.Wave.Wave
 			if wave.Length != 0 {
-				waveIndex := int(phase*float64(wave.Length)) % int(wave.Length)
-				value = (float64(wave.Samples[waveIndex]) - 7.5) / 7.5
+				advance := frequency / NativePreviewSampleRate
+				value = nativeWaveAverage(phase, advance, wave)
+				state.phase = math.Mod(phase+advance, 1)
 			}
 			volume = nativeWaveLevel(sound.Wave.Level)
 		case audio.SoundCH4:
-			frequency = nativeNoiseFrequency(sound.Noise.Divisor, sound.Noise.Shift)
-			state.noisePhase += frequency / NativePreviewSampleRate
-			for state.noisePhase >= 1 {
-				bit := (state.lfsr ^ (state.lfsr >> 1)) & 1
-				state.lfsr = (state.lfsr >> 1) | (bit << 14)
-				if sound.Noise.Width == hw.Noise7Bit {
-					state.lfsr = (state.lfsr &^ (1 << 6)) | (bit << 6)
-				}
-				state.noisePhase--
-			}
-			if state.lfsr&1 == 0 {
-				value = 1
-			} else {
-				value = -1
-			}
+			frequency = nativeNoiseFrequency(state.noiseDivisor, state.noiseShift)
+			value = nativeNoiseAverage(state, frequency/NativePreviewSampleRate, sound.Noise.Width)
 			volume = nativeEnvelopeVolume(state.elapsed, sound.Noise.Envelope.Initial, sound.Noise.Envelope.Pace, sound.Noise.Envelope.Direction == hw.EnvelopeUp)
 		}
 		target[start+index] += int16(value * volume * 112)
-		if sound.Kind != audio.SoundCH4 && state.tone {
-			state.phase = math.Mod(state.phase+frequency/NativePreviewSampleRate, 1)
-		}
 		state.elapsed++
 		state.sweepElapsed++
+		nativePreviewAdvanceMacro(sound, state)
 	}
+}
+
+func nativePreviewAdvanceMacro(sound audio.Sound, state *nativePreviewVoiceState) {
+	if state == nil || !state.macroActive {
+		return
+	}
+	state.macroRemainder += uint64(hw.GBAClockHz)
+	threshold := uint64(NativePreviewSampleRate) * uint64(audio.NativeMacroClockCycles)
+	if state.macroRemainder < threshold {
+		return
+	}
+	state.macroRemainder -= threshold
+	nativePreviewApplyMacroStep(sound, state)
+}
+
+func nativePreviewApplyMacroStep(sound audio.Sound, state *nativePreviewVoiceState) {
+	if state == nil || !state.macroActive || int(state.macroStep) >= len(sound.Macro.Steps) {
+		return
+	}
+	step := sound.Macro.Steps[state.macroStep]
+	if step.PeriodDelta != 0 {
+		state.period += int(step.PeriodDelta)
+		if state.period < 0 || state.period > 2047 {
+			state.tone = false
+			state.macroActive = false
+			return
+		}
+	}
+	if step.HasNoise {
+		state.noiseDivisor = step.NoiseDivisor
+		state.noiseShift = step.NoiseShift
+	}
+	if step.HasNoiseNote {
+		divisor, shift, ok := audio.NativeGBStudioNoisePolynomial(state.macroBaseNote, step.NoiseNoteOffset)
+		if !ok {
+			state.macroActive = false
+			return
+		}
+		state.noiseDivisor = divisor
+		state.noiseShift = shift
+	}
+	next := int(state.macroStep) + 1
+	if next >= len(sound.Macro.Steps) {
+		if sound.Macro.LoopStart < 0 {
+			state.macroActive = false
+			return
+		}
+		next = int(sound.Macro.LoopStart)
+	}
+	state.macroStep = uint8(next)
 }
 
 func nativeSoundRoute(sound audio.Sound) hw.SoundRoute {
@@ -532,6 +623,110 @@ func nativePulseValue(phase, duty float64) float64 {
 		return 1
 	}
 	return -1
+}
+
+// nativePulseAverage integrates one hardware pulse over an output sample.
+// Point-sampling a 262 kHz PSG clock aliases into false audible pitches;
+// integrating edge coverage is the compact equivalent of the low-pass stage
+// used by an emulator's blip buffer.
+func nativePulseAverage(phase, advance, duty float64) float64 {
+	if advance <= 0 {
+		return nativePulseValue(phase, duty)
+	}
+	positive := nativePeriodicIntervalCoverage(phase, advance, duty)
+	return positive*2/advance - 1
+}
+
+func nativePeriodicIntervalCoverage(phase, advance, positiveEnd float64) float64 {
+	phase = math.Mod(phase, 1)
+	if phase < 0 {
+		phase++
+	}
+	remaining := advance
+	covered := 0.0
+	for remaining > 0 {
+		span := math.Min(remaining, 1-phase)
+		if phase < positiveEnd {
+			covered += math.Min(span, positiveEnd-phase)
+		}
+		remaining -= span
+		phase += span
+		if phase >= 1-1e-12 {
+			phase = 0
+		}
+	}
+	return covered
+}
+
+func nativeWaveAverage(phase, advance float64, wave hw.Waveform) float64 {
+	if wave.Length == 0 {
+		return 0
+	}
+	if advance <= 0 {
+		index := int(math.Mod(phase, 1)*float64(wave.Length)) % int(wave.Length)
+		return (float64(wave.Samples[index]) - 7.5) / 7.5
+	}
+	remaining := advance
+	position := math.Mod(phase, 1) * float64(wave.Length)
+	weighted := 0.0
+	for remaining > 0 {
+		index := int(position) % int(wave.Length)
+		toBoundary := (float64(index+1) - position) / float64(wave.Length)
+		if toBoundary <= 1e-12 {
+			toBoundary = 1 / float64(wave.Length)
+		}
+		span := math.Min(remaining, toBoundary)
+		weighted += ((float64(wave.Samples[index]) - 7.5) / 7.5) * span
+		remaining -= span
+		position += span * float64(wave.Length)
+		if position >= float64(wave.Length)-1e-12 {
+			position = 0
+		}
+	}
+	return weighted / advance
+}
+
+func nativeNoiseValue(lfsr uint16) float64 {
+	if lfsr&1 == 0 {
+		return 1
+	}
+	return -1
+}
+
+func nativeNoiseShift(state *nativePreviewVoiceState, width hw.NoiseWidth) {
+	bit := (state.lfsr ^ (state.lfsr >> 1)) & 1
+	state.lfsr = (state.lfsr >> 1) | (bit << 14)
+	if width == hw.Noise7Bit {
+		state.lfsr = (state.lfsr &^ (1 << 6)) | (bit << 6)
+	}
+}
+
+func nativeNoiseAverage(state *nativePreviewVoiceState, advance float64, width hw.NoiseWidth) float64 {
+	if state == nil || advance <= 0 {
+		if state == nil {
+			return 0
+		}
+		return nativeNoiseValue(state.lfsr)
+	}
+	remaining := 1.0
+	weighted := 0.0
+	for remaining > 0 {
+		toShift := (1 - state.noisePhase) / advance
+		if toShift >= remaining {
+			weighted += nativeNoiseValue(state.lfsr) * remaining
+			state.noisePhase += advance * remaining
+			break
+		}
+		weighted += nativeNoiseValue(state.lfsr) * toShift
+		remaining -= toShift
+		state.noisePhase = 0
+		nativeNoiseShift(state, width)
+	}
+	if state.noisePhase >= 1-1e-12 {
+		state.noisePhase = 0
+		nativeNoiseShift(state, width)
+	}
+	return weighted
 }
 
 func nativePulseDutyFraction(duty hw.PulseDuty) float64 {

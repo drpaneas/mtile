@@ -42,6 +42,32 @@ func TestLaunchkeyKeysPadsEncodersAndTransport(t *testing.T) {
 	assertCommand(PortDAW, []byte{0xBF, 117, 127}, CommandRecordToggle)
 }
 
+func TestLaunchkeyMatchesPhysicalCoreMIDIPortsAndUsesProductName(t *testing.T) {
+	profile := LaunchkeyMini25MK4{}
+	ports := []Endpoint{
+		{Name: "Launchkey Mini MK4 25 MIDI Out", Input: true},
+		{Name: "Launchkey Mini MK4 25 DAW Out", Input: true},
+		{Name: "Launchkey Mini MK4 25 MIDI In", Output: true},
+		{Name: "Launchkey Mini MK4 25 DAW In", Output: true},
+	}
+	for _, port := range ports {
+		if !profile.Matches(port.Name) {
+			t.Fatalf("physical endpoint %q was not matched", port.Name)
+		}
+	}
+	for _, unsupported := range []string{"Launchkey Mini MK3 MIDI", "Launchkey MK4 49 MIDI"} {
+		if profile.Matches(unsupported) {
+			t.Fatalf("unsupported controller %q was matched", unsupported)
+		}
+	}
+	if profile.Role(ports[0].Name) != PortKeys || profile.Role(ports[1].Name) != PortDAW {
+		t.Fatal("physical CoreMIDI endpoints were assigned the wrong roles")
+	}
+	if got := profile.DisplayName(ports); got != "Launchkey Mini MK4 25" {
+		t.Fatalf("DisplayName() = %q", got)
+	}
+}
+
 func TestLaunchkeyInitializationUsesDocumentedMiniProtocol(t *testing.T) {
 	messages := (LaunchkeyMini25MK4{}).Initialize()
 	want := [][]byte{

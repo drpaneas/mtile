@@ -26,7 +26,7 @@ The straight editor grid reaches 1/64 note (6 ticks), while all events retain
 exact 96-PPQN ticks. This permits exact quarter/eighth/sixteenth triplets,
 dotted durations, and straight-grid swing without rescaling existing assets.
 A part records its bar count and time signature; its exact `lengthTicks`
-remains the runtime authority. The editor supports 1–16 bars, common simple,
+remains the runtime authority. The editor supports 1–128 bars, common simple,
 compound, and odd meters, plus custom numerators and power-of-two beat units.
 
 Each project may contain multiple songs with stable IDs. A song sequence is

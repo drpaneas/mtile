@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/drpaneas/mtile/internal/editor"
+	"github.com/ebitengine/oto/v3"
 	ebitaudio "github.com/hajimehoshi/ebiten/v2/audio"
 )
 
@@ -15,33 +18,180 @@ import (
 // low-latency buffer would only increase underrun risk.
 const editorPlaybackBufferSize = 500 * time.Millisecond
 
-// Desktop playback uses a conventional host-device rate. GBA synthesis and
-// analysis stay at the target rate; only the final monitor stream is resampled.
+// Ebitengine's audio.Context leaves Oto's host buffer at the platform
+// default. On macOS that is four 32 ms AudioQueue buffers, so a MIDI note can
+// wait roughly 128 ms before reaching the speakers even though the PSG stream
+// renders in a fraction of a millisecond. The editor owns a low-latency Oto
+// context directly so the device queue is short while cartridge audio remains
+// completely unchanged.
+const editorDeviceBufferSize = 40 * time.Millisecond
+
+// Desktop playback uses a conventional host-device rate. Legacy PCM previews
+// stay at their target FIFO rate; native PSG previews render directly at the
+// host rate so their hardware edges can be filtered without a 16 kHz aliasing
+// bottleneck.
 const editorPlaybackSampleRate = 48_000
 
-func editorAudioContext() (*ebitaudio.Context, error) {
-	context := ebitaudio.CurrentContext()
-	if context == nil {
-		return ebitaudio.NewContext(editorPlaybackSampleRate), nil
+const editorAudioBytesPerFrame = 4 // signed 16-bit stereo
+
+var (
+	editorAudioOnce       sync.Once
+	editorAudioContextRef *editorHostAudioContext
+	editorAudioContextErr error
+)
+
+// editorHostAudioContext is deliberately small: the editor already produces
+// signed 16-bit stereo PCM, and Oto only needs a single process-wide context.
+// Keeping this adapter local avoids changing any Game Boy PSG rendering code.
+type editorHostAudioContext struct {
+	context    *oto.Context
+	sampleRate int
+}
+
+func editorAudioContext() (*editorHostAudioContext, error) {
+	editorAudioOnce.Do(func() {
+		context, _, err := oto.NewContext(&oto.NewContextOptions{
+			SampleRate:   editorPlaybackSampleRate,
+			ChannelCount: 2,
+			Format:       oto.FormatSignedInt16LE,
+			BufferSize:   editorDeviceBufferSize,
+		})
+		if err != nil {
+			editorAudioContextErr = fmt.Errorf("create low-latency audio context: %w", err)
+			return
+		}
+		editorAudioContextRef = &editorHostAudioContext{context: context, sampleRate: editorPlaybackSampleRate}
+	})
+	if editorAudioContextErr != nil {
+		return nil, editorAudioContextErr
 	}
-	if context.SampleRate() != editorPlaybackSampleRate {
-		return nil, fmt.Errorf("audio context uses %d Hz, editor playback requires %d Hz", context.SampleRate(), editorPlaybackSampleRate)
+	if editorAudioContextRef == nil || editorAudioContextRef.context == nil {
+		return nil, fmt.Errorf("low-latency audio context is unavailable")
 	}
-	return context, nil
+	if err := editorAudioContextRef.context.Err(); err != nil {
+		return nil, fmt.Errorf("audio device: %w", err)
+	}
+	return editorAudioContextRef, nil
+}
+
+// editorAudioReader tracks how many source bytes Oto has requested. Subtracting
+// the bytes still buffered by the player gives a stable transport position
+// without adding another queue or clock to the playback path.
+type editorAudioReader struct {
+	reader io.Reader
+	read   atomic.Int64
+}
+
+func (r *editorAudioReader) Read(target []byte) (int, error) {
+	n, err := r.reader.Read(target)
+	r.read.Add(int64(n))
+	return n, err
+}
+
+type editorAudioPlayer struct {
+	player     *oto.Player
+	reader     *editorAudioReader
+	sampleRate int
+	closed     atomic.Bool
+}
+
+func (c *editorHostAudioContext) NewPlayer(source io.Reader) (*editorAudioPlayer, error) {
+	if c == nil || c.context == nil {
+		return nil, fmt.Errorf("audio context is unavailable")
+	}
+	if err := c.context.Err(); err != nil {
+		return nil, fmt.Errorf("audio device: %w", err)
+	}
+	tracked := &editorAudioReader{reader: source}
+	return &editorAudioPlayer{
+		player: c.context.NewPlayer(tracked), reader: tracked, sampleRate: c.sampleRate,
+	}, nil
+}
+
+func (p *editorAudioPlayer) Play() {
+	if p != nil && p.player != nil && !p.closed.Load() {
+		p.player.Play()
+	}
+}
+
+func (p *editorAudioPlayer) Pause() {
+	if p != nil && p.player != nil && !p.closed.Load() {
+		p.player.Pause()
+	}
+}
+
+func (p *editorAudioPlayer) IsPlaying() bool {
+	return p != nil && p.player != nil && !p.closed.Load() && p.player.IsPlaying()
+}
+
+func (p *editorAudioPlayer) SetVolume(volume float64) {
+	if p != nil && p.player != nil && !p.closed.Load() {
+		p.player.SetVolume(volume)
+	}
+}
+
+func (p *editorAudioPlayer) SetBufferSize(bufferSize time.Duration) {
+	if p == nil || p.player == nil || p.closed.Load() {
+		return
+	}
+	p.player.SetBufferSize(editorAudioBufferBytes(bufferSize, p.sampleRate))
+}
+
+func (p *editorAudioPlayer) Position() time.Duration {
+	if p == nil || p.player == nil || p.reader == nil || p.sampleRate <= 0 {
+		return 0
+	}
+	playedBytes := p.reader.read.Load() - int64(p.player.BufferedSize())
+	if playedBytes <= 0 {
+		return 0
+	}
+	return editorAudioDuration(playedBytes, p.sampleRate)
+}
+
+func (p *editorAudioPlayer) Close() error {
+	if p == nil || p.player == nil || p.closed.Swap(true) {
+		return nil
+	}
+	return p.player.Close()
+}
+
+func editorAudioBufferBytes(bufferSize time.Duration, sampleRate int) int {
+	bytes := int(bufferSize * time.Duration(sampleRate*editorAudioBytesPerFrame) / time.Second)
+	bytes -= bytes % editorAudioBytesPerFrame
+	return max(editorAudioBytesPerFrame, bytes)
+}
+
+func editorAudioDuration(byteCount int64, sampleRate int) time.Duration {
+	if byteCount <= 0 || sampleRate <= 0 {
+		return 0
+	}
+	frames := byteCount / editorAudioBytesPerFrame
+	return time.Duration(frames) * time.Second / time.Duration(sampleRate)
 }
 
 func resampleEditorPCM(pcm []byte) io.Reader {
+	return resampleEditorPCMAtRate(pcm, editor.SFXPreviewSampleRate)
+}
+
+func resampleEditorPCMAtRate(pcm []byte, sourceRate int) io.Reader {
+	if sourceRate <= 0 {
+		sourceRate = editor.SFXPreviewSampleRate
+	}
 	resampled := ebitaudio.ResampleReader(
 		bytes.NewReader(pcm), int64(len(pcm)),
-		editor.SFXPreviewSampleRate, editorPlaybackSampleRate,
+		sourceRate, editorPlaybackSampleRate,
 	)
-	hostBytes := int64(len(pcm)) * editorPlaybackSampleRate / editor.SFXPreviewSampleRate
+	hostBytes := int64(len(pcm)) * editorPlaybackSampleRate / int64(sourceRate)
 	hostBytes -= hostBytes % 4
 	return io.LimitReader(resampled, hostBytes)
 }
 
-func newEditorAudioPlayer(context *ebitaudio.Context, pcm []byte) (*ebitaudio.Player, error) {
-	player, err := context.NewPlayer(resampleEditorPCM(pcm))
+func newEditorAudioPlayer(context *editorHostAudioContext, pcm []byte) (*editorAudioPlayer, error) {
+	return newEditorAudioPlayerAtRate(context, pcm, editor.SFXPreviewSampleRate)
+}
+
+func newEditorAudioPlayerAtRate(context *editorHostAudioContext, pcm []byte, sourceRate int) (*editorAudioPlayer, error) {
+	player, err := context.NewPlayer(resampleEditorPCMAtRate(pcm, sourceRate))
 	if err != nil {
 		return nil, err
 	}

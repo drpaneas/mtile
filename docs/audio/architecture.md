@@ -27,7 +27,10 @@ fixed command queue
   interrupts are masked; it never transports the large snapshot through a
   TinyGo aggregate return.
 - Generated assets are immutable slices; target state is fixed-size.
-- Editor preview consumes the same event/state definitions as target playback.
+- Editor click audition and live MIDI monitoring share one pure-Go,
+  cycle-timed CH1-CH4 renderer. It consumes the same sound definitions as
+  target playback and uses band-limited hardware edges rather than host
+  oscillators.
 
 ## Desktop authoring boundary
 
@@ -40,15 +43,22 @@ computer keyboard / Launchkey MIDI
               |
  MONO/POLY2/POLY3/NOISE allocator
               |
- exact CH1-CH4 actions ----> 20 ms host preview stream
+ exact CH1-CH4 actions ----> low-latency host preview stream
               |
- raw timestamped take ----> quantizer ----> typed clips/sounds
+raw timestamped take ----> quantizer ----> typed clips/sounds
 ```
+
+The macOS authoring path uses a 20 ms live source buffer and requests a 40 ms
+Oto/CoreAudio device queue. Two source callbacks protect playback from an
+ordinary editor frame or short Go GC pause without returning to Oto's old
+half-second source buffer. MIDI note-off also gets a 5 ms monitor-only de-click
+ramp. These desktop choices do not alter PSG periods, recorded event timing,
+or generated cartridge code.
 
 The allocator, MIDI protocol, raw takes, metronome, and host preview stream are
 desktop-only. Recorded data crosses the compiler boundary only after it has
 become ordinary physical CH1–CH4 events. The cartridge contains no MIDI,
-polyphonic voice allocator, take metadata, or host oscillator.
+polyphonic voice allocator, take metadata, or desktop renderer.
 
 ## Resource ownership
 

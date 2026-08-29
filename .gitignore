@@ -1,4 +1,5 @@
 runtime/target-gba.json
+ .agents/
 gb-studio
 hint:
 runtime/target-gba-smoke.json

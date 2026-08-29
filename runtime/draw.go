@@ -33,7 +33,8 @@ func (c *Context) pixelRaw(x, y int) byte {
 }
 
 // Pset writes an opaque framebuffer pixel after draw-time palette remapping.
-// Palette and transparency state do not affect primitive opacity.
+// Palette and transparency state do not affect primitive opacity. Its exact
+// composed-image semantics are Mode 4-only; see docs/render-modes.md.
 func (c *Context) Pset(x, y, color int) {
 	if color < 0 || color > 255 {
 		return
@@ -54,6 +55,8 @@ func (c *Context) Pget(x, y int) byte {
 // preserves the current draw colour. There is no implicit clear during
 // presentation. Hardware uses DMA3 with a fixed source so a 60 Hz cls() is
 // one fill, not 9,600 ROM-resident word stores.
+// A future Mode 0 backend may preserve this only for a proven frame-initial
+// clear; later or persistent-framebuffer clears require Mode 4.
 func (c *Context) Cls(color int) {
 	if color < 0 || color > 255 {
 		return

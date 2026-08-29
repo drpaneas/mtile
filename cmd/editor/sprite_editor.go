@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"math"
-	"runtime"
 	"time"
 
 	"github.com/drpaneas/mtile/internal/editor"
@@ -14,6 +13,7 @@ import (
 
 func (g *Game) updateSpriteMode() {
 	mx, my := ebiten.CursorPosition()
+	g.updateSpriteCanvasView(mx, my)
 	g.updateSpriteTools(mx, my)
 	g.updatePixelCanvas(mx, my)
 	g.updateFlags(mx, my)
@@ -106,8 +106,8 @@ func (g *Game) drawSpriteCanvasChrome(screen *ebiten.Image) {
 	dimensionX += smallTextWidth(heightText)
 	drawSmallText(screen, " PX", dimensionX, dimensionY, colorDim)
 
-	footerY := canvasRect.Y + canvasRect.H + 9
-	drawSmallText(screen, resizeShortcutText(runtime.GOOS), canvasRect.X, footerY, colorDim)
+	footerY := canvasRect.Y + canvasRect.H + spriteCanvasFooterGap
+	g.drawSpriteCanvasZoomControls(screen)
 	if g.hoverX >= 0 {
 		coordinates := fmt.Sprintf("PIXEL %d, %d", g.hoverX, g.hoverY)
 		drawSmallText(screen, coordinates, canvasRect.X+canvasRect.W-smallTextWidth(coordinates), footerY, colorSprite)
@@ -145,7 +145,139 @@ func (g *Game) canvasPixelScale() float64 {
 	if gridW <= 0 || gridH <= 0 {
 		return 1
 	}
-	return math.Max(1, math.Min(float64(canvasRect.W)/float64(gridW), float64(canvasRect.H)/float64(gridH)))
+	fit := math.Max(1, math.Min(float64(canvasRect.W)/float64(gridW), float64(canvasRect.H)/float64(gridH)))
+	return fit * spriteCanvasZoomFactor(g.spriteCanvasZoomLevel)
+}
+
+const (
+	spriteCanvasZoomMin = 0
+	spriteCanvasZoomMax = 4
+)
+
+func spriteCanvasZoomFactor(level int) float64 {
+	switch min(spriteCanvasZoomMax, max(spriteCanvasZoomMin, level)) {
+	case 1:
+		return 1.5
+	case 2:
+		return 2
+	case 3:
+		return 3
+	case 4:
+		return 4
+	default:
+		return 1
+	}
+}
+
+func (g *Game) clampSpriteCanvasPan() {
+	scale := g.canvasPixelScale()
+	if scale <= 0 {
+		g.spriteCanvasPanX, g.spriteCanvasPanY = 0, 0
+		return
+	}
+	spanX := float64(canvasRect.W) / scale
+	spanY := float64(canvasRect.H) / scale
+	maxX := max(0, float64(g.gridPixelsW())-spanX)
+	maxY := max(0, float64(g.gridPixelsH())-spanY)
+	g.spriteCanvasPanX = min(max(g.spriteCanvasPanX, 0), maxX)
+	g.spriteCanvasPanY = min(max(g.spriteCanvasPanY, 0), maxY)
+}
+
+func (g *Game) spriteCanvasOrigin() (float64, float64) {
+	scale := g.canvasPixelScale()
+	return float64(canvasRect.X) - g.spriteCanvasPanX*scale,
+		float64(canvasRect.Y) - g.spriteCanvasPanY*scale
+}
+
+func (g *Game) changeSpriteCanvasZoom(delta int) bool {
+	oldLevel := min(spriteCanvasZoomMax, max(spriteCanvasZoomMin, g.spriteCanvasZoomLevel))
+	newLevel := min(spriteCanvasZoomMax, max(spriteCanvasZoomMin, oldLevel+delta))
+	if newLevel == oldLevel {
+		return false
+	}
+	oldScale := g.canvasPixelScale()
+	focusX := g.spriteCanvasPanX + float64(canvasRect.W)/(2*oldScale)
+	focusY := g.spriteCanvasPanY + float64(canvasRect.H)/(2*oldScale)
+	g.spriteCanvasZoomLevel = newLevel
+	newScale := g.canvasPixelScale()
+	g.spriteCanvasPanX = focusX - float64(canvasRect.W)/(2*newScale)
+	g.spriteCanvasPanY = focusY - float64(canvasRect.H)/(2*newScale)
+	g.clampSpriteCanvasPan()
+	g.spriteTool = spriteToolMove
+	g.spriteShapeActive = false
+	g.statusMsg = fmt.Sprintf("canvas zoom: %d%%", int(spriteCanvasZoomFactor(newLevel)*100))
+	return true
+}
+
+func spriteCanvasZoomButtonRect(delta int) editor.Rect {
+	index := 0
+	if delta > 0 {
+		index = 1
+	}
+	return editor.Rect{
+		X: canvasRect.X + index*36,
+		Y: canvasRect.Y + canvasRect.H + spriteCanvasFooterGap,
+		W: 30,
+		H: max(18, uiSmallTextHeight),
+	}
+}
+
+func (g *Game) updateSpriteCanvasView(mx, my int) {
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		switch {
+		case rectContains(spriteCanvasZoomButtonRect(-1), mx, my):
+			g.changeSpriteCanvasZoom(-1)
+		case rectContains(spriteCanvasZoomButtonRect(1), mx, my):
+			g.changeSpriteCanvasZoom(1)
+		}
+	}
+	middleDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
+	moveDown := g.spriteTool == spriteToolMove && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
+	middleStarted := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle)
+	moveStarted := g.spriteTool == spriteToolMove && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
+	if (middleStarted || moveStarted) && rectContains(canvasRect, mx, my) {
+		g.spriteCanvasPanning = true
+		g.spriteCanvasLastMouseX, g.spriteCanvasLastMouseY = mx, my
+	}
+	if (middleDown || moveDown) && g.spriteCanvasPanning {
+		g.panSpriteCanvasBy(mx-g.spriteCanvasLastMouseX, my-g.spriteCanvasLastMouseY)
+		g.spriteCanvasLastMouseX, g.spriteCanvasLastMouseY = mx, my
+	}
+	if !middleDown && !moveDown {
+		g.spriteCanvasPanning = false
+	}
+	// Grid dimensions can change through the existing keyboard and wheel
+	// shortcuts; keep a retained zoom view inside the new selection bounds.
+	g.clampSpriteCanvasPan()
+}
+
+func (g *Game) panSpriteCanvasBy(screenDX, screenDY int) {
+	scale := g.canvasPixelScale()
+	if scale <= 0 {
+		return
+	}
+	g.spriteCanvasPanX -= float64(screenDX) / scale
+	g.spriteCanvasPanY -= float64(screenDY) / scale
+	g.clampSpriteCanvasPan()
+}
+
+func (g *Game) drawSpriteCanvasZoomControls(screen *ebiten.Image) {
+	for _, control := range []struct {
+		delta int
+		label string
+	}{{-1, "-"}, {1, "+"}} {
+		enabled := control.delta < 0 && g.spriteCanvasZoomLevel > spriteCanvasZoomMin ||
+			control.delta > 0 && g.spriteCanvasZoomLevel < spriteCanvasZoomMax
+		r := spriteCanvasZoomButtonRect(control.delta)
+		if enabled {
+			drawTactileButton(screen, r, control.label, false, colorSprite, true)
+			continue
+		}
+		fillRoundedRect(screen, editor.Rect{X: r.X + 2, Y: r.Y + 3, W: r.W, H: r.H}, 4, colorShellShadow)
+		fillRoundedRect(screen, r, 4, colorButtonFace)
+		strokeRoundedRect(screen, r, 4, rgba(colorBorder, 90))
+		drawSmallTextCentered(screen, control.label, r, rgba(colorDim, 120))
+	}
 }
 
 // canvasPixelBounds maps sprite pixels onto shared integer boundaries. A
@@ -153,10 +285,11 @@ func (g *Game) canvasPixelScale() float64 {
 // cells while the selection still consumes the full canvas without seams.
 func (g *Game) canvasPixelBounds(x, y, width, height int) editor.Rect {
 	scale := g.canvasPixelScale()
-	x0 := int(math.Floor(float64(canvasRect.X) + float64(x)*scale))
-	y0 := int(math.Floor(float64(canvasRect.Y) + float64(y)*scale))
-	x1 := int(math.Floor(float64(canvasRect.X) + float64(x+width)*scale))
-	y1 := int(math.Floor(float64(canvasRect.Y) + float64(y+height)*scale))
+	originX, originY := g.spriteCanvasOrigin()
+	x0 := int(math.Floor(originX + float64(x)*scale))
+	y0 := int(math.Floor(originY + float64(y)*scale))
+	x1 := int(math.Floor(originX + float64(x+width)*scale))
+	y1 := int(math.Floor(originY + float64(y+height)*scale))
 	return editor.Rect{X: x0, Y: y0, W: max(0, x1-x0), H: max(0, y1-y0)}
 }
 
@@ -232,14 +365,19 @@ func (g *Game) spriteCanvasCellAt(mx, my int, clampToGrid bool) (col, row int, o
 		return 0, 0, false
 	}
 	if clampToGrid {
-		mx = max(used.X, min(used.X+used.W-1, mx))
-		my = max(used.Y, min(used.Y+used.H-1, my))
-	} else if !rectContains(used, mx, my) {
+		visible, ok := intersectEditorRects(used, canvasRect)
+		if !ok {
+			return 0, 0, false
+		}
+		mx = max(visible.X, min(visible.X+visible.W-1, mx))
+		my = max(visible.Y, min(visible.Y+visible.H-1, my))
+	} else if !rectContains(canvasRect, mx, my) || !rectContains(used, mx, my) {
 		return 0, 0, false
 	}
 	scale := g.canvasPixelScale()
-	col = int(math.Ceil(float64(mx-canvasRect.X+1)/scale)) - 1
-	row = int(math.Ceil(float64(my-canvasRect.Y+1)/scale)) - 1
+	originX, originY := g.spriteCanvasOrigin()
+	col = int(math.Ceil((float64(mx)-originX+1)/scale)) - 1
+	row = int(math.Ceil((float64(my)-originY+1)/scale)) - 1
 	return col, row, col >= 0 && row >= 0 && col < gridW && row < gridH
 }
 
@@ -267,15 +405,19 @@ func (g *Game) drawPixelCanvas(screen *ebiten.Image) {
 	scale := g.canvasPixelScale()
 	gridW, gridH := g.gridPixelsW(), g.gridPixelsH()
 	baseRow, baseCol := g.baseSpriteRowCol()
-	g.drawSpritePixels(screen, float64(canvasRect.X), float64(canvasRect.Y), scale, scale, baseCol*8, baseRow*8, gridW, gridH, false)
-	g.drawPixelCanvasGrid(screen, scale, gridW, gridH)
+	originX, originY := g.spriteCanvasOrigin()
+	drawCheckerboardColors(screen, canvasRect, colorSpriteCheckerA, colorSpriteCheckerB)
+	g.drawSpritePixels(screen, originX, originY, scale, scale, baseCol*8, baseRow*8, gridW, gridH, true, canvasRect)
+	g.drawPixelCanvasGrid(screen, originX, originY, scale, gridW, gridH)
 	g.drawSpriteShapePreview(screen)
 	g.drawReservedSpriteCanvasLock(screen)
 	strokeRoundedRect(screen, editor.Rect{X: canvasRect.X - 1, Y: canvasRect.Y - 1, W: canvasRect.W + 2, H: canvasRect.H + 2}, 5, colorBorder)
 	if g.theme.level != effectsClean {
 		mx, my := ebiten.CursorPosition()
 		if col, row, ok := g.spriteCanvasCellAt(mx, my, false); ok {
-			strokeRect(screen, g.canvasPixelBounds(col, row, 1, 1), colorSprite)
+			if r, visible := intersectEditorRects(g.canvasPixelBounds(col, row, 1, 1), canvasRect); visible {
+				strokeRect(screen, r, colorSprite)
+			}
 		}
 		if g.theme.inkPulse > 0 {
 			if col, row, ok := g.spriteCanvasCellAt(g.theme.inkX, g.theme.inkY, false); ok {
@@ -283,6 +425,10 @@ func (g *Game) drawPixelCanvas(screen *ebiten.Image) {
 				alpha := uint8(min(190, g.theme.inkPulse*15))
 				r := g.canvasPixelBounds(col, row, 1, 1)
 				r = editor.Rect{X: r.X - expand, Y: r.Y - expand, W: r.W + expand*2, H: r.H + expand*2}
+				r, visible := intersectEditorRects(r, canvasRect)
+				if !visible {
+					return
+				}
 				strokeRect(screen, r, rgba(colorSprite, alpha))
 			}
 		}
@@ -292,11 +438,11 @@ func (g *Game) drawPixelCanvas(screen *ebiten.Image) {
 
 // drawPixelCanvasGrid uses the shared sprite-grid treatment, including minor
 // pixel boundaries while the enlarged canvas has enough room for them.
-func (g *Game) drawPixelCanvasGrid(screen *ebiten.Image, scale float64, gridW, gridH int) {
+func (g *Game) drawPixelCanvasGrid(screen *ebiten.Image, originX, originY, scale float64, gridW, gridH int) {
 	if screen == nil || scale <= 1 || gridW <= 0 || gridH <= 0 {
 		return
 	}
-	drawSpritePixelGrid(screen, float64(canvasRect.X), float64(canvasRect.Y), scale, scale, gridW, gridH, canvasRect, true)
+	drawSpritePixelGrid(screen, originX, originY, scale, scale, gridW, gridH, canvasRect, true)
 }
 
 // drawSpritePixelGrid renders grid lines in sprite-pixel space. The editing
@@ -380,6 +526,11 @@ func (g *Game) drawReservedSpriteCanvasLock(screen *ebiten.Image) {
 		return
 	}
 	r := g.canvasPixelBounds(0, 0, 8, 8)
+	var visible bool
+	r, visible = intersectEditorRects(r, canvasRect)
+	if !visible {
+		return
+	}
 	if r.W < 160 || r.H < 120 {
 		drawSpriteLockOverlay(screen, r)
 		return
@@ -450,14 +601,6 @@ func spriteCanvasTitleParts(spriteID, spriteCols, width, height int) []spriteCan
 	}
 }
 
-func resizeShortcutText(goos string) string {
-	mod := "CTRL"
-	if goos == "darwin" {
-		mod = "CMD"
-	}
-	return fmt.Sprintf("%s+[ / ] RESIZE", mod)
-}
-
 func (g *Game) fillColor(screen *ebiten.Image, r editor.Rect, index int) {
 	if isEraserIndex(index) {
 		drawCheckerboardColors(screen, r, colorSpriteCheckerA, colorSpriteCheckerB)
@@ -493,11 +636,7 @@ func flagCheckboxRect(i int) editor.Rect {
 		width = 34
 		gap   = 8
 	)
-	buttonY := flagsRect.Y + 21
-	if spriteFlagsPanelRect.H >= spriteFlagsPanelHeight {
-		buttonY = flagsRect.Y + 31
-	}
-	return editor.Rect{X: flagsRect.X + 4 + i*(width+gap), Y: buttonY, W: width, H: 30}
+	return editor.Rect{X: flagsRect.X + 4 + i*(width+gap), Y: flagsRect.Y, W: width, H: spriteButtonHeight}
 }
 
 func (g *Game) toggleFlag(bit int) {
@@ -556,8 +695,6 @@ func (g *Game) flagBitState(bit int) (allTrue, anyTrue bool) {
 
 func (g *Game) drawFlags(screen *ebiten.Image) {
 	drawSpritePanelTitle(screen, spriteFlagsPanelRect, "SPRITE FLAGS")
-	meta := "BITS 0–7"
-	drawSmallText(screen, meta, spriteFlagsPanelRect.X+spriteFlagsPanelRect.W-spritePanelTitleInsetX-smallTextWidth(meta), spritePanelMetaY(spriteFlagsPanelRect), colorDim)
 	for i := 0; i < 8; i++ {
 		r := flagCheckboxRect(i)
 		allTrue, anyTrue := g.flagBitState(i)
@@ -581,9 +718,9 @@ func (g *Game) drawFlags(screen *ebiten.Image) {
 func (g *Game) sheetGridCanvas() editor.Rect {
 	return editor.Rect{
 		X: sheetPanelRect.X + 10,
-		Y: sheetPanelRect.Y + sheetPanelLabelHeight,
+		Y: spritePanelContentY(sheetPanelRect),
 		W: max(1, sheetPanelRect.W-20),
-		H: max(1, sheetPanelRect.H-sheetPanelLabelHeight-10),
+		H: max(1, sheetPanelRect.H-spritePanelContentOffset()-10),
 	}
 }
 
@@ -618,6 +755,37 @@ func (g *Game) clampSheetCamera(canvas editor.Rect) {
 	}
 }
 
+// spritesheetDragSelection turns an anchor and the current pointer tile into
+// the rectangular multi-sprite selection used by the editing canvas. The
+// cursor can be outside the sheet while dragging; both axes stay bounded by
+// the sheet and by the editor's 16x16 selection limit.
+func spritesheetDragSelection(anchorCol, anchorRow, cursorCol, cursorRow, sheetCols, sheetRows int) (col, row, cols, rows int, ok bool) {
+	if sheetCols <= 0 || sheetRows <= 0 || anchorCol < 0 || anchorCol >= sheetCols || anchorRow < 0 || anchorRow >= sheetRows {
+		return 0, 0, 0, 0, false
+	}
+	cursorCol = min(max(cursorCol, max(0, anchorCol-gridCellsMax+1)), min(sheetCols-1, anchorCol+gridCellsMax-1))
+	cursorRow = min(max(cursorRow, max(0, anchorRow-gridCellsMax+1)), min(sheetRows-1, anchorRow+gridCellsMax-1))
+	col, row = min(anchorCol, cursorCol), min(anchorRow, cursorRow)
+	return col, row, max(anchorCol, cursorCol) - col + 1, max(anchorRow, cursorRow) - row + 1, true
+}
+
+func (g *Game) selectSpritesheetDrag(cursorCol, cursorRow, sheetCols, sheetRows int) {
+	col, row, cols, rows, ok := spritesheetDragSelection(
+		g.sheetSelectionAnchorCol,
+		g.sheetSelectionAnchorRow,
+		cursorCol,
+		cursorRow,
+		sheetCols,
+		sheetRows,
+	)
+	if !ok {
+		return
+	}
+	g.currentSprite = row*sheetCols + col
+	g.gridCols, g.gridRows = cols, rows
+	g.clampSpriteCanvasPan()
+}
+
 func (g *Game) updateSpritesheetPanel(mx, my int) {
 	canvas := g.sheetGridCanvas()
 	cols, rows := g.spriteCols(), g.spriteRows()
@@ -629,9 +797,23 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			col, row, ok := g.sheetCam.ScreenToTile(mx, my, canvas)
 			if ok && col >= 0 && row >= 0 && col < cols && row < rows {
-				g.currentSprite = row*cols + col
+				g.sheetSelectionDragging = true
+				g.sheetSelectionAnchorCol, g.sheetSelectionAnchorRow = col, row
+				g.selectSpritesheetDrag(col, row, cols, rows)
 			}
 		}
+	}
+	if g.sheetSelectionDragging && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		// Keep extending the selection when the pointer briefly leaves the
+		// canvas, matching native marquee-selection behavior at an edge.
+		selectionX := min(max(mx, canvas.X), canvas.X+canvas.W-1)
+		selectionY := min(max(my, canvas.Y), canvas.Y+canvas.H-1)
+		if col, row, ok := g.sheetCam.ScreenToTile(selectionX, selectionY, canvas); ok {
+			g.selectSpritesheetDrag(col, row, cols, rows)
+		}
+	}
+	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		g.sheetSelectionDragging = false
 	}
 	g.clampSheetCamera(canvas)
 }
@@ -647,6 +829,7 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	drawSmallText(screen, meta, titleX+uiTextWidth(title)+smallTextWidth("  "), metaY, colorDim)
 	fillRoundedRect(screen, canvas, 5, colorInk)
 	strokeRoundedRect(screen, canvas, 5, rgba(colorBorder, 180))
+	drawCheckerboardColors(screen, canvas, colorSheetCheckerA, colorSheetCheckerB)
 
 	minC, minR, maxC, maxR := g.sheetCam.VisibleBounds(canvas, cols, rows)
 	tileW, tileH := g.sheetCam.TileSize(), g.sheetCam.TileSizeY()
@@ -654,11 +837,11 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	lockedVisible := false
 	for row := minR; row < maxR; row++ {
 		for col := minC; col < maxC; col++ {
-			sx, sy := g.sheetCam.WorldToScreen(col, row, canvas)
+			cell := sheetCameraRect(g.sheetCam, canvas, col, row, 1, 1)
 			id := row*cols + col
-			g.drawSpriteThumb(screen, id, sx, sy, tileW, tileH)
+			g.drawSpriteThumb(screen, id, float64(cell.X), float64(cell.Y), float64(cell.W), float64(cell.H), cell)
 			if id == editor.ReservedSpriteID {
-				lockedRect = editor.Rect{X: int(sx), Y: int(sy), W: max(1, int(math.Ceil(tileW))), H: max(1, int(math.Ceil(tileH)))}
+				lockedRect = cell
 				lockedVisible = true
 			}
 		}
@@ -674,7 +857,7 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	g.drawSelectionBorder(screen, canvas)
 }
 
-func (g *Game) drawSpriteThumb(screen *ebiten.Image, id int, sx, sy, tileW, tileH float64) {
+func (g *Game) drawSpriteThumb(screen *ebiten.Image, id int, sx, sy, tileW, tileH float64, clips ...editor.Rect) {
 	cols := g.spriteCols()
 	if cols == 0 || id < 0 || id >= g.spriteN() {
 		return
@@ -683,13 +866,37 @@ func (g *Game) drawSpriteThumb(screen *ebiten.Image, id int, sx, sy, tileW, tile
 	scaleY := tileH / 8
 	baseCol := id % cols
 	baseRow := id / cols
-	g.drawSpritePixels(screen, sx, sy, scaleX, scaleY, baseCol*8, baseRow*8, 8, 8, true)
+	clip := editor.Rect{X: 0, Y: 0, W: screenWidth, H: screenHeight}
+	if len(clips) > 0 {
+		clip = clips[0]
+	}
+	var visible bool
+	clip, visible = intersectEditorRects(clip, spriteThumbRect(sx, sy, tileW, tileH))
+	if !visible {
+		return
+	}
+	g.drawSpritePixels(screen, sx, sy, scaleX, scaleY, baseCol*8, baseRow*8, 8, 8, true, clip)
+}
+
+// spriteThumbRect converts fractional camera geometry into shared integer
+// edges. Adjacent cells therefore abut exactly and every thumbnail, lock
+// overlay, and selection marker can use the same ownership boundary.
+func spriteThumbRect(sx, sy, tileW, tileH float64) editor.Rect {
+	left, top := int(math.Floor(sx)), int(math.Floor(sy))
+	right, bottom := int(math.Floor(sx+tileW)), int(math.Floor(sy+tileH))
+	return editor.Rect{X: left, Y: top, W: max(0, right-left), H: max(0, bottom-top)}
+}
+
+func sheetCameraRect(camera editor.Camera, canvas editor.Rect, col, row, cols, rows int) editor.Rect {
+	x1, y1 := camera.WorldToScreen(col, row, canvas)
+	x2, y2 := camera.WorldToScreen(col+cols, row+rows, canvas)
+	return spriteThumbRect(x1, y1, x2-x1, y2-y1)
 }
 
 // drawSpritePixels is the shared indexed-pixel renderer for the editing
 // canvas and each fitted spritesheet cell. Keeping the source lookup and
 // palette conversion here prevents the two views from drifting visually.
-func (g *Game) drawSpritePixels(screen *ebiten.Image, originX, originY, scaleX, scaleY float64, sourceX, sourceY, pixelW, pixelH int, subtleTransparency bool) {
+func (g *Game) drawSpritePixels(screen *ebiten.Image, originX, originY, scaleX, scaleY float64, sourceX, sourceY, pixelW, pixelH int, subtleTransparency bool, clip editor.Rect) {
 	if screen == nil || scaleX <= 0 || scaleY <= 0 || pixelW <= 0 || pixelH <= 0 {
 		return
 	}
@@ -699,13 +906,31 @@ func (g *Game) drawSpritePixels(screen *ebiten.Image, originX, originY, scaleX, 
 			x, w := scaledRun(originX, px, scaleX)
 			y, h := scaledRun(originY, py, scaleY)
 			target := editor.Rect{X: x, Y: y, W: w, H: h}
-			if subtleTransparency && isEraserIndex(pixel) {
-				drawCheckerboardColors(screen, target, colorSheetCheckerA, colorSheetCheckerB)
-			} else {
-				g.fillColor(screen, target, pixel)
+			var visible bool
+			target, visible = intersectEditorRects(target, clip)
+			if !visible {
+				continue
 			}
+			if subtleTransparency && isEraserIndex(pixel) {
+				// The caller paints one checkerboard under the complete surface.
+				// Leaving transparent pixels untouched replaces hundreds of
+				// thousands of tiny vector draws on a large empty spritesheet.
+				continue
+			}
+			g.fillColor(screen, target, pixel)
 		}
 	}
+}
+
+func intersectEditorRects(a, b editor.Rect) (editor.Rect, bool) {
+	left := max(a.X, b.X)
+	top := max(a.Y, b.Y)
+	right := min(a.X+a.W, b.X+b.W)
+	bottom := min(a.Y+a.H, b.Y+b.H)
+	if right <= left || bottom <= top {
+		return editor.Rect{}, false
+	}
+	return editor.Rect{X: left, Y: top, W: right - left, H: bottom - top}, true
 }
 
 // scaledRun maps one source texel onto an integer screen span so adjacent
@@ -723,26 +948,20 @@ func scaledRun(origin float64, i int, scale float64) (start, size int) {
 
 func (g *Game) drawSelectionBorder(screen *ebiten.Image, canvas editor.Rect) {
 	baseRow, baseCol := g.baseSpriteRowCol()
-	x1, y1 := g.sheetCam.WorldToScreen(baseCol, baseRow, canvas)
-	x2, y2 := g.sheetCam.WorldToScreen(baseCol+g.spriteGridCols(), baseRow+g.spriteGridRows(), canvas)
-	r := editor.Rect{
-		X: int(math.Round(x1)) + 3,
-		Y: int(math.Round(y1)) + 3,
-		W: max(1, int(math.Round(x2-x1))-6),
-		H: max(1, int(math.Round(y2-y1))-6),
-	}
-	if r.W <= 1 || r.H <= 1 {
+	selection := sheetCameraRect(g.sheetCam, canvas, baseCol, baseRow, g.spriteGridCols(), g.spriteGridRows())
+	r, ok := spritesheetSelectionOutlineRect(selection, canvas)
+	if !ok {
 		return
 	}
+	strokeRect(screen, r, rgba(colorSprite, 235))
+}
 
-	// A narrow, still cyan edge matches the restrained selection treatment used
-	// by the reference UI. The outer stroke is only a soft separator from the
-	// grid—not an animated neon halo competing with the artwork.
-	radius := min(8, max(3, min(r.W, r.H)/8))
-	strokeRoundedRectWidth(screen, r, radius, 3, rgba(colorSprite, 38))
-	strokeRoundedRectWidth(screen, r, radius, 2, rgba(colorSprite, 230))
-	inner := editor.Rect{X: r.X + 1, Y: r.Y + 1, W: max(1, r.W-2), H: max(1, r.H-2)}
-	strokeRoundedRectWidth(screen, inner, max(2, radius-1), 1, rgba(colorText, 96))
+func spritesheetSelectionOutlineRect(selection, canvas editor.Rect) (editor.Rect, bool) {
+	visible, ok := intersectEditorRects(selection, canvas)
+	if !ok || visible.W <= 2 || visible.H <= 2 {
+		return editor.Rect{}, false
+	}
+	return editor.Rect{X: visible.X + 1, Y: visible.Y + 1, W: visible.W - 2, H: visible.H - 2}, true
 }
 
 func cycleGridCells(n, delta int) int {
@@ -838,7 +1057,7 @@ func (g *Game) updateCopyPaste() {
 		g.copyCurrentSprite()
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyV) {
-		g.pasteCurrentSprite()
+		g.pasteSpriteClipboard()
 	}
 }
 

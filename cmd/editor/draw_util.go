@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"strings"
+	"sync"
 
 	fontassets "github.com/drpaneas/mtile/fonts"
 	"github.com/drpaneas/mtile/internal/assetsync"
@@ -416,6 +417,17 @@ func drawCheckerboardColors(screen *ebiten.Image, r editor.Rect, checkerA, check
 		return
 	}
 	cell := checkerCellSize(r)
+	if shader, _ := checkerboardFillShader(); shader != nil {
+		op := &ebiten.DrawRectShaderOptions{}
+		op.GeoM.Translate(float64(r.X), float64(r.Y))
+		op.Uniforms = map[string]any{
+			"Cell":   float32(cell),
+			"ColorA": shaderColor(checkerA),
+			"ColorB": shaderColor(checkerB),
+		}
+		screen.DrawRectShader(r.W, r.H, shader, op)
+		return
+	}
 	for y := r.Y; y < r.Y+r.H; y += cell {
 		h := min(cell, r.Y+r.H-y)
 		row := (y - r.Y) / cell
@@ -428,6 +440,44 @@ func drawCheckerboardColors(screen *ebiten.Image, r editor.Rect, checkerA, check
 			fillRect(screen, editor.Rect{X: x, Y: y, W: w, H: h}, clr)
 		}
 	}
+}
+
+const checkerboardShaderSource = `//kage:unit pixels
+
+package main
+
+var Cell float
+var ColorA vec4
+var ColorB vec4
+
+func Fragment(dstPos vec4, srcPos vec2, colorScale vec4) vec4 {
+	checker := mod(floor(dstPos.x/Cell)+floor(dstPos.y/Cell), 2)
+	if checker < 1 {
+		return ColorA
+	}
+	return ColorB
+}
+`
+
+var (
+	checkerShaderOnce sync.Once
+	checkerShader     *ebiten.Shader
+	checkerShaderErr  error
+)
+
+func checkerboardFillShader() (*ebiten.Shader, error) {
+	checkerShaderOnce.Do(func() {
+		// Keep the scalar fallback below for unusual graphics backends where
+		// shader compilation is unavailable; desktop Metal takes this one-draw
+		// path for every checker surface.
+		checkerShader, checkerShaderErr = ebiten.NewShader([]byte(checkerboardShaderSource))
+	})
+	return checkerShader, checkerShaderErr
+}
+
+func shaderColor(clr color.Color) []float32 {
+	r, g, b, a := clr.RGBA()
+	return []float32{float32(r) / 0xffff, float32(g) / 0xffff, float32(b) / 0xffff, float32(a) / 0xffff}
 }
 
 // drawEraserSwatch is the palette/map-preview mark: checkerboard plus an X

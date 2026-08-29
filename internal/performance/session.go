@@ -161,6 +161,20 @@ func (s *Session) StopRecording(at time.Duration) (RawPerformanceTake, bool) {
 	return s.recorder.Stop(at), true
 }
 
+// RecordingSnapshotInto returns the unfinished raw take for live piano-roll
+// feedback. The destination belongs to the caller and can be reused.
+func (s *Session) RecordingSnapshotInto(dst []RawEvent, at time.Duration) (RawPerformanceTake, bool) {
+	if s == nil {
+		return RawPerformanceTake{}, false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.recording {
+		return RawPerformanceTake{}, false
+	}
+	return s.recorder.SnapshotInto(dst, at)
+}
+
 // Disconnect is the hotplug safety boundary. It returns the final take when a
 // device disappears during recording and always silences every live channel.
 func (s *Session) Disconnect(at time.Duration) (RawPerformanceTake, bool) {
@@ -330,7 +344,7 @@ func applyParameter(sound *runtimeaudio.Sound, parameter Parameter, value int16)
 		}
 	case ParameterNoiseShift:
 		if sound.Kind == runtimeaudio.SoundCH4 {
-			sound.Noise.Shift = clamp(value, 13)
+			sound.Noise.Shift = clamp(value, 15)
 		}
 	}
 }

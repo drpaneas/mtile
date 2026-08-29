@@ -5,6 +5,9 @@ package runtime
 // value draws a cell only when all bits in layer are present in its flags.
 // Sprite 0 is the empty map cell. cellsW or cellsH <= 0
 // means "cover the current clip" (30x20 cells on the default 240x160 clip).
+// This is a conditional Mode 0 candidate: a tile backend must preserve map
+// offsets, layers, streaming, palette, transparency, and call order exactly;
+// see docs/render-modes.md.
 //
 // Executes from IWRAM: a full-screen call walks 600 cells, and each cell
 // pays bounds checks plus two software divides (id % cols, id / cols)

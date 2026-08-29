@@ -7,6 +7,11 @@ patterns keep a real game at 60 Hz. Every number below was measured with
 GBA's own TM0/TM1 hardware timers, on a 128x128 sheet with realistic
 half-transparent art. Re-measure after runtime changes with:
 
+All graphics numbers in this guide describe the current Mode 4 software
+framebuffer backend. Mode 0 is not implemented. The API-by-API compatibility
+contract and the rules for future build-time renderer selection are in the
+[render-mode compatibility guide](render-modes.md).
+
 ```sh
 cd runtime
 make benchspike-gba

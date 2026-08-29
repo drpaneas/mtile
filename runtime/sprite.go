@@ -30,8 +30,10 @@ func spriteCellSplit(id int, cols int, recip uint32) (int, int) {
 }
 
 // Spr is an immediate software blit from one or more 8x8 sprite cells.
-// Source transparency is tested before draw remapping (palt). A sprite ID is an int at the API boundary, but asset validation
-// limits IDs to the uint16 range.
+// Source transparency is tested before draw remapping (palt). A sprite ID is
+// an int at the API boundary, but asset validation limits IDs to the uint16
+// range. A future Mode 0 backend may lower compatible calls to hardware
+// OBJ/metasprites only after proving the constraints in docs/render-modes.md.
 func (c *Context) Spr(id, x, y, w, h int, flipX, flipY bool) {
 	if c == nil || c.cart == nil || id < 0 || id >= c.cart.SpriteN ||
 		c.cart.SpriteCols <= 0 || w <= 0 || h <= 0 {

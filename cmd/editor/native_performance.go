@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
+	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/drpaneas/mtile/internal/midicontrol"
 	"github.com/drpaneas/mtile/internal/performance"
 	runtimeaudio "github.com/drpaneas/mtile/runtime/audio"
@@ -12,7 +14,21 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-const nativeLiveBufferSize = 20 * time.Millisecond
+// Oto divides the requested device queue into four chunks on macOS and two
+// ALSA periods on Linux; WASAPI can request the complete shared buffer. Keep
+// two callbacks of source data on macOS: a single 10 ms chunk was vulnerable
+// to an editor frame or short GC pause and presented as crackling/torn MIDI
+// notes. This remains far below Oto's old 500 ms source default.
+func nativeLiveBufferSize() time.Duration {
+	switch runtime.GOOS {
+	case "darwin":
+		return editorDeviceBufferSize / 2
+	case "linux":
+		return editorDeviceBufferSize / 2
+	default:
+		return editorDeviceBufferSize
+	}
+}
 
 var nativePerformanceKeys = [...]ebiten.Key{
 	ebiten.KeyA, ebiten.KeyW, ebiten.KeyS, ebiten.KeyE, ebiten.KeyD, ebiten.KeyF,
@@ -26,8 +42,10 @@ func (g *Game) initNativePerformance() {
 	g.nativeStream = performance.NewStream(editorPlaybackSampleRate)
 	g.syncNativePerformanceOutput()
 	g.nativeSession = performance.NewSession(g.nativeStream, g.nativePerformanceSoundBank())
+	g.nativePerformanceInstrument = g.nativeInstrument
 	g.nativeClickStream = performance.NewClickStream(editorPlaybackSampleRate)
 	g.nativeConductor = performance.NewConductor(g.nativeSession, g.nativeClickStream.Trigger)
+	g.nativeCaptureSequence = -1
 	g.nativeVoiceMode = performance.ModeMono
 }
 
@@ -49,6 +67,7 @@ func (g *Game) initNativeMIDI() {
 	}
 	backend, err := midicontrol.NewSystemBackend()
 	if err != nil {
+		g.statusMsg = "MIDI unavailable: " + err.Error()
 		return
 	}
 	g.nativeMIDICommands = make(chan midicontrol.Command, 256)
@@ -68,6 +87,7 @@ func (g *Game) initNativeMIDI() {
 	if err := g.nativeMIDI.Start(); err != nil {
 		_ = g.nativeMIDI.Close()
 		g.nativeMIDI = nil
+		g.statusMsg = "MIDI unavailable: " + err.Error()
 	}
 }
 
@@ -80,6 +100,14 @@ func (g *Game) refreshNativePerformanceSounds() {
 		return
 	}
 	g.nativeSession.SetSoundBank(g.nativePerformanceSoundBank())
+	g.nativePerformanceInstrument = g.nativeInstrument
+}
+
+func (g *Game) syncNativePerformanceSounds() {
+	if g == nil || g.nativeSession == nil || g.nativePerformanceInstrument == g.nativeInstrument {
+		return
+	}
+	g.refreshNativePerformanceSounds()
 }
 
 func (g *Game) nativePerformanceSoundBank() performance.SoundBank {
@@ -96,7 +124,12 @@ func (g *Game) nativePerformanceSoundBank() performance.SoundBank {
 			}
 		}
 	}
-	noiseNames := [...]string{"Kick", "Snare", "Closed hat", "Open hat", "Tom 1", "Tom 2", "Click", "FX"}
+	// Launchkey pads follow a stable General-MIDI-like percussion order while
+	// reusing the exact authored GB Studio presets whenever they exist.
+	noiseNames := [...]string{
+		"Bass Drum", "Snare Drum", "Closed Hi-Hat", "Open Hi-Hat",
+		"Crash", "Snare Drum 2", "Bass Drum 2", "Explosion",
+	}
 	for preset, name := range noiseNames {
 		for _, authored := range g.model.NativeAudio.Sounds.Sounds {
 			if authored.Kind != "ch4" || authored.Name != name {
@@ -109,7 +142,6 @@ func (g *Game) nativePerformanceSoundBank() performance.SoundBank {
 			}
 		}
 	}
-	bank.Channels[3] = bank.Noise[0]
 	return bank
 }
 
@@ -158,7 +190,7 @@ func (g *Game) ensureNativeLiveAudio() bool {
 			g.statusMsg = "live audio failed: " + err.Error()
 			return false
 		}
-		g.nativeLivePlayer.SetBufferSize(nativeLiveBufferSize)
+		g.nativeLivePlayer.SetBufferSize(nativeLiveBufferSize())
 		g.setPreviewPlayerVolume(g.nativeLivePlayer)
 	}
 	if !g.nativeLivePlayer.IsPlaying() {
@@ -170,7 +202,7 @@ func (g *Game) ensureNativeLiveAudio() bool {
 			g.statusMsg = "metronome audio failed: " + err.Error()
 			return false
 		}
-		g.nativeClickPlayer.SetBufferSize(nativeLiveBufferSize)
+		g.nativeClickPlayer.SetBufferSize(nativeLiveBufferSize())
 		g.setPreviewPlayerVolume(g.nativeClickPlayer)
 	}
 	if g.nativeClickPlayer != nil && !g.nativeClickPlayer.IsPlaying() {
@@ -191,6 +223,7 @@ func (g *Game) closeNativePerformance() {
 		if take, ok := g.nativeConductor.Stop(); ok {
 			g.commitNativeTake(take, fmt.Sprintf("Take %d recorded on exit", g.nativeTakeCount))
 		}
+		g.clearNativeCapture()
 	}
 	if g.nativeSession != nil {
 		_, _ = g.nativeSession.Disconnect(g.nativeSession.Now())
@@ -224,6 +257,7 @@ func (g *Game) setNativeArmed(armed bool) {
 		if take, ok := g.nativeConductor.Stop(); ok {
 			g.commitNativeTake(take, fmt.Sprintf("Take %d recorded", g.nativeTakeCount))
 		}
+		g.clearNativeCapture()
 	}
 	g.nativeSession.Arm(armed, g.nativeSession.Now())
 	if armed {
@@ -258,18 +292,24 @@ func (g *Game) toggleNativeRecording() {
 			g.statusMsg = "ARM a channel or poly mode before recording"
 			return
 		}
-		loop := false
-		if song, ok := g.model.NativeSong(); ok {
-			loop = song.LoopStart != nil
-		}
 		tempo, _ := g.model.NativePartTempo(g.nativeSequence)
 		clock := performance.NewTrackerClock(tempo, g.nativePartTicks())
 		if !g.nativeConductor.Start(performance.CaptureOptions{
-			Clock: clock, CountInBars: g.nativeCountIn, Loop: loop, Metronome: g.nativeMetronome,
+			Clock: clock, CountInBars: g.nativeCountIn, Loop: false, Metronome: g.nativeMetronome,
 		}) {
 			g.statusMsg = "Recording could not start"
 			return
 		}
+		g.nativeCaptureClock = clock
+		g.nativeCaptureSequence = g.nativeSequence
+		g.nativeCaptureTick = 0
+		g.nativeCaptureVisible = false
+		g.nativeCaptureEvents = g.nativeCaptureEvents[:0]
+		g.nativeCaptureNotes = g.nativeCaptureNotes[:0]
+		g.nativeCaptureEventCount = -1
+		g.nativeCaptureDropped = 0
+		g.nativeCaptureQuantize = g.nativeQuantize
+		g.nativeCaptureSwing = g.nativeSwing
 		g.nativeTakeCount++
 		if g.nativeCountIn > 0 {
 			g.statusMsg = fmt.Sprintf("COUNT-IN %d BAR — Take %d", g.nativeCountIn, g.nativeTakeCount)
@@ -280,9 +320,11 @@ func (g *Game) toggleNativeRecording() {
 	}
 	take, ok := g.nativeConductor.Stop()
 	if !ok {
+		g.clearNativeCapture()
 		return
 	}
 	g.commitNativeTake(take, fmt.Sprintf("Take %d recorded", g.nativeTakeCount))
+	g.clearNativeCapture()
 }
 
 func (g *Game) stopNativeTransport() {
@@ -293,6 +335,7 @@ func (g *Game) stopNativeTransport() {
 	if take, ok := g.nativeConductor.Stop(); ok {
 		g.commitNativeTake(take, fmt.Sprintf("Take %d recorded", g.nativeTakeCount))
 	}
+	g.clearNativeCapture()
 }
 
 func (g *Game) updateNativeCapture() {
@@ -304,26 +347,96 @@ func (g *Game) updateNativeCapture() {
 		case event := <-g.nativeConductor.Events():
 			switch event.Kind {
 			case performance.CaptureStarted:
-				g.statusMsg = fmt.Sprintf("REC — Take %d", g.nativeTakeCount)
+				// A very fast disarm/stop can leave the asynchronous start notice
+				// queued for one frame. Never let that stale event overwrite the
+				// final committed status with a false REC indicator.
+				if g.nativeConductor.Snapshot().Recording {
+					g.statusMsg = fmt.Sprintf("REC — Take %d", g.nativeTakeCount)
+				}
 			case performance.CaptureTake:
 				g.commitNativeTake(event.Take, fmt.Sprintf("Loop take %d recorded", g.nativeTakeCount))
 				g.nativeTakeCount++
 			}
 		default:
-			return
+			goto drained
 		}
 	}
+
+drained:
+	snapshot := g.nativeConductor.Snapshot()
+	if !snapshot.Recording || g.nativeSession == nil || g.nativeCaptureSequence < 0 {
+		return
+	}
+	g.nativeCaptureVisible = true
+	g.nativeCaptureTick = max(0, int(snapshot.Tick))
+	g.nativeSequence = g.nativeCaptureSequence
+	take, ok := g.nativeSession.RecordingSnapshotInto(g.nativeCaptureEvents, g.nativeSession.Now())
+	if ok {
+		g.nativeCaptureEvents = take.Events
+		if len(take.Events) != g.nativeCaptureEventCount || take.Dropped != g.nativeCaptureDropped ||
+			g.nativeQuantize != g.nativeCaptureQuantize || g.nativeSwing != g.nativeCaptureSwing {
+			materialized := performance.MaterializeSwing(take, g.nativeCaptureClock, g.nativeQuantize, g.nativeSwing)
+			g.nativeCaptureNotes = append(g.nativeCaptureNotes[:0], materialized.Notes...)
+			g.nativeCaptureEventCount = len(take.Events)
+			g.nativeCaptureDropped = take.Dropped
+			g.nativeCaptureQuantize = g.nativeQuantize
+			g.nativeCaptureSwing = g.nativeSwing
+		}
+		// Materialization closes currently held notes at the snapshot duration.
+		// Extend only those cached visual notes in place as the playhead moves;
+		// completed notes are rematerialized once their stop event arrives.
+		allocation := g.nativeSession.Snapshot().Allocation
+		visualEnd := int(g.nativeCaptureClock.QuantizeTickSwing(snapshot.Tick, g.nativeQuantize, g.nativeSwing))
+		for channel := 0; channel < 3; channel++ {
+			if !allocation.Active[channel] {
+				continue
+			}
+			for index := len(g.nativeCaptureNotes) - 1; index >= 0; index-- {
+				note := &g.nativeCaptureNotes[index]
+				if int(note.Channel) != channel+1 || note.Note != allocation.Notes[channel] {
+					continue
+				}
+				note.DurationTicks = max(note.DurationTicks, visualEnd-note.StartTick)
+				break
+			}
+		}
+	}
+	if part, ok := g.model.NativePartAt(g.nativeCaptureSequence); ok {
+		_, _, _, ticksPerBar := editor.NativePartMeter(part)
+		g.nativeBar = g.nativeCaptureTick / max(1, ticksPerBar)
+	}
+	g.nativeSelectedStep = g.nativeCaptureTick / editor.NativeTicksPerStep
+}
+
+func (g *Game) clearNativeCapture() {
+	if g == nil {
+		return
+	}
+	g.nativeCaptureSequence = -1
+	g.nativeCaptureTick = 0
+	g.nativeCaptureVisible = false
+	g.nativeCaptureEvents = g.nativeCaptureEvents[:0]
+	g.nativeCaptureNotes = g.nativeCaptureNotes[:0]
+	g.nativeCaptureEventCount = -1
+	g.nativeCaptureDropped = 0
 }
 
 func (g *Game) commitNativeTake(take performance.RawPerformanceTake, message string) {
-	tempo, _ := g.model.NativePartTempo(g.nativeSequence)
-	clock := performance.NewTrackerClock(tempo, g.nativePartTicks())
-	id, err := g.model.ApplyNativePerformanceTakeSwing(g.nativeSequence, take, clock, g.nativeQuantize, g.nativeSwing, g.nativeOverdub)
+	sequence := g.nativeSequence
+	clock := g.nativeCaptureClock
+	if g.nativeCaptureSequence >= 0 {
+		sequence = g.nativeCaptureSequence
+	} else {
+		tempo, _ := g.model.NativePartTempo(sequence)
+		clock = performance.NewTrackerClock(tempo, g.nativePartTicks())
+	}
+	id, err := g.model.ApplyNativePerformanceTakeSwing(sequence, take, clock, g.nativeQuantize, g.nativeSwing, g.nativeOverdub)
 	if err != nil {
 		g.statusMsg = "recording not committed: " + err.Error()
 		return
 	}
-	for index, retained := range g.model.NativeTakesAt(g.nativeSequence) {
+	g.nativeSequence = sequence
+	for index, retained := range g.model.NativeTakesAt(sequence) {
 		if retained.ID == id {
 			g.nativeTakeSelection = index
 			break
@@ -344,6 +457,10 @@ func (g *Game) updateNativeMIDI() {
 		select {
 		case command := <-g.nativeMIDICommands:
 			g.applyNativeMIDICommand(command)
+			// MIDI commands arrive outside the mouse/keyboard input path. Wake the
+			// retained UI immediately so controller state never waits for the idle
+			// safety refresh before becoming visible.
+			g.requestRender()
 		default:
 			g.nativeMIDI.SetState(g.nativeControllerState())
 			return
@@ -384,7 +501,13 @@ func (g *Game) applyNativeMIDICommand(command midicontrol.Command) {
 		g.nudgeNativePerformanceParameter(command.Parameter, command.Delta)
 	case midicontrol.CommandConnected:
 		g.nativeMIDIName = command.Name
-		g.statusMsg = "Launchkey connected — zero-config controls ready"
+		if command.Detail != "" {
+			g.statusMsg = command.Detail
+		} else {
+			g.statusMsg = command.Name + " connected — zero-config controls ready"
+		}
+	case midicontrol.CommandProblem:
+		g.statusMsg = command.Detail
 	case midicontrol.CommandDisconnected:
 		g.nativeMIDIName = ""
 		var take performance.RawPerformanceTake
@@ -398,6 +521,7 @@ func (g *Game) applyNativeMIDICommand(command midicontrol.Command) {
 		} else {
 			g.statusMsg = "Launchkey disconnected — all notes off"
 		}
+		g.clearNativeCapture()
 	}
 }
 

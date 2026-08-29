@@ -11,8 +11,10 @@ CPU runs one 256 Hz Timer 0 service that:
 - writes only due channel/shared registers.
 
 The desktop live-preview stream is not part of this target budget. It exists
-only while authoring, uses a 20 ms host buffer, and translates the same physical
-channel actions that the recorder stores. It never enters generated ROM data.
+only while authoring and translates the same physical channel actions that the
+recorder stores. On macOS its source player keeps 20 ms of PCM while the host
+device queue is explicitly requested at 40 ms; the previous platform-default
+queue was roughly 128 ms. None of these host buffers enter generated ROM data.
 
 ## Parameter timing contract
 

@@ -24,6 +24,11 @@ func main() {
 	ebiten.SetWindowSizeLimits(minimumScreenWidth, minimumScreenHeight, -1, -1)
 	ebiten.SetWindowTitle("mtile editor - " + filepath.Base(*dir))
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	// The editor is mostly static. Keeping the offscreen buffer lets Draw
+	// return without touching it on idle ticks, which makes Ebitengine skip the
+	// Metal command buffer and swap entirely. Dynamic surfaces (transport,
+	// recording, MIDI and the emulator) still request every frame from Update.
+	ebiten.SetScreenClearedEveryFrame(false)
 	runErr := ebiten.RunGame(g)
 	g.closePlayMode()
 	g.closeNativePerformance()

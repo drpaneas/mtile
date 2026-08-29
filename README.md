@@ -241,12 +241,20 @@ every 4 - PICO-8's native schedule at the same 30 Hz rate.
 
 ## Drawing
 
-Immediate-mode software blit onto a 240x160 Mode 4 framebuffer:
+The current runtime draws into a 240x160 Mode 4 software framebuffer:
 
 - Color 0 is transparent for `spr` / `sspr` / `map` until `palt` changes it
 - `cls` does not change the current draw color
 - `print` uses a 6x8 cell font (40 columns by 20 rows)
 - `print(str, color)` vs `print(str, x, y [, color])`
+
+The exhaustive [render-mode compatibility matrix](docs/render-modes.md)
+classifies every builtin as renderer-independent, compatible with both
+backends, conditionally compatible with a future Mode 0 backend, or Mode 4
+only. Mode 4 remains the only shipping renderer; the matrix is the contract
+for future `mode0` and `auto` build selection. The corresponding
+[engineering and benchmark plan](docs/render-mode-plan.md) defines the staged
+proof and its go/no-go gates.
 
 ## Audio
 
@@ -298,6 +306,8 @@ examples, performance guidance, and mutation pitfalls.
 
 The function set and calling conventions follow
 [PIGO8](https://drpaneas.com/pigo8/)'s PICO-8-style API.
+Renderer compatibility and the exact Mode 0 restrictions for every function
+are documented in [docs/render-modes.md](docs/render-modes.md).
 
 Graphics: `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
 `circfill`, `spr`, `sspr`, `map`, `camera`, `clip`, `pal`, `palt`, `color`,

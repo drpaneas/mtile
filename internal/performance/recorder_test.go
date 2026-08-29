@@ -104,3 +104,19 @@ func TestRecorderDropsWithoutAllocatingPastCapacity(t *testing.T) {
 		t.Fatalf("bounded recorder = %#v", take)
 	}
 }
+
+func TestRecorderSnapshotShowsUnfinishedNoteWithoutStopping(t *testing.T) {
+	r := NewRecorder(8)
+	r.Start(100 * time.Millisecond)
+	batch := ActionBatch{Len: 1}
+	batch.Actions[0] = ChannelAction{At: 150 * time.Millisecond, Kind: ActionStart, Channel: 1, Note: 64}
+	r.Record(batch)
+
+	take, ok := r.SnapshotInto(make([]RawEvent, 0, 8), 350*time.Millisecond)
+	if !ok || len(take.Events) != 1 || take.Events[0].Offset != 50*time.Millisecond || take.Duration != 250*time.Millisecond {
+		t.Fatalf("live recorder snapshot = %#v ok=%t", take, ok)
+	}
+	if !r.Recording() {
+		t.Fatal("taking a live snapshot stopped the recorder")
+	}
+}

@@ -40,6 +40,13 @@ maps 96-PPQN ticks to the fixed 256 Hz hardware commit clock without drift.
         "useLength": false,
         "envelope": {"initial": 15, "direction": "down", "pace": 2},
         "sweep": {"pace": 2, "direction": "up", "shift": 1}
+      },
+      "macro": {
+        "steps": [
+          {"periodDelta": 1},
+          {"periodDelta": -1}
+        ],
+        "loopStart": 0
       }
     },
     {
@@ -72,9 +79,18 @@ Each sound has exactly one payload matching `kind`:
 Routes are `none`, `left`, `right`, or `both`. Duty is 12.5, 25, 50, or 75.
 Envelope initial volume is 0–15, direction is `up`/`down`, and pace is 0–7.
 Sweep pace and shift are 0–7. CH3 samples are 0–15 and level is
-0/25/50/75/100. CH4 divisor is 0–7 and shift is 0–13.
+0/25/50/75/100. CH4 divisor is 0–7 and shift is 0–15.
 
-Friendly presets are materialized into these fields before save.
+Friendly presets are materialized into these fields before save. A sound may
+also contain one optional bounded `macro` with 1–64 steps. `loopStart` is
+omitted for a one-shot macro or is a zero-based step index. Pitched channels
+accept only `periodDelta` (-2047 through 2047). CH4 accepts either an absolute
+`hasNoise: true` step with `noiseDivisor` 0–7 and `noiseShift` 0–15, or a GB
+Studio-compatible `hasNoiseNote: true` step with `noiseNoteOffset` -36..35.
+Relative rows follow the played C3..B8 note through hUGEDriver's exact
+`get_note_poly` conversion. Macros advance at one original Game Boy display
+frame (70,224 DMG clocks, represented as 280,896 GBA clocks); they never run a
+software oscillator or PCM path.
 
 ## `assets/audio/music.json`
 

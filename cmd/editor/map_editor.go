@@ -225,13 +225,17 @@ func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
 	w, h := g.mapBounds()
 	minX, minY, maxX, maxY := g.mapCam.VisibleBounds(layout.Canvas, w, h)
 	tile := g.mapCam.TileSize()
+	// Match the runtime's source-pixel transparency: color 0 leaves whatever
+	// is behind the map untouched. In the editor that underlying surface is a
+	// checkerboard, painted once for the visible map instead of once per tile.
+	if left, top, right, bottom, ok := g.mapGuideClip(layout); ok {
+		drawCheckerboard(screen, editor.Rect{X: left, Y: top, W: right - left + 1, H: bottom - top + 1})
+	}
 	for y := minY; y < maxY; y++ {
 		for x := minX; x < maxX; x++ {
 			sx, sy := g.mapCam.WorldToScreen(x, y, layout.Canvas)
 			id := g.mapCellAt(x, y)
-			cell := editor.Rect{X: int(sx), Y: int(sy), W: max(1, int(tile)), H: max(1, int(tile))}
 			if isEraserIndex(id) {
-				drawCheckerboard(screen, cell)
 				continue
 			}
 			g.drawSpriteThumb(screen, id, sx, sy, tile, tile)

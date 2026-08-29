@@ -7,15 +7,15 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/drpaneas/mtile/internal/gbapu"
 	runtimeaudio "github.com/drpaneas/mtile/runtime/audio"
 	"github.com/drpaneas/mtile/runtime/hw"
 )
 
 const (
-	liveQueueSize   = 256
-	liveQueueMask   = liveQueueSize - 1
-	liveReleaseMS   = 1
-	liveMixHeadroom = 4
+	liveQueueSize            = 256
+	liveQueueMask            = liveQueueSize - 1
+	liveMonitorReleaseMillis = 5
 )
 
 type liveCommandKind uint8
@@ -35,42 +35,54 @@ type liveCommand struct {
 }
 
 type liveVoice struct {
-	active        bool
-	note          uint8
-	sound         runtimeaudio.Sound
-	phase         float64
-	frequency     float64
-	noisePhase    float64
-	lfsr          uint16
-	elapsed       uint64
-	sweepEvery    uint64
-	period        int
-	release       int
-	releaseLength int
-	maxSamples    uint64
+	active         bool
+	note           uint8
+	sound          runtimeaudio.Sound
+	phase          float64
+	frequency      float64
+	noisePhase     float64
+	lfsr           uint16
+	elapsed        uint64
+	sweepEvery     uint64
+	period         int
+	noiseDivisor   uint8
+	noiseShift     uint8
+	macroStep      uint8
+	macroRemainder uint64
+	macroActive    bool
+	macroBaseNote  uint8
+	maxSamples     uint64
 }
 
 // Stream is an infinite 48 kHz-style PCM reader. Producers enqueue complete
 // physical channel commands; the audio reader owns oscillator state and never
 // locks or allocates while filling a buffer.
 type Stream struct {
-	sampleRate int
-	queue      [liveQueueSize]liveCommand
-	head       atomic.Uint32
-	tail       atomic.Uint32
-	producerMu sync.Mutex
-	dropped    atomic.Uint32
-	output     atomic.Uint32
-	closed     atomic.Bool
-	voices     [4]liveVoice
-	snapshot   [4]atomic.Uint32
+	sampleRate     int
+	queue          [liveQueueSize]liveCommand
+	head           atomic.Uint32
+	tail           atomic.Uint32
+	producerMu     sync.Mutex
+	dropped        atomic.Uint32
+	output         atomic.Uint32
+	closed         atomic.Bool
+	voices         [4]liveVoice
+	snapshot       [4]atomic.Uint32
+	renderer       *gbapu.Renderer
+	rendererOutput uint32
+	renderLeft     [1]int16
+	renderRight    [1]int16
 }
 
 func NewStream(sampleRate int) *Stream {
 	if sampleRate < 8_000 {
 		sampleRate = 48_000
 	}
-	stream := &Stream{sampleRate: sampleRate}
+	stream := &Stream{
+		sampleRate:     sampleRate,
+		renderer:       gbapu.NewRenderer(sampleRate),
+		rendererOutput: ^uint32(0),
+	}
 	stream.SetOutput(7, 7, 100)
 	return stream
 }
@@ -91,6 +103,25 @@ func (s *Stream) SetOutput(leftLevel, rightLevel, psgRatio int) {
 		ratioCode = 1
 	}
 	s.output.Store(uint32(leftLevel) | uint32(rightLevel)<<3 | ratioCode<<6)
+}
+
+// syncRendererOutput is called exclusively by the audio reader. SetOutput is
+// allowed from the editor goroutine, but the renderer and its blip buffers
+// remain single-owner state throughout playback.
+func (s *Stream) syncRendererOutput() {
+	packed := s.output.Load()
+	if s.renderer == nil || packed == s.rendererOutput {
+		return
+	}
+	ratio := 100
+	switch (packed >> 6) & 3 {
+	case 0:
+		ratio = 25
+	case 1:
+		ratio = 50
+	}
+	s.renderer.SetOutput(int(packed&7), int((packed>>3)&7), ratio)
+	s.rendererOutput = packed
 }
 
 func (s *Stream) enqueue(command liveCommand) bool {
@@ -153,7 +184,7 @@ func (s *Stream) ChannelSnapshot() (active [4]bool, notes [4]uint8) {
 func (s *Stream) publish(channel int) {
 	voice := &s.voices[channel]
 	packed := uint32(voice.note)
-	if voice.active || voice.release > 0 {
+	if voice.active {
 		packed |= 1 << 31
 	}
 	s.snapshot[channel].Store(packed)
@@ -168,6 +199,9 @@ func (s *Stream) drain() {
 		command := s.queue[head]
 		s.head.Store((head + 1) & liveQueueMask)
 		if command.kind == liveStopAll {
+			if s.renderer != nil {
+				s.renderer.StopAll()
+			}
 			for channel := range s.voices {
 				s.release(channel)
 			}
@@ -195,9 +229,22 @@ func (s *Stream) drain() {
 
 func (s *Stream) start(channel int, note uint8, sound runtimeaudio.Sound) {
 	voice := &s.voices[channel]
-	*voice = liveVoice{active: true, note: note, sound: sound, lfsr: 0x7fff}
-	voice.releaseLength = max(1, s.sampleRate*liveReleaseMS/1000)
+	*voice = liveVoice{
+		active: true, note: note, sound: sound, lfsr: 0x7fff,
+		noiseDivisor: sound.Noise.Divisor, noiseShift: sound.Noise.Shift,
+		macroActive: len(sound.Macro.Steps) != 0, macroBaseNote: note,
+	}
 	voice.maxSamples = liveHardwareLengthSamples(sound, s.sampleRate)
+	if !runtimeaudio.NativeSoundNoteValid(sound, note) {
+		voice.active = false
+		s.publish(channel)
+		return
+	}
+	if s.renderer != nil && !s.renderer.Start(uint8(channel+1), note, sound) {
+		voice.active = false
+		s.publish(channel)
+		return
+	}
 	if sound.Kind != runtimeaudio.SoundCH4 {
 		period, ok := runtimeaudio.NativeSoundPeriod(sound, note)
 		if !ok {
@@ -206,13 +253,13 @@ func (s *Stream) start(channel int, note uint8, sound runtimeaudio.Sound) {
 			return
 		}
 		voice.period = int(period)
-		clock := 131072.0
-		if sound.Kind == runtimeaudio.SoundCH3 {
-			waveLength := max(1, int(sound.Wave.Wave.Length))
-			clock = 2097152.0 / float64(waveLength)
-		}
-		voice.frequency = clock / float64(2048-voice.period)
 	}
+	if !liveApplyMacroStep(voice) {
+		voice.active = false
+		s.publish(channel)
+		return
+	}
+	liveUpdateToneFrequency(voice)
 	if sound.Kind == runtimeaudio.SoundCH1 && sound.Pulse1.Sweep.Pace != 0 {
 		voice.sweepEvery = uint64(max(1, s.sampleRate*int(sound.Pulse1.Sweep.Pace)/128))
 	}
@@ -224,8 +271,14 @@ func (s *Stream) release(channel int) {
 	if !voice.active {
 		return
 	}
+	if s.renderer != nil {
+		// Note-off timing remains exact in the allocator and recorder. Only the
+		// desktop monitor receives this tiny de-click tail; cartridge playback
+		// and explicit PSG Stop calls keep their hardware behavior.
+		frames := max(1, s.sampleRate*liveMonitorReleaseMillis/1000)
+		s.renderer.Release(uint8(channel+1), frames)
+	}
 	voice.active = false
-	voice.release = voice.releaseLength
 	s.publish(channel)
 }
 
@@ -241,35 +294,26 @@ func (s *Stream) Read(target []byte) (int, error) {
 		// Command polling every frame keeps callback-to-state latency below one
 		// sample once the host requests the next buffer.
 		s.drain()
-		left, right := int32(0), int32(0)
+		s.syncRendererOutput()
+		// Keep the public live-state snapshot and parameter semantics moving in
+		// lockstep with the audio callback. Audible samples come from the shared
+		// cycle-timed AGB renderer below.
 		for channel := range s.voices {
-			value := s.sample(channel)
-			route := liveSoundRoute(s.voices[channel].sound)
-			if route == hw.SoundRouteLeft || route == hw.SoundRouteBoth {
-				left += int32(value)
-			}
-			if route == hw.SoundRouteRight || route == hw.SoundRouteBoth {
-				right += int32(value)
+			s.advanceVoiceState(channel)
+		}
+		s.renderLeft[0], s.renderRight[0] = 0, 0
+		if s.renderer != nil {
+			s.renderer.Render(s.renderLeft[:], s.renderRight[:])
+			for channel := range s.voices {
+				if s.voices[channel].active && !s.renderer.Active(uint8(channel+1)) {
+					s.voices[channel].active = false
+					s.publish(channel)
+				}
 			}
 		}
-		left, right = left/liveMixHeadroom, right/liveMixHeadroom
-		output := s.output.Load()
-		leftLevel := int32(output & 7)
-		rightLevel := int32((output >> 3) & 7)
-		ratio := int32(100)
-		switch (output >> 6) & 3 {
-		case 0:
-			ratio = 25
-		case 1:
-			ratio = 50
-		}
-		left = left * (leftLevel + 1) * ratio / (8 * 100)
-		right = right * (rightLevel + 1) * ratio / (8 * 100)
-		left = min(max(left, -32767), 32767)
-		right = min(max(right, -32767), 32767)
 		offset := frame * 4
-		binary.LittleEndian.PutUint16(target[offset:], uint16(int16(left)))
-		binary.LittleEndian.PutUint16(target[offset+2:], uint16(int16(right)))
+		binary.LittleEndian.PutUint16(target[offset:], uint16(s.renderLeft[0]))
+		binary.LittleEndian.PutUint16(target[offset+2:], uint16(s.renderRight[0]))
 	}
 	for i := frames * 4; i < len(target); i++ {
 		target[i] = 0
@@ -279,16 +323,18 @@ func (s *Stream) Read(target []byte) (int, error) {
 
 var _ io.Reader = (*Stream)(nil)
 
-func (s *Stream) sample(channel int) int16 {
+func (s *Stream) advanceVoiceState(channel int) {
+	if channel < 0 || channel >= len(s.voices) {
+		return
+	}
 	voice := &s.voices[channel]
-	if !voice.active && voice.release <= 0 {
-		return 0
+	if !voice.active {
+		return
 	}
 	if voice.maxSamples != 0 && voice.elapsed >= voice.maxSamples {
 		voice.active = false
-		voice.release = 0
 		s.publish(channel)
-		return 0
+		return
 	}
 	if voice.sweepEvery != 0 && voice.elapsed != 0 && voice.elapsed%voice.sweepEvery == 0 {
 		delta := voice.period >> voice.sound.Pulse1.Sweep.Shift
@@ -298,56 +344,84 @@ func (s *Stream) sample(channel int) int16 {
 			voice.period += delta
 		}
 		if voice.period < 0 || voice.period > 2047 {
-			voice.active, voice.release = false, 0
+			voice.active = false
 			s.publish(channel)
-			return 0
+			return
 		}
-		voice.frequency = 131072 / float64(2048-voice.period)
-	}
-	voice.phase += voice.frequency / float64(s.sampleRate)
-	voice.phase -= math.Floor(voice.phase)
-	value, volume := 0.0, 1.0
-	switch voice.sound.Kind {
-	case runtimeaudio.SoundCH1:
-		value = livePulse(voice.phase, voice.sound.Pulse1.Pulse.Duty)
-		volume = liveEnvelope(voice.elapsed, s.sampleRate, voice.sound.Pulse1.Pulse.Envelope)
-	case runtimeaudio.SoundCH2:
-		value = livePulse(voice.phase, voice.sound.Pulse2.Duty)
-		volume = liveEnvelope(voice.elapsed, s.sampleRate, voice.sound.Pulse2.Envelope)
-	case runtimeaudio.SoundCH3:
-		wave := voice.sound.Wave.Wave
-		if wave.Length != 0 {
-			index := int(voice.phase*float64(wave.Length)) % int(wave.Length)
-			value = (float64(wave.Samples[index]) - 7.5) / 7.5
-		}
-		volume = liveWaveLevel(voice.sound.Wave.Level)
-	case runtimeaudio.SoundCH4:
-		frequency := liveNoiseFrequency(voice.sound.Noise.Divisor, voice.sound.Noise.Shift)
-		voice.noisePhase += frequency / float64(s.sampleRate)
-		for voice.noisePhase >= 1 {
-			bit := (voice.lfsr ^ (voice.lfsr >> 1)) & 1
-			voice.lfsr = (voice.lfsr >> 1) | (bit << 14)
-			if voice.sound.Noise.Width == hw.Noise7Bit {
-				voice.lfsr = (voice.lfsr &^ (1 << 6)) | (bit << 6)
-			}
-			voice.noisePhase--
-		}
-		if voice.lfsr&1 == 0 {
-			value = 1
-		} else {
-			value = -1
-		}
-		volume = liveEnvelope(voice.elapsed, s.sampleRate, voice.sound.Noise.Envelope)
-	}
-	if voice.release > 0 {
-		volume *= float64(voice.release) / float64(voice.releaseLength)
-		voice.release--
-		if voice.release == 0 {
-			s.publish(channel)
-		}
+		liveUpdateToneFrequency(voice)
 	}
 	voice.elapsed++
-	return int16(value * volume * 28_000)
+	if !liveAdvanceMacro(voice, s.sampleRate) {
+		voice.active = false
+		s.publish(channel)
+	}
+}
+
+func liveUpdateToneFrequency(voice *liveVoice) {
+	if voice == nil || voice.sound.Kind == runtimeaudio.SoundCH4 || voice.period < 0 || voice.period > 2047 {
+		return
+	}
+	clock := 131072.0
+	if voice.sound.Kind == runtimeaudio.SoundCH3 {
+		waveLength := max(1, int(voice.sound.Wave.Wave.Length))
+		clock = 2097152.0 / float64(waveLength)
+	}
+	voice.frequency = clock / float64(2048-voice.period)
+}
+
+func liveAdvanceMacro(voice *liveVoice, sampleRate int) bool {
+	if voice == nil || !voice.macroActive {
+		return true
+	}
+	voice.macroRemainder += uint64(hw.GBAClockHz)
+	threshold := uint64(sampleRate) * uint64(runtimeaudio.NativeMacroClockCycles)
+	if voice.macroRemainder < threshold {
+		return true
+	}
+	voice.macroRemainder -= threshold
+	return liveApplyMacroStep(voice)
+}
+
+func liveApplyMacroStep(voice *liveVoice) bool {
+	if voice == nil || !voice.macroActive {
+		return true
+	}
+	if int(voice.macroStep) >= len(voice.sound.Macro.Steps) {
+		voice.macroActive = false
+		return true
+	}
+	step := voice.sound.Macro.Steps[voice.macroStep]
+	if step.PeriodDelta != 0 {
+		voice.period += int(step.PeriodDelta)
+		if voice.period < 0 || voice.period > 2047 {
+			voice.macroActive = false
+			return false
+		}
+		liveUpdateToneFrequency(voice)
+	}
+	if step.HasNoise {
+		voice.noiseDivisor = step.NoiseDivisor
+		voice.noiseShift = step.NoiseShift
+	}
+	if step.HasNoiseNote {
+		divisor, shift, ok := runtimeaudio.NativeGBStudioNoisePolynomial(voice.macroBaseNote, step.NoiseNoteOffset)
+		if !ok {
+			voice.macroActive = false
+			return false
+		}
+		voice.noiseDivisor = divisor
+		voice.noiseShift = shift
+	}
+	next := int(voice.macroStep) + 1
+	if next >= len(voice.sound.Macro.Steps) {
+		if voice.sound.Macro.LoopStart < 0 {
+			voice.macroActive = false
+			return true
+		}
+		next = int(voice.sound.Macro.LoopStart)
+	}
+	voice.macroStep = uint8(next)
+	return true
 }
 
 func liveHardwareLengthSamples(sound runtimeaudio.Sound, sampleRate int) uint64 {
@@ -372,7 +446,7 @@ func liveHardwareLengthSamples(sound runtimeaudio.Sound, sampleRate int) uint64 
 	return 0
 }
 
-func livePulse(phase float64, duty hw.PulseDuty) float64 {
+func livePulseDutyFraction(duty hw.PulseDuty) float64 {
 	fraction := .75
 	switch duty {
 	case hw.PulseDuty12_5:
@@ -382,10 +456,110 @@ func livePulse(phase float64, duty hw.PulseDuty) float64 {
 	case hw.PulseDuty50:
 		fraction = .5
 	}
-	if phase < fraction {
+	return fraction
+}
+
+func livePulseAverage(phase, advance, duty float64) float64 {
+	if advance <= 0 {
+		if phase < duty {
+			return 1
+		}
+		return -1
+	}
+	positive := livePeriodicIntervalCoverage(phase, advance, duty)
+	return positive*2/advance - 1
+}
+
+func livePeriodicIntervalCoverage(phase, advance, positiveEnd float64) float64 {
+	phase = math.Mod(phase, 1)
+	if phase < 0 {
+		phase++
+	}
+	remaining := advance
+	covered := 0.0
+	for remaining > 0 {
+		span := math.Min(remaining, 1-phase)
+		if phase < positiveEnd {
+			covered += math.Min(span, positiveEnd-phase)
+		}
+		remaining -= span
+		phase += span
+		if phase >= 1-1e-12 {
+			phase = 0
+		}
+	}
+	return covered
+}
+
+func liveWaveAverage(phase, advance float64, wave hw.Waveform) float64 {
+	if wave.Length == 0 {
+		return 0
+	}
+	if advance <= 0 {
+		index := int(math.Mod(phase, 1)*float64(wave.Length)) % int(wave.Length)
+		return (float64(wave.Samples[index]) - 7.5) / 7.5
+	}
+	remaining := advance
+	position := math.Mod(phase, 1) * float64(wave.Length)
+	weighted := 0.0
+	for remaining > 0 {
+		index := int(position) % int(wave.Length)
+		toBoundary := (float64(index+1) - position) / float64(wave.Length)
+		if toBoundary <= 1e-12 {
+			toBoundary = 1 / float64(wave.Length)
+		}
+		span := math.Min(remaining, toBoundary)
+		weighted += ((float64(wave.Samples[index]) - 7.5) / 7.5) * span
+		remaining -= span
+		position += span * float64(wave.Length)
+		if position >= float64(wave.Length)-1e-12 {
+			position = 0
+		}
+	}
+	return weighted / advance
+}
+
+func liveNoiseValue(lfsr uint16) float64 {
+	if lfsr&1 == 0 {
 		return 1
 	}
 	return -1
+}
+
+func liveNoiseShift(voice *liveVoice, width hw.NoiseWidth) {
+	bit := (voice.lfsr ^ (voice.lfsr >> 1)) & 1
+	voice.lfsr = (voice.lfsr >> 1) | (bit << 14)
+	if width == hw.Noise7Bit {
+		voice.lfsr = (voice.lfsr &^ (1 << 6)) | (bit << 6)
+	}
+}
+
+func liveNoiseAverage(voice *liveVoice, advance float64, width hw.NoiseWidth) float64 {
+	if voice == nil || advance <= 0 {
+		if voice == nil {
+			return 0
+		}
+		return liveNoiseValue(voice.lfsr)
+	}
+	remaining := 1.0
+	weighted := 0.0
+	for remaining > 0 {
+		toShift := (1 - voice.noisePhase) / advance
+		if toShift >= remaining {
+			weighted += liveNoiseValue(voice.lfsr) * remaining
+			voice.noisePhase += advance * remaining
+			break
+		}
+		weighted += liveNoiseValue(voice.lfsr) * toShift
+		remaining -= toShift
+		voice.noisePhase = 0
+		liveNoiseShift(voice, width)
+	}
+	if voice.noisePhase >= 1-1e-12 {
+		voice.noisePhase = 0
+		liveNoiseShift(voice, width)
+	}
+	return weighted
 }
 
 func liveEnvelope(sample uint64, sampleRate int, envelope hw.HardwareEnvelope) float64 {
@@ -421,7 +595,7 @@ func liveNoiseFrequency(divisor, shift uint8) float64 {
 	if divisor != 0 {
 		ratio = float64(divisor)
 	}
-	return 262144 / (ratio * math.Pow(2, float64(shift+1)))
+	return 262144 / (ratio * math.Pow(2, float64(shift)))
 }
 
 func liveSoundRoute(sound runtimeaudio.Sound) hw.SoundRoute {

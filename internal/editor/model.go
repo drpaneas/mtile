@@ -492,6 +492,112 @@ func (m *Model) SetSpritePixel(id, x, y, color int) error {
 	return nil
 }
 
+// SetSpritePixelBlock atomically replaces a tile-aligned rectangle of sheet
+// pixels. It is used by multi-tile imports, where a validation failure must
+// not leave the first part of the image applied. Empty tiles remain sparse;
+// existing flags are preserved on every overwritten tile.
+func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixels []int) (bool, error) {
+	if m == nil {
+		return false, fmt.Errorf("editor model is required")
+	}
+	if width <= 0 || height <= 0 || width%8 != 0 || height%8 != 0 {
+		return false, fmt.Errorf("sprite pixel block must have positive dimensions divisible by 8 (got %dx%d)", width, height)
+	}
+	if len(pixels) != width*height {
+		return false, fmt.Errorf("sprite pixel block has %d pixels (want %d)", len(pixels), width*height)
+	}
+	cols, rows := m.Sheet.Width/8, m.Sheet.Height/8
+	tileCols, tileRows := width/8, height/8
+	if startCol < 0 || startRow < 0 || startCol+tileCols > cols || startRow+tileRows > rows {
+		return false, fmt.Errorf("%dx%d tile paste at (%d,%d) exceeds the %dx%d spritesheet", tileCols, tileRows, startCol, startRow, cols, rows)
+	}
+	for _, colorIndex := range pixels {
+		if colorIndex < 0 || colorIndex >= len(m.ActivePalette.Colors) {
+			return false, fmt.Errorf("pixel color %d is outside active palette length %d", colorIndex, len(m.ActivePalette.Colors))
+		}
+	}
+
+	updated := cloneSpritesheet(m.Sheet)
+	records := make(map[int]int, len(updated.Sprites))
+	for i := range updated.Sprites {
+		records[updated.Sprites[i].ID] = i
+	}
+	for tileY := 0; tileY < tileRows; tileY++ {
+		for tileX := 0; tileX < tileCols; tileX++ {
+			col, row := startCol+tileX, startRow+tileY
+			id := row*cols + col
+			if id == ReservedSpriteID {
+				return false, fmt.Errorf("sprite 0 is reserved as the transparent map eraser and cannot be edited")
+			}
+			if index, ok := records[id]; ok {
+				sprite := updated.Sprites[index]
+				if sprite.X != col*8 || sprite.Y != row*8 || sprite.Width != 8 || sprite.Height != 8 || len(sprite.Pixels) != 8 {
+					return false, fmt.Errorf("sprite %d is not an editable 8x8 cell", id)
+				}
+				for _, pixelRow := range sprite.Pixels {
+					if len(pixelRow) != 8 {
+						return false, fmt.Errorf("sprite %d is not an editable 8x8 cell", id)
+					}
+				}
+			}
+		}
+	}
+
+	changed := false
+	for tileY := 0; tileY < tileRows; tileY++ {
+		for tileX := 0; tileX < tileCols; tileX++ {
+			col, row := startCol+tileX, startRow+tileY
+			id := row*cols + col
+			index, exists := records[id]
+			if !exists && !pixelTileHasInk(pixels, width, tileX, tileY) {
+				continue
+			}
+			if !exists {
+				updated.Sprites = append(updated.Sprites, newCellSprite(id, col*8, row*8))
+				index = len(updated.Sprites) - 1
+				records[id] = index
+			}
+			sprite := &updated.Sprites[index]
+			for y := 0; y < 8; y++ {
+				for x := 0; x < 8; x++ {
+					value := pixels[(tileY*8+y)*width+tileX*8+x]
+					if sprite.Pixels[y][x] != value {
+						sprite.Pixels[y][x] = value
+						changed = true
+					}
+				}
+			}
+		}
+	}
+	if changed {
+		m.Sheet = updated
+	}
+	return changed, nil
+}
+
+func cloneSpritesheet(sheet assetsync.Spritesheet) assetsync.Spritesheet {
+	cloned := sheet
+	cloned.Sprites = slices.Clone(sheet.Sprites)
+	for i := range cloned.Sprites {
+		cloned.Sprites[i].Pixels = slices.Clone(sheet.Sprites[i].Pixels)
+		for y := range cloned.Sprites[i].Pixels {
+			cloned.Sprites[i].Pixels[y] = slices.Clone(sheet.Sprites[i].Pixels[y])
+		}
+	}
+	return cloned
+}
+
+func pixelTileHasInk(pixels []int, width, tileX, tileY int) bool {
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			if pixels[(tileY*8+y)*width+tileX*8+x] != 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // SpriteFlagByte returns sprite id's whole flag byte, or 0 if the sprite has
 // never been authored (matching an unpainted sprite's implicit zero pixels).
 func (m *Model) SpriteFlagByte(id int) int {

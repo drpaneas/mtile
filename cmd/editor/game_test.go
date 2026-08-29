@@ -263,25 +263,6 @@ func TestPlaceGridSpritesSkipsSelectionsThatRunOffTheSheet(t *testing.T) {
 	}
 }
 
-func TestColorPickerInfoTextIncludesSelectedID(t *testing.T) {
-	tests := []struct {
-		name   string
-		id     int
-		packed uint16
-		want   string
-	}{
-		{name: "first swatch", id: 0, packed: 0x0000, want: "BGR555 · 0x0000 · ID 0"},
-		{name: "last swatch", id: 255, packed: 0x7fff, want: "BGR555 · 0x7FFF · ID 255"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := colorPickerInfoText(tt.id, tt.packed); got != tt.want {
-				t.Fatalf("colorPickerInfoText(%d, %#04x) = %q, want %q", tt.id, tt.packed, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestColorZeroHintMentionsTransparentEraser(t *testing.T) {
 	if !strings.Contains(colorZeroHint, "0") || !strings.Contains(colorZeroHint, "transparent") || !strings.Contains(colorZeroHint, "eraser") {
 		t.Fatalf("colorZeroHint = %q, want it to say id 0 is transparent (eraser)", colorZeroHint)
@@ -798,22 +779,45 @@ func TestBracketKeysCycleWidthAndHeightIndependently(t *testing.T) {
 	}
 }
 
-func TestResizeShortcutUsesCmdOnMacAndCtrlElsewhere(t *testing.T) {
+func TestSpritesheetDragSelectionBuildsRectangleAroundAnchor(t *testing.T) {
 	tests := []struct {
-		name string
-		goos string
-		want string
+		name                                       string
+		anchorCol, anchorRow, cursorCol, cursorRow int
+		wantCol, wantRow, wantCols, wantRows       int
 	}{
-		{name: "darwin", goos: "darwin", want: "CMD+[ / ] RESIZE"},
-		{name: "linux", goos: "linux", want: "CTRL+[ / ] RESIZE"},
-		{name: "windows", goos: "windows", want: "CTRL+[ / ] RESIZE"},
+		{name: "single tile", anchorCol: 4, anchorRow: 5, cursorCol: 4, cursorRow: 5, wantCol: 4, wantRow: 5, wantCols: 1, wantRows: 1},
+		{name: "down and right", anchorCol: 3, anchorRow: 4, cursorCol: 5, cursorRow: 6, wantCol: 3, wantRow: 4, wantCols: 3, wantRows: 3},
+		{name: "up and left", anchorCol: 3, anchorRow: 4, cursorCol: 1, cursorRow: 2, wantCol: 1, wantRow: 2, wantCols: 3, wantRows: 3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := resizeShortcutText(tt.goos); got != tt.want {
-				t.Fatalf("resizeShortcutText(%q) = %q, want %q", tt.goos, got, tt.want)
+			col, row, cols, rows, ok := spritesheetDragSelection(tt.anchorCol, tt.anchorRow, tt.cursorCol, tt.cursorRow, 30, 20)
+			if !ok || col != tt.wantCol || row != tt.wantRow || cols != tt.wantCols || rows != tt.wantRows {
+				t.Fatalf("selection = (%d,%d %dx%d ok=%t), want (%d,%d %dx%d true)", col, row, cols, rows, ok, tt.wantCol, tt.wantRow, tt.wantCols, tt.wantRows)
 			}
 		})
+	}
+}
+
+func TestSpritesheetDragSelectionClampsToMaximumAndSheetEdges(t *testing.T) {
+	tests := []struct {
+		name                                       string
+		anchorCol, anchorRow, cursorCol, cursorRow int
+		wantCol, wantRow, wantCols, wantRows       int
+	}{
+		{name: "far up and left", anchorCol: 20, anchorRow: 10, cursorCol: -100, cursorRow: -100, wantCol: 5, wantRow: 0, wantCols: 16, wantRows: 11},
+		{name: "far down and right", anchorCol: 2, anchorRow: 2, cursorCol: 100, cursorRow: 100, wantCol: 2, wantRow: 2, wantCols: 16, wantRows: 16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			col, row, cols, rows, ok := spritesheetDragSelection(tt.anchorCol, tt.anchorRow, tt.cursorCol, tt.cursorRow, 30, 20)
+			if !ok || col != tt.wantCol || row != tt.wantRow || cols != tt.wantCols || rows != tt.wantRows {
+				t.Fatalf("selection = (%d,%d %dx%d ok=%t), want (%d,%d %dx%d true)", col, row, cols, rows, ok, tt.wantCol, tt.wantRow, tt.wantCols, tt.wantRows)
+			}
+		})
+	}
+	if _, _, _, _, ok := spritesheetDragSelection(-1, 0, 0, 0, 30, 20); ok {
+		t.Fatal("selection accepted an anchor outside the spritesheet")
 	}
 }
 
@@ -882,8 +886,7 @@ func TestCanvasPixelScaleKeepsSquarePixelsForNonSquareGrid(t *testing.T) {
 func TestSquarePixelSelectionConsumesEntireCanvas(t *testing.T) {
 	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
 	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
-	g := newTestGame(t, 32, 32, 2, 2)
-	g.gridCols, g.gridRows = 4, 4
+	g := &Game{gridCols: 4, gridRows: 4}
 
 	if got := g.canvasPixelBounds(0, 0, g.gridPixelsW(), g.gridPixelsH()); got != canvasRect {
 		t.Fatalf("32x32 canvas bounds = %#v, want full canvas %#v", got, canvasRect)
@@ -891,6 +894,80 @@ func TestSquarePixelSelectionConsumesEntireCanvas(t *testing.T) {
 	col, row, ok := g.spriteCanvasCellAt(canvasRect.X+canvasRect.W-1, canvasRect.Y+canvasRect.H-1, false)
 	if !ok || col != 31 || row != 31 {
 		t.Fatalf("bottom-right canvas pixel = (%d,%d ok=%t), want (31,31 true)", col, row, ok)
+	}
+}
+
+func TestSpriteCanvasZoomKeepsCenterPixelStableAndReturnsToFit(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := &Game{gridCols: 4, gridRows: 4, spriteTool: spriteToolLine, spriteShapeActive: true}
+
+	centerX, centerY := canvasRect.X+canvasRect.W/2, canvasRect.Y+canvasRect.H/2
+	centerCol, centerRow, ok := g.spriteCanvasCellAt(centerX, centerY, false)
+	if !ok {
+		t.Fatal("fit canvas center is outside the sprite")
+	}
+	if !g.changeSpriteCanvasZoom(1) {
+		t.Fatal("zoom in did not change the canvas view")
+	}
+	if g.spriteTool != spriteToolMove || g.spriteShapeActive {
+		t.Fatalf("zoom selected tool %s with shapeActive=%t, want MOVE with no active shape", g.spriteTool, g.spriteShapeActive)
+	}
+	zoomedCol, zoomedRow, ok := g.spriteCanvasCellAt(centerX, centerY, false)
+	if !ok || zoomedCol != centerCol || zoomedRow != centerRow {
+		t.Fatalf("zoom moved center pixel from (%d,%d) to (%d,%d ok=%t)", centerCol, centerRow, zoomedCol, zoomedRow, ok)
+	}
+	for g.changeSpriteCanvasZoom(1) {
+	}
+	if g.spriteCanvasZoomLevel != spriteCanvasZoomMax || spriteCanvasZoomFactor(g.spriteCanvasZoomLevel) != 4 {
+		t.Fatalf("maximum zoom = level %d factor %g, want level %d factor 4", g.spriteCanvasZoomLevel, spriteCanvasZoomFactor(g.spriteCanvasZoomLevel), spriteCanvasZoomMax)
+	}
+	for g.changeSpriteCanvasZoom(-1) {
+	}
+	if g.spriteCanvasZoomLevel != spriteCanvasZoomMin || g.spriteCanvasPanX != 0 || g.spriteCanvasPanY != 0 {
+		t.Fatalf("fit view = level %d pan (%g,%g), want level 0 pan (0,0)", g.spriteCanvasZoomLevel, g.spriteCanvasPanX, g.spriteCanvasPanY)
+	}
+	if got := g.canvasPixelBounds(0, 0, 32, 32); got != canvasRect {
+		t.Fatalf("restored fit bounds = %#v, want %#v", got, canvasRect)
+	}
+}
+
+func TestSpriteCanvasZoomPanCannotExposeOutsideSelection(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := &Game{gridCols: 4, gridRows: 4}
+	g.spriteCanvasZoomLevel = spriteCanvasZoomMax
+	g.spriteCanvasPanX, g.spriteCanvasPanY = 1e6, 1e6
+	g.clampSpriteCanvasPan()
+	scale := g.canvasPixelScale()
+	wantMaxX := float64(g.gridPixelsW()) - float64(canvasRect.W)/scale
+	wantMaxY := float64(g.gridPixelsH()) - float64(canvasRect.H)/scale
+	if diff(g.spriteCanvasPanX, wantMaxX) > 0.001 || diff(g.spriteCanvasPanY, wantMaxY) > 0.001 {
+		t.Fatalf("clamped pan = (%g,%g), want (%g,%g)", g.spriteCanvasPanX, g.spriteCanvasPanY, wantMaxX, wantMaxY)
+	}
+	col, row, ok := g.spriteCanvasCellAt(canvasRect.X+canvasRect.W-1, canvasRect.Y+canvasRect.H-1, false)
+	if !ok || col != 31 || row != 31 {
+		t.Fatalf("panned bottom-right pixel = (%d,%d ok=%t), want (31,31 true)", col, row, ok)
+	}
+	g.spriteCanvasPanX, g.spriteCanvasPanY = -100, -100
+	g.clampSpriteCanvasPan()
+	if g.spriteCanvasPanX != 0 || g.spriteCanvasPanY != 0 {
+		t.Fatalf("negative pan survived clamp: (%g,%g)", g.spriteCanvasPanX, g.spriteCanvasPanY)
+	}
+}
+
+func TestMoveToolPanUsesScreenDragAndStaysBounded(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := &Game{gridCols: 4, gridRows: 4, spriteTool: spriteToolMove, spriteCanvasZoomLevel: spriteCanvasZoomMax}
+
+	g.panSpriteCanvasBy(-100, -80)
+	if g.spriteCanvasPanX <= 0 || g.spriteCanvasPanY <= 0 {
+		t.Fatalf("left/up drag produced pan (%g,%g), want positive world offset", g.spriteCanvasPanX, g.spriteCanvasPanY)
+	}
+	g.panSpriteCanvasBy(1_000_000, 1_000_000)
+	if g.spriteCanvasPanX != 0 || g.spriteCanvasPanY != 0 {
+		t.Fatalf("large right/down drag escaped start bound: (%g,%g)", g.spriteCanvasPanX, g.spriteCanvasPanY)
 	}
 }
 
@@ -922,9 +999,9 @@ func TestSheetCameraFillsEntireAvailableCanvas(t *testing.T) {
 	}
 	wantCanvas := editor.Rect{
 		X: sheetPanelRect.X + 10,
-		Y: sheetPanelRect.Y + sheetPanelLabelHeight,
+		Y: spritePanelContentY(sheetPanelRect),
 		W: sheetPanelRect.W - 20,
-		H: sheetPanelRect.H - sheetPanelLabelHeight - 10,
+		H: sheetPanelRect.H - spritePanelContentOffset() - 10,
 	}
 	if canvas != wantCanvas {
 		t.Fatalf("grid canvas = %#v, want full panel interior %#v", canvas, wantCanvas)
@@ -932,6 +1009,32 @@ func TestSheetCameraFillsEntireAvailableCanvas(t *testing.T) {
 	sheetX, sheetY := g.sheetCam.WorldToScreen(0, 0, canvas)
 	if diff(sheetX, float64(canvas.X)) > 1 || diff(sheetY, float64(canvas.Y)) > 1 {
 		t.Fatalf("fitted sheet starts at %g,%g, want panel origin %d,%d", sheetX, sheetY, canvas.X, canvas.Y)
+	}
+}
+
+func TestSpriteSheetRefitsWhenInterfaceTextSizeChanges(t *testing.T) {
+	t.Cleanup(func() {
+		setInterfaceTextSize(textComfort)
+		setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	})
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	g := newTestGame(t, 240, 160, 10, 10)
+	g.preferences = defaultEditorPreferences()
+	for _, size := range []interfaceTextSize{textCompact, textComfort, textLarge} {
+		g.preferences.TextSize = size
+		g.applyPreferences()
+		canvas := g.sheetGridCanvas()
+		if diff(g.sheetCam.TileSizeY()*float64(g.spriteRows()), float64(canvas.H)) > 0.001 {
+			t.Fatalf("%s text left the spritesheet fitted to the old content height", size)
+		}
+	}
+	// Preferences unrelated to layout must not reset the user's sheet view.
+	g.sheetCam.Zoom = 2
+	g.sheetCam.ZoomY = 2
+	g.preferences.PreviewVolume = 50
+	g.applyPreferences()
+	if g.sheetCam.Zoom != 2 || g.sheetCam.ZoomY != 2 {
+		t.Fatal("changing preview volume refitted the spritesheet")
 	}
 }
 
@@ -1037,15 +1140,12 @@ func TestDesktopSpriteInspectorBalancesFlagsAndColorPicker(t *testing.T) {
 	if colorPickerTitle != "CHANGE COLOR" {
 		t.Fatalf("color picker title = %q, want CHANGE COLOR", colorPickerTitle)
 	}
-	if spriteFlagsPanelRect.H != spriteFlagsPanelHeight {
-		t.Fatalf("flags panel height = %d, want %d", spriteFlagsPanelRect.H, spriteFlagsPanelHeight)
+	if want := spritePanelContentOffset() + spriteButtonHeight + spritePanelPadding; spriteFlagsPanelRect.H != want {
+		t.Fatalf("flags panel height = %d, want %d", spriteFlagsPanelRect.H, want)
 	}
 	lastFlag := flagCheckboxRect(7)
 	if bottomSpace := spriteFlagsPanelRect.Y + spriteFlagsPanelRect.H - (lastFlag.Y + lastFlag.H); bottomSpace < 12 {
 		t.Fatalf("flags panel bottom space = %dpx, want at least 12px", bottomSpace)
-	}
-	if infoBottom := colorPickerInfoY() + uiSmallTextHeight; infoBottom != pickerRect.Y+pickerRect.H {
-		t.Fatalf("color metadata bottom = %d, want picker content bottom %d", infoBottom, pickerRect.Y+pickerRect.H)
 	}
 	preview := colorPickerPreviewRect()
 	titleX, _ := colorPickerTitlePosition()
@@ -1082,10 +1182,6 @@ func TestDesktopSpriteInspectorBalancesFlagsAndColorPicker(t *testing.T) {
 	paletteMeta := paletteMetaText(256)
 	if metaRight := paletteMetaX(paletteMeta) + smallTextWidth(paletteMeta); metaRight > paletteRect.X+paletteRect.W {
 		t.Fatalf("compact palette metadata ends at %d outside palette column %d", metaRight, paletteRect.X+paletteRect.W)
-	}
-	lastSlider := pickerSliderRect(2)
-	if got, want := colorPickerInfoY(), lastSlider.Y+lastSlider.H+12; got != want {
-		t.Fatalf("compact color metadata Y = %d, want %d after RGB stack", got, want)
 	}
 }
 
@@ -1234,5 +1330,32 @@ func TestScaledRunAbutsWithoutGaps(t *testing.T) {
 			t.Fatalf("run %d starts at %d, want %d (gap or overlap)", i, start, prevEnd)
 		}
 		prevEnd = start + size
+	}
+}
+
+func TestSpriteThumbRectsShareFractionalTileEdgesWithoutOverlap(t *testing.T) {
+	canvas := editor.Rect{X: 101, Y: 73, W: 1596, H: 952}
+	camera := editor.Camera{X: 0.125, Y: 0.25, Zoom: 6.65, ZoomY: 5.95}
+	topLeft := sheetCameraRect(camera, canvas, 1, 1, 1, 1)
+	right := sheetCameraRect(camera, canvas, 2, 1, 1, 1)
+	below := sheetCameraRect(camera, canvas, 1, 2, 1, 1)
+	if topLeft.X+topLeft.W != right.X {
+		t.Fatalf("horizontal thumbnail bounds overlap or gap: %#v then %#v", topLeft, right)
+	}
+	if topLeft.Y+topLeft.H != below.Y {
+		t.Fatalf("vertical thumbnail bounds overlap or gap: %#v then %#v", topLeft, below)
+	}
+}
+
+func TestSpritesheetSelectionOutlineStaysInsideCanvasAndSelection(t *testing.T) {
+	canvas := editor.Rect{X: 100, Y: 70, W: 300, H: 200}
+	selection := editor.Rect{X: 95, Y: 65, W: 120, H: 90}
+	outline, ok := spritesheetSelectionOutlineRect(selection, canvas)
+	if !ok {
+		t.Fatal("visible selection did not produce an outline")
+	}
+	visible, _ := intersectEditorRects(selection, canvas)
+	if outline.X <= visible.X || outline.Y <= visible.Y || outline.X+outline.W >= visible.X+visible.W || outline.Y+outline.H >= visible.Y+visible.H {
+		t.Fatalf("outline %#v is not strictly inside visible selection %#v", outline, visible)
 	}
 }

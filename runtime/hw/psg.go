@@ -152,7 +152,7 @@ type NoiseConfig struct {
 }
 
 func (n NoiseConfig) Valid() bool {
-	return n.Width <= Noise7Bit && n.Divisor <= 7 && n.Shift <= 13 && n.Length <= 63 &&
+	return n.Width <= Noise7Bit && n.Divisor <= 7 && n.Shift <= 15 && n.Length <= 63 &&
 		n.Envelope.Valid() && n.Route <= SoundRouteBoth
 }
 
@@ -317,6 +317,24 @@ func TriggerNoise(config NoiseConfig) bool {
 		polynomial |= 1 << 3
 	}
 	SetReg16(SOUND4CNT_H, polynomial|triggerControl(0, config.UseLength))
+	return true
+}
+
+// SetNoisePolynomial updates CH4's clock/divisor without retriggering its
+// envelope or length counter. hUGEDriver instrument subpatterns use this to
+// shape percussion over successive audio ticks.
+func SetNoisePolynomial(divisor, shift uint8, width NoiseWidth) bool {
+	if divisor > 7 || shift > 15 || width > Noise7Bit {
+		return false
+	}
+	polynomial := uint16(divisor) | uint16(shift)<<4
+	if width == Noise7Bit {
+		polynomial |= 1 << 3
+	}
+	// NR44's length-enable bit shares this 16-bit GBA register with NR43.
+	// Preserve it, while deliberately leaving the write-only trigger bit clear.
+	polynomial |= GetReg16(SOUND4CNT_H) & (1 << 14)
+	SetReg16(SOUND4CNT_H, polynomial)
 	return true
 }
 

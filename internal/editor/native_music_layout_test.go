@@ -23,7 +23,8 @@ func TestNativeMusicLayoutIsOneBoundedNonOverlappingWorkspace(t *testing.T) {
 		"note length down": layout.NoteLengthDown, "note length": layout.NoteLengthValue, "note length up": layout.NoteLengthUp,
 		"instrument previous": layout.InstrumentPrevious, "instrument name": layout.InstrumentName,
 		"instrument next": layout.InstrumentNext, "instrument duplicate": layout.InstrumentDuplicate,
-		"part bars down": layout.PartBarsDown, "part bars": layout.PartBarsValue, "part bars up": layout.PartBarsUp, "meter": layout.Meter,
+		"instrument preset": layout.InstrumentPreset,
+		"part bars down":    layout.PartBarsDown, "part bars": layout.PartBarsValue, "part bars up": layout.PartBarsUp, "meter": layout.Meter,
 		"advanced":      layout.Advanced,
 		"take previous": layout.TakePrevious, "take next": layout.TakeNext, "take use": layout.TakeUse,
 	} {
@@ -47,8 +48,8 @@ func TestNativeMusicLayoutIsOneBoundedNonOverlappingWorkspace(t *testing.T) {
 		t.Fatalf("inspector title ends at %d and overlaps instrument label at %d", inspectorTitleBottom, instrumentLabelTop)
 	}
 	firstInspectorLabelTop := layout.InspectorControlRect(0, 0).Y - 17
-	if layout.InstrumentName.Y+layout.InstrumentName.H > firstInspectorLabelTop {
-		t.Fatalf("instrument row ends at %d and overlaps first sound-control label at %d", layout.InstrumentName.Y+layout.InstrumentName.H, firstInspectorLabelTop)
+	if layout.InstrumentPreset.Y+layout.InstrumentPreset.H > firstInspectorLabelTop {
+		t.Fatalf("preset row ends at %d and overlaps first sound-control label at %d", layout.InstrumentPreset.Y+layout.InstrumentPreset.H, firstInspectorLabelTop)
 	}
 	if layout.OutputLeft.X+layout.OutputLeft.W > layout.OutputRight.X ||
 		layout.OutputRight.X+layout.OutputRight.W > layout.OutputMix.X ||

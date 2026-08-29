@@ -141,7 +141,11 @@ func (g *Game) handleModeNavigation() bool {
 	mode := editorModeCount
 	handled := false
 	textEntry := g.nativeNameTarget != 0 || g.mode == modeCode
+	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	switch {
+	case mod && inpututil.IsKeyJustPressed(ebiten.KeyComma):
+		g.preferencesOpen = true
+		return true
 	case inpututil.IsKeyJustPressed(ebiten.KeyF6):
 		g.cycleEffects()
 		return true
@@ -164,10 +168,6 @@ func (g *Game) handleModeNavigation() bool {
 		handled = true
 	case inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft):
 		mx, my := ebiten.CursorPosition()
-		if rectContains(themeEffectsRect(), mx, my) {
-			g.preferencesOpen = true
-			return true
-		}
 		for _, candidate := range primaryEditorModes {
 			if rectContains(editorTabRect(candidate), mx, my) {
 				mode = candidate
@@ -201,12 +201,4 @@ func (g *Game) drawEditorTabs(screen *ebiten.Image) {
 	}
 	active := editorTabRect(g.mode)
 	fillRect(screen, editor.Rect{X: active.X, Y: active.Y + active.H - 3, W: active.W, H: 3}, modeAccent(g.mode))
-	project := themeProjectRect()
-	fillRect(screen, project, color.RGBA{R: 31, G: 28, B: 56, A: 255})
-	strokeRect(screen, project, colorShellBorder)
-	drawTextCentered(screen, truncateUIText(g.projectBadgeLabel(), project.W-16), project, colorDim)
-	fx := themeEffectsRect()
-	fillRect(screen, fx, colorButtonFace)
-	strokeRect(screen, fx, colorShellHighlight)
-	drawTextCentered(screen, "SETTINGS  ·  "+g.theme.level.String(), fx, colorText)
 }

@@ -41,6 +41,21 @@ type NativeSoundAsset struct {
 	Pulse *NativePulseAsset `json:"pulse,omitempty"`
 	Wave  *NativeWaveAsset  `json:"wave,omitempty"`
 	Noise *NativeNoiseAsset `json:"noise,omitempty"`
+	Macro *NativeMacroAsset `json:"macro,omitempty"`
+}
+
+type NativeMacroAsset struct {
+	Steps     []NativeMacroStepAsset `json:"steps"`
+	LoopStart *int                   `json:"loopStart,omitempty"`
+}
+
+type NativeMacroStepAsset struct {
+	PeriodDelta     int  `json:"periodDelta,omitempty"`
+	NoiseDivisor    int  `json:"noiseDivisor,omitempty"`
+	NoiseShift      int  `json:"noiseShift,omitempty"`
+	HasNoise        bool `json:"hasNoise,omitempty"`
+	NoiseNoteOffset int  `json:"noiseNoteOffset,omitempty"`
+	HasNoiseNote    bool `json:"hasNoiseNote,omitempty"`
 }
 
 type NativeEnvelopeAsset struct {
@@ -565,7 +580,7 @@ func compileNativeSounds(library NativeSoundLibrary) ([]audio.Sound, error) {
 				return nil, fmt.Errorf("sound %d CH4 requires only noise", asset.ID)
 			}
 			noise := asset.Noise
-			if noise.Width != 7 && noise.Width != 15 || noise.Divisor < 0 || noise.Divisor > 7 || noise.Shift < 0 || noise.Shift > 13 || noise.Length < 0 || noise.Length > 63 {
+			if noise.Width != 7 && noise.Width != 15 || noise.Divisor < 0 || noise.Divisor > 7 || noise.Shift < 0 || noise.Shift > 15 || noise.Length < 0 || noise.Length > 63 {
 				return nil, fmt.Errorf("sound %d has invalid CH4 width/divisor/shift/length", asset.ID)
 			}
 			envelope, err := nativeEnvelope(noise.Envelope)
@@ -577,6 +592,50 @@ func compileNativeSounds(library NativeSoundLibrary) ([]audio.Sound, error) {
 				width = hw.Noise7Bit
 			}
 			sound.Noise = hw.NoiseConfig{Width: width, Divisor: uint8(noise.Divisor), Shift: uint8(noise.Shift), Length: uint8(noise.Length), UseLength: noise.UseLength, Envelope: envelope, Route: route}
+		}
+		if asset.Macro != nil {
+			if len(asset.Macro.Steps) == 0 || len(asset.Macro.Steps) > audio.NativeMaxMacroSteps {
+				return nil, fmt.Errorf("sound %d macro has %d steps (want 1..%d)", asset.ID, len(asset.Macro.Steps), audio.NativeMaxMacroSteps)
+			}
+			loopStart := -1
+			if asset.Macro.LoopStart != nil {
+				loopStart = *asset.Macro.LoopStart
+			}
+			if loopStart < -1 || loopStart >= len(asset.Macro.Steps) {
+				return nil, fmt.Errorf("sound %d macro loop start %d is outside its steps", asset.ID, loopStart)
+			}
+			steps := make([]audio.SoundMacroStep, len(asset.Macro.Steps))
+			for stepIndex, step := range asset.Macro.Steps {
+				if step.PeriodDelta < -2047 || step.PeriodDelta > 2047 {
+					return nil, fmt.Errorf("sound %d macro step %d period delta %d is outside -2047..2047", asset.ID, stepIndex, step.PeriodDelta)
+				}
+				if step.HasNoise && step.HasNoiseNote {
+					return nil, fmt.Errorf("sound %d macro step %d mixes absolute and note-relative CH4 polynomial fields", asset.ID, stepIndex)
+				}
+				if step.HasNoise {
+					if kind != audio.SoundCH4 || step.NoiseDivisor < 0 || step.NoiseDivisor > 7 || step.NoiseShift < 0 || step.NoiseShift > 15 {
+						return nil, fmt.Errorf("sound %d macro step %d has invalid CH4 polynomial", asset.ID, stepIndex)
+					}
+				} else if step.NoiseDivisor != 0 || step.NoiseShift != 0 {
+					return nil, fmt.Errorf("sound %d macro step %d has noise fields without hasNoise", asset.ID, stepIndex)
+				}
+				if step.HasNoiseNote {
+					if kind != audio.SoundCH4 || step.NoiseNoteOffset < -36 || step.NoiseNoteOffset > 35 {
+						return nil, fmt.Errorf("sound %d macro step %d has invalid CH4 note offset", asset.ID, stepIndex)
+					}
+				} else if step.NoiseNoteOffset != 0 {
+					return nil, fmt.Errorf("sound %d macro step %d has a noise note offset without hasNoiseNote", asset.ID, stepIndex)
+				}
+				if kind == audio.SoundCH4 && step.PeriodDelta != 0 {
+					return nil, fmt.Errorf("sound %d CH4 macro step %d cannot use tone period effects", asset.ID, stepIndex)
+				}
+				steps[stepIndex] = audio.SoundMacroStep{
+					PeriodDelta: int16(step.PeriodDelta), NoiseDivisor: uint8(step.NoiseDivisor),
+					NoiseShift: uint8(step.NoiseShift), HasNoise: step.HasNoise,
+					NoiseNoteOffset: int8(step.NoiseNoteOffset), HasNoiseNote: step.HasNoiseNote,
+				}
+			}
+			sound.Macro = audio.SoundMacro{Steps: steps, LoopStart: int8(loopStart)}
 		}
 		compiled = append(compiled, sound)
 	}
@@ -632,11 +691,10 @@ func compileNativeMusic(library NativeMusicLibrary, sounds []audio.Sound) ([]aud
 			if event.Note < 0 || event.Note > 127 || event.Priority < 0 || event.Priority > 255 {
 				return nil, nil, nil, fmt.Errorf("clip %d event %d note/priority is outside 0..127/0..255", asset.ID, eventIndex)
 			}
-			if kind != audio.SoundCH4 {
-				if _, ok := audio.NativeSoundPeriod(*sound, uint8(event.Note)); !ok {
-					return nil, nil, nil, fmt.Errorf("clip %d event %d note %d is outside %s hardware range", asset.ID, eventIndex, event.Note, asset.Kind)
-				}
-			} else if event.Legato {
+			if !audio.NativeSoundNoteValid(*sound, uint8(event.Note)) {
+				return nil, nil, nil, fmt.Errorf("clip %d event %d note %d is outside %s hardware range", asset.ID, eventIndex, event.Note, asset.Kind)
+			}
+			if kind == audio.SoundCH4 && event.Legato {
 				return nil, nil, nil, fmt.Errorf("clip %d event %d requests legato on CH4 noise", asset.ID, eventIndex)
 			}
 			clip.NoteEvents = append(clip.NoteEvents, audio.NoteEvent{Tick: uint32(event.Tick), DurationTicks: uint16(event.DurationTicks), Note: uint8(event.Note), SoundID: uint8(event.SoundID), Priority: uint8(event.Priority), Legato: event.Legato})
@@ -661,7 +719,7 @@ func compileNativeMusic(library NativeMusicLibrary, sounds []audio.Sound) ([]aud
 		}
 		if asset.Bars != 0 || asset.BeatsPerBar != 0 || asset.BeatUnit != 0 {
 			validUnit := asset.BeatUnit == 1 || asset.BeatUnit == 2 || asset.BeatUnit == 4 || asset.BeatUnit == 8 || asset.BeatUnit == 16 || asset.BeatUnit == 32
-			if asset.Bars < 1 || asset.Bars > 16 || asset.BeatsPerBar < 1 || asset.BeatsPerBar > 16 || !validUnit {
+			if asset.Bars < 1 || asset.Bars > audio.NativeMaxPartBars || asset.BeatsPerBar < 1 || asset.BeatsPerBar > 16 || !validUnit {
 				return nil, nil, nil, fmt.Errorf("part %d has invalid bars/time signature", asset.ID)
 			}
 			ticksPerBar := audio.NativePPQN * 4 * asset.BeatsPerBar / asset.BeatUnit

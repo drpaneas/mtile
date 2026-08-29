@@ -83,6 +83,50 @@ func TestPlayKeyLabel(t *testing.T) {
 	}
 }
 
+func TestHostAudioXRunsStartCountingOnlyWhilePSGIsActive(t *testing.T) {
+	pcm := emulator.NewPCMStream(100)
+	g := &Game{playPCM: pcm, playCount: 20}
+	buffer := make([]byte, 4)
+	_, _ = pcm.Read(buffer) // A silent-preview transport underrun.
+
+	g.acceptPlayTelemetry(emulator.Telemetry{Valid: true})
+	g.capturePlayAudioBaseline()
+	if g.playAudioActive || g.playAudioBaselineReady {
+		t.Fatalf("silent telemetry armed host audio: active=%v baseline=%v", g.playAudioActive, g.playAudioBaselineReady)
+	}
+
+	g.acceptPlayTelemetry(emulator.Telemetry{Valid: true, PSG: emulator.PSGRegisters{Status: 1}})
+	g.capturePlayAudioBaseline()
+	if !g.playAudioActive || !g.playAudioBaselineReady {
+		t.Fatalf("active PSG did not arm host audio: active=%v baseline=%v", g.playAudioActive, g.playAudioBaselineReady)
+	}
+	_, _ = pcm.Read(buffer)
+	_, underruns, overruns := g.developHostAudioStatus()
+	if underruns != 1 || overruns != 0 {
+		t.Fatalf("active host audio xruns = under %d over %d, want 1/0", underruns, overruns)
+	}
+
+	g.acceptPlayTelemetry(emulator.Telemetry{Valid: true})
+	if g.playAudioActive || g.playAudioBaselineReady {
+		t.Fatalf("stopped PSG retained host audio counters: active=%v baseline=%v", g.playAudioActive, g.playAudioBaselineReady)
+	}
+}
+
+func TestPlayTelemetryAudioActivityIncludesPSGAndDirectSound(t *testing.T) {
+	if playTelemetryAudioActive(emulator.Telemetry{}) {
+		t.Fatal("invalid telemetry reported active audio")
+	}
+	if playTelemetryAudioActive(emulator.Telemetry{Valid: true}) {
+		t.Fatal("silent telemetry reported active audio")
+	}
+	if !playTelemetryAudioActive(emulator.Telemetry{Valid: true, PSG: emulator.PSGRegisters{Status: 1 << 2}}) {
+		t.Fatal("active PSG channel reported silent audio")
+	}
+	if !playTelemetryAudioActive(emulator.Telemetry{Valid: true, PSG: emulator.PSGRegisters{MixDMA: 1 << 12}}) {
+		t.Fatal("routed Direct Sound channel reported silent audio")
+	}
+}
+
 func TestPlaySessionSuspendsAndResumesWithoutBeingDestroyed(t *testing.T) {
 	stop := make(chan struct{})
 	g := &Game{playStop: stop, playKeys: emulator.KeyLeft}

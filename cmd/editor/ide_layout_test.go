@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"image/color"
+	"strings"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/build"
@@ -245,18 +246,14 @@ func TestStatusMessageColorSeparatesInformationFromErrors(t *testing.T) {
 	}
 }
 
-func TestThemeChromeStaysSeparatedAtEverySupportedWindowSize(t *testing.T) {
+func TestEditorTabsStayInsideTopBarAtEverySupportedWindowSize(t *testing.T) {
 	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
 	for _, size := range [][2]int{{minimumScreenWidth, minimumScreenHeight}, {1920, 1200}, {2560, 1440}, {3840, 2160}} {
 		setEditorLayout(size[0], size[1])
-		project, effects := themeProjectRect(), themeEffectsRect()
-		if rectsOverlapIDE(project, effects) {
-			t.Fatalf("%dx%d project badge overlaps effects control", size[0], size[1])
-		}
 		for _, mode := range primaryEditorModes {
 			tab := editorTabRect(mode)
-			if rectsOverlapIDE(tab, project) || rectsOverlapIDE(tab, effects) {
-				t.Fatalf("%dx%d %s tab overlaps right-side chrome", size[0], size[1], mode.label())
+			if !rectInsideIDE(tab, editorTabsRect) {
+				t.Fatalf("%dx%d %s tab outside top bar: %#v", size[0], size[1], mode.label(), tab)
 			}
 		}
 	}
@@ -318,11 +315,28 @@ func TestDevelopMemoryAndCycleLabelsStayCompact(t *testing.T) {
 	if label != "EWRAM 128/255.5K  50%" {
 		t.Fatalf("EWRAM label = %q", label)
 	}
-	if got := formatDevelopHostAudio(160, 80); got != "160ms  /  DROPS 80" {
-		t.Fatalf("host audio dropout label = %q", got)
+	if got := formatDevelopHostAudio(160, 80, 3); got != "160ms  UNDER 80  OVER 3" {
+		t.Fatalf("host audio xrun label = %q", got)
 	}
-	if got := formatDevelopHostAudio(160, 0); got != "160ms QUEUED" {
+	if got := formatDevelopHostAudio(160, 0, 0); got != "160ms QUEUED" {
 		t.Fatalf("host audio queued label = %q", got)
+	}
+}
+
+func TestDevelopTelemetryUsesTheAvailablePixelWidth(t *testing.T) {
+	label := "CPU  96.9%  544.0K cyc"
+	columnWidth := uiTextWidth(label) + 24
+	if got := truncateDevelopTelemetryText(label, columnWidth); got != label {
+		t.Fatalf("exact-fit telemetry label = %q, want %q", got, label)
+	}
+
+	narrowWidth := uiTextWidth("CPU  96.9%") + 24
+	got := truncateDevelopTelemetryText(label, narrowWidth)
+	if got == label || !strings.HasSuffix(got, "...") {
+		t.Fatalf("narrow telemetry label = %q, want truncated label", got)
+	}
+	if width := uiTextWidth(got); width > narrowWidth-24 {
+		t.Fatalf("truncated telemetry label width = %d, available = %d", width, narrowWidth-24)
 	}
 }
 

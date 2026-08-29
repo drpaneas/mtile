@@ -12,6 +12,15 @@ const (
 	NativeMaxEvents        = 8192
 	NativeMaxCommandQueue  = 32
 	NativeMaxSequenceParts = 128
+	NativeMaxMacroSteps    = 64
+	// NativeMaxPartBars keeps one continuous performance in one reusable part
+	// while bounding authored tick positions and note durations to target-safe
+	// integer ranges. At 120 BPM this is more than four minutes of recording.
+	NativeMaxPartBars = 128
+	// NativeMacroClockCycles is one original Game Boy display frame. The
+	// stock GB Studio player calls hUGEDriver once per frame, so instrument
+	// subpatterns advance at 4,194,304 / 70,224 ~= 59.73 Hz.
+	NativeMacroClockCycles = 280896
 )
 
 // Profile is one measured native GBA playback configuration.
@@ -42,6 +51,27 @@ type Sound struct {
 	Pulse2 hw.PulseConfig
 	Wave   hw.WaveConfig
 	Noise  hw.NoiseConfig
+	Macro  SoundMacro
+}
+
+// SoundMacroStep is one hUGEDriver-compatible instrument subpattern row.
+// PeriodDelta implements the 1xx/2xx pitch effects used by the stock duty
+// presets. HasNoise replaces NR43's divisor/shift fields without retriggering
+// CH4, matching a noise-table note update.
+type SoundMacroStep struct {
+	PeriodDelta     int16
+	NoiseDivisor    uint8
+	NoiseShift      uint8
+	HasNoise        bool
+	NoiseNoteOffset int8
+	HasNoiseNote    bool
+}
+
+// SoundMacro is optional per-tick hardware automation attached to a sound.
+// LoopStart is -1 for a one-shot table or an index into Steps.
+type SoundMacro struct {
+	Steps     []SoundMacroStep
+	LoopStart int8
 }
 
 // NoteEvent is one bounded PSG note in a typed clip.

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/editor"
@@ -78,6 +79,42 @@ func TestNativeControllerShowsRecordingDuringCountIn(t *testing.T) {
 		t.Fatalf("controller state during count-in = %#v", state)
 	}
 	_, _ = g.nativeConductor.Stop()
+}
+
+func TestNativeRecordingIsVisibleAndContinuesPastLoopingPart(t *testing.T) {
+	g := newNativeMusicTestGame(t)
+	if err := g.model.SetNativePartMeter(0, 1, 1, 32); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetNativePartTempo(0, 400); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetNativeSongLoop(true); err != nil {
+		t.Fatal(err)
+	}
+	g.nativeSession.Arm(true, g.nativeSession.Now())
+	g.toggleNativeRecording()
+	g.nativeSession.Handle(performance.PerformanceEvent{At: g.nativeSession.Now(), Kind: performance.NoteOn, Note: 60})
+	time.Sleep(30 * time.Millisecond) // more than two 12-tick bars at 400 BPM
+	g.updateNativeCapture()
+
+	snapshot := g.nativeConductor.Snapshot()
+	if !snapshot.Recording || snapshot.Tick <= 12 {
+		t.Fatalf("recording stopped at looping part boundary: %#v", snapshot)
+	}
+	if !g.nativeCaptureVisible || len(g.nativeCaptureNotes) != 1 || g.nativeBar < 1 {
+		t.Fatalf("live recording feedback = visible %t notes %#v bar %d", g.nativeCaptureVisible, g.nativeCaptureNotes, g.nativeBar)
+	}
+	if takes := g.model.NativeTakesAt(0); len(takes) != 0 {
+		t.Fatalf("recording committed before STOP: %#v", takes)
+	}
+
+	g.nativeSession.Handle(performance.PerformanceEvent{At: g.nativeSession.Now(), Kind: performance.NoteOff, Note: 60})
+	g.toggleNativeRecording()
+	part, ok := g.model.NativePartAt(0)
+	if !ok || part.Bars < 2 || len(g.model.NativeTakesAt(0)) != 1 {
+		t.Fatalf("STOP did not commit the continuous take: part %#v ok=%t takes=%#v", part, ok, g.model.NativeTakesAt(0))
+	}
 }
 
 func TestNativeDeleteTargetsNoteOrArrangementLaneByFocus(t *testing.T) {
@@ -214,6 +251,61 @@ func TestNativePerformanceUsesSelectedReusableInstrument(t *testing.T) {
 	}
 }
 
+func TestNativePerformanceSynchronizesInstrumentSelectedWithoutEdit(t *testing.T) {
+	g := newNativeMusicTestGame(t)
+	first, err := g.model.CreateNativeSound(0, -1, "First")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := g.model.CreateNativeSound(0, first, "Second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.UpdateNativeSoundByID(second, func(sound *assetsync.NativeSoundAsset) {
+		sound.Pulse.Duty = 75
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// This is the path used when selection lands on an existing note: the UI
+	// changes instrument ID, but there is no edit action to refresh the bank.
+	g.nativeInstrument[0] = second
+	g.syncNativePerformanceSounds()
+	bank := g.nativeSession.SoundBank()
+	if bank.Channels[0].ID != uint8(second) || bank.Channels[0].Pulse1.Pulse.Duty != hw.PulseDuty75 {
+		t.Fatalf("armed MIDI bank stayed stale: id=%d duty=%v", bank.Channels[0].ID, bank.Channels[0].Pulse1.Pulse.Duty)
+	}
+}
+
+func TestNativePerformanceKeepsSelectedCH4Instrument(t *testing.T) {
+	g := newNativeMusicTestGame(t)
+	id, _, err := g.model.EnsureNativeSoundPreset(3, 12) // Explosion
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.nativeInstrument[3] = id
+	bank := g.nativePerformanceSoundBank()
+	if bank.Channels[3].ID != uint8(id) || bank.Channels[3].Kind != 3 {
+		t.Fatalf("selected CH4 instrument was replaced: id=%d kind=%d", bank.Channels[3].ID, bank.Channels[3].Kind)
+	}
+}
+
+func TestNativePerformanceMapsAuthoredGBStudioDrumsToLaunchkeyPads(t *testing.T) {
+	g := newNativeMusicTestGame(t)
+	bass, _, err := g.model.EnsureNativeSoundPreset(3, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snare, _, err := g.model.EnsureNativeSoundPreset(3, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bank := g.nativePerformanceSoundBank()
+	if bank.Noise[0].ID != uint8(bass) || bank.Noise[1].ID != uint8(snare) {
+		t.Fatalf("Launchkey drum map = bass %d snare %d, want %d/%d", bank.Noise[0].ID, bank.Noise[1].ID, bass, snare)
+	}
+}
+
 func TestNativeMusicLayoutKeepsComposerInspectorAndOrderVisible(t *testing.T) {
 	layout := newNativeMusicLayout()
 	for name, rect := range map[string]struct{ x, y, w, h int }{
@@ -228,6 +320,25 @@ func TestNativeMusicLayoutKeepsComposerInspectorAndOrderVisible(t *testing.T) {
 	}
 	if layout.Grid.Y+layout.Grid.H > layout.Arrangement.Y || layout.Inspector.Y+layout.Inspector.H > layout.Arrangement.Y {
 		t.Fatalf("composer/inspector overlaps order strip: grid=%#v inspector=%#v order=%#v", layout.Grid, layout.Inspector, layout.Arrangement)
+	}
+}
+
+func TestNativePresetMenuStaysInsideWorkspaceAndRowsDoNotOverlap(t *testing.T) {
+	layout := newNativeMusicLayout()
+	for channel := 0; channel < 4; channel++ {
+		presets := editor.NativeSoundPresets(channel)
+		menu := nativePresetMenuRect(layout, len(presets))
+		if menu.X < layout.Main.X || menu.Y <= layout.InstrumentPreset.Y || menu.X+menu.W > layout.Main.X+layout.Main.W || menu.Y+menu.H > layout.Arrangement.Y {
+			t.Fatalf("CH%d preset menu escapes Music Lab: menu=%#v main=%#v arrangement=%#v", channel+1, menu, layout.Main, layout.Arrangement)
+		}
+		visible := nativePresetMenuVisibleCount(layout, len(presets))
+		for row := 1; row < visible; row++ {
+			previous := nativePresetMenuItemRect(layout, len(presets), row-1)
+			current := nativePresetMenuItemRect(layout, len(presets), row)
+			if previous.Y+previous.H > current.Y {
+				t.Fatalf("CH%d preset rows %d and %d overlap: %#v %#v", channel+1, row, row+1, previous, current)
+			}
+		}
 	}
 }
 

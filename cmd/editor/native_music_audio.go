@@ -82,7 +82,7 @@ func (g *Game) playNativeMusicPreviewFrom(sampleOffset int) {
 	g.nativePreview = preview
 	sampleOffset = min(max(sampleOffset, 0), max(0, len(preview.Samples)-1))
 	g.nativePreviewOffset = sampleOffset
-	g.previewPlayer, err = newEditorAudioPlayer(context, targetStereoToHostStereo(preview.LeftSamples[sampleOffset:], preview.RightSamples[sampleOffset:]))
+	g.previewPlayer, err = newEditorAudioPlayerAtRate(context, targetStereoToHostStereo(preview.LeftSamples[sampleOffset:], preview.RightSamples[sampleOffset:]), editor.NativePreviewSampleRate)
 	if err != nil {
 		g.statusMsg = "preview failed: " + err.Error()
 		return
@@ -97,17 +97,21 @@ func (g *Game) playNativeMusicPreviewFrom(sampleOffset int) {
 }
 
 func (g *Game) playNativeNotePreview(step, note int) {
-	if g.nativeEffectiveMuteMask()&(1<<g.nativeChannel) != 0 {
-		g.stopAudioPreview()
-		g.statusMsg = fmt.Sprintf("CH%d is muted in the monitor mix", g.nativeChannel+1)
-		return
-	}
 	sound, ok := g.nativeSoundAtStep(step)
 	if !ok {
 		g.statusMsg = "note preview failed: the cell has no hardware sound"
 		return
 	}
-	left, right, err := editor.RenderNativeNotePreviewStereo(g.model.NativeAudio.Library, sound.ID, note, g.model.NativeAudio.Settings)
+	g.playNativeSoundPreview(sound.ID, note)
+}
+
+func (g *Game) playNativeSoundPreview(soundID, note int) {
+	if g.nativeEffectiveMuteMask()&(1<<g.nativeChannel) != 0 {
+		g.stopAudioPreview()
+		g.statusMsg = fmt.Sprintf("CH%d is muted in the monitor mix", g.nativeChannel+1)
+		return
+	}
+	left, right, err := editor.RenderNativeNotePreviewStereo(g.model.NativeAudio.Library, soundID, note, g.model.NativeAudio.Settings)
 	if err != nil {
 		g.statusMsg = "note preview failed: " + err.Error()
 		return
@@ -124,7 +128,7 @@ func (g *Game) playNativeNotePreview(step, note int) {
 	g.nativePreview = nil
 	g.nativePreviewOffset = 0
 	g.nativeAudition = true
-	g.previewPlayer, err = newEditorAudioPlayer(context, targetStereoToHostStereo(left, right))
+	g.previewPlayer, err = newEditorAudioPlayerAtRate(context, targetStereoToHostStereo(left, right), editor.NativePreviewSampleRate)
 	if err != nil {
 		g.nativeAudition = false
 		g.statusMsg = "note preview failed: " + err.Error()
@@ -205,6 +209,9 @@ func nativeToggleState(active bool) string {
 }
 
 func (g *Game) nativePreviewStep() (int, bool) {
+	if g != nil && g.nativeCaptureVisible && g.nativeCaptureSequence == g.nativeSequence {
+		return max(0, g.nativeCaptureTick/editor.NativeTicksPerStep), true
+	}
 	sequence, step, ok := g.nativePreviewPosition()
 	if !ok || !g.nativeSFXMode && sequence != g.nativeSequence {
 		return 0, false

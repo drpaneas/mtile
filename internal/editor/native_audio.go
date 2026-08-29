@@ -22,7 +22,7 @@ const (
 	NativePartTicks    = NativeStepsPerPart * NativeTicksPerStep
 )
 
-const NativeMaxPartBars = 16
+const NativeMaxPartBars = audio.NativeMaxPartBars
 
 // NativePartMeter returns musical metadata for an authored part. Older v2
 // files did not store meter, so their existing tick length remains valid and
@@ -1803,7 +1803,7 @@ func (m *Model) AddNativePart(duplicateSequence int) (int, error) {
 func (m *Model) SetNativePartMeter(sequenceIndex, bars, beatsPerBar, beatUnit int) error {
 	validUnit := beatUnit == 1 || beatUnit == 2 || beatUnit == 4 || beatUnit == 8 || beatUnit == 16 || beatUnit == 32
 	if bars < 1 || bars > NativeMaxPartBars || beatsPerBar < 1 || beatsPerBar > 16 || !validUnit {
-		return errors.New("part meter is outside 1..16 bars and supported note units")
+		return fmt.Errorf("part meter is outside 1..%d bars and supported note units", NativeMaxPartBars)
 	}
 	ticksPerBar := audio.NativePPQN * 4 * beatsPerBar / beatUnit
 	if ticksPerBar < NativeTicksPerStep || ticksPerBar%NativeTicksPerStep != 0 {

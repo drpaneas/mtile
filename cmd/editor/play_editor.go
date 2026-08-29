@@ -201,10 +201,7 @@ func (g *Game) pumpPlaySession() {
 				g.playImage.ReplacePixels(frame.RGBA)
 				g.acceptPlayTelemetry(frame.Telemetry)
 				g.playCount++
-				if g.playCount == 10 && g.playPCM != nil {
-					_, g.playAudioBaselineUnderruns, g.playAudioBaselineOverruns = g.playPCM.Stats()
-					g.playAudioBaselineReady = true
-				}
+				g.capturePlayAudioBaseline()
 				elapsed := time.Since(g.playStart).Seconds()
 				if elapsed >= .5 {
 					g.playFPS = float64(g.playCount) / elapsed
@@ -234,6 +231,7 @@ func (g *Game) acceptPlayTelemetry(telemetry emulator.Telemetry) {
 		return
 	}
 	g.playTelemetry = telemetry
+	g.setPlayAudioActive(playTelemetryAudioActive(telemetry))
 	if !telemetry.DebugValid || telemetry.Sequence == g.playTelemetrySeq {
 		return
 	}
@@ -243,6 +241,32 @@ func (g *Game) acceptPlayTelemetry(telemetry emulator.Telemetry) {
 	copy(g.playCPULoad[:], g.playCPULoad[1:])
 	g.playCPULoad[len(g.playCPULoad)-1] = load
 	g.playCPUSamples = min(len(g.playCPULoad), g.playCPUSamples+1)
+}
+
+func playTelemetryAudioActive(telemetry emulator.Telemetry) bool {
+	// NR52 exposes the four PSG channel-on flags. Preserve legacy Direct Sound
+	// previews too: SOUNDCNT_H route bits mean FIFO A or B owns host output even
+	// though the PSG status flags remain clear.
+	const directSoundRouteMask uint16 = 0x3300
+	return telemetry.Valid && (telemetry.PSG.Status&0x000f != 0 || telemetry.PSG.MixDMA&directSoundRouteMask != 0)
+}
+
+func (g *Game) setPlayAudioActive(active bool) {
+	if active == g.playAudioActive {
+		return
+	}
+	g.playAudioActive = active
+	g.playAudioBaselineReady = false
+	g.playAudioBaselineUnderruns = 0
+	g.playAudioBaselineOverruns = 0
+}
+
+func (g *Game) capturePlayAudioBaseline() {
+	if !g.playAudioActive || g.playAudioBaselineReady || g.playCount < 10 || g.playPCM == nil {
+		return
+	}
+	_, g.playAudioBaselineUnderruns, g.playAudioBaselineOverruns = g.playPCM.Stats()
+	g.playAudioBaselineReady = true
 }
 
 func (g *Game) updatePlayMode() {
@@ -353,6 +377,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	g.playStart = time.Now()
 	g.playCount = 0
 	g.playFPS = 0
+	g.playAudioActive = false
 	g.playAudioBaselineReady = false
 	g.playAudioBaselineUnderruns = 0
 	g.playAudioBaselineOverruns = 0
@@ -557,6 +582,7 @@ func (g *Game) stopPlayback() {
 	}
 	g.playFrames = nil
 	g.playErrors = nil
+	g.playAudioActive = false
 	g.playAudioBaselineReady = false
 	g.playAudioBaselineUnderruns = 0
 	g.playAudioBaselineOverruns = 0

@@ -67,6 +67,91 @@ func TestLiveStreamRendersAndStopsWithoutPersistentTick(t *testing.T) {
 	}
 }
 
+func TestLiveStreamNoteOffHasClickSafeMonitorRelease(t *testing.T) {
+	stream := NewStream(48_000)
+	if !stream.Start(1, 60, testSoundBank().Channels[0]) {
+		t.Fatal("start queue rejected")
+	}
+	_, _ = stream.Read(make([]byte, 137*4))
+	if !stream.Stop(1) {
+		t.Fatal("stop queue rejected")
+	}
+
+	release := make([]byte, liveMonitorReleaseMillis*48*4)
+	_, _ = stream.Read(release)
+	audibleTail := false
+	for frame := 32; frame < len(release)/8; frame++ {
+		if binary.LittleEndian.Uint32(release[frame*4:]) != 0 {
+			audibleTail = true
+			break
+		}
+	}
+	if !audibleTail {
+		t.Fatal("MIDI note-off was hard-cut instead of de-clicked")
+	}
+	active, _ := stream.ChannelSnapshot()
+	if active[0] {
+		t.Fatalf("released channel remained logically held: %v", active)
+	}
+
+	silence := make([]byte, 256*4)
+	_, _ = stream.Read(silence)
+	for _, value := range silence[len(silence)/2:] {
+		if value != 0 {
+			t.Fatal("de-click release left a persistent background tick")
+		}
+	}
+}
+
+func BenchmarkLiveStream480Frames(b *testing.B) {
+	stream := NewStream(48_000)
+	bank := testSoundBank()
+	for channel := range 4 {
+		if !stream.Start(uint8(channel+1), uint8(60+channel*5), bank.Channels[channel]) {
+			b.Fatalf("CH%d start queue rejected", channel+1)
+		}
+	}
+	pcm := make([]byte, 480*4)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		_, _ = stream.Read(pcm)
+	}
+}
+
+func TestLiveStreamRetriggerBeginsFromContinuousOutput(t *testing.T) {
+	const leadFrames = 480
+	renderBoundary := func(retrigger bool) (int16, int16, *Stream) {
+		stream := NewStream(48_000)
+		sound := testSoundBank().Channels[0]
+		if !stream.Start(1, 60, sound) {
+			t.Fatal("initial start queue rejected")
+		}
+		_, _ = stream.Read(make([]byte, leadFrames*4))
+		if retrigger && !stream.Start(1, 72, sound) {
+			t.Fatal("retrigger queue rejected")
+		}
+		pcm := make([]byte, 4)
+		_, _ = stream.Read(pcm)
+		return int16(binary.LittleEndian.Uint16(pcm)), int16(binary.LittleEndian.Uint16(pcm[2:])), stream
+	}
+
+	wantLeft, wantRight, _ := renderBoundary(false)
+	gotLeft, gotRight, stream := renderBoundary(true)
+	if gotLeft != wantLeft || gotRight != wantRight {
+		t.Fatalf("retrigger boundary = %d/%d, uninterrupted voice = %d/%d", gotLeft, gotRight, wantLeft, wantRight)
+	}
+	active, notes := stream.ChannelSnapshot()
+	if !active[0] || notes[0] != 72 {
+		t.Fatalf("retrigger snapshot = active %v notes %v", active, notes)
+	}
+	_, _ = stream.Read(make([]byte, 64*4))
+	active, notes = stream.ChannelSnapshot()
+	if !active[0] || notes[0] != 72 || stream.Dropped() != 0 {
+		t.Fatalf("retrigger did not remain stable: active %v notes %v dropped %d", active, notes, stream.Dropped())
+	}
+}
+
 func TestLiveStreamHonorsHardwareRoute(t *testing.T) {
 	stream := NewStream(48_000)
 	sound := testSoundBank().Channels[0]
@@ -155,6 +240,73 @@ func TestLiveStreamKeepsCH3PitchAcrossWaveDimensions(t *testing.T) {
 	}
 	if period32 != 1750 || period64 != 1899 {
 		t.Fatalf("CH3 periods = %d/%d, want 1750/1899", period32, period64)
+	}
+}
+
+func TestLiveStreamNoiseClockMatchesNR43HardwareFormula(t *testing.T) {
+	for _, test := range []struct {
+		divisor uint8
+		shift   uint8
+		want    float64
+	}{
+		{divisor: 0, shift: 0, want: 524288},
+		{divisor: 1, shift: 0, want: 262144},
+		{divisor: 2, shift: 1, want: 65536},
+		{divisor: 7, shift: 13, want: 262144.0 / (7 * 8192)},
+	} {
+		if got := liveNoiseFrequency(test.divisor, test.shift); math.Abs(got-test.want) > 1e-9 {
+			t.Fatalf("noise divisor=%d shift=%d frequency = %f, want %f", test.divisor, test.shift, got, test.want)
+		}
+	}
+}
+
+func TestLiveStreamAppliesInstrumentMacrosAtPreviewCadence(t *testing.T) {
+	stream := NewStream(48_000)
+	sound := testSoundBank().Channels[0]
+	base, ok := runtimeaudio.NativeSoundPeriod(sound, 60)
+	if !ok {
+		t.Fatal("test note has no pulse period")
+	}
+	sound.Macro = runtimeaudio.SoundMacro{
+		Steps:     []runtimeaudio.SoundMacroStep{{PeriodDelta: 3}, {PeriodDelta: -2}},
+		LoopStart: 0,
+	}
+	if !stream.Start(1, 60, sound) {
+		t.Fatal("start queue rejected")
+	}
+	_, _ = stream.Read(make([]byte, 4))
+	if got, want := stream.voices[0].period, int(base)+3; got != want {
+		t.Fatalf("immediate macro period = %d, want %d", got, want)
+	}
+
+	framesPerMacroStep := int((uint64(48_000)*uint64(runtimeaudio.NativeMacroClockCycles) + uint64(hw.GBAClockHz) - 1) / uint64(hw.GBAClockHz))
+	_, _ = stream.Read(make([]byte, (framesPerMacroStep-1)*4))
+	if got, want := stream.voices[0].period, int(base)+1; got != want {
+		t.Fatalf("second macro period = %d, want %d", got, want)
+	}
+}
+
+func TestMIDINoteUsesSelectedBankSoundAndLiveMacroRenderer(t *testing.T) {
+	stream := NewStream(48_000)
+	bank := testSoundBank()
+	bank.Channels[0].ID = 37
+	bank.Channels[0].Macro = runtimeaudio.SoundMacro{
+		Steps:     []runtimeaudio.SoundMacroStep{{PeriodDelta: 5}},
+		LoopStart: 0,
+	}
+	base, ok := runtimeaudio.NativeSoundPeriod(bank.Channels[0], 60)
+	if !ok {
+		t.Fatal("test note has no pulse period")
+	}
+	session := NewSession(stream, bank)
+	session.Arm(true, 0)
+	session.Handle(PerformanceEvent{Kind: NoteOn, Source: SourceMIDI, Note: 60})
+	_, _ = stream.Read(make([]byte, 4))
+	if got := stream.voices[0].sound.ID; got != 37 {
+		t.Fatalf("MIDI selected sound ID = %d, want 37", got)
+	}
+	if got, want := stream.voices[0].period, int(base)+5; got != want {
+		t.Fatalf("MIDI live macro period = %d, want %d", got, want)
 	}
 }
 

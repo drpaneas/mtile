@@ -1,6 +1,7 @@
 package audio
 
 import (
+	"math"
 	"testing"
 	"unsafe"
 
@@ -86,6 +87,45 @@ func TestNativeControllerRunsTypedSongAtRationalClock(t *testing.T) {
 	stats = c.Stats()
 	if stats.RunningSong || stats.CompletedSongs != 1 {
 		t.Fatalf("ending song did not stop exactly: %+v", stats)
+	}
+}
+
+func TestNativeControllerRunsInstrumentMacrosAtHUGEDriverCadence(t *testing.T) {
+	library := nativeTestLibrary()
+	library.Sounds[0].Macro = SoundMacro{
+		Steps: []SoundMacroStep{{PeriodDelta: 1}, {PeriodDelta: 1}}, LoopStart: 1,
+	}
+	library.Sounds[3].Noise.UseLength = true
+	library.Sounds[3].Noise.Width = hw.Noise7Bit
+	library.Sounds[3].Macro = SoundMacro{
+		Steps: []SoundMacroStep{
+			{NoiseDivisor: 7, NoiseShift: 0, HasNoise: true},
+			{NoiseDivisor: 4, NoiseShift: 1, HasNoise: true},
+		},
+		LoopStart: 1,
+	}
+	hw.ResetForTest()
+	var c Controller
+	if !c.Init(ProfilePSG) || !c.Bind(library) || !c.NoteOn(1, 60, 10, 0) || !c.NoteOn(4, 60, 13, 0) {
+		t.Fatal("macro fixture setup failed")
+	}
+	c.Service()
+	if got := hw.GetReg16(hw.SOUND1CNT_X) & 0x07ff; got != 1547 {
+		t.Fatalf("immediate duty macro period = %d, want 1547", got)
+	}
+	if got := hw.GetReg16(hw.SOUND4CNT_H); got != 0x400f {
+		t.Fatalf("immediate noise macro register = %#04x, want 0x400f", got)
+	}
+	// The command service already accumulated one 65,536-cycle quantum. Four
+	// further services cross one 280,896-cycle Game Boy frame boundary.
+	for range 4 {
+		c.Service()
+	}
+	if got := hw.GetReg16(hw.SOUND1CNT_X) & 0x07ff; got != 1548 {
+		t.Fatalf("second duty macro period = %d, want 1548", got)
+	}
+	if got := hw.GetReg16(hw.SOUND4CNT_H); got != 0x401c {
+		t.Fatalf("second noise macro register = %#04x, want 0x401c", got)
 	}
 }
 
@@ -257,8 +297,8 @@ func TestNativePitchTablesCoverHardwareRanges(t *testing.T) {
 	if got, ok := NativeSoundPeriod(wave64, 57); !ok || got != 1899 {
 		t.Errorf("64-sample CH3 A3 = %d/%v, want 1899/true", got, ok)
 	}
-	if got, ok := NativeSoundPeriod(wave64, 12); !ok || got != 44 {
-		t.Errorf("64-sample CH3 C0 = %d/%v, want 44/true", got, ok)
+	if got, ok := NativeSoundPeriod(wave64, 24); !ok || got != 1046 {
+		t.Errorf("64-sample CH3 C1 = %d/%v, want 1046/true", got, ok)
 	}
 	if got, ok := NativeSoundPeriod(wave64, 127); !ok || got != 2045 {
 		t.Errorf("64-sample CH3 G9 = %d/%v, want 2045/true", got, ok)
@@ -275,6 +315,116 @@ func TestNativePitchTablesCoverHardwareRanges(t *testing.T) {
 	}
 	if _, _, ok := NativeSoundNoteRange(Sound{Kind: SoundCH4}); ok {
 		t.Error("noise channel reported a pitched range")
+	}
+}
+
+func TestNativePitchTableMatchesHUGEDriverExactly(t *testing.T) {
+	want := [...]uint16{
+		44, 156, 262, 363, 457, 547, 631, 710, 786, 854, 923, 986,
+		1046, 1102, 1155, 1205, 1253, 1297, 1339, 1379, 1417, 1452, 1486, 1517,
+		1546, 1575, 1602, 1627, 1650, 1673, 1694, 1714, 1732, 1750, 1767, 1783,
+		1798, 1812, 1825, 1837, 1849, 1860, 1871, 1881, 1890, 1899, 1907, 1915,
+		1923, 1930, 1936, 1943, 1949, 1954, 1959, 1964, 1969, 1974, 1978, 1982,
+		1985, 1988, 1992, 1995, 1998, 2001, 2004, 2006, 2009, 2011, 2013, 2015,
+	}
+	for offset, period := range want {
+		note := uint8(36 + offset)
+		for _, kind := range []SoundKind{SoundCH1, SoundCH2} {
+			got, ok := NativeTonePeriod(kind, note)
+			if !ok || got != period {
+				t.Fatalf("%v note %d period = %d/%t, want %d/true", kind, note, got, ok, period)
+			}
+		}
+	}
+}
+
+func TestNativeCH3PeriodsPreserveConventionalMIDIPitch(t *testing.T) {
+	for _, length := range []uint8{32, 64} {
+		sound := Sound{Kind: SoundCH3, Wave: nativeTestWave()}
+		sound.Wave.Wave.Length = length
+		period, ok := NativeSoundPeriod(sound, 57) // conventional MIDI A3
+		if !ok {
+			t.Fatalf("%d-sample CH3 rejected MIDI A3", length)
+		}
+		gotHz := 2097152.0 / float64(length) / float64(2048-period)
+		if math.Abs(gotHz-220) > 0.2 {
+			t.Fatalf("%d-sample CH3 MIDI A3 = %.3f Hz (period %d), want 220 Hz", length, gotHz, period)
+		}
+	}
+}
+
+func TestNativeGBStudioNoisePolynomialMatchesHUGEDriver(t *testing.T) {
+	tests := []struct {
+		note   uint8
+		offset int8
+		want   uint8
+	}{
+		{60, 32, 0x07}, // C5 + G#8 table row: Closed Hi-Hat
+		{60, 27, 0x24}, // C5 + D#8 table row: Bass Drum 2 attack
+		{60, -2, 0x95}, // C5 + A#2-relative row: Bass Drum 2 body
+		{72, 32, 0xD7}, // the same table follows the played note by one octave
+	}
+	for _, test := range tests {
+		divisor, shift, ok := NativeGBStudioNoisePolynomial(test.note, test.offset)
+		if got := shift<<4 | divisor; !ok || got != test.want {
+			t.Fatalf("note %d offset %d polynomial = %#02x valid=%t, want %#02x", test.note, test.offset, got, ok, test.want)
+		}
+	}
+	if _, _, ok := NativeGBStudioNoisePolynomial(35, 0); ok {
+		t.Fatal("noise note below GB Studio C3 range was accepted")
+	}
+}
+
+func TestNativeControllerAppliesRelativeNoiseMacroFromPlayedNote(t *testing.T) {
+	for _, test := range []struct {
+		note uint8
+		want uint16
+	}{
+		{60, 0x07},
+		{72, 0xd7},
+	} {
+		library := nativeTestLibrary()
+		library.Sounds[3].Macro = SoundMacro{
+			Steps:     []SoundMacroStep{{NoiseNoteOffset: 32, HasNoiseNote: true}},
+			LoopStart: 0,
+		}
+		library.Clips[2].NoteEvents[0].Note = 60
+		hw.ResetForTest()
+		var controller Controller
+		if !controller.Init(ProfilePSG) || !controller.Bind(library) || !controller.NoteOn(4, test.note, 13, 0) {
+			t.Fatalf("relative noise fixture note %d setup failed", test.note)
+		}
+		controller.Service()
+		if got := hw.GetReg16(hw.SOUND4CNT_H); got != test.want {
+			t.Fatalf("relative noise note %d NR43 = %#04x, want %#04x", test.note, got, test.want)
+		}
+	}
+}
+
+func TestNativeNoiseTriggerUsesPlayedNoteBeforeRelativeMacroRowZero(t *testing.T) {
+	sound := nativeTestLibrary().Sounds[3]
+	sound.Noise.Divisor = 0
+	sound.Noise.Shift = 0
+	sound.Macro = SoundMacro{
+		Steps:     []SoundMacroStep{{NoiseNoteOffset: 32, HasNoiseNote: true}},
+		LoopStart: 0,
+	}
+	for _, note := range []uint8{60, 72} {
+		config, ok := nativeNoiseTriggerConfig(sound, note)
+		wantDivisor, wantShift, wantOK := NativeGBStudioNoisePolynomial(note, 0)
+		if !ok || !wantOK || config.Divisor != wantDivisor || config.Shift != wantShift {
+			t.Fatalf("note %d trigger polynomial = shift %d divisor %d valid=%t, want %d/%d/true", note, config.Shift, config.Divisor, ok, wantShift, wantDivisor)
+		}
+		rowDivisor, rowShift, rowOK := NativeGBStudioNoisePolynomial(note, 32)
+		if !rowOK || rowDivisor == config.Divisor && rowShift == config.Shift {
+			t.Fatalf("note %d fixture did not distinguish trigger from row zero", note)
+		}
+	}
+
+	static := nativeTestLibrary().Sounds[3]
+	config, ok := nativeNoiseTriggerConfig(static, 60)
+	if !ok || config.Divisor != static.Noise.Divisor || config.Shift != static.Noise.Shift {
+		t.Fatalf("static noise trigger changed saved polynomial: %#v valid=%t", config, ok)
 	}
 }
 

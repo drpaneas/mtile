@@ -55,7 +55,7 @@ path.
 
 Each pitched hardware channel exposes only notes that its real frequency
 register can represent; invalid piano keys are disabled and octave navigation
-skips empty ranges. Each part may contain 1–16 bars and uses an explicit time
+skips empty ranges. Each part may contain 1–128 bars and uses an explicit time
 signature. The friendly selector includes common simple, compound, and odd
 meters from 2/4 through 12/8; Shift-click changes a custom numerator and
 right-click changes its denominator among 1, 2, 4, 8, 16, and 32. The BAR
@@ -64,6 +64,12 @@ patterns. The selected pitched note exposes `RETRIGGER` or `TIE / LEGATO`. A
 tie changes only the hardware period when a compatible previous note is still
 sounding, so its phase/envelope is not restarted. CH4 always retriggers.
 
+`REC` is a continuous transport, independent of the song's playback loop. The
+playhead and unfinished notes appear in the piano roll while they are being
+performed. Recording continues across measure boundaries until `STOP`; the
+active part then grows to the next whole bar and the single retained raw take
+is committed for non-destructive quantization.
+
 The name above the grid is the selected channel clip and can be edited in
 place. The hardware inspector changes with the channel:
 
@@ -71,6 +77,22 @@ place. The hardware inspector changes with the channel:
 - CH2: duty, envelope, length, and route;
 - CH3: Wave RAM drawer, bank, level, length, and route; and
 - CH4: width, divisor, shift, envelope, length, and route.
+
+`PRESET LIBRARY` opens a channel-specific dropdown based on GB Studio's
+MIT-licensed factory instruments: 14 CH1 pulse/sweep sounds, 10 CH2 pulse
+sounds, 14 CH3 Wave RAM tones, and 14 CH4 noise/percussion sounds. Pointing at
+an entry highlights it; click it, or use the arrow keys and Enter, to select
+and immediately audition it. The chosen preset becomes the reusable instrument
+for new notes on that physical channel. Selecting the same unchanged preset
+again reuses its stable sound ID instead of consuming another ROM slot.
+
+GB Studio instruments can contain multi-step subpatterns. Music Lab preserves
+the factory tables as bounded hardware macros: row zero is applied with the
+note trigger, later rows advance at hUGEDriver's 59.7275 Hz cadence, CH1–CH3
+rows update period without retriggering, and CH4 rows rewrite the exact NR43
+divisor/shift pair relative to the note being played. Preview, saved assets,
+generated cartridge tables, and the runtime controller all consume the same
+macro rather than reducing a preset to its first row.
 
 Every control writes a real hardware-valid field. CH3 Wave RAM may be drawn
 directly. The editor never invents ADSR, filters, reverb, arbitrary oscillators,
@@ -194,6 +216,12 @@ those dimensions. Disconnect emits all-notes-off, finalizes the current take,
 and restores controller mode on shutdown. MIDI data never becomes a cartridge
 asset.
 
+On macOS this uses the four CoreMIDI endpoints exposed by the controller. It
+does not require a driver, Novation Components preset, MIDI Learn, or manual CC
+mapping. Hot-plug scanning starts when Music Lab opens. A fully ready device is
+shown by its clean product name; a missing or busy MIDI/DAW port is reported in
+the status bar instead of failing silently.
+
 ## First-use acceptance
 
 A new project must let a first-time user select CH1, click notes, press Space,
@@ -213,6 +241,15 @@ notes, periods, duty cycles, Wave RAM, envelopes, sweep, and CH4 LFSR controls.
 Play and Space send this signal to the host audio device and move the playhead.
 An empty arrangement reports that there is nothing to play instead of opening
 an all-zero stream.
+
+Click audition and armed keyboard/MIDI monitoring use the same pure-Go PSG
+renderer. Its channel timers run from the AGB clock and its hardware edges are
+band-limited to the 48 kHz monitor rate. Retriggering a pulse channel preserves
+the hardware waveform phase, so rapid Launchkey notes do not introduce a new
+DC jump or a click at every note-on.
+Physical MIDI note-off receives a 5 ms host-monitor de-click ramp. This does
+not lengthen the recorded note or change the PSG command emitted by a built
+cartridge.
 
 For an independently playable check, render exactly that pre-device signal:
 

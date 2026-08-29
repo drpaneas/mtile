@@ -80,6 +80,26 @@ func (r *Recorder) Stop(at time.Duration) RawPerformanceTake {
 	return RawPerformanceTake{Events: append([]RawEvent(nil), r.events...), Duration: duration, Dropped: r.dropped}
 }
 
+// SnapshotInto copies an in-progress take into caller-owned storage. It is
+// used by authoring UI only; the fixed-capacity recording path remains
+// allocation-free. Reusing dst avoids allocating on every editor frame.
+func (r *Recorder) SnapshotInto(dst []RawEvent, at time.Duration) (RawPerformanceTake, bool) {
+	if r == nil {
+		return RawPerformanceTake{}, false
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.recording {
+		return RawPerformanceTake{}, false
+	}
+	duration := at - r.start
+	if duration < 0 {
+		duration = 0
+	}
+	dst = append(dst[:0], r.events...)
+	return RawPerformanceTake{Events: dst, Duration: duration, Dropped: r.dropped}, true
+}
+
 func (r *Recorder) Recording() bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()

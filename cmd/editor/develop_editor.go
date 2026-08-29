@@ -325,7 +325,7 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	}
 	colW := max(1, r.W/3)
 	columnText := func(text string) string {
-		return truncateMusicEditText(text, max(1, (colW-24)/codeCharWidth))
+		return truncateDevelopTelemetryText(text, colW)
 	}
 	for column := 1; column < 3; column++ {
 		x := r.X + column*colW
@@ -368,11 +368,14 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 		drawText(screen, columnText(fmt.Sprintf("MIX %04X  STATUS %04X", g.playTelemetry.PSG.MixPSG, g.playTelemetry.PSG.Status)), x, r.Y+142, colorLCD)
 	}
 	if r.H >= 220 && g.playPCM != nil {
-		queuedMS, dropouts := g.developHostAudioStatus()
-		label := formatDevelopHostAudio(queuedMS, dropouts)
 		clr := colorDim
-		if dropouts > 0 {
-			clr = colorHighlight
+		label := "SILENT / IDLE"
+		if g.playAudioActive {
+			queuedMS, underruns, overruns := g.developHostAudioStatus()
+			label = formatDevelopHostAudio(queuedMS, underruns, overruns)
+			if underruns > 0 || overruns > 0 {
+				clr = colorHighlight
+			}
 		}
 		drawText(screen, columnText("HOST AUDIO"), x, r.Y+r.H-54, colorDim)
 		drawText(screen, columnText(label), x, r.Y+r.H-30, clr)
@@ -431,6 +434,10 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	if r.H >= 238 {
 		g.drawDevelopCPUGraph(screen, editor.Rect{X: x, Y: r.Y + r.H - 42, W: colW - 24, H: 28})
 	}
+}
+
+func truncateDevelopTelemetryText(value string, columnWidth int) string {
+	return truncateUIText(value, max(0, columnWidth-24))
 }
 
 func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developLayout) {
@@ -503,22 +510,22 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	}
 }
 
-func (g *Game) developHostAudioStatus() (queuedMilliseconds int, dropouts uint64) {
+func (g *Game) developHostAudioStatus() (queuedMilliseconds int, underruns, overruns uint64) {
 	if g == nil || g.playPCM == nil {
-		return 0, 0
+		return 0, 0, 0
 	}
-	queued, underruns, overruns := g.playPCM.Stats()
+	queued, totalUnderruns, totalOverruns := g.playPCM.Stats()
 	queuedMilliseconds = queued * 1000 / emulator.SampleRate
 	if !g.playAudioBaselineReady {
-		return queuedMilliseconds, 0
+		return queuedMilliseconds, 0, 0
 	}
-	if underruns >= g.playAudioBaselineUnderruns {
-		dropouts += underruns - g.playAudioBaselineUnderruns
+	if totalUnderruns >= g.playAudioBaselineUnderruns {
+		underruns = totalUnderruns - g.playAudioBaselineUnderruns
 	}
-	if overruns >= g.playAudioBaselineOverruns {
-		dropouts += overruns - g.playAudioBaselineOverruns
+	if totalOverruns >= g.playAudioBaselineOverruns {
+		overruns = totalOverruns - g.playAudioBaselineOverruns
 	}
-	return queuedMilliseconds, dropouts
+	return queuedMilliseconds, underruns, overruns
 }
 
 func formatDevelopCount(value uint32) string {
@@ -532,9 +539,9 @@ func formatDevelopCount(value uint32) string {
 	}
 }
 
-func formatDevelopHostAudio(queuedMilliseconds int, dropouts uint64) string {
-	if dropouts > 0 {
-		return fmt.Sprintf("%dms  /  DROPS %d", queuedMilliseconds, dropouts)
+func formatDevelopHostAudio(queuedMilliseconds int, underruns, overruns uint64) string {
+	if underruns > 0 || overruns > 0 {
+		return fmt.Sprintf("%dms  UNDER %d  OVER %d", queuedMilliseconds, underruns, overruns)
 	}
 	return fmt.Sprintf("%dms QUEUED", queuedMilliseconds)
 }

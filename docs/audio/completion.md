@@ -3,12 +3,44 @@
 ## Status
 
 **PSG-only software, emulator runtime, one-screen Music Lab, performance
-recorder, and Launchkey integration are implemented. Physical-GBA and physical
-Launchkey sign-off remain external release gates.**
+recorder, and Launchkey integration are implemented. Physical-GBA and the
+remaining Launchkey transport/hotplug/latency sign-off remain external release
+gates.**
 
 Direct Sound/PCM is deferred and is not part of this audit.
 
-## Latest automated verification — 2026-08-27
+## Latest verification — 2026-08-28
+
+- All 52 GB Studio factory instruments now preserve their exact hardware
+  controls. The custom duty vibrato and every CH4 subpattern are generated as
+  bounded runtime macros; all 14 noise presets have independent golden tests
+  for every C5 NR43 byte, including the corrected Closed Hi-Hat `0x07` value.
+  CH4 table rows remain relative to the played note just as they do in
+  hUGEDriver, and the duty vibrato retains its exact eight-frame cycle.
+- CH1 and CH2 use hUGEDriver's exact 72 period-register values for C2..B7.
+  CH3 preserves conventional MIDI pitch by indexing the same table one octave
+  higher for 32-sample waves and two octaves higher for 64-sample waves. Period
+  and physical-frequency tests verify MIDI A3 at approximately 220 Hz in both
+  modes instead of conflating hUGEDriver's raw tracker index with MIDI.
+- Table-driven CH4 presets now trigger from the played-note polynomial before
+  applying relative subpattern row zero without retriggering. This preserves
+  the original hUGEDriver LFSR/timer attack as well as the subsequent table
+  motion.
+- Native PSG audition now renders at 48 kHz, integrates oscillator/LFSR edges
+  per sample, and applies an AC-coupled high-pass stage. This removes the severe
+  DC offset and alias tones produced by the former 16,384 Hz point-sampled
+  preview while leaving cartridge register playback unchanged. The instrument
+  test also preserves the hardware trigger transient instead of applying an
+  editor-only 4 ms fade.
+
+- A physical Novation Launchkey Mini MK4 25 was discovered through its exact
+  four macOS CoreMIDI endpoints. CoreMIDI accepted the DAW/feature-mode,
+  OLED, pad, and transport-feedback handshake; note-on/off, a mode pad, and a
+  relative encoder delta were received successfully with no driver, preset,
+  MIDI Learn, or manual mapping.
+- Exact physical endpoint names now have regression coverage, the UI shows the
+  canonical product name, and backend/port/feedback failures are surfaced
+  instead of being silently ignored.
 
 - Race-enabled tests pass for the performance allocator/session, MIDI control,
   editor model/layout, and PSG-only asset compiler.
@@ -22,8 +54,8 @@ Direct Sound/PCM is deferred and is not part of this audit.
   Ebitengine initializes macOS display services during package startup; all
   display-independent editor behavior is covered under `internal/editor`.
 - A fresh `audio-gb-editor` cartridge build succeeds at 57,620 bytes, with
-  74,168 bytes of EWRAM free and 2,794 bytes of PSG assets. Its independent
-  desktop render is non-silent at 16,384 Hz (peak 67/127, RMS 23.49).
+  74,168 bytes of EWRAM free and 2,794 bytes of PSG assets. Native PSG desktop
+  monitoring is host-rate 48 kHz; legacy v1 PCM evidence remains 16,384 Hz.
 - Fresh builds of all three v2 examples pass, and the six-ROM PSG hardware
   bundle passes hash/manifest validation; its 59 physical-GBA listening checks
   remain intentionally unsigned until run on the device.
@@ -63,9 +95,9 @@ Direct Sound/PCM is deferred and is not part of this audit.
 | MONO/POLY2/POLY3/NOISE allocator | Implemented; restoration/overflow tests pass |
 | ARM, REC, count-in, click, loop takes, overdub, quantize, swing | Implemented; straight/triplet raw-take and scheduler tests pass |
 | Parameter automation materializes real sound variants | Implemented with explicit RETRIGGER/NEXT_NOTE timing and hardware-compatible targets |
-| Low-latency desktop PSG preview | Implemented; 20 ms buffer, stereo/global-output parity, hardware-length cutoff, and allocation-free reader tests |
+| Low-latency desktop PSG preview | Implemented; macOS 40 ms device queue + 20 ms/two-callback live source buffer, 5 ms monitor-only note-off de-click, stereo/global-output parity, hardware-length cutoff, and allocation-free reader tests; physical latency sign-off pending |
 | Independent PSG WAV render/check | Implemented; real CH1–CH4 song renders non-silent PCM16 with duration/peak/RMS telemetry |
-| Launchkey Mini 25 MK4 zero-config adapter | Implemented; protocol and fake-hotplug tests pass; physical controller pending |
+| Launchkey Mini 25 MK4 zero-config adapter | Implemented; physical discovery, outbound OLED/LED handshake, keys, pad, and encoder pass; transport/hotplug/latency sign-off remains |
 | Native four-channel examples | Three buildable examples complete |
 | CPU/coexistence measurements | Paced mGBA: 1.248% mean, 17.45% maximum slot share; 636.53-second soak: zero errors/frame skips, CH1–CH4 observed |
 | Physical-GBA sign-off | Pending |
@@ -86,7 +118,7 @@ hotplug, and audible latency are exercised on the named device.
 | 3 Scheduler, assets, APIs, and preview truth | Complete |
 | 4 One-screen Music Lab | Software complete; manual desktop sign-off pending |
 | 5 Performance engine and recorder | Complete |
-| 6 Launchkey integration | Software complete; physical controller pending |
+| 6 Launchkey integration | Software complete; physical core path passes, final transport/hotplug/latency run pending |
 | 7 Release verification | Automated/emulator gates complete; physical gates pending |
 
 ## Completion rule
