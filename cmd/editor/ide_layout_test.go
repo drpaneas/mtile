@@ -312,7 +312,7 @@ func TestDevelopMemoryAndCycleLabelsStayCompact(t *testing.T) {
 		t.Fatalf("EWRAM capacity label = %q", got)
 	}
 	label := developEWRAMLabel(128 * 1024)
-	if label != "EWRAM 128/255.5K  50%" {
+	if label != "EWRAM 50% OK 128K" {
 		t.Fatalf("EWRAM label = %q", label)
 	}
 	if got := formatDevelopHostAudio(160, 80, 3); got != "160ms  UNDER 80  OVER 3" {
@@ -320,6 +320,49 @@ func TestDevelopMemoryAndCycleLabelsStayCompact(t *testing.T) {
 	}
 	if got := formatDevelopHostAudio(160, 0, 0); got != "160ms QUEUED" {
 		t.Fatalf("host audio queued label = %q", got)
+	}
+}
+
+func TestDevelopUtilizationHealthUsesVisibleThresholds(t *testing.T) {
+	tests := []struct {
+		load      float64
+		wantState string
+		wantColor color.Color
+	}{
+		{load: 0, wantState: "OK", wantColor: colorRun},
+		{load: .6999, wantState: "OK", wantColor: colorRun},
+		{load: .70, wantState: "HIGH", wantColor: colorHighlight},
+		{load: .8999, wantState: "HIGH", wantColor: colorHighlight},
+		{load: .90, wantState: "CRITICAL", wantColor: colorDanger},
+		{load: 1.05, wantState: "CRITICAL", wantColor: colorDanger},
+	}
+	for _, test := range tests {
+		if got := developUtilizationState(test.load); got != test.wantState {
+			t.Errorf("developUtilizationState(%v) = %q, want %q", test.load, got, test.wantState)
+		}
+		if got := developUtilizationColor(test.load); got != test.wantColor {
+			t.Errorf("developUtilizationColor(%v) = %v, want %v", test.load, got, test.wantColor)
+		}
+	}
+}
+
+func TestDevelopMemoryHealthFitsWideAndCompactInspectors(t *testing.T) {
+	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+
+	setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	wide := newDevelopLayout().Play.Inspector
+	wideAvailable := wide.W/3 - 24
+	wideLabel := developEWRAMLabel(build.EWRAMCapacity)
+	if width := uiTextWidth(wideLabel); width > wideAvailable {
+		t.Fatalf("wide memory health label %q uses %d px, available %d", wideLabel, width, wideAvailable)
+	}
+
+	setEditorLayout(minimumScreenWidth, minimumScreenHeight)
+	compact := newDevelopLayout().Play.Inspector
+	compactAvailable := compact.W/2 - 24
+	compactLabel := developEWRAMCompactLabel(build.EWRAMCapacity)
+	if width := smallTextWidth(compactLabel); width > compactAvailable {
+		t.Fatalf("compact memory health label %q uses %d px, available %d", compactLabel, width, compactAvailable)
 	}
 }
 
@@ -337,6 +380,25 @@ func TestDevelopTelemetryUsesTheAvailablePixelWidth(t *testing.T) {
 	}
 	if width := uiTextWidth(got); width > narrowWidth-24 {
 		t.Fatalf("truncated telemetry label width = %d, available = %d", width, narrowWidth-24)
+	}
+}
+
+func TestDevelopRendererLabelShowsPolicyAndFinalSelection(t *testing.T) {
+	tests := []struct {
+		requested string
+		selected  string
+		want      string
+	}{
+		{requested: "auto", selected: "mode0", want: "RENDERER  AUTO -> MODE 0"},
+		{requested: "auto", selected: "mode4", want: "RENDERER  AUTO -> MODE 4"},
+		{requested: "mode4", selected: "mode4", want: "RENDERER  MODE 4"},
+		{requested: "mode0", want: "RENDERER  MODE 0 / NOT BUILT"},
+		{want: "RENDERER  BUILD TO SELECT"},
+	}
+	for _, test := range tests {
+		if got := developRendererLabel(test.requested, test.selected); got != test.want {
+			t.Fatalf("developRendererLabel(%q, %q) = %q, want %q", test.requested, test.selected, got, test.want)
+		}
 	}
 }
 

@@ -97,6 +97,14 @@ func (g *Game) startRun() {
 	g.runGeneratedGo = ""
 	g.runEntry = ""
 	g.runSourceFiles = nil
+	g.runRendererRequested = ""
+	g.runRendererSelected = ""
+	g.runRendererReason = ""
+	g.runRendererProfile = ""
+	g.runRendererDiagnostic = ""
+	g.runRendererLayers = 0
+	g.runRendererObjects = false
+	g.runRendererText = false
 	g.runEWRAMUsed = 0
 	g.runEWRAMFree = 0
 	g.runIWRAMUsed = 0
@@ -113,6 +121,7 @@ func (g *Game) startRun() {
 			g.appendBuildEvent(runID, event)
 		}
 		service.Debug = true
+		service.UseProjectRenderer = true
 		result, err := service.Build(projectDir, "")
 		if err != nil {
 			g.deliverPlayLaunch(playLaunch{id: runID, err: err})
@@ -329,6 +338,14 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		g.runEntry = launch.result.Entry
 		g.runSourceFiles = append([]string(nil), launch.result.SourceFiles...)
 		g.runGeneratedGo = launch.result.GeneratedGo
+		g.runRendererRequested = launch.result.RendererRequested.String()
+		g.runRendererSelected = launch.result.Renderer.String()
+		g.runRendererReason = launch.result.RendererReason
+		g.runRendererProfile = launch.result.RendererProfile
+		g.runRendererDiagnostic = launch.result.RendererDiagnostic
+		g.runRendererLayers = launch.result.RendererLayers
+		g.runRendererObjects = launch.result.RendererObjects
+		g.runRendererText = launch.result.RendererText
 	}
 	if launch.err != nil {
 		g.runError = launch.err.Error()

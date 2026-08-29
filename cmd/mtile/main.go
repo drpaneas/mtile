@@ -10,10 +10,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
+	"github.com/drpaneas/mtile/internal/transpiler"
 )
 
 var errMissingCommand = errors.New("missing command")
@@ -150,6 +152,7 @@ func runBuild(args []string, out io.Writer) error {
 	tinygo := flags.String("tinygo", "", "TinyGo executable (default: PATH)")
 	runtimeDir := flags.String("runtime", "", "mtile runtime directory")
 	keepWork := flags.Bool("keep-work", false, "keep the temporary generated build workspace")
+	rendererName := flags.String("renderer", "", "override project renderer: mode4, mode0, or auto")
 	help, err := parseFlags(flags, args, out)
 	if err != nil {
 		return err
@@ -165,11 +168,32 @@ func runBuild(args []string, out io.Writer) error {
 		return err
 	}
 	service.KeepWork = *keepWork
+	if strings.TrimSpace(*rendererName) == "" {
+		service.UseProjectRenderer = true
+	} else {
+		renderer, parseErr := transpiler.ParseRenderer(*rendererName)
+		if parseErr != nil {
+			return parseErr
+		}
+		service.Renderer = renderer
+	}
 	result, err := service.Build(flags.Arg(0), *output)
 	if err != nil {
 		return err
 	}
 	_, _ = fmt.Fprintf(out, "built %s (%d bytes, %d bytes EWRAM free)\n", result.ROMPath, result.ROMSize, result.EWRAMFree)
+	if result.Renderer == transpiler.RendererMode0 {
+		_, _ = fmt.Fprintf(out, "renderer requested %s -> selected %s (%s), %d BG layer(s), OBJ %t, text %t\n",
+			result.RendererRequested, result.Renderer, result.RendererReason, result.RendererLayers, result.RendererObjects, result.RendererText)
+	} else {
+		_, _ = fmt.Fprintf(out, "renderer requested %s -> selected %s (%s)\n", result.RendererRequested, result.Renderer, result.RendererReason)
+	}
+	if result.RendererDiagnostic != "" {
+		_, _ = fmt.Fprintln(out, "renderer fallback:", result.RendererDiagnostic)
+	}
+	if result.RendererProfile != "" {
+		_, _ = fmt.Fprintln(out, "renderer auto profile:", result.RendererProfile)
+	}
 	if result.AudioVoices != 0 {
 		if result.AudioProfile == assetsync.NativeAudioProfile {
 			_, _ = fmt.Fprintf(out, "audio: Game Boy PSG CH1-CH4, hardware mix %d%%, %s-byte assets\n",

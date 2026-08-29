@@ -47,6 +47,17 @@ jobs:
         run: go test ./...
         working-directory: runtime
 
+      # Build-tag matrix for the compile-time Mode 0 state shapes. These are
+      # intentionally focused because the ordinary framebuffer tests are a
+      # different linked renderer and must not run under mtile_mode0.
+      - name: Test Mode 0 runtime matrix
+        working-directory: runtime
+        run: |
+          go test -tags=mtile_mode0 -run '^TestMode0' .
+          go test -tags=mtile_mode0,mtile_mode0_layers2 -run '^TestMode0(TwoLayers|Mutations)' .
+          go test -tags=mtile_mode0,mtile_mode0_obj -run '^TestMode0(HardwareSprite|AlignedSSpr)' .
+          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text -run '^TestMode0StaticText' .
+
       # One-second fuzz smoke for the strict PSG-only asset/runtime boundaries.
       - name: Audio v2 fuzz smoke (Linux)
         if: runner.os == 'Linux'
@@ -122,6 +133,21 @@ jobs:
           sudo dpkg -i "tinygo_${TINYGO_VERSION}_amd64.deb"
           tinygo version
 
+      - name: Install headless renderer benchmark dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build
+
+      - name: Build pinned headless mGBA helper
+        run: |
+          cmake -S cmd/mtile-player -B /tmp/mtile-player-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DBUILD_QT=OFF -DBUILD_SDL=OFF \
+            -DBUILD_GL=OFF -DBUILD_GLES2=OFF -DBUILD_GLES3=OFF \
+            -DUSE_DISCORD_RPC=OFF -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF \
+            -DUSE_SQLITE3=OFF -DUSE_LZMA=OFF -DUSE_EPOXY=OFF \
+            -DUSE_MINIZIP=OFF -DUSE_ZLIB=OFF
+          cmake --build /tmp/mtile-player-build --target mtile-player --config Release
+
       # Full pipeline smoke: Lua + strict four-channel assets -> generated Go
       # -> TinyGo -> .gba. Legacy PICO and PCM fixtures are intentionally not
       # release inputs for Audio v2.
@@ -135,6 +161,47 @@ jobs:
             -o /tmp/audio-gb-song.gba examples/audio-gb-song/
           go run ./cmd/mtile build \
             -o /tmp/audio-gb-editor.gba examples/audio-gb-editor/
+
+      # The same cartridge must link through every public renderer policy.
+      # AUTO is asserted by the CLI report in unit tests; this matrix catches
+      # build-tag/resource regressions in the actual TinyGo links.
+      - name: Build renderer matrix
+        run: |
+          go run ./cmd/mtile build -renderer mode4 -o /tmp/testio-mode4.gba examples/testio/
+          go run ./cmd/mtile build -renderer mode0 -o /tmp/testio-mode0.gba examples/testio/
+          go run ./cmd/mtile build -renderer auto -o /tmp/testio-auto.gba examples/testio/
+
+      # Paired, frame-synchronized semantic/performance gate on the actual
+      # mGBA core. A mismatch or a missed-frame/cycle/memory regression fails.
+      - name: Paired Mode 4 / Mode 0 mGBA gate
+        run: >-
+          go run ./cmd/renderbench
+          -project examples/testio
+          -player /tmp/mtile-player-build/mtile-player
+          -out /tmp/renderer-report
+          -warmup 8
+          -samples 30
+
+      # Evidence-backed AUTO shapes beyond the static-map vertical slice.
+      # Runtime fset is intentionally absent: tile-v1 keeps that measured
+      # sub-20%-win shape on Mode 4 and its selector behavior is unit-tested.
+      - name: Paired Mode 0 workload matrix
+        run: |
+          for workload in camera composite layers2 sset16 mset16; do
+            go run ./cmd/renderbench \
+              -project examples/testio \
+              -source "cmd/renderbench/testdata/workloads/${workload}.lua" \
+              -player /tmp/mtile-player-build/mtile-player \
+              -out "/tmp/renderer-report-${workload}" \
+              -warmup 8 \
+              -samples 30
+          done
+
+      - name: Upload renderer evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: renderer-report
+          path: /tmp/renderer-report*
 
       # Fresh-project path a new user hits first.
       - name: Build a new project

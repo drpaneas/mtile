@@ -7,22 +7,27 @@ import (
 )
 
 func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
-	counts := map[RendererCompatibility]int{}
-	for name := range Builtins {
-		got := BuiltinRendererCompatibility(name)
-		if got == RendererUnknown {
-			t.Errorf("builtin %q has no renderer compatibility", name)
-		}
-		counts[got]++
-	}
-	if got := BuiltinRendererCompatibility("not_a_builtin"); got != RendererUnknown {
-		t.Fatalf("unknown builtin compatibility = %d", got)
-	}
 	want := map[RendererCompatibility]int{
 		RendererIndependent:      45,
 		RendererBoth:             9,
 		RendererMode0Conditional: 8,
 		RendererMode4Only:        7,
+	}
+	counts := make(map[RendererCompatibility]int, len(want))
+	for name := range Builtins {
+		got := BuiltinRendererCompatibility(name)
+		if got == RendererUnknown {
+			t.Errorf("builtin %q has no renderer compatibility; classify it in render_modes.go and document it in docs/render-modes.md", name)
+			continue
+		}
+		if _, known := want[got]; !known {
+			t.Errorf("builtin %q uses unreviewed renderer compatibility %d; add the category to the renderer contract and this exhaustive gate", name, got)
+			continue
+		}
+		counts[got]++
+	}
+	if got := BuiltinRendererCompatibility("not_a_builtin"); got != RendererUnknown {
+		t.Fatalf("unknown builtin compatibility = %d", got)
 	}
 	for compatibility, wantCount := range want {
 		if got := counts[compatibility]; got != wantCount {

@@ -211,6 +211,14 @@ type Game struct {
 	runEntry                   string
 	runSourceFiles             []string
 	runGeneratedGo             string
+	runRendererRequested       string
+	runRendererSelected        string
+	runRendererReason          string
+	runRendererProfile         string
+	runRendererDiagnostic      string
+	runRendererLayers          int
+	runRendererObjects         bool
+	runRendererText            bool
 	runBuildEvents             []build.Event
 	runRuntimeLog              []string
 	developPanel               developPanel

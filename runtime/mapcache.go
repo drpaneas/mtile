@@ -105,14 +105,17 @@ func (c *Context) mapStreamingGet(x, y int) uint16 {
 	return c.cart.Map[slot*MapChunkCells+localY*MapChunkWidth+localX]
 }
 
-func (c *Context) mapStreamingSet(x, y int, value uint16) {
+// mapStreamingSet reports whether the authoritative map value changed. The
+// renderer uses that signal to invalidate a materialized hardware tilemap
+// without treating idempotent mset() calls as per-frame upload work.
+func (c *Context) mapStreamingSet(x, y int, value uint16) bool {
 	if c == nil || c.cart == nil || !c.cart.MapStreaming || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
-		return
+		return false
 	}
 	index, ok := mapCellIndex(x, y, c.cart.MapW)
 	if !ok {
 		c.mapError = MapCacheInvalid
-		return
+		return false
 	}
 	slot, editSlot := c.mapEditLookupSlot(index)
 	if editSlot < 0 {
@@ -122,17 +125,17 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) {
 			// means the ROM value is authoritative.
 			if uint64(index) >= uint64(len(c.mapROM)) {
 				c.mapError = MapCacheInvalid
-				return
+				return false
 			}
 			if c.mapROM[int(index)] != value {
 				c.mapError = MapEditFull
 			}
-			return
+			return false
 		}
 		if slot < 0 {
 			slot = c.loadMapChunk(x/MapChunkWidth, y/MapChunkHeight)
 			if slot < 0 {
-				return
+				return false
 			}
 		}
 		localX := x % MapChunkWidth
@@ -141,14 +144,17 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) {
 		if c.cart.Map[cacheIndex] == value {
 			// A write that already matches ROM (or the current cached value)
 			// needs no overlay entry and cannot consume the edit budget.
-			return
+			return false
 		}
 		editSlot = c.mapEditInsert(index, value)
 		if editSlot < 0 {
 			c.mapError = MapEditFull
-			return
+			return false
 		}
 	} else {
+		if c.cart.MapEdits[editSlot].Value == value {
+			return false
+		}
 		c.cart.MapEdits[editSlot].Value = value
 	}
 	if slot >= 0 {
@@ -157,6 +163,7 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) {
 		localY := y % MapChunkHeight
 		c.cart.Map[slot*MapChunkCells+localY*MapChunkWidth+localX] = value
 	}
+	return true
 }
 
 func mapCellIndex(x, y, width int) (uint32, bool) {

@@ -136,7 +136,13 @@ func (c *Context) Sset(x, y, color int) {
 		x < 0 || y < 0 || x >= c.cart.SheetW || y >= c.cart.SheetH {
 		return
 	}
-	c.cart.Sheet[y*c.cart.SheetW+x] = byte(color)
+	index := y*c.cart.SheetW + x
+	value := byte(color)
+	if c.cart.Sheet[index] == value {
+		return
+	}
+	c.cart.Sheet[index] = value
+	c.sheetMutated(x, y)
 }
 
 func (c *Context) Mget(x, y int) uint16 {
@@ -157,10 +163,18 @@ func (c *Context) Mset(x, y, id int) {
 		return
 	}
 	if c.cart.MapStreaming {
-		c.mapStreamingSet(x, y, uint16(id))
+		if c.mapStreamingSet(x, y, uint16(id)) {
+			c.mapMutated(x, y)
+		}
 		return
 	}
-	c.cart.Map[y*c.cart.MapW+x] = uint16(id)
+	index := y*c.cart.MapW + x
+	value := uint16(id)
+	if c.cart.Map[index] == value {
+		return
+	}
+	c.cart.Map[index] = value
+	c.mapMutated(x, y)
 }
 
 // Fget reports one flag bit for sprite id. Out-of-range id or bit is false.
@@ -186,10 +200,14 @@ func (c *Context) Fset(id, bit int, val bool) {
 		return
 	}
 	mask := byte(1 << uint(bit))
+	before := c.cart.Flags[id]
 	if val {
 		c.cart.Flags[id] |= mask
 	} else {
 		c.cart.Flags[id] &^= mask
+	}
+	if c.cart.Flags[id] != before {
+		c.flagsMutated(id)
 	}
 }
 
@@ -199,5 +217,10 @@ func (c *Context) FsetByte(id, flags int) {
 	if c == nil || c.cart == nil || id < 0 || id >= c.cart.SpriteN {
 		return
 	}
-	c.cart.Flags[id] = byte(flags)
+	value := byte(flags)
+	if c.cart.Flags[id] == value {
+		return
+	}
+	c.cart.Flags[id] = value
+	c.flagsMutated(id)
 }

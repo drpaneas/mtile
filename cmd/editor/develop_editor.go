@@ -385,42 +385,40 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	drawText(screen, columnText("DEBUG / INSPECTOR"), x, r.Y+14, colorDim)
 	g.runMu.Lock()
 	ewramUsed, ewramFree, iwramUsed := g.runEWRAMUsed, g.runEWRAMFree, g.runIWRAMUsed
+	rendererRequested, rendererSelected := g.runRendererRequested, g.runRendererSelected
 	g.runMu.Unlock()
+	if rendererRequested == "" && g.model != nil {
+		rendererRequested = g.model.Project.Renderer
+	}
+	rendererLabel := developRendererLabel(rendererRequested, rendererSelected)
+	drawText(screen, columnText(rendererLabel), x, r.Y+64, developRendererColor(rendererSelected))
 	if !g.playTelemetry.DebugValid {
 		drawText(screen, columnText("CPU  waiting for live preview"), x, r.Y+40, colorDim)
 		if ewramUsed != 0 {
-			drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+64, colorText)
-			drawText(screen, columnText(developMemoryHeadroomLabel(ewramFree, iwramUsed)), x, r.Y+88, colorLCD)
+			drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
+			drawText(screen, columnText(developMemoryHeadroomLabel(ewramFree, iwramUsed)), x, r.Y+112, colorLCD)
 		} else {
-			drawText(screen, columnText("RAM  available after build"), x, r.Y+64, colorDim)
+			drawText(screen, columnText("RAM  available after build"), x, r.Y+88, colorDim)
 		}
 		return
 	}
 	stats := g.playTelemetry.Stats
 	load := float64(stats.LastFrame) / 561792.0
-	loadColor := colorRun
-	if load >= .90 {
-		loadColor = colorDanger
-	} else if load >= .70 {
-		loadColor = colorHighlight
-	}
+	loadColor := developUtilizationColor(load)
 	drawText(screen, columnText(fmt.Sprintf("CPU  %.1f%%  %s cyc", load*100, formatDevelopCount(stats.LastFrame))), x, r.Y+40, loadColor)
 	if ewramUsed != 0 {
-		drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+64, colorText)
+		drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
 	} else {
-		drawText(screen, columnText("EWRAM  build data unavailable"), x, r.Y+64, colorDim)
+		drawText(screen, columnText("EWRAM  build data unavailable"), x, r.Y+88, colorDim)
 	}
 	compact := r.H < 220
 	frameY, watchY := r.Y+112, r.Y+164
 	if compact {
-		frameY, watchY = r.Y+88, r.Y+116
+		watchY = r.Y + 132
 	} else {
-		drawText(screen, columnText(developMemoryHeadroomLabel(ewramFree, iwramUsed)), x, r.Y+88, colorLCD)
-	}
-	drawText(screen, columnText(fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames)), x, frameY, colorText)
-	if !compact {
 		drawText(screen, columnText(fmt.Sprintf("UPDATE %s  DRAW %s", formatDevelopCount(stats.LastUpdate), formatDevelopCount(stats.LastDraw))), x, r.Y+136, colorText)
 	}
+	drawText(screen, columnText(fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames)), x, frameY, colorText)
 	drawText(screen, columnText("WATCH / VARIABLES"), x, watchY, colorDim)
 	watchRows := min(1, len(g.playTelemetry.Watches))
 	for row := 0; row < watchRows; row++ {
@@ -431,13 +429,51 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	if watchRows == 0 {
 		drawText(screen, columnText("No top-level globals"), x, watchY+24, colorDim)
 	}
-	if r.H >= 238 {
+	if r.H >= 250 {
 		g.drawDevelopCPUGraph(screen, editor.Rect{X: x, Y: r.Y + r.H - 42, W: colW - 24, H: 28})
 	}
 }
 
 func truncateDevelopTelemetryText(value string, columnWidth int) string {
 	return truncateUIText(value, max(0, columnWidth-24))
+}
+
+func developRendererLabel(requested, selected string) string {
+	requested = strings.ToLower(strings.TrimSpace(requested))
+	selected = strings.ToLower(strings.TrimSpace(selected))
+	if selected == "" {
+		if requested == "" {
+			return "RENDERER  BUILD TO SELECT"
+		}
+		return "RENDERER  " + developRendererName(requested) + " / NOT BUILT"
+	}
+	if requested == "" || requested == selected {
+		return "RENDERER  " + developRendererName(selected)
+	}
+	return "RENDERER  " + developRendererName(requested) + " -> " + developRendererName(selected)
+}
+
+func developRendererName(renderer string) string {
+	switch strings.ToLower(strings.TrimSpace(renderer)) {
+	case "mode0":
+		return "MODE 0"
+	case "mode4":
+		return "MODE 4"
+	case "auto":
+		return "AUTO"
+	default:
+		return strings.ToUpper(strings.TrimSpace(renderer))
+	}
+}
+
+func developRendererColor(selected string) color.Color {
+	if strings.EqualFold(strings.TrimSpace(selected), "mode0") {
+		return colorLCD
+	}
+	if strings.TrimSpace(selected) == "" {
+		return colorDim
+	}
+	return colorCode
 }
 
 func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developLayout) {
@@ -454,7 +490,11 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	romSize := g.runROMSize
 	inputKeys := g.playKeys | g.playPendingKeys
 	ewramUsed := g.runEWRAMUsed
+	rendererRequested, rendererSelected := g.runRendererRequested, g.runRendererSelected
 	g.runMu.Unlock()
+	if rendererRequested == "" && g.model != nil {
+		rendererRequested = g.model.Project.Renderer
+	}
 	cell(0, 0, "CARTRIDGE", colorDim)
 	cell(0, 1, filepath.Base(g.model.Dir), colorText)
 	cell(0, 2, "240 x 160  ·  59.73 Hz", colorLCD)
@@ -469,13 +509,13 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	}
 	drawNativeButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
 
-	cell(1, 0, "RUNTIME", colorDim)
+	cell(1, 0, "DEBUG / RUNTIME", colorDim)
+	cell(1, 1, developRendererLabel(rendererRequested, rendererSelected), developRendererColor(rendererSelected))
 	if !g.playTelemetry.Valid {
-		cell(1, 1, "mGBA  ·  WAITING", colorDim)
-		cell(1, 2, "PSG  WAITING", colorDim)
+		cell(1, 2, "mGBA  ·  WAITING", colorDim)
 		cell(1, 3, "CPU  WAITING", colorDim)
 		if ewramUsed != 0 {
-			cell(1, 4, developEWRAMLabel(ewramUsed), colorText)
+			cell(1, 4, developEWRAMCompactLabel(ewramUsed), developEWRAMColor(ewramUsed))
 		} else {
 			cell(1, 4, "RAM  AFTER BUILD", colorDim)
 		}
@@ -487,26 +527,23 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 			activeChannels++
 		}
 	}
-	cell(1, 1, fmt.Sprintf("PSG  %d/4 CHANNELS", activeChannels), colorLCD)
+	cell(1, 2, fmt.Sprintf("PSG  %d/4 CHANNELS", activeChannels), colorLCD)
 	if !g.playTelemetry.DebugValid {
-		cell(1, 2, "CPU  WAITING", colorDim)
+		cell(1, 3, "CPU  WAITING", colorDim)
+		if ewramUsed != 0 {
+			cell(1, 4, developEWRAMCompactLabel(ewramUsed), developEWRAMColor(ewramUsed))
+		}
 		return
 	}
 	stats := g.playTelemetry.Stats
 	load := float64(stats.LastFrame) / 561792.0
-	loadColor := colorRun
-	if load >= .90 {
-		loadColor = colorDanger
-	} else if load >= .70 {
-		loadColor = colorHighlight
-	}
-	cell(1, 2, fmt.Sprintf("CPU  %.1f%%  %s CYC", load*100, formatDevelopCount(stats.LastFrame)), loadColor)
+	loadColor := developUtilizationColor(load)
+	cell(1, 3, fmt.Sprintf("CPU  %.1f%%  %s CYC", load*100, formatDevelopCount(stats.LastFrame)), loadColor)
 	if ewramUsed != 0 {
-		cell(1, 3, developEWRAMLabel(ewramUsed), colorText)
+		cell(1, 4, developEWRAMCompactLabel(ewramUsed), developEWRAMColor(ewramUsed))
 	}
-	cell(1, 4, fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames), colorText)
-	if r.H >= 195 {
-		cell(1, 5, "WATCH  "+fmt.Sprint(len(g.playTelemetry.Watches)), colorDim)
+	if r.H >= 150 {
+		cell(1, 5, fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames), colorText)
 	}
 }
 
@@ -558,8 +595,37 @@ func formatDevelopBytes(value uint64) string {
 }
 
 func developEWRAMLabel(used uint64) string {
-	percent := float64(used) * 100 / float64(build.EWRAMCapacity)
-	return fmt.Sprintf("EWRAM %s/%sK  %.0f%%", formatDevelopKiB(used), formatDevelopKiB(build.EWRAMCapacity), percent)
+	load := float64(used) / float64(build.EWRAMCapacity)
+	return fmt.Sprintf("EWRAM %.0f%% %s %sK", load*100, developUtilizationState(load), formatDevelopKiB(used))
+}
+
+func developEWRAMCompactLabel(used uint64) string {
+	load := float64(used) / float64(build.EWRAMCapacity)
+	return fmt.Sprintf("EWRAM %.0f%% %s", load*100, developUtilizationState(load))
+}
+
+func developEWRAMColor(used uint64) color.Color {
+	return developUtilizationColor(float64(used) / float64(build.EWRAMCapacity))
+}
+
+func developUtilizationColor(load float64) color.Color {
+	if load >= .90 {
+		return colorDanger
+	}
+	if load >= .70 {
+		return colorHighlight
+	}
+	return colorRun
+}
+
+func developUtilizationState(load float64) string {
+	if load >= .90 {
+		return "CRITICAL"
+	}
+	if load >= .70 {
+		return "HIGH"
+	}
+	return "OK"
 }
 
 func developMemoryHeadroomLabel(free, iwramUsed uint64) string {
@@ -711,6 +777,9 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 	entry := g.runEntry
 	sources := append([]string(nil), g.runSourceFiles...)
 	generated := g.runGeneratedGo
+	rendererRequested, rendererSelected := g.runRendererRequested, g.runRendererSelected
+	rendererReason, rendererProfile, rendererDiagnostic := g.runRendererReason, g.runRendererProfile, g.runRendererDiagnostic
+	rendererLayers, rendererObjects, rendererText := g.runRendererLayers, g.runRendererObjects, g.runRendererText
 	events := append([]build.Event(nil), g.runBuildEvents...)
 	runtimeLog := append([]string(nil), g.runRuntimeLog...)
 	g.runMu.Unlock()
@@ -742,9 +811,19 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 		if romPath != "" {
 			lines = append(lines,
 				fmt.Sprintf("ROM     %s  /  %s", filepath.Base(romPath), formatDevelopBytes(uint64(romSize))),
+				fmt.Sprintf("RENDER  requested %s  /  selected %s  /  %s", rendererRequested, rendererSelected, rendererReason),
 				fmt.Sprintf("EWRAM   %s used  /  %s free  /  %s total", formatDevelopBytes(ewramUsed), formatDevelopBytes(ewramFree), formatDevelopBytes(build.EWRAMCapacity)),
 				fmt.Sprintf("IWRAM   %s used  /  %s total", formatDevelopBytes(iwramUsed), formatDevelopBytes(build.IWRAMCapacity)),
 			)
+			if rendererSelected == "mode0" {
+				lines = append(lines, fmt.Sprintf("MODE 0  %d BG layer(s)  /  OBJ %t  /  text %t", rendererLayers, rendererObjects, rendererText))
+			}
+			if rendererProfile != "" {
+				lines = append(lines, "AUTO    profile "+rendererProfile)
+			}
+			if rendererDiagnostic != "" {
+				lines = append(lines, "FALLBACK  "+rendererDiagnostic)
+			}
 		}
 		lines = append(lines,
 			fmt.Sprintf("SPRITES %d  /  MAP %d x %d", g.spriteN(), g.model.Map.Width, g.model.Map.Height),

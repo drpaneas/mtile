@@ -17,7 +17,8 @@ var (
 	hostBG2Y     uint32
 	hostIO       [0x400]byte
 	hostVRAM     [VRAMBytes]byte
-	hostPalette  [256]uint16
+	hostOAM      [OAMBytes]byte
+	hostPalette  [512]uint16
 	hostWrites   [128]hostRegisterWrite
 	hostWriteN   int
 )
@@ -57,6 +58,9 @@ func GetReg16(addr uintptr) uint16 {
 		if off, ok := hostVRAMOffset(addr, 2); ok {
 			return uint16(hostVRAM[off]) | uint16(hostVRAM[off+1])<<8
 		}
+		if off, ok := hostOAMOffset(addr, 2); ok {
+			return uint16(hostOAM[off]) | uint16(hostOAM[off+1])<<8
+		}
 		if off, ok := hostPaletteOffset(addr, 2); ok {
 			return hostPalette[off/2]
 		}
@@ -92,6 +96,11 @@ func SetReg16(addr uintptr, value uint16) {
 			hostVRAM[off+1] = byte(value >> 8)
 			return
 		}
+		if off, ok := hostOAMOffset(addr, 2); ok {
+			hostOAM[off] = byte(value)
+			hostOAM[off+1] = byte(value >> 8)
+			return
+		}
 		if off, ok := hostPaletteOffset(addr, 2); ok {
 			hostPalette[off/2] = value
 		}
@@ -117,6 +126,12 @@ func GetReg32(addr uintptr) uint32 {
 				uint32(hostVRAM[off+2])<<16 |
 				uint32(hostVRAM[off+3])<<24
 		}
+		if off, ok := hostOAMOffset(addr, 4); ok {
+			return uint32(hostOAM[off]) |
+				uint32(hostOAM[off+1])<<8 |
+				uint32(hostOAM[off+2])<<16 |
+				uint32(hostOAM[off+3])<<24
+		}
 	}
 	return 0
 }
@@ -140,6 +155,13 @@ func SetReg32(addr uintptr, value uint32) {
 			hostVRAM[off+1] = byte(value >> 8)
 			hostVRAM[off+2] = byte(value >> 16)
 			hostVRAM[off+3] = byte(value >> 24)
+			return
+		}
+		if off, ok := hostOAMOffset(addr, 4); ok {
+			hostOAM[off] = byte(value)
+			hostOAM[off+1] = byte(value >> 8)
+			hostOAM[off+2] = byte(value >> 16)
+			hostOAM[off+3] = byte(value >> 24)
 		}
 	}
 }
@@ -203,6 +225,17 @@ func hostVRAMOffset(addr uintptr, width int) (int, bool) {
 	return int(off), true
 }
 
+func hostOAMOffset(addr uintptr, width int) (int, bool) {
+	if addr < OAM {
+		return 0, false
+	}
+	off := addr - OAM
+	if off >= uintptr(len(hostOAM)) || width < 0 || off+uintptr(width) > uintptr(len(hostOAM)) {
+		return 0, false
+	}
+	return int(off), true
+}
+
 func hostPaletteOffset(addr uintptr, width int) (int, bool) {
 	if addr < PALRAM {
 		return 0, false
@@ -233,6 +266,9 @@ func ResetForTest() {
 	}
 	for i := range hostVRAM {
 		hostVRAM[i] = 0
+	}
+	for i := range hostOAM {
+		hostOAM[i] = 0
 	}
 	for i := range hostPalette {
 		hostPalette[i] = 0

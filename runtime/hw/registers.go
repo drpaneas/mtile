@@ -8,6 +8,18 @@ package hw
 const (
 	DISPCNT       uintptr = 0x04000000
 	VCOUNT        uintptr = 0x04000006
+	BG0CNT        uintptr = 0x04000008
+	BG1CNT        uintptr = 0x0400000A
+	BG2CNT        uintptr = 0x0400000C
+	BG3CNT        uintptr = 0x0400000E
+	BG0HOFS       uintptr = 0x04000010
+	BG0VOFS       uintptr = 0x04000012
+	BG1HOFS       uintptr = 0x04000014
+	BG1VOFS       uintptr = 0x04000016
+	BG2HOFS       uintptr = 0x04000018
+	BG2VOFS       uintptr = 0x0400001A
+	BG3HOFS       uintptr = 0x0400001C
+	BG3VOFS       uintptr = 0x0400001E
 	BG2PA         uintptr = 0x04000020
 	BG2PB         uintptr = 0x04000022
 	BG2PC         uintptr = 0x04000024
@@ -57,6 +69,8 @@ const (
 	INTERRUPT_IME uintptr = 0x04000208
 	PALRAM        uintptr = 0x05000000
 	VRAM          uintptr = 0x06000000
+	OBJVRAM       uintptr = 0x06010000
+	OAM           uintptr = 0x07000000
 	Page0         uintptr = 0x06000000
 	Page1         uintptr = 0x0600A000
 
@@ -64,5 +78,8 @@ const (
 	ScreenHeight = 160
 	PageStride   = 0xA000
 	VisibleBytes = ScreenWidth * ScreenHeight
-	VRAMBytes    = PageStride * 2
+	// Physical GBA VRAM is 96 KiB. Mode 4 uses only two 0xA000-byte page
+	// slots; Mode 0 additionally exercises the 32 KiB OBJ character region.
+	VRAMBytes = 96 * 1024
+	OAMBytes  = 1024
 )

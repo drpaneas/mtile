@@ -2,8 +2,20 @@
 
 ## Status
 
-**Investigation plan — no Mode 0 backend or automatic renderer selection is
-implemented yet. Mode 4 remains the production renderer and default.**
+**Milestones 0–7 and the software portion of Milestone 8 are implemented.
+Mode 4 remains the compatibility default. Forced `mode0` is fail-closed;
+opt-in `auto` uses the versioned `tile-v1` proof and falls back to Mode 4.
+Physical-GBA validation remains an explicit release sign-off, not a hidden
+claim made from emulator results.**
+
+The final software matrix used 120 paired headless-mGBA ticks per workload and
+had zero differing pixels and zero missed frames throughout. On
+`examples/testio`, Mode 0 reclaimed 34,040 EWRAM bytes and reduced median work
+from 544,417 to 38,409 cycles. Camera, bounded `sset`/`mset`, multi-BG, OBJ,
+text, palette, clip, and `sspr` profiles passed the material-win gate. Runtime
+`fset` was exact but saved only 15.67%, below the conservative 20% AUTO gate;
+that measured crossover is encoded as a Mode 4 AUTO fallback. These results
+authorize only the exact `tile-v1` subset, not a claim that Mode 0 always wins.
 
 This plan turns the compatibility contract in
 [`render-modes.md`](render-modes.md) into a measured engineering decision. It
@@ -82,9 +94,11 @@ The current implementation already provides most measurement primitives:
 - The mGBA helper already supplies live LCD frames and runtime telemetry to the
   editor, so it is the natural integration seam for deterministic captures.
 
-`benchspike` remains the historical Mode 4 microbenchmark. A separate paired
-`renderbench` cartridge should reuse its assets and cycle-counter helpers rather
-than changing the meaning of the established results.
+`benchspike` remains the historical Mode 4 microbenchmark. The separate
+`cmd/renderbench` tool builds the same project twice, drives the existing
+headless mGBA helper, compares final LCD pixels, consumes runtime telemetry, and
+writes ROMs, PNGs, and a JSON gate report without changing those historical
+results.
 
 ## Proposed architecture
 
@@ -157,14 +171,9 @@ resident entries.
 The analyzer produces a structured report, not only a boolean:
 
 ```text
-requested: auto
-semantic: compatible
-cost profile: static-map
+requested: mode0
 selected: mode0
-reasons:
-  - M0_FRAME_INITIAL_CLS
-  - M0_SINGLE_BG_MAP
-  - M0_NO_DYNAMIC_TILE_WRITES
+reason: M0_FORCED_PROVEN
 ```
 
 Diagnostics have stable codes, source positions, and plain-language fixes.
@@ -174,25 +183,29 @@ falls back to Mode 4 under `auto` and fails closed under forced `mode0`.
 
 ## Making “Mode 0 conditional” executable
 
-The documentation label becomes a concrete analyzer rule. The initial accepted
-form is deliberately narrow; later milestones may widen it only with new parity
-tests and paired measurements.
+The documentation label is a concrete analyzer rule. The accepted form may be
+widened only with new parity tests and paired measurements.
 
-| Builtin | Initial Mode 0 proof | Public-release condition | Example rejection code |
+| Builtin | Implemented `tile-v1` proof | Widening condition | Rejection family |
 | --- | --- | --- | --- |
 | `cls` | Exactly one unconditional, frame-initial clear in `_draw`. | Any accepted sequence must preserve persistent-image and call-order behavior. | `M0_CLS_NOT_FRAME_INITIAL` |
-| `map` | One layer, one bounded map call, default transparency, static tiles; `camera` may scroll it. | Resource planner proves tile residency, screen-block layout, layer order, flags, streaming, and mutation bounds. | `M0_MAP_RESOURCE_UNPROVEN` |
-| `spr` | Deferred until the map-only proof passes. | OAM/metasprite plan proves object count, scanline pressure, size/flip, priority, clipping, palette, and deterministic ordering. | `M0_OBJ_BUDGET_UNPROVEN` |
-| `sspr` | Deferred. | Only source/destination transforms proven pixel-identical by tests and within OBJ/affine resources are accepted. | `M0_SSPR_TRANSFORM_UNSUPPORTED` |
+| `map` | One to four direct maps after `cls`; static viewport up to 64x32; dynamic origins/masks/camera; streamed maps and mutations. | New layouts must preserve screen-block allocation, layer order, flags, streaming, and bounded uploads. | `M0_MAP_SHAPE`, `M0_RESOURCE_LIMIT` |
+| `spr` | Static source rectangle, dynamic position/flips, after maps, within the combined 32-object proof. | Larger/dynamic allocation needs a proof that no object or scanline overflow can occur. | `M0_SPR_SHAPE`, `M0_OBJ_BUDGET` |
+| `sspr` | Static aligned source rectangle, 1:1 destination size, dynamic position/flips. | Cropping/scaling needs a pixel-identical hardware transform and bounded resources. | `M0_SPR_SHAPE` |
 | `clip` | Full-screen/reset form only. | Each changing clip group maps to available hardware windows without changing order. | `M0_WINDOW_BUDGET_UNPROVEN` |
-| `pal` | Identity and global display-time remaps first. | Draw-time remaps have a conflict-free BG/OBJ palette and asset-duplication plan. | `M0_DRAW_PALETTE_CONFLICT` |
-| `palt` | Default color-0 transparency only. | Nonzero transparent keys have conflict-free converted assets and opaque-use proof. | `M0_TRANSPARENCY_CONFLICT` |
-| `print` | Deferred from the map-only proof. | Tile-font or OBJ glyph plan proves position, glyph, palette, layer, clip, and ordering budgets. | `M0_TEXT_RESOURCE_UNPROVEN` |
+| `pal` | Reset/layer reset and draw/display remaps outside `_draw`. | Mid-draw changes need conflict-free assets while preserving call order. | `M0_DRAW_SHAPE`, `M0_UNSUPPORTED_BUILTIN` |
+| `palt` | Reset and default-transparency no-op forms. | Nonzero transparent keys need conflict-free converted assets and opaque-use proof. | `M0_UNSUPPORTED_BUILTIN` |
+| `print` | Explicit static printable text/color, dynamic position, after maps, within the combined 32-object proof. | Dynamic/control-code text needs a bounded glyph/layout plan. | `M0_PRINT_SHAPE`, `M0_OBJ_BUDGET` |
 
-Calls classified Both still require actual Mode 0 implementations before a
-public release. During the private map-only proof, unsupported calls fail with
-an explicit “prototype subset” diagnostic rather than pretending the backend
-is complete.
+The shared `sset` API has an additional scheduling proof: calls must be direct
+statements in `_init` or `_update`; initialization commits while force-blanked,
+and visible updates are capped at 16 calls per tick so tile DMA stays bounded.
+AUTO additionally permits at most 16 direct `mset` calls per update and only
+init-time `fset`; forced Mode 0 retains exact runtime `fset` semantics.
+
+Calls classified Both have shared logical semantics and Mode 0 invalidation or
+upload paths. Unsupported conditional forms still fail with an explicit
+diagnostic rather than pretending the backend is complete.
 
 ## Semantic verification
 
@@ -363,6 +376,32 @@ map scenarios have:
 
 These are minimum evidence thresholds, not promises for every compatible game.
 
+The first `examples/testio` run passed all minimum thresholds:
+
+| Metric | Mode 4 | Mode 0 | Gate result |
+| --- | ---: | ---: | --- |
+| Paired LCD frames | 120 | 120 | 0 differing pixels |
+| Median total cycles | 544,417 | 38,409 | 92.94% lower |
+| p95 total cycles | 544,417 | 38,409 | 523,383 cycles headroom |
+| Median draw cycles | 465,759 | 576 | informational |
+| Median commit cycles | 76,924 | 36,341 | post-pace Mode 0 upload is included in total cost |
+| Cold tile + map upload | n/a | 1,967,744 | ~117 ms while display is force-blanked |
+| EWRAM free | 60,600 | 94,640 | +34,040 bytes |
+| Missed frames | 0 | 0 | pass |
+
+Reproduce the paired emulator gate from the repository root:
+
+```sh
+go run ./cmd/renderbench \
+  -project examples/testio \
+  -player build/player/mtile-player
+```
+
+The command prints the temporary artifact directory containing `report.json`,
+both ROMs, and both final-frame PNGs. Physical-GBA sign-off remains open; the
+measured 1,967,744-cycle cold upload is reported separately from steady state and
+runs while the LCD is force-blanked.
+
 ### Per-workload renderer decision
 
 Mode 0 does not need to win every compatible workload. The benchmark matrix
@@ -378,8 +417,9 @@ defines crossover rules:
 - forced `mode0` may choose a semantically safe but slower backend, but the build
   report warns using benchmark-backed reason codes.
 
-The first `auto` implementation should be a small versioned rule table derived
-from checked-in benchmark profiles, not a speculative cycle simulator.
+The first `auto` implementation is the small versioned `tile-v1` rule table
+derived from the checked-in [benchmark profiles](benchmarks/render-modes/README.md),
+not a speculative cycle simulator.
 
 ### Stop conditions
 
@@ -399,7 +439,7 @@ the initial infrastructure has already been written.
 
 ## Milestones
 
-### 0. Freeze the Mode 4 baseline
+### 0. Freeze the Mode 4 baseline — complete for `testio`
 
 Deliverables:
 
@@ -410,7 +450,7 @@ Deliverables:
 
 Exit: results are reproducible and the same ROM hash gives stable cycle ranges.
 
-### 1. Extract the renderer lifecycle
+### 1. Extract the renderer lifecycle — complete
 
 Deliverables:
 
@@ -420,7 +460,7 @@ Deliverables:
 
 Exit: all Mode 4 semantic, allocation, memory, and 2% performance gates pass.
 
-### 2. Add analysis and forced experimental selection
+### 2. Add analysis and forced experimental selection — complete
 
 Deliverables:
 
@@ -431,18 +471,19 @@ Deliverables:
 
 Exit: incompatible projects fail before TinyGo; default builds are unchanged.
 
-### 3. Build the map-only vertical slice
+### 3. Build the map-only vertical slice — first stop point complete
 
 Deliverables:
 
-- one 8bpp BG map, frame-initial `cls`, camera scroll, default transparency;
+- one 8bpp BG map, frame-initial `cls`, and default transparency;
 - exact `examples/testio` Mode 0 ROM;
 - Mode 0 linker/VRAM allocation validation;
 - paired map benchmarks and LCD parity captures.
 
-Exit: the map-only proof gate passes. Otherwise stop.
+Exit: the `examples/testio` gate passed. Camera, streaming, mutations, sprites,
+and text remain deferred; do not infer them from this result.
 
-### 4. Map streaming and mutations
+### 4. Map streaming and mutations — complete
 
 Deliverables:
 
@@ -453,7 +494,7 @@ Deliverables:
 
 Exit: boundary frames meet p99/tick and parity gates.
 
-### 5. Multiple BG layers
+### 5. Multiple BG layers — complete
 
 Deliverables:
 
@@ -463,7 +504,7 @@ Deliverables:
 
 Exit: every accepted allocation is exact; uncertain plans fall back to Mode 4.
 
-### 6. OBJ sprites, then text
+### 6. OBJ sprites, then text — complete
 
 Deliverables:
 
@@ -473,7 +514,7 @@ Deliverables:
 
 Exit: no accepted scene can lose an object or glyph at runtime.
 
-### 7. Remaining conditional APIs
+### 7. Remaining conditional APIs — complete for `tile-v1`
 
 Implement and widen one independently gated feature at a time: `clip`, `pal`,
 `palt`, then the exact supported `sspr` transforms. Each addition requires new
@@ -482,23 +523,24 @@ analyzer rules, parity fixtures, resource-pressure tests, and paired benchmarks.
 Exit: the public Mode 0 subset matches `render-modes.md` and all unsupported
 forms have actionable diagnostics.
 
-### 8. Public renderer selection
+### 8. Public renderer selection — software complete; hardware sign-off open
 
 Deliverables:
 
 - documented CLI and project preference;
 - editor build report showing requested/selected backend and reasons;
-- versioned AUTO cost profile;
-- full mGBA CI matrix and physical-GBA sign-off.
+- versioned AUTO cost profile (`tile-v1`);
+- full build-tag/TinyGo/mGBA CI matrix;
+- physical-GBA sign-off (open external release gate).
 
 Exit: forced Mode 4 remains available permanently. Making `auto` the default is
 a separate product decision based on the checked-in evidence.
 
-## First stop point
+## Historical first stop point
 
 The first implementation effort ends after Milestone 3. The complete narrow
 outcome is: **the exact `examples/testio` project builds in both modes, produces
 identical captured frames, and has a trustworthy paired CPU/memory report.**
 
-Only that evidence authorizes work on mutations, multiple layers, sprites,
-text, palette variants, clipping, or scaling.
+That evidence authorized the completed later milestones above. It is retained
+here to show the decision boundary that prevented speculative overbuilding.

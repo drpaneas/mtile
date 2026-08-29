@@ -134,6 +134,9 @@ func TestRunNewDefaultProjectHasNativeMap(t *testing.T) {
 	if assets.SheetW != 240 || assets.SheetH != 160 || assets.MapW != 30 || assets.MapH != 20 || assets.SpriteN != 600 {
 		t.Fatalf("CLI default project = %dx%d map %dx%d sprites %d", assets.SheetW, assets.SheetH, assets.MapW, assets.MapH, assets.SpriteN)
 	}
+	if assets.Project.Renderer != assetsync.DefaultRendererName {
+		t.Fatalf("CLI default renderer = %q", assets.Project.Renderer)
+	}
 }
 
 func TestRunNewLeftoverEdgeSheetCreatesEmptyMap(t *testing.T) {
@@ -185,6 +188,13 @@ func TestRunBuildRejectsWrongArgCount(t *testing.T) {
 func TestRunBuildRejectsBadFlag(t *testing.T) {
 	if err := run([]string{"build", "-not-a-flag", "x"}, &bytes.Buffer{}, &bytes.Buffer{}); err == nil {
 		t.Fatal("run([build -not-a-flag]) should surface the flag parse error")
+	}
+}
+
+func TestRunBuildRejectsUnknownRenderer(t *testing.T) {
+	err := run([]string{"build", "-renderer", "adaptive", t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
+	if err == nil || !strings.Contains(err.Error(), "mode4, mode0, or auto") {
+		t.Fatalf("run([build -renderer adaptive]) error = %v", err)
 	}
 }
 

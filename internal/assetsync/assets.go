@@ -97,7 +97,7 @@ func LoadProject(projectDir string) (Project, error) {
 	var project Project
 	err := readJSON(filepath.Join(projectDir, "project.json"), &project)
 	if errors.Is(err, os.ErrNotExist) {
-		return Project{ActivePalette: CanonicalPaletteName}, nil
+		return Project{ActivePalette: CanonicalPaletteName, Renderer: DefaultRendererName}, nil
 	}
 	if err != nil {
 		return Project{}, fmt.Errorf("read project.json: %w", err)
@@ -105,11 +105,17 @@ func LoadProject(projectDir string) (Project, error) {
 	if project.ActivePalette == "" {
 		project.ActivePalette = CanonicalPaletteName
 	}
+	if project.Renderer == "" {
+		project.Renderer = DefaultRendererName
+	}
 	if err := validatePaletteName(project.ActivePalette); err != nil {
 		return Project{}, fmt.Errorf("project activePalette: %w", err)
 	}
 	if err := validateProjectEntry(project.Entry); err != nil {
 		return Project{}, fmt.Errorf("project entry: %w", err)
+	}
+	if err := validateProjectRenderer(project.Renderer); err != nil {
+		return Project{}, fmt.Errorf("project renderer: %w", err)
 	}
 	return project, nil
 }
@@ -118,13 +124,28 @@ func SaveProject(projectDir string, project Project) error {
 	if project.ActivePalette == "" {
 		project.ActivePalette = CanonicalPaletteName
 	}
+	if project.Renderer == "" {
+		project.Renderer = DefaultRendererName
+	}
 	if err := validatePaletteName(project.ActivePalette); err != nil {
 		return fmt.Errorf("project activePalette: %w", err)
 	}
 	if err := validateProjectEntry(project.Entry); err != nil {
 		return fmt.Errorf("project entry: %w", err)
 	}
+	if err := validateProjectRenderer(project.Renderer); err != nil {
+		return fmt.Errorf("project renderer: %w", err)
+	}
 	return writeJSON(filepath.Join(projectDir, "project.json"), project)
+}
+
+func validateProjectRenderer(renderer string) error {
+	switch renderer {
+	case "mode4", "mode0", "auto":
+		return nil
+	default:
+		return fmt.Errorf("must be mode4, mode0, or auto, got %q", renderer)
+	}
 }
 
 func validateProjectEntry(entry string) error {

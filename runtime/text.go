@@ -158,6 +158,9 @@ func (c *Context) PrintCursor(s string) int {
 }
 
 func (c *Context) PrintV(s, x, y, color Value) int {
+	if result, handled := c.hardwarePrint(s, x, y, color); handled {
+		return result
+	}
 	c.ensureDrawState()
 	// Mtile's two-argument form is print(str, color), while the three- and
 	// four-argument forms are print(str, x, y [, color]). The transpiler fills

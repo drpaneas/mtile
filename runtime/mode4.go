@@ -1,3 +1,5 @@
+//go:build !mtile_mode0
+
 package runtime
 
 import "github.com/drpaneas/mtile/runtime/hw"
@@ -11,25 +13,6 @@ const (
 	mode4Display = 0x0404 // MODE_4 | BG2_ON; OBJ remains disabled
 	forceBlank   = 0x0080
 	pageBit      = 0x0010
-
-	cyclesPerScanline = 1232
-	scanlinesPerFrame = 228
-	// cyclesPerFrame backstops the VCOUNT-based deadline check below: a copy
-	// slow enough to wrap one or more full 228-line frames can land VCOUNT
-	// back in the 160-227 range by coincidence, aliasing as "still in
-	// VBlank" even though it overran by a full frame or more.
-	cyclesPerFrame = cyclesPerScanline * scanlinesPerFrame
-)
-
-// BlitKind selects the VBlank copy used by BlitToHiddenPage. DMA is the
-// production default. CPU and IWRAM exist so the presentation gate can
-// record VCOUNT and cycle counts for each path.
-type BlitKind int
-
-const (
-	BlitDMA BlitKind = iota
-	BlitCPU
-	BlitIWRAM
 )
 
 func clearPage(base uintptr, value byte) {
@@ -58,23 +41,8 @@ func (c *Context) InitHardware() {
 	hw.SetReg16(hw.DISPCNT, mode4Display)
 }
 
-// WaitForPresentWindow uses the current VBlank if the caller is already in
-// it. This is deliberately different from helpers that always wait for the
-// next VBlank and would waste the remaining presentation window.
-func (c *Context) WaitForPresentWindow() {
-	if c != nil && c.profileEnabled {
-		c.lastPresentStart = hw.GetReg16(hw.VCOUNT)
-	}
-	hw.WaitForPresentWindow()
-	if c != nil && c.profileEnabled {
-		c.lastPresentEnd = hw.GetReg16(hw.VCOUNT)
-	}
-}
-
-// WaitVDraw consumes the current VBlank so each generated-loop iteration is
-// locked to exactly one display interval.
-func (c *Context) WaitVDraw() {
-	hw.WaitVDraw()
+func (c *Context) clearRender(color int) {
+	c.clearMode4(color)
 }
 
 func (c *Context) hiddenPage() uintptr {
@@ -140,6 +108,21 @@ func (c *Context) PrepareHiddenPage() {
 	c.lastBlitEnd = hw.GetReg16(hw.VCOUNT)
 }
 
+// BeginRenderFrame, PrepareRender, and PresentRender are the only renderer
+// lifecycle calls emitted by generated games. They deliberately resolve to
+// concrete methods at compile time, so selecting Mode 0 cannot add a renderer
+// interface dispatch or per-frame mode branch to Mode 4.
+func (c *Context) BeginRenderFrame() {}
+
+func (c *Context) PrepareRender() {
+	c.PrepareHiddenPage()
+}
+
+func (c *Context) PresentRender() {
+	c.ApplyDisplayPalette()
+	c.FlipPage()
+}
+
 // BlitToHiddenPage copies the logical framebuffer as packed 32-bit Mode 4
 // indices. It refuses to flip if VBlank is already over or wraps before the
 // final volatile VCOUNT read. Cycle count covers only the copy.
@@ -174,16 +157,4 @@ func (c *Context) BlitToHiddenPage() bool {
 
 func (c *Context) FlipPage() {
 	hw.SetReg16(hw.DISPCNT, hw.GetReg16(hw.DISPCNT)^pageBit)
-}
-
-func (c *Context) FrameSkips() uint32 {
-	return c.frameSkips
-}
-
-func (c *Context) LastBlitWindow() (start, end uint16) {
-	return c.lastBlitStart, c.lastBlitEnd
-}
-
-func (c *Context) LastBlitCycles() uint32 {
-	return c.lastBlitCycles
 }

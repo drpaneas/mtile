@@ -1,8 +1,8 @@
 package transpiler
 
 // RendererCompatibility is the build-time compatibility contract for one
-// public Lua builtin. It describes what a future renderer selector may emit;
-// the shipping runtime is still Mode 4-only. Keep this table synchronized with
+// public Lua builtin. It describes what the compile-time renderer selector may
+// emit. Keep this table synchronized with
 // docs/render-modes.md whenever an API is added or its exact semantics change.
 type RendererCompatibility uint8
 
@@ -18,7 +18,7 @@ const (
 	// call/use restrictions documented in docs/render-modes.md are satisfied.
 	RendererMode0Conditional
 	// RendererMode4Only requires exact software-framebuffer raster or readback
-	// semantics. Any reachable call forces a future AUTO build to Mode 4.
+	// semantics. Any reachable call forces an AUTO build to Mode 4.
 	RendererMode4Only
 )
 

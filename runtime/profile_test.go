@@ -73,6 +73,35 @@ func TestPaceFrame30RecordsWorkCostBeforePaceWait(t *testing.T) {
 	}
 }
 
+func TestPostPaceRendererWorkUpdatesCPUAndDeadlineOnce(t *testing.T) {
+	hw.ResetForTest()
+	var c Context
+	const prePresent = 530_000
+	hw.SetFrameCycleCounterForTest(prePresent)
+	c.BeginFramePace()
+	c.PaceFrame30()
+
+	// The renderer used 20k active cycles after pacing and completed after the
+	// two-frame wall deadline. Work excludes the deliberate wait, while the
+	// missed-frame counter uses elapsed wall time.
+	c.accountPostPaceWork(20_000, 570_000)
+	if c.lastFrameCycles != 550_000 || c.maxFrameCycles != 550_000 {
+		t.Fatalf("post-present cycles = %d/%d", c.lastFrameCycles, c.maxFrameCycles)
+	}
+	if c.profileMisses != 1 {
+		t.Fatalf("misses = %d, want 1", c.profileMisses)
+	}
+
+	// A tick already classified late before presentation must not count twice.
+	hw.SetFrameCycleCounterForTest(570_000)
+	c.BeginFramePace()
+	c.PaceFrame30()
+	c.accountPostPaceWork(10_000, 590_000)
+	if c.profileMisses != 2 {
+		t.Fatalf("misses after pre-present miss = %d, want 2", c.profileMisses)
+	}
+}
+
 func TestStatReportsMaximumTickCost(t *testing.T) {
 	hw.ResetForTest()
 	var c Context

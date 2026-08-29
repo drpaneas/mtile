@@ -61,6 +61,10 @@ func (c *Context) Cls(color int) {
 	if color < 0 || color > 255 {
 		return
 	}
+	c.clearRender(color)
+}
+
+func (c *Context) clearMode4(color int) {
 	c.ensureDrawState()
 	c.ClipReset()
 	c.cursor.x, c.cursor.y = 0, 0

@@ -7,10 +7,46 @@ patterns keep a real game at 60 Hz. Every number below was measured with
 GBA's own TM0/TM1 hardware timers, on a 128x128 sheet with realistic
 half-transparent art. Re-measure after runtime changes with:
 
-All graphics numbers in this guide describe the current Mode 4 software
-framebuffer backend. Mode 0 is not implemented. The API-by-API compatibility
-contract and the rules for future build-time renderer selection are in the
-[render-mode compatibility guide](render-modes.md).
+Unless a section explicitly says otherwise, graphics numbers in this guide
+describe the Mode 4 software framebuffer backend. The compile-time Mode 0
+backend accepts the statically proven tile/BG/OBJ subset, and AUTO selects it
+only when both its semantic and benchmark-backed cost proofs succeed. The exact API contract and expansion gates are in the
+[render-mode compatibility guide](render-modes.md) and
+[engineering plan](render-mode-plan.md).
+
+## Paired static-map proof
+
+`cmd/renderbench` built `examples/testio` twice with identical source/assets,
+TinyGo 0.41.1, `-gc=none -opt=2`, and the pinned headless mGBA core. After 20
+warm-up frames it compared and sampled 120 synchronized 30 Hz ticks.
+
+| Metric | Forced Mode 4 | Forced Mode 0 |
+| --- | ---: | ---: |
+| LCD pixel differences | 0 | 0 |
+| Median / p95 total cycles | 544,417 / 544,417 | 38,409 / 38,409 |
+| Median draw cycles | 465,759 | 576 |
+| Median commit cycles | 76,924 | 36,341 |
+| Cold tile + map upload cycles | n/a | 1,967,744 |
+| Missed frames | 0 | 0 |
+| ROM bytes (debug build) | 25,980 | 25,528 |
+| EWRAM free | 60,600 | 94,640 |
+
+Mode 0 avoids redrawing 600 8x8 cells and copying a 38,400-byte framebuffer on
+every tick; its immutable tiles and screen map remain resident in VRAM. That is
+why this deliberately static case wins by an unusually large margin. The table
+does not predict mutation-heavy, scrolling, sprite, text, or primitive-heavy
+games. Those supported shapes have separate parity fixtures; their cost must be
+measured with `cmd/renderbench` for the actual project. The 1,967,744-cycle
+(~117 ms) cold tile/map upload is excluded from the steady-state median and
+occurs during forced blank, before BG0 is enabled.
+
+The complete `tile-v1` matrix is checked in under
+[`docs/benchmarks/render-modes`](benchmarks/render-modes/README.md). Camera,
+two-layer, composite OBJ/text/palette, 16 `sset`, and 16 `mset` workloads all
+passed parity, memory, p95, missed-frame, and ≥20% median-speed gates. Runtime
+`fset` remained pixel-exact and 15.67% faster than Mode 4, but deliberately
+failed the conservative 20% AUTO gate; `tile-v1` therefore selects Mode 4 for
+that source shape.
 
 ```sh
 cd runtime

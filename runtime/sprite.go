@@ -40,7 +40,7 @@ func (c *Context) Spr(id, x, y, w, h int, flipX, flipY bool) {
 		return
 	}
 	c.ensureDrawState()
-	c.drawSprite(id, x, y, w, h, flipX, flipY)
+	c.renderSprite(id, x, y, w, h, flipX, flipY)
 }
 
 // packedHasZeroByte reports whether any of v's four little-endian bytes is
@@ -436,6 +436,9 @@ func (c *Context) SSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) {
 		return
 	}
 	c.ensureDrawState()
+	if c.renderSSpr(sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY) {
+		return
+	}
 	baseX := dx - c.camX
 	baseY := dy - c.camY
 	drawX0, drawX1 := 0, dw

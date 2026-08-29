@@ -74,6 +74,32 @@ func TestLoadFlattensNativeAssets(t *testing.T) {
 	}
 }
 
+func TestProjectRendererDefaultsPersistsAndValidates(t *testing.T) {
+	dir := t.TempDir()
+	project, err := LoadProject(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if project.Renderer != DefaultRendererName {
+		t.Fatalf("missing project renderer = %q, want %q", project.Renderer, DefaultRendererName)
+	}
+	project.Renderer = "auto"
+	if err := SaveProject(dir, project); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := LoadProject(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Renderer != "auto" {
+		t.Fatalf("reloaded renderer = %q", reloaded.Renderer)
+	}
+	project.Renderer = "adaptive"
+	if err := SaveProject(dir, project); err == nil || !strings.Contains(err.Error(), "mode4, mode0, or auto") {
+		t.Fatalf("invalid renderer error = %v", err)
+	}
+}
+
 func Test128x64MapKeepsFullMutableRAMPath(t *testing.T) {
 	sheet := Spritesheet{Width: 16, Height: 8}
 	mapData := Map{Width: 128, Height: 64, Cells: make([]int, 128*64)}

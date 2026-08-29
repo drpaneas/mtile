@@ -2,9 +2,9 @@ package runtime
 
 import "github.com/drpaneas/mtile/runtime/audio"
 
-// Screen dimensions are the native GBA Mode 4 dimensions. The software
-// framebuffer is one byte per pixel and lives with Context so a generated
-// program can place the whole object in its .ewram section.
+// Screen dimensions are the native GBA display dimensions. FramebufferSize is
+// retained as the Mode 4 backing-store size; the selected renderer decides at
+// compile time whether Context actually contains that 38,400-byte array.
 const (
 	ScreenWidth      = 240
 	ScreenHeight     = 160
@@ -12,12 +12,13 @@ const (
 	defaultDrawColor = 12
 )
 
-// Context owns all mutable runtime state. It must always be passed by pointer:
-// copying it would copy the 38,400-byte framebuffer onto the tiny IWRAM stack.
+// Context owns all mutable runtime state. It must always be passed by pointer.
+// renderState is build-tag selected so a Mode 0 ROM does not pay for the Mode 4
+// software framebuffer in EWRAM.
 type Context struct {
 	cart *AssetMemory
 
-	framebuffer     [FramebufferSize]byte
+	renderState
 	drawPal         [256]byte
 	displayPal      [256]byte
 	transp          [256]bool
@@ -92,6 +93,7 @@ type drawCursor struct {
 // c.cart first so a failed re-init cannot leave a stale pointer.
 func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	c.cart = nil
+	c.resetRendererState()
 	c.mapROM = nil
 	c.mapStamp = 0
 	c.mapEditCount = 0

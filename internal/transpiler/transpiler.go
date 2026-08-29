@@ -26,10 +26,13 @@ import (
 // fields with real ROM data.
 type Options struct {
 	PackageName string
-	SheetW      int
-	SheetH      int
-	MapW        int
-	MapH        int
+	// Renderer is selected at build time. Its zero value deliberately preserves
+	// the shipping Mode 4 backend for every existing caller.
+	Renderer Renderer
+	SheetW   int
+	SheetH   int
+	MapW     int
+	MapH     int
 	// MapStreaming is normally derived from MapW*MapH. It is exposed so the
 	// build path can make the selected storage mode visible to callers/tests.
 	MapStreaming bool
@@ -55,6 +58,11 @@ type Options struct {
 	// Debug emits the fixed preview mailbox and runtime instrumentation. It is
 	// off for normal CLI/release cartridge builds.
 	Debug bool
+	// Mode0Layers is populated by SelectRenderer and is consumed by the build
+	// service as a link-time allocation decision. Callers should leave it zero.
+	Mode0Layers  int
+	Mode0Objects bool
+	Mode0Text    bool
 }
 
 // BuiltinSpec is the public mapping table used by the generator and by the
@@ -100,19 +108,50 @@ var Builtins = map[string]BuiltinSpec{
 	"gba_note": {"GBANoteV", 3, 4}, "gba_stop": {"GBAStopV", 1, 1}, "printh": {"noop", 1, 2},
 }
 
-// Transpile parses source and returns generated Go source.
+// Transpile parses source and returns generated Go source. Existing callers
+// keep the Mode 4 default; callers that need selection diagnostics use
+// TranspileWithReport.
 func Transpile(sourceName, source string, opts Options) (string, error) {
+	generated, _, err := TranspileWithReport(sourceName, source, opts)
+	return generated, err
+}
+
+// TranspileWithReport parses source, performs conservative renderer selection,
+// and returns the stable decision report alongside generated Go.
+func TranspileWithReport(sourceName, source string, opts Options) (string, RendererReport, error) {
 	chunk, err := luaparser.ParseString(sourceName, source)
 	if err != nil {
-		return "", err
+		return "", RendererReport{}, err
 	}
-	return Generate(chunk, opts)
+	report, err := SelectRenderer(chunk, opts)
+	if err != nil {
+		return "", report, err
+	}
+	opts.Renderer = report.Selected
+	opts.Mode0Layers = report.Mode0Layers
+	opts.Mode0Objects = report.Mode0Objects
+	opts.Mode0Text = report.Mode0Text
+	generated, err := Generate(chunk, opts)
+	return generated, report, err
 }
 
 // Generate emits a complete package main from a parsed chunk.
 func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
 	if chunk == nil {
 		return "", errors.New("transpiler: nil chunk")
+	}
+	// Do not let direct AST callers bypass the forced Mode 0 proof. Mode 4 is
+	// the zero/default and needs no eligibility scan; every other preference is
+	// normalized through the same conservative selector used by Build.
+	if opts.Renderer != RendererMode4 {
+		report, err := SelectRenderer(chunk, opts)
+		if err != nil {
+			return "", err
+		}
+		opts.Renderer = report.Selected
+		opts.Mode0Layers = report.Mode0Layers
+		opts.Mode0Objects = report.Mode0Objects
+		opts.Mode0Text = report.Mode0Text
 	}
 	g := &generator{
 		chunk:    chunk,
@@ -1348,6 +1387,11 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tctx.AttachNativeAudio(&nativeAudioController)")
 	}
 	b.line("\tgame.Init(&ctx)")
+	if g.opts.Renderer == RendererMode0 {
+		b.line("\t// _init runs while Mode 0 is force-blanked; commit its")
+		b.line("\t// spritesheet mutations before the first visible frame.")
+		b.line("\tctx.FinalizeInitHardware()")
+	}
 	if g.legacyAudioEnabled {
 		b.line("\tif !sfxStream.StartSFX(&sfxPlayer, hw.DirectSoundRate16384) { for {} }")
 	}
@@ -1374,6 +1418,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
 	}
 	b.line("\t\tctx.BeginProfilePhase(rt.ProfileDraw)")
+	b.line("\t\tctx.BeginRenderFrame()")
 	b.line("\t\tgame.Draw(&ctx)")
 	b.line("\t\tctx.EndProfilePhase(rt.ProfileDraw)")
 	if g.legacyAudioEnabled {
@@ -1382,15 +1427,14 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\t// Copy to the hidden page immediately - it is never on screen, so")
 	b.line("\t\t// this cannot tear, and update+draw+copy own the full two-frame")
 	b.line("\t\t// window (~562k cycles) minus only the flip itself.")
-	b.line("\t\tctx.PrepareHiddenPage()")
+	b.line("\t\tctx.PrepareRender()")
 	if g.legacyAudioEnabled {
 		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
 	}
 	b.line("\t\tctx.CollectIfNeeded()")
 	b.line("\t\tctx.PaceFrame30()")
 	b.line("\t\tctx.WaitForPresentWindow()")
-	b.line("\t\tctx.ApplyDisplayPalette()")
-	b.line("\t\tctx.FlipPage()")
+	b.line("\t\tctx.PresentRender()")
 	if g.opts.Debug {
 		b.line("\t\tdebugMailbox.Begin(ctx.PerformanceStats())")
 		for index, name := range g.globals {

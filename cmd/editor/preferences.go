@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -180,9 +181,9 @@ func (g *Game) setPreviewPlayerVolume(player editorVolumePlayer) {
 
 type preferencesLayout struct {
 	Shade, Panel, Close, Defaults editor.Rect
-	Rows                          [5]editor.Rect
-	Minus                         [5]editor.Rect
-	Plus                          [5]editor.Rect
+	Rows                          [6]editor.Rect
+	Minus                         [6]editor.Rect
+	Plus                          [6]editor.Rect
 }
 
 func newPreferencesLayout() preferencesLayout {
@@ -194,10 +195,10 @@ func newPreferencesLayout() preferencesLayout {
 		Defaults: editor.Rect{X: panel.X + 24, Y: panel.Y + panel.H - 58, W: 176, H: 34},
 	}
 	for index := range layout.Rows {
-		row := editor.Rect{X: panel.X + 24, Y: panel.Y + 88 + index*76, W: panel.W - 48, H: 64}
+		row := editor.Rect{X: panel.X + 24, Y: panel.Y + 88 + index*64, W: panel.W - 48, H: 56}
 		layout.Rows[index] = row
-		layout.Minus[index] = editor.Rect{X: row.X + row.W - 212, Y: row.Y + 14, W: 42, H: 36}
-		layout.Plus[index] = editor.Rect{X: row.X + row.W - 42, Y: row.Y + 14, W: 42, H: 36}
+		layout.Minus[index] = editor.Rect{X: row.X + row.W - 212, Y: row.Y + 10, W: 42, H: 36}
+		layout.Plus[index] = editor.Rect{X: row.X + row.W - 42, Y: row.Y + 10, W: 42, H: 36}
 	}
 	return layout
 }
@@ -243,10 +244,29 @@ func (g *Game) updatePreferences() {
 			g.preferences.AutoSaveBeforeBuild = !g.preferences.AutoSaveBeforeBuild
 		case 4:
 			g.preferences.TextSize = interfaceTextSize((int(g.preferences.TextSize) + delta + int(interfaceTextSizeCount)) % int(interfaceTextSizeCount))
+		case 5:
+			g.cycleProjectRenderer(delta)
+			g.persist()
+			return
 		}
 		g.savePreferences()
 		return
 	}
+}
+
+func (g *Game) cycleProjectRenderer(delta int) {
+	if g == nil || g.model == nil || delta == 0 {
+		return
+	}
+	options := [...]string{"mode4", "auto", "mode0"}
+	current := 0
+	for index, renderer := range options {
+		if g.model.Project.Renderer == renderer {
+			current = index
+			break
+		}
+	}
+	g.model.Project.Renderer = options[(current+delta+len(options))%len(options)]
 }
 
 func (g *Game) drawPreferences(screen *ebiten.Image) {
@@ -254,16 +274,17 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 	fillRect(screen, layout.Shade, color.RGBA{R: 4, G: 5, B: 14, A: 214})
 	drawHardwarePanel(screen, layout.Panel, color.RGBA{R: 23, G: 22, B: 52, A: 255}, colorCode)
 	drawTextScale(screen, "PREFERENCES", layout.Panel.X+24, layout.Panel.Y+12, 2, colorText)
-	drawText(screen, "Real editor behaviour — saved for every project", layout.Panel.X+24, layout.Panel.Y+50, colorDim)
+	drawText(screen, "Editor behaviour and this project's build renderer", layout.Panel.X+24, layout.Panel.Y+50, colorDim)
 	drawNativeButton(screen, layout.Close, "DONE", false, colorCode)
 
-	labels := [...]string{"VISUAL EFFECTS", "GBA LCD TREATMENT", "PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT"}
+	labels := [...]string{"VISUAL EFFECTS", "GBA LCD TREATMENT", "PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT", "PROJECT RENDERER"}
 	details := [...]string{
 		"Motion and shell lighting; work surfaces remain still.",
 		"Dot-matrix shader on the embedded mGBA screen.",
 		"Music, note audition, metronome, and game preview volume.",
 		"OFF refuses dirty builds until source files are saved.",
 		"Readable editor chrome and source text; COMFORT is the default.",
+		"AUTO selects proven Mode 0 builds; incompatible programs fall back to Mode 4.",
 	}
 	values := [...]string{
 		g.preferences.Effects.String(),
@@ -271,6 +292,7 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 		fmt.Sprintf("%d%%", g.preferences.PreviewVolume),
 		map[bool]string{false: "OFF", true: "ON"}[g.preferences.AutoSaveBeforeBuild],
 		g.preferences.TextSize.String(),
+		strings.ToUpper(g.model.Project.Renderer),
 	}
 	for index, row := range layout.Rows {
 		fillRoundedRect(screen, row, 6, color.RGBA{R: 18, G: 19, B: 44, A: 255})
@@ -281,7 +303,7 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 		drawNativeButton(screen, layout.Minus[index], "-", false, colorCode)
 		valueX := layout.Minus[index].X + layout.Minus[index].W
 		valueW := layout.Plus[index].X - valueX
-		valueRect := editor.Rect{X: valueX, Y: row.Y + 14, W: valueW, H: 36}
+		valueRect := editor.Rect{X: valueX, Y: row.Y + 10, W: valueW, H: 36}
 		fillRect(screen, valueRect, colorBackground)
 		strokeRect(screen, valueRect, colorBorder)
 		drawTextCentered(screen, values[index], valueRect, colorLCD)

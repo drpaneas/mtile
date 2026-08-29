@@ -32,7 +32,7 @@ func ReadVRAM32(addr uintptr) uint32 {
 }
 
 func SetPaletteRAM16(index int, value uint16) {
-	if index < 0 || index >= 256 {
+	if index < 0 || index >= 512 {
 		return
 	}
 	SetReg16(PALRAM+uintptr(index*2), value)
@@ -41,14 +41,14 @@ func SetPaletteRAM16(index int, value uint16) {
 // SetPaletteRAM32 writes two adjacent 16-bit palette entries with one
 // 32-bit store. index must be even; an odd index is a misaligned PALRAM write.
 func SetPaletteRAM32(index int, lo, hi uint16) {
-	if index < 0 || index >= 255 || index&1 != 0 {
+	if index < 0 || index >= 511 || index&1 != 0 {
 		return
 	}
 	SetReg32(PALRAM+uintptr(index*2), uint32(lo)|uint32(hi)<<16)
 }
 
 func ReadPaletteRAM16(index int) uint16 {
-	if index < 0 || index >= 256 {
+	if index < 0 || index >= 512 {
 		return 0
 	}
 	return GetReg16(PALRAM + uintptr(index*2))

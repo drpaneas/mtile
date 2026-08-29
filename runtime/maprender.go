@@ -1,3 +1,5 @@
+//go:build !mtile_mode0
+
 package runtime
 
 // Map draws map cells as 8x8 sprite cells from the native uint16 map and

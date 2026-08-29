@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "profile": "tile-v1",
+  "capturedAt": "2026-08-29",
+  "sourceRevision": "2b04c69f4fc5a03e35cea0ec536492ca0504d568",
+  "sourceDirty": true,
+  "toolchain": {
+    "go": "go1.26.4",
+    "tinygo": "tinygo 0.41.1 darwin/arm64; Go 1.26.4; LLVM 20.1.1",
+    "host": "darwin/arm64",
+    "emulatorHelperSha256": "ed509b7dab7297326ba91b312a583e59ec40049c4b795aaa6f3fd2a8b4940e7a"
+  },
+  "capture": {
+    "warmupFrames": 20,
+    "frames": 120,
+    "tickRateHz": 30
+  },
+  "gates": {
+    "maximumDifferingPixels": 0,
+    "minimumEwramGainBytes": 24576,
+    "minimumMedianSavingPercent": 20,
+    "minimumP95HeadroomCycles": 56179,
+    "maximumMissedFrames": 0
+  },
+  "workloads": [
+    {
+      "name": "testio",
+      "source": "examples/testio/game.lua",
+      "projectSha256": "c3a649147f86e473161ed7f3183413709c6cac8486eb8103413b30aaaf414f3c",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 92.9449300811694,
+      "mode0P95HeadroomCycles": 523383,
+      "mode4": {"romSha256":"cb197a7b4e72a1b868f46bed0bd978821f7308a88f255922c3f0ae84a54b32fa","romBytes":25980,"ewramFree":60600,"medianCycles":544417,"p95Cycles":544417,"drawCycles":465759,"commitCycles":76924,"missedFrames":0},
+      "mode0": {"romSha256":"ff9e251c6d1a96a2b7fb4c4dd3453bde7aeb510a8967a0ef7b7537ea8aa00ddc","romBytes":25528,"ewramFree":94640,"medianCycles":38409,"p95Cycles":38409,"drawCycles":576,"commitCycles":36341,"coldUploadCycles":1967744,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "camera",
+      "source": "cmd/renderbench/testdata/workloads/camera.lua",
+      "projectSha256": "0758f6d4eb1a2479e460994945ee837205de9a9b40ce688a01d9bf13c15aa70a",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 89.31264355599643,
+      "mode0P95HeadroomCycles": 525592,
+      "mode4": {"romSha256":"f7559333b8aea6f93b00fdd791eab55af5870e7560459b281675c9909a690a14","romBytes":26792,"ewramFree":60588,"medianCycles":338718,"p95Cycles":343808,"drawCycles":259704,"commitCycles":76933,"missedFrames":0},
+      "mode0": {"romSha256":"bf2a5916596788bc1fcc11cb3b99120a5c5bcecf9db014a90ec4f4cf4149d73a","romBytes":26140,"ewramFree":94628,"medianCycles":36200,"p95Cycles":36200,"drawCycles":540,"commitCycles":33948,"coldUploadCycles":1973112,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "composite",
+      "source": "cmd/renderbench/testdata/workloads/composite.lua",
+      "projectSha256": "69301c05c6839695476bb21042e9fd6b1fcb2a29dae4574b0d39b31772663e84",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 30952,
+      "medianSavingPercent": 78.71033951289338,
+      "mode0P95HeadroomCycles": 449353,
+      "mode4": {"romSha256":"6f35b37876af0060c0755f6f7bdd4254d307401ccece8797b9b9c5652243702d","romBytes":39000,"ewramFree":60576,"medianCycles":528139,"p95Cycles":531319,"drawCycles":407551,"commitCycles":76936,"missedFrames":0},
+      "mode0": {"romSha256":"b760b7c55a9bed6b89dd65795801bff537add7314ea372afaa0d2c699307d20a","romBytes":30348,"ewramFree":91528,"medianCycles":112439,"p95Cycles":112439,"drawCycles":17846,"commitCycles":51167,"coldUploadCycles":3420563,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "layers2",
+      "source": "cmd/renderbench/testdata/workloads/layers2.lua",
+      "projectSha256": "261eb72f96fa6466c40e5844d628ada0f5d093509e34aeb040432b530fad4a1c",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 29912,
+      "medianSavingPercent": 93.2078285106819,
+      "mode0P95HeadroomCycles": 527993,
+      "mode4": {"romSha256":"243f8c8392ef1a43fe35a38218311fcf9df197eb9f4554b8026158e8061c6429","romBytes":25964,"ewramFree":60600,"medianCycles":497617,"p95Cycles":497617,"drawCycles":418959,"commitCycles":76924,"missedFrames":0},
+      "mode0": {"romSha256":"0922a64cafff3f8b1d141ab696bcc425e29a67cf542cb677f01a77537cc3bbcd","romBytes":25792,"ewramFree":90512,"medianCycles":33799,"p95Cycles":33799,"drawCycles":1188,"commitCycles":30995,"coldUploadCycles":1962859,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "sset16",
+      "source": "cmd/renderbench/testdata/workloads/sset16.lua",
+      "projectSha256": "8c86335a2f66b5816c34d608133659c15237cf3293ab51ff85bd8aca1e296fea",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 84.90882609669038,
+      "mode0P95HeadroomCycles": 501799,
+      "mode4": {"romSha256":"ba0ac97ded212429a40510ca85267050ca6327d2ba3edadcb96ebbf37773a811","romBytes":55656,"ewramFree":32988,"medianCycles":397537,"p95Cycles":397902,"drawCycles":317020,"commitCycles":76937,"missedFrames":0},
+      "mode0": {"romSha256":"3e81bf8dde1aa4a5c6ca47f757ffabf892b6c437132950ec8ecd8af89aaa9a2f","romBytes":55336,"ewramFree":67028,"medianCycles":59993,"p95Cycles":59993,"drawCycles":540,"commitCycles":55550,"coldUploadCycles":1863712,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "mset16",
+      "source": "cmd/renderbench/testdata/workloads/mset16.lua",
+      "projectSha256": "37089f4d1494c82c6f0c54f28bd70f918d6151d7984b4eda3c03ff7473c0801b",
+      "autoDecision": "mode0",
+      "autoReason": "M0_AUTO_ELIGIBLE",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 85.03455584364816,
+      "mode0P95HeadroomCycles": 512789,
+      "mode4": {"romSha256":"bad10c1cf24347984b944425f489b5b6b8ec19e9a402a5a1e938ad600c505b70","romBytes":29116,"ewramFree":60588,"medianCycles":327441,"p95Cycles":327441,"drawCycles":244811,"commitCycles":76924,"missedFrames":0},
+      "mode0": {"romSha256":"8668a49a481288809c70acd294f0441209439b29b3609a3186549a552fc7fd34","romBytes":28672,"ewramFree":94628,"medianCycles":49003,"p95Cycles":49003,"drawCycles":560,"commitCycles":34400,"coldUploadCycles":1949712,"missedFrames":0},
+      "gatePass": true
+    },
+    {
+      "name": "fset1",
+      "source": "cmd/renderbench/testdata/workloads/fset1.lua",
+      "projectSha256": "09f3d8f3d070ff2fad6fbddf3f90c74b089c356a698a45d8912cbfc81bbc8c58",
+      "autoDecision": "mode4",
+      "autoReason": "M4_AUTO_MODE0_COST_UNPROVEN",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 15.668714158888598,
+      "mode0P95HeadroomCycles": 421205,
+      "mode4": {"romSha256":"362f4a15c13d8f7fc7c70739cd6bd9583bab8db5cc703792f85aab8166597d55","romBytes":26724,"ewramFree":60588,"medianCycles":166708,"p95Cycles":166762,"drawCycles":87845,"commitCycles":76916,"missedFrames":0},
+      "mode0": {"romSha256":"8bbd7fe70c20b9badf2a7df7f6ad426a3d47718db631ea47d1cef38c652ce46f","romBytes":26840,"ewramFree":94628,"medianCycles":140587,"p95Cycles":140587,"drawCycles":560,"commitCycles":42250,"coldUploadCycles":1968395,"missedFrames":0},
+      "gatePass": false,
+      "expectedCharacterizationFailure": "Mode 0 wins 15.67%, below the tile-v1 AUTO requirement of 20%."
+    }
+  ]
+}

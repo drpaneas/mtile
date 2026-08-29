@@ -14,6 +14,7 @@ import (
 
 const (
 	CanonicalPaletteName = "aurora"
+	DefaultRendererName  = "mode4"
 	MaxPaletteNameLength = 32
 	MaxSpriteN           = 65536
 	// MapStreamingThresholdCells must match runtime.MapStreamingThresholdCells.
@@ -29,6 +30,10 @@ type Project struct {
 	// Entry is an optional project-relative Lua entry point. Empty preserves
 	// the original root game.lua convention.
 	Entry string `json:"entry,omitempty"`
+	// Renderer is the build-time display policy: mode4, mode0, or auto. Empty
+	// is normalized to mode4 so projects created before this field retain their
+	// established framebuffer behavior.
+	Renderer string `json:"renderer,omitempty"`
 }
 
 // RGB15 is a GBA-compatible color component triple. Components are five-bit

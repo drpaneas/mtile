@@ -90,6 +90,31 @@ when they change. IWRAM placement (`//go:section .iwram`) is reserved for
 proven hot loops - check the linker map's `.data` size stays well under
 32 KB after adding one.
 
+## Public Lua API changes
+
+Every new, renamed, removed, or semantically changed public Lua API must update
+the renderer contract in the same change. Adding the implementation alone is
+not complete.
+
+- Update the public `Builtins` registry and explicitly classify the API in
+  `BuiltinRendererCompatibility` as renderer-independent, both renderers,
+  Mode 0 conditional, or Mode 4 only. If a different class is genuinely
+  required, add it explicitly with coverage; never leave `RendererUnknown`.
+- Update [`docs/render-modes.md`](docs/render-modes.md) with the exact semantic
+  reason, Mode 0 restrictions, and AUTO fallback behavior.
+- Add parser, transpiler, runtime, and renderer-selection tests. Any API admitted
+  to Mode 0/AUTO also needs pixel-parity fixtures and benchmark evidence for its
+  accepted call shapes.
+- Preserve exact semantics. A visually similar Mode 0 approximation is not
+  sufficient; unsupported or unproven behavior must fail forced Mode 0 or make
+  AUTO fall back to Mode 4 with a stable diagnostic.
+
+Run the mandatory classification gate with:
+
+```sh
+go test ./internal/transpiler -run 'TestEveryBuiltinHasRendererCompatibility|TestRenderModeDocumentationMentionsEveryBuiltin'
+```
+
 ## Guidelines
 
 - Keep the runtime allocation-free on hot paths; `make smoke-gba` enforces
@@ -99,8 +124,8 @@ proven hot loops - check the linker map's `.data` size stays well under
 - `runtime/target-gba.json`, `runtime/target-gba-smoke.json`, and
   `runtime/crt0/gba-smoke.s` are generated (`make generate` in `runtime/`)
   and gitignored - never commit them.
-- New Lua builtins need parser, transpiler, and runtime coverage plus tests
-  in all three layers.
+- Follow the public Lua API renderer-classification rule above; API changes need
+  parser, transpiler, runtime, renderer-selection, and documentation coverage.
 - Match the existing comment style: explain *why*, especially for hardware
   timing and memory-layout decisions.
 

@@ -144,6 +144,30 @@ func (c *Context) PaceFrame30() {
 	hw.PaceWaitUntil(cyclesPerFrame)
 }
 
+// accountPostPaceWork folds renderer work that must run in the presentation
+// window into stat(1)/debug CPU totals. Mode 4's material page copy runs before
+// pacing; Mode 0's visible VRAM/OAM commit necessarily runs after
+// WaitForPresentWindow. elapsed is the free-running tick counter at the end of
+// that commit, so deadline misses remain wall-clock truthful while
+// lastFrameCycles continues to exclude the deliberate pace wait itself.
+func (c *Context) accountPostPaceWork(work, elapsed uint32) {
+	if c == nil {
+		return
+	}
+	prePresent := c.lastFrameCycles
+	total := uint64(prePresent) + uint64(work)
+	if total > uint64(^uint32(0)) {
+		total = uint64(^uint32(0))
+	}
+	c.lastFrameCycles = uint32(total)
+	if c.lastFrameCycles > c.maxFrameCycles {
+		c.maxFrameCycles = c.lastFrameCycles
+	}
+	if prePresent < 2*cyclesPerFrame && elapsed >= 2*cyclesPerFrame {
+		c.profileMisses++
+	}
+}
+
 // EndFramePace30 is kept as the loop's post-flip hook. Work-cost sampling
 // happens in PaceFrame30 (before the pace burn); nothing is left to record
 // here, but the generated loop calls it so future flip-timing diagnostics

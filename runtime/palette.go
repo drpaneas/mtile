@@ -33,6 +33,7 @@ func (c *Context) Pal(from, to, layer int) {
 	if layer == 0 {
 		c.drawPal[from] = byte(to)
 		c.refreshSpriteFastFlags()
+		c.drawPaletteMutated()
 		return
 	}
 	c.displayPal[from] = byte(to)
@@ -50,6 +51,7 @@ func (c *Context) PalLayerReset(layer int) {
 			c.drawPal[i] = byte(i)
 		}
 		c.drawPalIdentity = true
+		c.drawPaletteMutated()
 		return
 	}
 	for i := 0; i < 256; i++ {
@@ -70,6 +72,7 @@ func (c *Context) PalReset() {
 	c.paletteDirty = true
 	c.transpKey0 = true
 	c.drawPalIdentity = true
+	c.drawPaletteMutated()
 }
 
 // PaltColor changes source-color transparency for sprite, sspr, and map
@@ -115,8 +118,8 @@ func (c *Context) ApplyDisplayPalette() {
 		return
 	}
 	for i := 0; i < 256; i += 2 {
-		lo := c.palette[c.displayPal[i]]
-		hi := c.palette[c.displayPal[i+1]]
+		lo := c.palette[c.rendererPaletteIndex(i)]
+		hi := c.palette[c.rendererPaletteIndex(i+1)]
 		hw.SetPaletteRAM32(i, lo, hi)
 	}
 	c.paletteDirty = false

@@ -4,6 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/drpaneas/mtile/internal/assetsync"
+	editormodel "github.com/drpaneas/mtile/internal/editor"
 )
 
 func TestEditorPreferencesRoundTrip(t *testing.T) {
@@ -21,6 +24,30 @@ func TestEditorPreferencesRoundTrip(t *testing.T) {
 	}
 	if got != want {
 		t.Fatalf("preferences = %+v, want %+v", got, want)
+	}
+}
+
+func TestProjectRendererCyclesWithoutChangingGlobalPreferences(t *testing.T) {
+	g := &Game{
+		model:       &editormodel.Model{Project: assetsync.Project{Renderer: "mode4"}},
+		preferences: defaultEditorPreferences(),
+	}
+	wantPreferences := g.preferences
+	g.cycleProjectRenderer(1)
+	if g.model.Project.Renderer != "auto" || g.preferences != wantPreferences {
+		t.Fatalf("after +1: renderer=%q preferences=%+v", g.model.Project.Renderer, g.preferences)
+	}
+	g.cycleProjectRenderer(1)
+	if g.model.Project.Renderer != "mode0" {
+		t.Fatalf("after +2 renderer=%q", g.model.Project.Renderer)
+	}
+	g.cycleProjectRenderer(1)
+	if g.model.Project.Renderer != "mode4" {
+		t.Fatalf("wrapped renderer=%q", g.model.Project.Renderer)
+	}
+	g.cycleProjectRenderer(-1)
+	if g.model.Project.Renderer != "mode0" {
+		t.Fatalf("reverse renderer=%q", g.model.Project.Renderer)
 	}
 }
 

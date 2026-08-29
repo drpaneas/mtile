@@ -6,7 +6,9 @@
 
 Mtile is a Lua-to-Game Boy Advance toolchain. You write a game in a small
 Lua dialect, paint sprites and maps, author sound and music in the bundled
-editor, and build a native Mode 4 GBA ROM.
+editor, and build a native GBA ROM. Mode 4 is the compatibility default; a
+compile-time Mode 0 backend is available for statically proven tile/BG/OBJ
+projects, and `auto` safely falls back to Mode 4.
 
 The screen is the GBA's real **240x160** bitmap. Sprites are 8x8 cells on an
 8 bits-per-pixel sheet. Maps are a grid of 16-bit sprite IDs. The default
@@ -122,6 +124,7 @@ mtile render-audio [options] project-dir
 | `-tinygo` | managed bundle, then `PATH` | TinyGo executable |
 | `-runtime` | checkout or embedded runtime | Runtime module directory |
 | `-keep-work` | off | Keep the temporary generated Go workspace |
+| `-renderer` | project setting | One-build override: `mode4`, `mode0`, or `auto` |
 
 `edit` opens the Ebitengine IDE. Audio Studio is one native four-channel Music
 Lab: its piano/drum editor, CH1–CH4 hardware inspector, live-performance
@@ -163,7 +166,7 @@ mygame/
 ├── game.lua
 ├── src/                         # optional required Lua modules
 │   └── player.lua
-├── project.json                 # palette and optional Lua entry point
+├── project.json                 # palette, renderer policy, optional Lua entry
 └── assets/
     ├── spritesheet.json         # 8bpp pixels, 8x8 sprite cells, flags
     ├── map.json                 # uint16 cell grid
@@ -241,7 +244,7 @@ every 4 - PICO-8's native schedule at the same 30 Hz rate.
 
 ## Drawing
 
-The current runtime draws into a 240x160 Mode 4 software framebuffer:
+The compatibility renderer draws into a 240x160 Mode 4 software framebuffer:
 
 - Color 0 is transparent for `spr` / `sspr` / `map` until `palt` changes it
 - `cls` does not change the current draw color
@@ -250,11 +253,15 @@ The current runtime draws into a 240x160 Mode 4 software framebuffer:
 
 The exhaustive [render-mode compatibility matrix](docs/render-modes.md)
 classifies every builtin as renderer-independent, compatible with both
-backends, conditionally compatible with a future Mode 0 backend, or Mode 4
-only. Mode 4 remains the only shipping renderer; the matrix is the contract
-for future `mode0` and `auto` build selection. The corresponding
-[engineering and benchmark plan](docs/render-mode-plan.md) defines the staged
-proof and its go/no-go gates.
+backends, conditionally compatible with Mode 0, or Mode 4 only. Mode 0 supports
+statically proven map layers, camera/streaming/mutations, bounded sprites and
+text, palette remaps, full clip reset, and aligned unscaled `sspr`; unsupported
+forms fail before TinyGo. `auto` combines that semantic proof with the
+benchmark-backed `tile-v1` cost profile: bounded `sset`/`mset` remain eligible,
+while runtime `fset` and unbounded mutation fall back exactly to Mode 4 with a
+diagnostic. The corresponding
+[engineering and benchmark plan](docs/render-mode-plan.md) defines the semantic
+and performance gates.
 
 ## Audio
 

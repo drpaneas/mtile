@@ -10,7 +10,7 @@ runtime/crt0/gba-smoke.s
 *.sav
 *.allocs
 *.tmp
-build/
+/build/
 __pycache__/
 *.pyc
 .DS_Store
