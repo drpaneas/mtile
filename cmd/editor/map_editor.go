@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"math"
 
 	"github.com/drpaneas/mtile/internal/editor"
@@ -14,11 +15,11 @@ func mapCanvasRect() editor.Rect {
 }
 
 func (g *Game) mapCellAt(x, y int) int {
-	w, h := g.mapBounds()
-	if x < 0 || y < 0 || x >= w || y >= h {
-		return 0
-	}
-	return g.model.Map.Cells[y*w+x]
+	return g.mapCellAtLayer(g.mapActiveLayer, x, y)
+}
+
+func (g *Game) mapCellAtLayer(layer, x, y int) int {
+	return g.model.MapCell(layer, x, y)
 }
 
 func (g *Game) setMapCell(x, y, id int) bool {
@@ -26,12 +27,12 @@ func (g *Game) setMapCell(x, y, id int) bool {
 	if x < 0 || y < 0 || x >= w || y >= h || id < 0 || id >= g.spriteN() {
 		return false
 	}
-	idx := y*w + x
-	if g.model.Map.Cells[idx] == id {
+	changed, err := g.model.SetMapCell(g.mapActiveLayer, x, y, id)
+	if err != nil {
+		g.statusMsg = err.Error()
 		return false
 	}
-	g.model.Map.Cells[idx] = id
-	return true
+	return changed
 }
 
 func (g *Game) updateMapMode() {
@@ -43,12 +44,55 @@ func (g *Game) updateMapMode() {
 	g.mapCam.Clamp(mapW, mapH, layout.Canvas)
 
 	g.handleMapResizeKeys()
+	g.handleMapLayerPanel(layout)
 	g.handleMapPan(layout)
 	g.handleMapMouseDrag(layout)
 	g.handleMapZoom(layout)
 	mapW, mapH = g.mapBounds()
 	g.mapCam.Clamp(mapW, mapH, layout.Canvas)
 	g.handleMapPlaceErase(layout)
+}
+
+func (g *Game) selectMapLayer(layer int) bool {
+	if layer < 0 || layer >= len(g.mapLayerVisible) {
+		return false
+	}
+	g.mapActiveLayer = layer
+	g.statusMsg = fmt.Sprintf("BG%d selected", layer)
+	return true
+}
+
+func mapLayerPanelHit(layout mapLayout, x, y int) (layer int, visibility bool, ok bool) {
+	for bg := 0; bg < 4; bg++ {
+		if rectContains(layout.LayerEyes[bg], x, y) {
+			return bg, true, true
+		}
+		if rectContains(layout.LayerRows[bg], x, y) {
+			return bg, false, true
+		}
+	}
+	return 0, false, false
+}
+
+func (g *Game) handleMapLayerPanel(layout mapLayout) {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return
+	}
+	mx, my := ebiten.CursorPosition()
+	layer, visibility, ok := mapLayerPanelHit(layout, mx, my)
+	if !ok {
+		return
+	}
+	if visibility {
+		g.mapLayerVisible[layer] = !g.mapLayerVisible[layer]
+		state := "hidden"
+		if g.mapLayerVisible[layer] {
+			state = "visible"
+		}
+		g.statusMsg = fmt.Sprintf("BG%d %s", layer, state)
+		return
+	}
+	g.selectMapLayer(layer)
 }
 
 func (g *Game) handleMapPan(layout mapLayout) {
@@ -219,6 +263,7 @@ func (g *Game) drawMapMode(screen *ebiten.Image) {
 	g.drawMapHover(screen, layout, tileX, tileY, ok)
 	g.drawSceneBoundaries(screen, layout)
 	g.drawMapBottomStrip(screen, layout, tileX, tileY, ok)
+	g.drawMapLayersPanel(screen, layout)
 }
 
 func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
@@ -231,15 +276,65 @@ func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
 	if left, top, right, bottom, ok := g.mapGuideClip(layout); ok {
 		drawCheckerboard(screen, editor.Rect{X: left, Y: top, W: right - left + 1, H: bottom - top + 1})
 	}
-	for y := minY; y < maxY; y++ {
-		for x := minX; x < maxX; x++ {
-			sx, sy := g.mapCam.WorldToScreen(x, y, layout.Canvas)
-			id := g.mapCellAt(x, y)
-			if isEraserIndex(id) {
-				continue
-			}
-			g.drawSpriteThumb(screen, id, sx, sy, tile, tile)
+	for layer := 0; layer < 4; layer++ {
+		if !g.mapLayerVisible[layer] {
+			continue
 		}
+		for y := minY; y < maxY; y++ {
+			for x := minX; x < maxX; x++ {
+				sx, sy := g.mapCam.WorldToScreen(x, y, layout.Canvas)
+				id := g.mapCellAtLayer(layer, x, y)
+				if isEraserIndex(id) {
+					continue
+				}
+				g.drawSpriteThumb(screen, id, sx, sy, tile, tile)
+			}
+		}
+	}
+}
+
+func (g *Game) drawMapLayersPanel(screen *ebiten.Image, layout mapLayout) {
+	drawText(screen, "LAYERS", layout.Layers.X+4, layout.Layers.Y+1, colorText)
+	drawSmallText(screen, fmt.Sprintf("ACTIVE BG%d  /  1-4", g.mapActiveLayer), layout.Layers.X+4, layout.Layers.Y+layout.Layers.H-uiSmallTextHeight-1, colorMap)
+	for bg := 0; bg < 4; bg++ {
+		row := layout.LayerRows[bg]
+		if bg == g.mapActiveLayer {
+			fillRect(screen, row, color.RGBA{R: 32, G: 62, B: 48, A: 255})
+			fillRect(screen, editor.Rect{X: row.X, Y: row.Y + row.H - 3, W: row.W, H: 3}, colorMap)
+		}
+		strokeRect(screen, row, rgba(colorBorder, 150))
+		g.drawMapLayerVisibility(screen, layout.LayerEyes[bg], g.mapLayerVisible[bg])
+		labelColor := colorText
+		if !g.mapLayerVisible[bg] {
+			labelColor = colorDim
+		}
+		role := "MID"
+		switch bg {
+		case 0:
+			role = "BACK"
+		case 3:
+			role = "FRONT"
+		}
+		textX := row.X + 36
+		drawText(screen, fmt.Sprintf("BG%d", bg), textX, row.Y+1, labelColor)
+		drawSmallText(screen, role, textX, row.Y+row.H-uiSmallTextHeight-2, colorDim)
+	}
+}
+
+func (g *Game) drawMapLayerVisibility(screen *ebiten.Image, rect editor.Rect, visible bool) {
+	color := colorDim
+	if visible {
+		color = colorText
+	}
+	cx, cy := rect.X+rect.W/2, rect.Y+rect.H/2
+	drawLine(screen, rect.X+4, cy, cx, rect.Y+5, color)
+	drawLine(screen, cx, rect.Y+5, rect.X+rect.W-4, cy, color)
+	drawLine(screen, rect.X+rect.W-4, cy, cx, rect.Y+rect.H-5, color)
+	drawLine(screen, cx, rect.Y+rect.H-5, rect.X+4, cy, color)
+	if visible {
+		fillRect(screen, editor.Rect{X: cx - 2, Y: cy - 2, W: 5, H: 5}, colorMap)
+	} else {
+		drawLine(screen, rect.X+5, rect.Y+4, rect.X+rect.W-5, rect.Y+rect.H-4, colorDanger)
 	}
 }
 
@@ -336,7 +431,7 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 
 	hoverText := "tile: -,- sprite: -"
 	if ok {
-		hoverText = fmt.Sprintf("tile: %d,%d sprite: %d", tileX, tileY, g.mapCellAt(tileX, tileY))
+		hoverText = fmt.Sprintf("BG%d tile: %d,%d sprite: %d", g.mapActiveLayer, tileX, tileY, g.mapCellAt(tileX, tileY))
 	}
 	mw, mh := g.mapBounds()
 	hoverText += fmt.Sprintf("  map: %dx%d (%dx%d screens)", mw, mh, mapScreenCount(mw, gbaScreenWidthTiles), mapScreenCount(mh, gbaScreenHeightTiles))
@@ -344,8 +439,9 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 	if isEraserIndex(g.currentSprite) {
 		selected += " eraser"
 	}
-	drawText(screen, hoverText, layout.Coordinates.X, layout.Coordinates.Y-6, colorText)
-	drawText(screen, fmt.Sprintf("%s  (] width  [ height, Cmd shrinks, WASD pan, wheel zoom, left place, right erase)", selected), layout.Coordinates.X, layout.Coordinates.Y+8, colorDim)
+	drawText(screen, truncateUIText(hoverText, layout.Coordinates.W), layout.Coordinates.X, layout.Coordinates.Y-6, colorText)
+	help := fmt.Sprintf("%s  (1-4 layers, WASD pan, wheel zoom, left place, right erase)", selected)
+	drawText(screen, truncateUIText(help, layout.Coordinates.W), layout.Coordinates.X, layout.Coordinates.Y+8, colorDim)
 }
 
 func mapScreenCount(tiles, screen int) int {

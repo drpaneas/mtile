@@ -50,6 +50,40 @@ func TestPerformanceProfilingRecordsFramePhasesAndGC(t *testing.T) {
 	}
 }
 
+func TestPerformanceStatsExposeHeapCurrentLivePeakAndHandles(t *testing.T) {
+	var c Context
+	c.SetProfiling(true)
+	var root Value
+	c.RegisterGlobal(&root)
+
+	var err HeapError
+	root, err = c.NewString([]byte("keep"))
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	if _, err = c.NewString([]byte("drop")); err != HeapOK {
+		t.Fatal(err)
+	}
+	before := c.PerformanceStats()
+	if before.HeapCapacity != heapSize || before.HeapHandleLimit != maxHandles {
+		t.Fatalf("heap limits = %+v", before)
+	}
+	if before.HeapAllocated != 16 || before.HeapLive != 0 || before.HeapHandles != 2 {
+		t.Fatalf("pre-GC heap telemetry = %+v", before)
+	}
+
+	if err := c.Collect(); err != HeapOK {
+		t.Fatal(err)
+	}
+	after := c.PerformanceStats()
+	if after.HeapAllocated != 8 || after.HeapLive != 8 || after.HeapPeakLive != 8 || after.HeapHandles != 1 {
+		t.Fatalf("post-GC heap telemetry = %+v", after)
+	}
+	if after.HeapError != HeapOK {
+		t.Fatalf("post-GC heap error = %v", after.HeapError)
+	}
+}
+
 func TestPaceFrame30RecordsWorkCostBeforePaceWait(t *testing.T) {
 	hw.ResetForTest()
 	var c Context

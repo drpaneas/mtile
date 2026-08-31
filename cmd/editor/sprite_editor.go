@@ -273,7 +273,6 @@ func (g *Game) drawSpriteCanvasZoomControls(screen *ebiten.Image) {
 			drawTactileButton(screen, r, control.label, false, colorSprite, true)
 			continue
 		}
-		fillRoundedRect(screen, editor.Rect{X: r.X + 2, Y: r.Y + 3, W: r.W, H: r.H}, 4, colorShellShadow)
 		fillRoundedRect(screen, r, 4, colorButtonFace)
 		strokeRoundedRect(screen, r, 4, rgba(colorBorder, 90))
 		drawSmallTextCentered(screen, control.label, r, rgba(colorDim, 120))

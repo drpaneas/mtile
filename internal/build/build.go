@@ -32,6 +32,24 @@ type Service struct {
 	Trace      func(Event)
 	Debug      bool
 	Renderer   transpiler.Renderer
+	// DisableStableTableFields is the reversible legacy path used for semantic
+	// comparison and performance A/B measurements.
+	DisableStableTableFields bool
+	// DisableMonomorphicNumbers retains tagged rt.Value numeric storage and is
+	// the rollback/A-B path for the first-observed-number optimization.
+	DisableMonomorphicNumbers bool
+	// DisableMonomorphicFunctions retains the tagged user-function ABI while
+	// leaving all other monomorphic-number optimizations enabled.
+	DisableMonomorphicFunctions bool
+	// DisableMonomorphicMultiReturns retains tagged multi-return results while
+	// keeping parameter and single-return specialization enabled.
+	DisableMonomorphicMultiReturns bool
+	// DisableNoAllocFunctionCalls retains root-protected user calls even when
+	// static analysis proves that the complete callee chain cannot allocate.
+	DisableNoAllocFunctionCalls bool
+	// DisableNumericArrays retains generic table storage for fixed numeric
+	// arrays and provides the benchmark/rollback path for compact storage.
+	DisableNumericArrays bool
 	// UseProjectRenderer reads project.json's renderer policy. Renderer remains
 	// an explicit programmatic override for renderbench and build tests.
 	UseProjectRenderer bool
@@ -74,6 +92,7 @@ type Result struct {
 	AudioPSGRatio      int
 	Entry              string
 	SourceFiles        []string
+	GlobalUsage        GlobalUsage
 	GeneratedGo        string
 	RendererRequested  transpiler.Renderer
 	Renderer           transpiler.Renderer
@@ -173,21 +192,31 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		return Result{}, fmt.Errorf("resolve Lua sources: %w", err)
 	}
 	s.emit(PhaseSource, fmt.Sprintf("Resolved %d Lua source file(s), entry %s", len(bundle.Files), bundle.Entry))
+	sourceAnalysis, analysisErr := analyzeResolvedSources(bundle)
+	result = Result{
+		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals,
+	}
+	s.emit(PhaseSource, fmt.Sprintf("Global state: %d/%d persistent fields", sourceAnalysis.Globals.Count, sourceAnalysis.Globals.Limit))
+	if analysisErr != nil {
+		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(analysisErr))
+	}
 	s.emit(PhaseAssets, "Loading and validating cartridge assets")
 	assets, err := loadBuildAssets(projectDir)
 	if err != nil {
-		return Result{}, fmt.Errorf("load assets: %w", err)
-	}
-	audioROMBytes, err := validateCompiledAssetFootprint(assets)
-	if err != nil {
-		return Result{}, err
+		return result, fmt.Errorf("load assets: %w", err)
 	}
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
 	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
-		PackageName: "main",
-		Renderer:    renderer,
-		SheetW:      assets.SheetW, SheetH: assets.SheetH,
-		MapW: assets.MapW, MapH: assets.MapH,
+		PackageName:                    "main",
+		Renderer:                       renderer,
+		DisableStableTableFields:       s.DisableStableTableFields,
+		DisableMonomorphicNumbers:      s.DisableMonomorphicNumbers,
+		DisableMonomorphicFunctions:    s.DisableMonomorphicFunctions,
+		DisableMonomorphicMultiReturns: s.DisableMonomorphicMultiReturns,
+		DisableNoAllocFunctionCalls:    s.DisableNoAllocFunctionCalls,
+		DisableNumericArrays:           s.DisableNumericArrays,
+		SheetW:                         assets.SheetW, SheetH: assets.SheetH,
+		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
 		Palette:              assets.PaletteROM[:],
 		SFX:                  assets.SFXROM,
@@ -201,7 +230,11 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		Debug:                s.Debug,
 	})
 	if err != nil {
-		return Result{}, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
+		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
+	}
+	audioROMBytes, err := validateCompiledAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask)
+	if err != nil {
+		return result, err
 	}
 	s.emit(PhaseTranspile, fmt.Sprintf("Renderer: requested %s -> selected %s (%s)", rendererReport.Requested, rendererReport.Selected, rendererReport.Reason))
 	if rendererReport.Profile != "" {
@@ -214,7 +247,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	s.emit(PhaseWorkspace, "Creating isolated build workspace")
 	workDir, err := os.MkdirTemp("", "mtile-build-*")
 	if err != nil {
-		return Result{}, fmt.Errorf("create build workspace: %w", err)
+		return result, fmt.Errorf("create build workspace: %w", err)
 	}
 	if !s.KeepWork {
 		defer func() { _ = os.RemoveAll(workDir) }()
@@ -226,30 +259,30 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		}()
 	}
 	if err := s.writeWorkspace(workDir, generated); err != nil {
-		return Result{}, err
+		return result, err
 	}
 	s.emit(PhaseToolchain, "Locating TinyGo toolchain")
 	tinygoRoot, err := discoverTinyGoRoot(s.TinyGoBin)
 	if err != nil {
-		return Result{}, err
+		return result, err
 	}
 	targetPath := filepath.Join(workDir, "target-gba.json")
 	if err := GenerateTarget(tinygoRoot, s.RuntimeDir, targetPath); err != nil {
-		return Result{}, err
+		return result, err
 	}
 
 	mapPath := filepath.Join(workDir, "game.map")
 	elfPath := filepath.Join(workDir, "game.elf")
 	s.emit(PhaseLinkELF, "Linking analysis ELF and memory map")
 	if err := s.runTinyGo(workDir, targetPath, elfPath, mapPath, rendererReport); err != nil {
-		return Result{}, fmt.Errorf("link ELF: %w", err)
+		return result, fmt.Errorf("link ELF: %w", err)
 	}
 	symbols, err := ParseLinkerMap(mapPath)
 	if err != nil {
-		return Result{}, err
+		return result, err
 	}
 	if err := ValidateHeapBudget(symbols); err != nil {
-		return Result{}, err
+		return result, err
 	}
 	ewramUsed := symbols.EWRAMEnd - gbaEWRAMOrigin
 	ewramFree := symbols.HeapEnd - symbols.EWRAMEnd
@@ -261,23 +294,23 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	romPath := filepath.Join(workDir, "game.gba")
 	s.emit(PhaseLinkROM, "Linking GBA ROM")
 	if err := s.runTinyGo(workDir, targetPath, romPath, "", rendererReport); err != nil {
-		return Result{}, fmt.Errorf("link ROM: %w", err)
+		return result, fmt.Errorf("link ROM: %w", err)
 	}
 	rom, err := os.ReadFile(romPath)
 	if err != nil {
-		return Result{}, fmt.Errorf("read linked ROM: %w", err)
+		return result, fmt.Errorf("read linked ROM: %w", err)
 	}
 	if err := ValidateROM(rom); err != nil {
-		return Result{}, err
+		return result, err
 	}
 	s.emit(PhaseValidate, fmt.Sprintf("Validated %d-byte GBA cartridge", len(rom)))
 	if outputPath == "" {
 		outputPath = filepath.Join(projectDir, "game.gba")
 	} else if outputPath, err = filepath.Abs(outputPath); err != nil {
-		return Result{}, fmt.Errorf("resolve output path: %w", err)
+		return result, fmt.Errorf("resolve output path: %w", err)
 	}
 	if err := atomicWrite(outputPath, rom, 0o644); err != nil {
-		return Result{}, fmt.Errorf("write ROM: %w", err)
+		return result, fmt.Errorf("write ROM: %w", err)
 	}
 	s.emit(PhaseWrite, "Wrote "+outputPath)
 	audioVoices := 0
@@ -301,7 +334,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		EWRAMUsed: ewramUsed, EWRAMFree: ewramFree, IWRAMUsed: iwramUsed,
 		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices, AudioMasterVolume: audioMasterVolume,
 		AudioProfile: audioProfile, AudioPSGRatio: audioPSGRatio,
-		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GeneratedGo: generated,
+		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals, GeneratedGo: generated,
 		RendererRequested: rendererReport.Requested,
 		Renderer:          rendererReport.Selected, RendererReason: rendererReport.Reason,
 		RendererProfile: rendererReport.Profile, RendererDiagnostic: rendererReport.Diagnostic,
@@ -361,6 +394,12 @@ func validateBuildAssetFootprint(sheet assetsync.Spritesheet, mapData assetsync.
 	if err != nil {
 		return err
 	}
+	if layers := uint64(mapData.LayerCount()); layers != 0 {
+		if mapCells > math.MaxUint32/layers {
+			return fmt.Errorf("map layers exceed the uint32 asset limit")
+		}
+		mapCells *= layers
+	}
 	assetBytes := sheetBytes
 	for _, item := range []struct {
 		name  string
@@ -386,13 +425,33 @@ func validateCompiledAssetFootprint(assets *assetsync.Assets) (int, error) {
 	if assets == nil {
 		return 0, errors.New("compiled assets are required")
 	}
+	layers := assets.MapLayers
+	if layers == 0 {
+		layers = 1
+	}
+	return validateCompiledAssetFootprintForPlanes(assets, uint8((1<<uint(layers))-1))
+}
+
+func validateCompiledAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMask uint8) (int, error) {
+	if assets == nil {
+		return 0, errors.New("compiled assets are required")
+	}
+	layers := assets.MapLayers
+	if layers == 0 {
+		layers = 1
+	}
+	validMask := uint8((1 << uint(layers)) - 1)
+	if mapPlaneMask&^validMask != 0 {
+		return 0, fmt.Errorf("map plane mask %#02x exceeds %d logical layers", mapPlaneMask, layers)
+	}
 	audioBytes := uint64(assetsync.CompiledAudioROMBytes(
 		assets.SFXROM, assets.SFXStepROM, assets.MusicROM, assets.SampleROM, assets.SamplePCMROM,
 	))
 	if assets.NativeAudio != nil {
 		audioBytes += uint64(assetsync.CompiledNativeAudioROMBytes(assets.NativeAudio.Library))
 	}
-	total := uint64(len(assets.SheetROM)) + uint64(len(assets.MapROM))*2 +
+	mapCells := uint64(assets.MapW * assets.MapH * mapPlanePopulation(mapPlaneMask))
+	total := uint64(len(assets.SheetROM)) + mapCells*2 +
 		uint64(len(assets.FlagROM)) + uint64(len(assets.PaletteROM))*2
 	var err error
 	total, err = addAssetBytes(total, audioBytes, "audio")
@@ -406,6 +465,15 @@ func validateCompiledAssetFootprint(assets *assetsync.Assets) (int, error) {
 		return 0, errors.New("audio asset payload exceeds host int range")
 	}
 	return int(audioBytes), nil
+}
+
+func mapPlanePopulation(mask uint8) int {
+	n := 0
+	for mask != 0 {
+		n += int(mask & 1)
+		mask >>= 1
+	}
+	return n
 }
 
 func addAssetBytes(total, amount uint64, name string) (uint64, error) {
@@ -444,7 +512,7 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	args := []string{"build", "-gc=none", "-opt=2", "-target=" + targetPath}
 	if report.Selected == transpiler.RendererMode0 {
 		tags := "mtile_mode0"
-		if report.Mode0Layers > 1 {
+		if report.Mode0Layers != 1 {
 			tags += fmt.Sprintf(",mtile_mode0_layers%d", report.Mode0Layers)
 		}
 		if report.Mode0Objects {

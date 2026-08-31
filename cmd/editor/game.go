@@ -75,6 +75,8 @@ type Game struct {
 
 	mapLastMouseX, mapLastMouseY int
 	middleWasDown                bool
+	mapActiveLayer               int
+	mapLayerVisible              [assetsync.MapLayerCount]bool
 
 	copiedSprite [8][8]int
 	hasCopied    bool
@@ -163,38 +165,40 @@ type Game struct {
 	// owns independent text history, selection, cursor, scroll, and diagnostics;
 	// the fields below are aliases for the active document so the editing path
 	// remains allocation-light.
-	code                 *codeeditor.Editor
-	codePath             string
-	codeDocuments        map[string]*codeDocument
-	codeTabs             []string
-	codeActiveTab        int
-	codeProjectEntries   []developProjectEntry
-	codeProjectExpanded  map[string]bool
-	codeProjectScroll    int
-	codeClosePending     string
-	codeClosePendingAt   time.Time
-	codeReloadPending    string
-	codeReloadPendingAt  time.Time
-	codeQuickOpen        bool
-	codeQuickDraft       string
-	codeQuickMatches     []string
-	codeQuickIndex       int
-	codeScrollLine       int
-	codeScrollColumn     int
-	codeDragging         bool
-	codeSearchOpen       bool
-	codeSearchDraft      string
-	codeSearchMatches    []int
-	codeSearchIndex      int
-	codeCompletionOpen   bool
-	codeCompletions      []string
-	codeCompletionIndex  int
-	codeDiagnostic       string
-	codeDiagnosticLine   int
-	codeDiagnosticColumn int
-	codeClipboard        string
-	codeLastParsed       string
-	developGameFocus     bool
+	code                     *codeeditor.Editor
+	codePath                 string
+	codeDocuments            map[string]*codeDocument
+	codeTabs                 []string
+	codeActiveTab            int
+	codeProjectEntries       []developProjectEntry
+	codeProjectExpanded      map[string]bool
+	codeProjectScroll        int
+	codeClosePending         string
+	codeClosePendingAt       time.Time
+	codeReloadPending        string
+	codeReloadPendingAt      time.Time
+	codeQuickOpen            bool
+	codeQuickDraft           string
+	codeQuickMatches         []string
+	codeQuickIndex           int
+	codeScrollLine           int
+	codeScrollColumn         int
+	codeDragging             bool
+	codeHorizontalDragging   bool
+	codeHorizontalDragOffset int
+	codeSearchOpen           bool
+	codeSearchDraft          string
+	codeSearchMatches        []int
+	codeSearchIndex          int
+	codeCompletionOpen       bool
+	codeCompletions          []string
+	codeCompletionIndex      int
+	codeDiagnostic           string
+	codeDiagnosticLine       int
+	codeDiagnosticColumn     int
+	codeClipboard            string
+	codeLastParsed           string
+	developGameFocus         bool
 
 	// Build/run state is synchronized because TinyGo and the emulator helper
 	// must never block Ebitengine's UI thread.
@@ -210,6 +214,8 @@ type Game struct {
 	runIWRAMUsed               uint64
 	runEntry                   string
 	runSourceFiles             []string
+	runGlobalUsage             build.GlobalUsage
+	sourceAnalysisError        string
 	runGeneratedGo             string
 	runRendererRequested       string
 	runRendererSelected        string
@@ -307,7 +313,11 @@ func newGame(dir string) (*Game, error) {
 		// Maps open at a readable 32px-per-tile scale. In particular, do not
 		// fit an entire long level into the window: that can make every tile
 		// less than one pixel wide.
-		mapCam:              editor.Camera{Zoom: editor.MaxZoom},
+		mapCam: editor.Camera{Zoom: editor.MaxZoom},
+		// BG0 is the backwards-compatible editing default and the leftmost
+		// background in the horizontal back-to-front toolbar.
+		mapActiveLayer:      0,
+		mapLayerVisible:     [assetsync.MapLayerCount]bool{true, true, true, true},
 		codeDocuments:       make(map[string]*codeDocument),
 		codeActiveTab:       -1,
 		codeProjectExpanded: make(map[string]bool),
@@ -321,6 +331,7 @@ func newGame(dir string) (*Game, error) {
 		return nil, fmt.Errorf("open project code: %w", err)
 	}
 	g.scanDevelopProject()
+	g.refreshProjectSourceAnalysis()
 	g.initTheme()
 	g.loadPreferences()
 	g.initNativePerformance()
@@ -592,6 +603,19 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 	mode := g.mode.label()
 	lastSprite := max(0, g.spriteN()-1)
 	msg := fmt.Sprintf("[%s]  sprite:%d/%d  tool:%s  (M/P/E/F/L/R/C: tools, Shift+H/V: flip, Cmd/Ctrl+S: save, Cmd/Ctrl+Z: undo)", mode, g.currentSprite, lastSprite, g.spriteTool.String())
+	if g.mode == modeMap {
+		visible := ""
+		for layer := 0; layer < assetsync.MapLayerCount; layer++ {
+			if g.mapLayerVisible[layer] {
+				visible += fmt.Sprintf("%d", layer)
+			}
+		}
+		if visible == "" {
+			visible = "none"
+		}
+		msg = fmt.Sprintf("[map editor]  BG%d  visible:%s  sprite:%d/%d  (1-4: layer, eye: preview, left: paint, right: erase, Cmd/Ctrl+S: save)",
+			g.mapActiveLayer, visible, g.currentSprite, lastSprite)
+	}
 	if g.mode == modeMusic {
 		sections := 0
 		if song, ok := g.model.NativeSong(); ok {
@@ -626,11 +650,21 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 		}
 		msg = fmt.Sprintf("[develop]  %s  Ln %d, Col %d  %s  /  UTF-8  LF  LUA  /  %s  /  %s  (Cmd/Ctrl+P: files, Cmd/Ctrl+R: build)", name, line+1, column+1, state, runStatus, focus)
 	}
-	msg = truncateUIText(msg, statusBarRect.W-16)
-	drawText(screen, msg, statusBarRect.X+8, statusBarRect.Y+(statusBarRect.H-uiTextHeight)/2, colorText)
+	if g.mode == modeCode {
+		msg = truncateDevelopText(msg, statusBarRect.W-16)
+		drawDevelopText(screen, msg, statusBarRect.X+8, statusBarRect.Y+(statusBarRect.H-developTextHeight)/2, colorText)
+	} else {
+		msg = truncateUIText(msg, statusBarRect.W-16)
+		drawText(screen, msg, statusBarRect.X+8, statusBarRect.Y+(statusBarRect.H-uiTextHeight)/2, colorText)
+	}
 	if g.statusMsg != "" {
-		status := truncateUIText(g.statusMsg, statusBarRect.W-16)
-		drawText(screen, status, statusBarRect.X+8, statusBarRect.Y-uiTextHeight-6, statusMessageColor(g.statusMsg))
+		if g.mode == modeCode {
+			status := truncateDevelopText(g.statusMsg, statusBarRect.W-16)
+			drawDevelopText(screen, status, statusBarRect.X+8, statusBarRect.Y-developTextHeight-6, statusMessageColor(g.statusMsg))
+		} else {
+			status := truncateUIText(g.statusMsg, statusBarRect.W-16)
+			drawText(screen, status, statusBarRect.X+8, statusBarRect.Y-uiTextHeight-6, statusMessageColor(g.statusMsg))
+		}
 	}
 }
 
@@ -719,7 +753,6 @@ func (g *Game) updateRenderDemand() {
 }
 
 func (g *Game) dynamicSurfaceActivity() (active, everyTick bool) {
-	active = g.theme.buildPulse > 0 || g.theme.inkPulse > 0 || g.theme.mapPulse > 0
 	if g.mode == modeMusic {
 		if g.nativeMusicPreviewPlaying() || g.nativeCaptureVisible || g.nativeNoteDrag {
 			return true, false

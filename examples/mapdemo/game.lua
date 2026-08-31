@@ -1,4 +1,4 @@
--- mapdemo: full-screen map() redraw every tick with camera scroll.
+-- mapdemo: full-screen logical BG0 redraw every tick with camera scroll.
 -- Maximum continuous 16:16 world (4095x20 cells); arrow keys move, A jumps.
 -- stat(1) is last-tick CPU load (see README for HUD alloc notes).
 
@@ -74,10 +74,10 @@ function _update()
 end
 
 function _draw()
-  cls(47)
+  cls(130)
 
   camera(cam_x, 0)
-  map(flr(cam_x / 8), 0)
+  map(0, flr(cam_x / 8), 0)
   spr(30, px, py)
   camera(0, 0)
 

@@ -653,8 +653,9 @@ func (m *Model) SetSpriteFlag(id, bit int, value bool) error {
 }
 
 // ResizeMap changes the tile map's cell grid, copying the overlapping
-// top-left region and filling new cells with 0 (the eraser sprite). There
-// is no hardcoded 128x32/128x64 cap; size is project-defined.
+// top-left region of every stored background and filling new cells with 0
+// (the eraser sprite). Legacy single-plane maps stay legacy; v2 maps retain
+// all four independent planes. There is no hardcoded size cap.
 func (m *Model) ResizeMap(width, height int) error {
 	if m == nil {
 		return fmt.Errorf("editor model is required")
@@ -666,20 +667,55 @@ func (m *Model) ResizeMap(width, height int) error {
 	if width == oldW && height == oldH {
 		return nil
 	}
-	cells := make([]int, width*height)
 	copyW := min(oldW, width)
 	copyH := min(oldH, height)
-	for y := 0; y < copyH; y++ {
-		src := y * oldW
-		dst := y * width
-		copy(cells[dst:dst+copyW], m.Map.Cells[src:src+copyW])
+	resized := assetsync.Map{Width: width, Height: height}
+	if m.Map.IsLayered() {
+		var err error
+		resized, err = assetsync.NewLayeredMap(width, height)
+		if err != nil {
+			return err
+		}
+	} else {
+		resized.Cells = make([]int, width*height)
 	}
-	resized := assetsync.Map{Width: width, Height: height, Cells: cells}
+	for layer := 0; layer < m.Map.LayerCount(); layer++ {
+		source := m.Map.LayerCells(layer)
+		target := resized.LayerCells(layer)
+		for y := 0; y < copyH; y++ {
+			src := y * oldW
+			dst := y * width
+			copy(target[dst:dst+copyW], source[src:src+copyW])
+		}
+	}
 	if _, err := assetsync.Flatten(m.Project, m.Sheet, resized, m.ActivePalette); err != nil {
 		return err
 	}
 	m.Map = resized
 	return nil
+}
+
+// MapCell reads one authored background plane. Invalid coordinates and
+// absent planes on legacy maps are transparent.
+func (m *Model) MapCell(layer, x, y int) int {
+	if m == nil {
+		return 0
+	}
+	return m.Map.Cell(layer, x, y)
+}
+
+// SetMapCell edits one authored background. The first BG1-BG3 write expands
+// a legacy map to the versioned four-plane shape without changing BG0.
+func (m *Model) SetMapCell(layer, x, y, id int) (bool, error) {
+	if m == nil {
+		return false, fmt.Errorf("editor model is required")
+	}
+	cols, rows := m.Sheet.Width/8, m.Sheet.Height/8
+	spriteN := cols * rows
+	if id < 0 || id >= spriteN {
+		return false, fmt.Errorf("sprite id %d is outside 0..%d", id, max(spriteN-1, 0))
+	}
+	return m.Map.SetCell(layer, x, y, id)
 }
 
 func newCellSprite(id, x, y int) assetsync.SpriteRecord {

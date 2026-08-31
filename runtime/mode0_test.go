@@ -3,12 +3,21 @@
 package runtime
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/drpaneas/mtile/runtime/hw"
 )
 
+func requireMode0LayerCount(t *testing.T, want int) {
+	t.Helper()
+	if mode0LayerCount != want {
+		t.Skipf("test requires %d linked Mode 0 layer(s), got %d", want, mode0LayerCount)
+	}
+}
+
 func TestMode0UploadsTilesMapAndTransparentBackdrop(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	var cell [64]byte
 	for i := range cell {
@@ -47,8 +56,8 @@ func TestMode0UploadsTilesMapAndTransparentBackdrop(t *testing.T) {
 	c.Cls(5)
 	c.Map(0, 0, 0, 0, 0, 0, 0)
 	c.PresentRender()
-	if got := hw.GetReg16(hw.DISPCNT); got != mode0Display {
-		t.Fatalf("DISPCNT after present = %#04x, want %#04x", got, mode0Display)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(1); got != want {
+		t.Fatalf("DISPCNT after present = %#04x, want %#04x", got, want)
 	}
 	if got := hw.GetReg16(mode0ScreenBase); got != 1 {
 		t.Fatalf("screen entry 0 = %d, want tile 1", got)
@@ -71,13 +80,17 @@ func TestMode0ContextDoesNotContainMode4Framebuffer(t *testing.T) {
 func newMode0TestContext(t *testing.T, sheetW, sheetH, mapW, mapH int, sheet []byte, mapData []uint16, flags []byte) *Context {
 	t.Helper()
 	spriteN := (sheetW / 8) * (sheetH / 8)
+	mapLayers := 1
+	if planeCells := mapW * mapH; planeCells > 0 && len(mapData)%planeCells == 0 {
+		mapLayers = len(mapData) / planeCells
+	}
 	image := AssetImage{
 		SheetW: sheetW, SheetH: sheetH, SpriteCols: sheetW / 8, SpriteRows: sheetH / 8, SpriteN: spriteN,
-		MapW: mapW, MapH: mapH, Sheet: sheet, Map: mapData, Flags: flags,
+		MapW: mapW, MapH: mapH, MapLayers: mapLayers, Sheet: sheet, Map: mapData, Flags: flags,
 	}
 	ram := &AssetMemory{
 		SheetW: sheetW, SheetH: sheetH, SpriteCols: sheetW / 8, SpriteRows: sheetH / 8, SpriteN: spriteN,
-		MapW: mapW, MapH: mapH, Sheet: make([]byte, len(sheet)), Map: make([]uint16, len(mapData)), Flags: make([]byte, len(flags)),
+		MapW: mapW, MapH: mapH, MapLayers: mapLayers, Sheet: make([]byte, len(sheet)), Map: make([]uint16, len(mapData)), Flags: make([]byte, len(flags)),
 	}
 	var c Context
 	if !c.Init(&image, ram) {
@@ -92,6 +105,7 @@ func mode0VRAMEntry(x, y int) uint16 {
 }
 
 func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	mapData := make([]uint16, 80*40)
 	mapData[5*80+10] = 1
@@ -146,6 +160,7 @@ func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
 }
 
 func TestMode0SsetMsetAndFsetDirtyOnlyChangedHardware(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	sheet := make([]byte, 16*8)
 	sheet[8] = 3
@@ -203,6 +218,7 @@ func TestMode0SsetMsetAndFsetDirtyOnlyChangedHardware(t *testing.T) {
 }
 
 func TestMode0OffscreenMsetDoesNotInvalidateVisibleWindow(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	sheet := make([]byte, 16*8)
 	c := newMode0TestContext(t, 16, 8, 2, 1, sheet, []uint16{1, 1}, []byte{0, 0})
@@ -225,6 +241,7 @@ func TestMode0OffscreenMsetDoesNotInvalidateVisibleWindow(t *testing.T) {
 }
 
 func TestMode0FinalizeInitCommitsSheetMutationsBeforeFirstFrame(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, []byte{0, 0})
 	coldBefore := c.RendererUploadStats().ColdTileBytes
@@ -246,6 +263,7 @@ func TestMode0FinalizeInitCommitsSheetMutationsBeforeFirstFrame(t *testing.T) {
 }
 
 func TestMode0StreamsLargeLogicalMapWindow(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	const mapW, mapH = 256, 128
 	mapROM := make([]uint16, mapW*mapH)
@@ -285,6 +303,7 @@ func TestMode0StreamsLargeLogicalMapWindow(t *testing.T) {
 }
 
 func TestMode0CombinesDrawAndDisplayPaletteRemaps(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, make([]byte, 2))
 	var colors [256]uint16
@@ -298,5 +317,64 @@ func TestMode0CombinesDrawAndDisplayPaletteRemaps(t *testing.T) {
 	c.PresentRender()
 	if got := hw.ReadPaletteRAM16(1); got != colors[3] {
 		t.Fatalf("combined palette[1] = %#04x, want %#04x", got, colors[3])
+	}
+}
+
+func TestMode0MapBGAtVDefaultsEveryOptionalArgumentAfterBG(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	values := [8]Value{
+		IntVal(2), // BG2
+		IntVal(1), // cell x
+		IntVal(1), // cell y
+		IntVal(3), // screen x
+		IntVal(5), // screen y
+		IntVal(2), // cells wide
+		IntVal(2), // cells high
+		IntVal(2), // flag mask; tile 1 has only flag 0 and is filtered
+	}
+	for provided := 1; provided <= len(values); provided++ {
+		t.Run(fmt.Sprintf("arity-%d", provided), func(t *testing.T) {
+			makeContext := func() *Context {
+				image := AssetImage{
+					SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1, SpriteN: 2,
+					MapW: 3, MapH: 3, MapLayers: 4, MapPlaneMask: 0x04,
+					Sheet: make([]byte, 16*8), Map: []uint16{1, 1, 1, 1, 1, 1, 1, 1, 1}, Flags: []byte{0, 1},
+				}
+				ram := &AssetMemory{
+					SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1, SpriteN: 2,
+					MapW: 3, MapH: 3, MapLayers: 4, MapPlaneMask: 0x04,
+					Sheet: make([]byte, 16*8), Map: make([]uint16, 9), Flags: make([]byte, 2),
+				}
+				var c Context
+				if !c.Init(&image, ram) {
+					t.Fatal("Init rejected compact BG2 arity fixture")
+				}
+				c.InitHardware()
+				c.BeginRenderFrame()
+				c.Cls(0)
+				return &c
+			}
+
+			args := [8]Value{}
+			copy(args[:provided], values[:provided])
+			got := makeContext()
+			got.MapBGAtV(0, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
+
+			expected := [8]int{}
+			for index := 0; index < provided; index++ {
+				expected[index] = values[index].Int()
+			}
+			want := makeContext()
+			want.MapBGAt(0, expected[0], expected[1], expected[2], expected[3], expected[4], expected[5], expected[6], expected[7])
+
+			if got.mode0Screen[0] != want.mode0Screen[0] ||
+				got.mode0MapCellX[0] != want.mode0MapCellX[0] || got.mode0MapCellY[0] != want.mode0MapCellY[0] ||
+				got.mode0MapCellsW[0] != want.mode0MapCellsW[0] || got.mode0MapCellsH[0] != want.mode0MapCellsH[0] ||
+				got.mode0MapTileX[0] != want.mode0MapTileX[0] || got.mode0MapTileY[0] != want.mode0MapTileY[0] ||
+				got.mode0MapLayer[0] != want.mode0MapLayer[0] || got.mode0MapSource[0] != want.mode0MapSource[0] ||
+				got.mode0ScrollX[0] != want.mode0ScrollX[0] || got.mode0ScrollY[0] != want.mode0ScrollY[0] {
+				t.Fatalf("MapBGAtV arity %d did not match explicit defaults", provided)
+			}
+		})
 	}
 }

@@ -560,7 +560,7 @@ func drawSpriteLockOverlay(screen *ebiten.Image, r editor.Rect) {
 	body := editor.Rect{X: overlay.X + (overlay.W-size)/2, Y: overlay.Y + overlay.H/2 - size/6, W: size, H: max(6, size*2/3)}
 	shackle := editor.Rect{X: body.X + size/4, Y: body.Y - size/3, W: max(4, size/2), H: max(5, size/2)}
 	strokeRoundedRect(screen, shackle, max(2, shackle.W/2), colorText)
-	fillRoundedRect(screen, body, max(2, size/7), colorShellHighlight)
+	fillRoundedRect(screen, body, max(2, size/7), colorBorder)
 	keyW := max(2, size/8)
 	fillRoundedRect(screen, editor.Rect{X: body.X + body.W/2 - keyW/2, Y: body.Y + body.H/3, W: keyW, H: max(3, body.H/3)}, keyW/2, colorInk)
 }

@@ -1,5 +1,11 @@
 # mapdemo
 
+A single-background asset-compatibility example. Its `map.json` is still the
+legacy one-plane shape, which is treated as logical BG0 without an asset
+migration. `game.lua` uses `map(0, x, y)`: compared with the former positional
+API, only the leading BG argument was added and the other optional arguments
+retain their order and defaults.
+
 A realistic full-screen `map()` demo: a **4095x20** world (**136 complete
 240px screens plus 15 tiles**) redrawn from scratch every tick, with
 `camera()` scroll as you move right, plus a playable sprite with gravity,

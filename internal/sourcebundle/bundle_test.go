@@ -81,6 +81,27 @@ func TestResolveDependenciesDepthFirstOnce(t *testing.T) {
 	}
 }
 
+func TestResolveWithOverlayUsesOpenDocumentContentsAcrossModules(t *testing.T) {
+	root := t.TempDir()
+	writeSource(t, root, "src/player.lua", "player_x = 1\n")
+	writeSource(t, root, "game.lua", "require(\"player\")\nscore = 0\n")
+	bundle, err := ResolveWithOverlay(root, "game.lua", map[string]string{
+		"src/player.lua": "player_x = 2\nplayer_y = 3\n",
+		"game.lua":       "require(\"player\")\nscore = 4\n",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"player_x = 2", "player_y = 3", "score = 4"} {
+		if !strings.Contains(bundle.Source, want) {
+			t.Fatalf("overlay bundle is missing %q:\n%s", want, bundle.Source)
+		}
+	}
+	if strings.Contains(bundle.Source, "player_x = 1") || strings.Contains(bundle.Source, "score = 0") {
+		t.Fatalf("overlay bundle retained disk contents:\n%s", bundle.Source)
+	}
+}
+
 func TestResolveRejectsMissingAndTraversal(t *testing.T) {
 	for _, source := range []string{`require("missing")`, `require("../outside")`} {
 		root := t.TempDir()

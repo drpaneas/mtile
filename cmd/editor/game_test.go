@@ -93,6 +93,14 @@ func TestPaintableColorCountMatchesStoredPaletteLength(t *testing.T) {
 
 func TestMapCellGetSetRoundTripsAndClampsOutOfBounds(t *testing.T) {
 	g := newTestGame(t, 16, 16, 10, 8) // 2x2 sprites: valid ids are 0..3
+	if g.mapActiveLayer != 0 {
+		t.Fatalf("fresh map active layer = BG%d, want BG0", g.mapActiveLayer)
+	}
+	for layer, visible := range g.mapLayerVisible {
+		if !visible {
+			t.Fatalf("fresh map BG%d is hidden, want all layers visible", layer)
+		}
+	}
 
 	if got := g.mapCellAt(0, 0); got != 0 {
 		t.Fatalf("fresh cell = %d, want 0", got)
@@ -113,6 +121,94 @@ func TestMapCellGetSetRoundTripsAndClampsOutOfBounds(t *testing.T) {
 		}
 		if g.setMapCell(out[0], out[1], 2) {
 			t.Fatalf("out-of-bounds setMapCell%v reported success", out)
+		}
+	}
+}
+
+func TestMapLayerSelectionStartsAtBG0AndRejectsInvalidLayers(t *testing.T) {
+	g := newTestGame(t, 16, 16, 10, 8)
+	if g.mapActiveLayer != 0 {
+		t.Fatalf("default active layer = BG%d, want BG0", g.mapActiveLayer)
+	}
+	if !g.selectMapLayer(3) || g.mapActiveLayer != 3 {
+		t.Fatalf("select BG3 left active layer at BG%d", g.mapActiveLayer)
+	}
+	if g.selectMapLayer(4) || g.mapActiveLayer != 3 {
+		t.Fatalf("invalid BG4 changed active layer to BG%d", g.mapActiveLayer)
+	}
+	if !g.selectMapLayer(0) || g.mapActiveLayer != 0 {
+		t.Fatalf("select BG0 left active layer at BG%d", g.mapActiveLayer)
+	}
+}
+
+func TestBackgroundLayersExampleOpensWithBG0Active(t *testing.T) {
+	g, err := newGame(filepath.Join("..", "..", "examples", "background-layers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !g.model.Map.IsLayered() {
+		t.Fatal("background-layers example is not a versioned layered map")
+	}
+	if g.mapActiveLayer != 0 {
+		t.Fatalf("background-layers active layer = BG%d, want BG0", g.mapActiveLayer)
+	}
+	for layer, visible := range g.mapLayerVisible {
+		if !visible {
+			t.Fatalf("background-layers BG%d starts hidden", layer)
+		}
+	}
+}
+
+func TestMapLayerEditingIsolatedAndUndoRestoresLegacyShape(t *testing.T) {
+	g := newTestGame(t, 16, 16, 4, 3)
+	legacy := g.snapshot()
+	g.mapActiveLayer = 2
+	if !g.setMapCell(1, 1, 3) {
+		t.Fatal("BG2 edit reported no change")
+	}
+	if !g.model.Map.IsLayered() || g.mapCellAtLayer(2, 1, 1) != 3 {
+		t.Fatalf("BG2 edit did not promote/store: %#v", g.model.Map)
+	}
+	if g.mapCellAtLayer(0, 1, 1) != 0 || g.mapCellAtLayer(1, 1, 1) != 0 || g.mapCellAtLayer(3, 1, 1) != 0 {
+		t.Fatalf("BG2 edit leaked into another plane: %#v", g.model.Map)
+	}
+	g.restore(legacy)
+	if g.model.Map.IsLayered() || g.mapCellAtLayer(2, 1, 1) != 0 {
+		t.Fatalf("undo snapshot did not restore legacy map: %#v", g.model.Map)
+	}
+}
+
+func TestMapLayerToolbarUsesBackToFrontHorizontalOrderAndSeparateEyeTargets(t *testing.T) {
+	layout := newMapLayout(1400, 1000)
+	if layout.Layers.X < layout.Strip.X || layout.Layers.Y < layout.Strip.Y ||
+		layout.Layers.X+layout.Layers.W > layout.Strip.X+layout.Strip.W ||
+		layout.Layers.Y+layout.Layers.H > layout.Strip.Y+layout.Strip.H {
+		t.Fatalf("layer toolbar escapes bottom strip: strip=%#v layers=%#v", layout.Strip, layout.Layers)
+	}
+	if layout.Canvas.X+layout.Canvas.W != 1400-mapPadding {
+		t.Fatalf("map canvas does not use full workspace width: %#v", layout.Canvas)
+	}
+	if layout.Coordinates.X+layout.Coordinates.W > layout.Layers.X {
+		t.Fatalf("map information overlaps layer toolbar: coordinates=%#v layers=%#v", layout.Coordinates, layout.Layers)
+	}
+	if layout.LayerRows[0].X >= layout.LayerRows[1].X || layout.LayerRows[1].X >= layout.LayerRows[2].X || layout.LayerRows[2].X >= layout.LayerRows[3].X {
+		t.Fatalf("horizontal order is not BG0..BG3: %#v", layout.LayerRows)
+	}
+	for bg := 1; bg < 4; bg++ {
+		if layout.LayerRows[bg].Y != layout.LayerRows[0].Y {
+			t.Fatalf("BG%d is not on the shared toolbar row: %#v", bg, layout.LayerRows)
+		}
+	}
+	for bg := 0; bg < 4; bg++ {
+		eye := layout.LayerEyes[bg]
+		layer, visibility, ok := mapLayerPanelHit(layout, eye.X+eye.W/2, eye.Y+eye.H/2)
+		if !ok || !visibility || layer != bg {
+			t.Fatalf("BG%d eye hit = layer %d visibility=%v ok=%v", bg, layer, visibility, ok)
+		}
+		row := layout.LayerRows[bg]
+		layer, visibility, ok = mapLayerPanelHit(layout, row.X+row.W-8, row.Y+row.H/2)
+		if !ok || visibility || layer != bg {
+			t.Fatalf("BG%d row hit = layer %d visibility=%v ok=%v", bg, layer, visibility, ok)
 		}
 	}
 }

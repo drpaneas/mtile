@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/codeeditor"
 )
 
@@ -40,6 +41,43 @@ func (g *Game) projectEntryPath() string {
 		entry = g.model.Project.Entry
 	}
 	return filepath.Join(g.model.Dir, filepath.FromSlash(entry))
+}
+
+func cloneGlobalUsage(usage build.GlobalUsage) build.GlobalUsage {
+	usage.Symbols = append([]build.GlobalSymbol(nil), usage.Symbols...)
+	return usage
+}
+
+func (g *Game) projectSourceOverlay() map[string]string {
+	g.syncActiveCodeDocument()
+	overlay := make(map[string]string, len(g.codeDocuments))
+	for _, document := range g.codeDocuments {
+		if document == nil || document.Editor == nil || document.Relative == "" {
+			continue
+		}
+		overlay[document.Relative] = document.Editor.Text()
+	}
+	return overlay
+}
+
+// refreshProjectSourceAnalysis updates the editor's source-file and global
+// budget metadata without invoking TinyGo or writing a ROM.
+func (g *Game) refreshProjectSourceAnalysis() (build.GlobalUsage, error) {
+	if g == nil || g.model == nil {
+		return build.GlobalUsage{}, fmt.Errorf("project is unavailable")
+	}
+	analysis, err := build.AnalyzeProjectSources(g.model.Dir, g.projectSourceOverlay())
+	g.runMu.Lock()
+	g.runEntry = analysis.Entry
+	g.runSourceFiles = append([]string(nil), analysis.SourceFiles...)
+	g.runGlobalUsage = cloneGlobalUsage(analysis.Globals)
+	g.sourceAnalysisError = ""
+	if err != nil {
+		g.sourceAnalysisError = err.Error()
+	}
+	g.runMu.Unlock()
+	g.requestRender()
+	return analysis.Globals, err
 }
 
 func secureDevelopPath(root, path string) (string, error) {
@@ -138,6 +176,7 @@ func (g *Game) activateCodeDocument(path string) {
 	g.codeLastParsed = document.LastParsed
 	g.codeActiveTab = slices.Index(g.codeTabs, path)
 	g.codeDragging = false
+	g.codeHorizontalDragging = false
 	g.codeSearchOpen = false
 	g.codeCompletionOpen = false
 	g.codeClosePending = ""
@@ -202,6 +241,7 @@ func (g *Game) reloadActiveCodeDocument() {
 	document.LastParsed = ""
 	g.activateCodeDocument(document.Path)
 	g.refreshCodeDiagnostics()
+	g.refreshProjectSourceAnalysis()
 	g.codeReloadPending = ""
 	g.statusMsg = document.Relative + " reloaded from disk"
 }
@@ -218,10 +258,13 @@ func (g *Game) saveAllCode() bool {
 			saved++
 		}
 	}
-	if saved == 0 {
+	usage, analysisErr := g.refreshProjectSourceAnalysis()
+	if analysisErr != nil {
+		g.statusMsg = fmt.Sprintf("saved %d source file(s); source analysis found a problem", saved)
+	} else if saved == 0 {
 		g.statusMsg = "all source files already saved"
 	} else {
-		g.statusMsg = fmt.Sprintf("saved %d source file(s)", saved)
+		g.statusMsg = fmt.Sprintf("saved %d source file(s); globals %d/%d", saved, usage.Count, usage.Limit)
 	}
 	g.codeClosePending = ""
 	return true
@@ -271,6 +314,7 @@ func (g *Game) closeCodeDocument(path string) {
 	g.codeTabs = append(g.codeTabs[:index], g.codeTabs[index+1:]...)
 	next := min(index, len(g.codeTabs)-1)
 	g.activateCodeDocument(g.codeTabs[next])
+	g.refreshProjectSourceAnalysis()
 	g.statusMsg = document.Relative + " closed"
 }
 

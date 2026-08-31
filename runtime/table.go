@@ -3,7 +3,101 @@ package runtime
 const (
 	defaultTableArrayCap = 16
 	defaultTableHashCap  = 8
+	numberArrayHeader    = 4
 )
+
+// NewNumberArray allocates a fixed-length, number-only Lua array. It retains
+// KindTable so the GC roots it like every other table, but its payload uses one
+// 4-byte Number per slot instead of a 12-byte Value. Generated code selects
+// this representation only for non-escaping arrays with monomorphic numeric
+// elements and uses the matching accessors below.
+func (c *Context) NewNumberArray(length int) (Value, HeapError) {
+	if length < 0 || length > maxArrayCap {
+		return NilVal(), HeapOOM
+	}
+	size := numberArrayHeader + length*4
+	if size > 0xFFFF {
+		return NilVal(), HeapOOM
+	}
+	c.ensureHeap()
+	ref, err := c.heap.allocObject(ObjNumberArray, uint16(size))
+	if err != HeapOK {
+		return NilVal(), err
+	}
+	data, err := c.objectBytes(ref)
+	if err != HeapOK {
+		return NilVal(), err
+	}
+	writeU16(data, 0, uint16(length))
+	writeU16(data, 2, 0)
+	return Value{Kind: KindTable, Ref: ref}, HeapOK
+}
+
+func (c *Context) numberArrayData(array Value) ([]byte, int, HeapError) {
+	if array.Kind != KindTable || array.Ref >= maxHandles || array.Ref == invalidRef {
+		return nil, 0, HeapCorruptRef
+	}
+	if c.heap.handles[array.Ref].Kind() != ObjNumberArray {
+		return nil, 0, HeapCorruptRef
+	}
+	data, err := c.objectBytes(array.Ref)
+	if err != HeapOK || len(data) < numberArrayHeader {
+		return nil, 0, HeapCorrupt
+	}
+	length := int(readU16(data, 0))
+	if numberArrayHeader+length*4 > len(data) {
+		return nil, 0, HeapCorrupt
+	}
+	return data, length, HeapOK
+}
+
+// NumberArrayGet returns zero for an invalid object or out-of-range index.
+// Indices are one-based to preserve Lua's array convention.
+func (c *Context) NumberArrayGet(array Value, index int) Number {
+	data, length, err := c.numberArrayData(array)
+	if err != HeapOK || index < 1 || index > length {
+		return 0
+	}
+	offset := numberArrayHeader + (index-1)*4
+	raw := uint32(data[offset]) | uint32(data[offset+1])<<8 | uint32(data[offset+2])<<16 | uint32(data[offset+3])<<24
+	return Number(int32(raw))
+}
+
+// NumberArraySet stores a native Number and ignores out-of-range indices,
+// matching the experiment's fixed-capacity contract without risking a panic.
+func (c *Context) NumberArraySet(array Value, index int, number Number) HeapError {
+	data, length, err := c.numberArrayData(array)
+	if err != HeapOK {
+		return err
+	}
+	if index < 1 || index > length {
+		return HeapOK
+	}
+	offset := numberArrayHeader + (index-1)*4
+	raw := uint32(number)
+	data[offset] = byte(raw)
+	data[offset+1] = byte(raw >> 8)
+	data[offset+2] = byte(raw >> 16)
+	data[offset+3] = byte(raw >> 24)
+	return HeapOK
+}
+
+func (c *Context) NumberArrayLen(array Value) int {
+	_, length, err := c.numberArrayData(array)
+	if err != HeapOK {
+		return 0
+	}
+	return length
+}
+
+// TableFieldCache is the one-based byte offset of a stable table field.
+// Zero means that the access site has not resolved its field yet.
+//
+// Generated code owns one cache per static field access site. The first
+// access performs the complete table/key checks; later accesses deliberately
+// assume that the value is still a table with the same layout. This is the
+// monomorphic fast path used by game state records.
+type TableFieldCache uint16
 
 func tableLayoutSize(arrayCap, hashCap uint16) (uint32, uint32, bool) {
 	if arrayCap > maxArrayCap || hashCap > maxHashCap {
@@ -143,6 +237,55 @@ func (c *Context) TableGet(t, key Value) Value {
 	return readValue(data, hashValOff(arrayCapU, hashCap, idx))
 }
 
+// TableGetStable resolves a static field normally on its first access, then
+// reads the cached byte offset without repeating type, handle-kind, capacity,
+// hash, or key-equality checks. The table may move during GC because its stable
+// handle is resolved on every access; its type and layout must not change.
+func (c *Context) TableGetStable(t, key Value, cache *TableFieldCache) Value {
+	if *cache == 0 {
+		return c.tableGetStableFirst(t, key, cache)
+	}
+	hdr := &c.heap.handles[t.Ref]
+	return readValue(c.activeSpace(), hdr.Offset+uint32(*cache)-1)
+}
+
+func (c *Context) tableGetStableFirst(t, key Value, cache *TableFieldCache) Value {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	off, found := c.tableFieldOffset(data, key)
+	if !found {
+		return NilVal()
+	}
+	*cache = TableFieldCache(off + 1)
+	return readValue(data, off)
+}
+
+// TableGetStableNumber is the numeric monomorphic field path. Its first read
+// validates both the table slot and the field's number kind. Warm reads load
+// the fixed-point payload directly and deliberately assume both stay stable.
+func (c *Context) TableGetStableNumber(t, key Value, cache *TableFieldCache) Number {
+	if *cache == 0 {
+		data, err := c.tableData(t)
+		if err != HeapOK {
+			return 0
+		}
+		off, found := c.tableFieldOffset(data, key)
+		if !found {
+			return 0
+		}
+		value := readValue(data, off)
+		if value.Kind != KindNumber {
+			return 0
+		}
+		*cache = TableFieldCache(off + 1)
+		return value.Num
+	}
+	hdr := &c.heap.handles[t.Ref]
+	return readValue(c.activeSpace(), hdr.Offset+uint32(*cache)-1).Num
+}
+
 func (c *Context) TableSet(t, key, val Value) HeapError {
 	if key.Kind == KindNil {
 		return HeapOK
@@ -200,6 +343,51 @@ func (c *Context) TableSet(t, key, val Value) HeapError {
 	writeValue(data, hashValOff(arrayCapU, hashCap, slot), val)
 	writeU16(data, 4, hashLen+1)
 	return HeapOK
+}
+
+// TableSetStable is the write counterpart to TableGetStable. The first write
+// uses normal table semantics and caches the resulting field offset. Later
+// writes assume the same table type and layout and update that slot directly.
+func (c *Context) TableSetStable(t, key, val Value, cache *TableFieldCache) HeapError {
+	if *cache == 0 {
+		return c.tableSetStableFirst(t, key, val, cache)
+	}
+	hdr := &c.heap.handles[t.Ref]
+	writeValue(c.activeSpace(), hdr.Offset+uint32(*cache)-1, val)
+	return HeapOK
+}
+
+func (c *Context) tableSetStableFirst(t, key, val Value, cache *TableFieldCache) HeapError {
+	if err := c.TableSet(t, key, val); err != HeapOK {
+		return err
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return err
+	}
+	off, found := c.tableFieldOffset(data, key)
+	if found {
+		*cache = TableFieldCache(off + 1)
+	}
+	return HeapOK
+}
+
+// TableSetStableNumber writes a native fixed-point payload into a stable field
+// while preserving the table's Value storage for GC and generic Lua access.
+func (c *Context) TableSetStableNumber(t, key Value, number Number, cache *TableFieldCache) HeapError {
+	return c.TableSetStable(t, key, NumVal(number), cache)
+}
+
+func (c *Context) tableFieldOffset(data []byte, key Value) (uint32, bool) {
+	arrayCap := int(readU16(data, 2))
+	if n, ok := integerKey(key); ok && n >= 1 && n <= arrayCap {
+		return arraySlotOff(n - 1), true
+	}
+	idx, found := c.hashFind(data, key)
+	if !found {
+		return 0, false
+	}
+	return hashValOff(readU16(data, 2), readU16(data, 6), idx), true
 }
 
 func (c *Context) hashFind(data []byte, key Value) (int, bool) {
@@ -438,6 +626,9 @@ func (c *Context) abandonHandle(ref Ref) {
 	hdr.Size = 0
 	hdr.Offset = uint32(c.heap.freeHead)
 	c.heap.freeHead = ref
+	if c.heap.handleN > 0 {
+		c.heap.handleN--
+	}
 }
 
 func (c *Context) adoptTableStorage(keep, drop Ref) {

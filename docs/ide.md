@@ -80,6 +80,14 @@ the source location. Each Lua document keeps its own cursor, selection, scroll,
 undo, and dirty state. Saving uses an atomic replacement and refuses to
 overwrite a file changed by another program until it is explicitly reloaded.
 
+Develop's source badge reports `GLOBALS n / 256` from the complete explicit
+`require` graph, including dirty text in every open document. The badge warns
+at 224 fields, marks 256 as full, and blocks builds above the runtime limit.
+Output lists each distinct persistent name and its first source position;
+Problems lists every name beyond the limit. Top-level `local` state counts
+because it persists in the generated game, while function locals, parameters,
+loop variables, and fields inside a state table do not consume global slots.
+
 Offsets are Unicode rune positions, so cursor movement and selection do not
 split UTF-8 characters. Parser diagnostics use the same Lua parser as the
 build, so a reported syntax error is not a separate linter's approximation.
@@ -116,8 +124,16 @@ debug mailbox. The build's linker map supplies static/preallocated EWRAM,
 remaining EWRAM headroom, and IWRAM use beside the live CPU budget. The host
 audio queue is explicitly a desktop-preview transport; its startup grace
 period is excluded from actionable dropout counts. Debug telemetry is included
-only in editor preview builds and is absent from normal release ROMs. Arbitrary
-locals, live heap occupancy, and source breakpoints are not claimed.
+only in editor preview builds and is absent from normal release ROMs.
+
+Heap telemetry is separate from linker-measured EWRAM. `HEAP` is the current
+bump-allocation cursor and can include unreachable garbage; `LIVE` is the byte
+count retained by the most recent collection, while `PEAK`, `HANDLES`, and `GC`
+show the largest observed live set, occupied handle slots, and collection
+count. Health colour is based on `LIVE` after the first collection. A terminal
+collector failure is shown in red, including `HEAP OOM` when the reachable
+graph plus a requested allocation cannot fit in one 56 KiB semispace. Arbitrary
+locals and source breakpoints are not claimed.
 
 ## Emulator architecture
 

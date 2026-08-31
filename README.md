@@ -8,7 +8,8 @@ Mtile is a Lua-to-Game Boy Advance toolchain. You write a game in a small
 Lua dialect, paint sprites and maps, author sound and music in the bundled
 editor, and build a native GBA ROM. Mode 4 is the compatibility default; a
 compile-time Mode 0 backend is available for statically proven tile/BG/OBJ
-projects, and `auto` safely falls back to Mode 4.
+projects, and `auto` safely falls back to Mode 4. Fresh projects request
+`auto`; older projects without a renderer setting retain Mode 4.
 
 The screen is the GBA's real **240x160** bitmap. Sprites are 8x8 cells on an
 8 bits-per-pixel sheet. Maps are a grid of 16-bit sprite IDs. The default
@@ -169,7 +170,7 @@ mygame/
 ├── project.json                 # palette, renderer policy, optional Lua entry
 └── assets/
     ├── spritesheet.json         # 8bpp pixels, 8x8 sprite cells, flags
-    ├── map.json                 # uint16 cell grid
+    ├── map.json                 # legacy BG0 grid or versioned BG0-BG3 planes
     ├── palettes/
     │   └── aurora.json          # 16 or 256 RGB15 colors
     └── audio/
@@ -180,6 +181,14 @@ mygame/
 
 Sheet and map sizes are project data. There is no shared sheet/map address
 space: `sset` never writes map cells, and `mset` never writes sheet pixels.
+Projects contain one shared sheet and either a legacy BG0 map or four versioned
+BG0-BG3 planes. The Map Editor selects and hides planes like a layer stack;
+`map()` draws every non-empty authored plane, while every non-empty
+`map(bg, ...)` call uses its first argument as the selected plane. Old
+positional calls migrate by prefixing the intended BG number.
+See the [graphics model](docs/graphics-model.md) and
+[map asset schema](docs/map-assets.md) for ordering, migration, masks,
+parallax, mutation, and Mode 0 BG/OBJ behavior.
 
 Generated games whose Lua source never calls `sset` compact the sprite sheet
 by 8x8 cell: only non-empty cells are copied into EWRAM, and a two-byte index
@@ -302,6 +311,30 @@ Mtile Lua is a small language, not full Lua 5.x. Supported extras:
 - bitwise operators `& | ^^ ~ << >> >>> <<> >><`
 - single-line `if (condition) statement`
 
+Mtile treats the first statically observed numeric type of a global, local,
+numeric-for counter, arithmetic expression, or record field as permanent and
+lowers it to native 16:16 storage. Static field access (`object.x`) likewise
+assumes a stable table layout after its first checked lookup. Code that changes
+those types or record shapes is outside the optimized language contract; use a
+separate binding or bracket indexing (`object["x"]`) for dynamic values.
+Fixed global array literals containing only numbers also use compact 4-byte
+numeric elements when they are accessed only through direct indexing or
+`#array`, never escape, and are not shadowed or explicitly assigned a
+non-number. Such arrays retain Lua's one-based indexing but their element type
+is permanent; escaping, mixed, or otherwise unproven arrays keep ordinary
+12-byte `rt.Value` table slots.
+User-function parameters and return positions also lower to native numbers
+when every static call site supplies numbers, every path returns a number in
+that position, and the function cannot fall through. Multi-return functions
+are analyzed slot by slot, so `(number, string, number)` becomes
+`(rt.Number, rt.Value, rt.Number)`. Mixed, missing, recursive-unknown, or
+otherwise unproven positions retain general Lua values. A specialized
+parameter or result position must remain numeric for the duration of the call.
+Calls to transitively proven non-allocating user functions bypass the temporary
+GC-root wrapper. Functions that may create/grow tables or strings, contain an
+unknown allocation effect, or participate in an unproven recursive cycle keep
+the protected call path. This changes call cost, not Lua-visible semantics.
+
 Rejected at parse time: closures, `goto` / labels, variadic functions, and
 `string.format`. PICO-8-style `foreach(table, function_name)` is supported as
 statement syntax and lowers to an `all(table)` loop; the callback must be a
@@ -369,9 +402,19 @@ go run ./cmd/mtile build examples/hello/
 
 - [`examples/hello`](examples/hello) - D-pad moves an 8x8 sprite on a mapped
   background. In mGBA, click the window and use the arrow keys.
+- [`examples/multi-file`](examples/multi-file) - explicit `require()` across
+  `game.lua`, `src/player.lua`, and `src/hud.lua`, with two persistent global
+  state tables visible in Develop's `GLOBALS n / 256` budget.
 - [`examples/mapdemo`](examples/mapdemo) - maximum-width continuous 16:16
-  world (4095x20 cells; 136 full screens plus 15 tiles), with a full-screen
-  `map()` redraw every tick and live CPU readout (~62% measured).
+  single-BG world (4095x20 cells; 136 full screens plus 15 tiles), using the
+  legacy map asset as BG0 and the short `map(0,x,y)` API, with a full-screen redraw
+  every tick and live CPU readout (~62% measured).
+- [`examples/background-layers`](examples/background-layers) - four authored
+  BG0-BG3 planes with an editor isolation walkthrough, independent camera
+  speeds, parallax, and a foreground hardware object.
+- [`examples/coin-block`](examples/coin-block) - one animated background map
+  cell which awards one coin and becomes a stable used tile, using only the
+  current `mset()`, `map()`, and `spr()` APIs.
 - [`examples/color`](examples/color) - `print` smoke project from `mtile new`
 - [`examples/audio-gb-melody`](examples/audio-gb-melody) - compact native
   CH1–CH4 looping melody.

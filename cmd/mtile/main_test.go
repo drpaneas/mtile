@@ -134,8 +134,8 @@ func TestRunNewDefaultProjectHasNativeMap(t *testing.T) {
 	if assets.SheetW != 240 || assets.SheetH != 160 || assets.MapW != 30 || assets.MapH != 20 || assets.SpriteN != 600 {
 		t.Fatalf("CLI default project = %dx%d map %dx%d sprites %d", assets.SheetW, assets.SheetH, assets.MapW, assets.MapH, assets.SpriteN)
 	}
-	if assets.Project.Renderer != assetsync.DefaultRendererName {
-		t.Fatalf("CLI default renderer = %q", assets.Project.Renderer)
+	if assets.Project.Renderer != assetsync.NewProjectRendererName {
+		t.Fatalf("CLI new-project renderer = %q, want %q", assets.Project.Renderer, assetsync.NewProjectRendererName)
 	}
 }
 

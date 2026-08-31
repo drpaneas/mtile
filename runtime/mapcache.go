@@ -43,7 +43,7 @@ type MapChunk struct {
 	Y     uint32
 	Stamp uint32
 	Valid uint16
-	_     uint16
+	Layer uint16
 }
 
 // MapEdit is one sparse write overlay entry. Index is the row-major map cell
@@ -78,22 +78,30 @@ func (c *Context) ClearMapError() {
 }
 
 func (c *Context) mapStreamingGet(x, y int) uint16 {
-	if c == nil || c.cart == nil || !c.cart.MapStreaming || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
+	return c.mapStreamingGetLayer(0, x, y)
+}
+
+func (c *Context) mapStreamingGetLayer(layer, x, y int) uint16 {
+	if c == nil || c.cart == nil || !c.cart.MapStreaming || layer < 0 || layer >= c.cart.MapLayers || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return 0
 	}
-	index, ok := mapCellIndex(x, y, c.cart.MapW)
+	storageLayer, present := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
+	if !present {
+		return 0
+	}
+	index, ok := mapLayerCellIndex(storageLayer, x, y, c.cart.MapW, c.cart.MapH, mapMaskPopulation(c.cart.MapPlaneMask))
 	if !ok {
 		return 0
 	}
 	if value, found := c.mapEditLookup(index); found {
-		if slot := c.mapChunkSlot(x/MapChunkWidth, y/MapChunkHeight); slot >= 0 {
+		if slot := c.mapLayerChunkSlot(layer, x/MapChunkWidth, y/MapChunkHeight); slot >= 0 {
 			c.touchMapChunk(slot)
 		}
 		return value
 	}
-	slot := c.mapChunkSlot(x/MapChunkWidth, y/MapChunkHeight)
+	slot := c.mapLayerChunkSlot(layer, x/MapChunkWidth, y/MapChunkHeight)
 	if slot < 0 {
-		slot = c.loadMapChunk(x/MapChunkWidth, y/MapChunkHeight)
+		slot = c.loadMapLayerChunk(layer, x/MapChunkWidth, y/MapChunkHeight)
 		if slot < 0 {
 			return 0
 		}
@@ -112,7 +120,12 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) bool {
 	if c == nil || c.cart == nil || !c.cart.MapStreaming || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return false
 	}
-	index, ok := mapCellIndex(x, y, c.cart.MapW)
+	storageLayer, present := mapPlaneSlot(c.cart.MapPlaneMask, 0, c.cart.MapLayers)
+	if !present {
+		c.mapError = MapCacheInvalid
+		return false
+	}
+	index, ok := mapLayerCellIndex(storageLayer, x, y, c.cart.MapW, c.cart.MapH, mapMaskPopulation(c.cart.MapPlaneMask))
 	if !ok {
 		c.mapError = MapCacheInvalid
 		return false
@@ -133,7 +146,7 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) bool {
 			return false
 		}
 		if slot < 0 {
-			slot = c.loadMapChunk(x/MapChunkWidth, y/MapChunkHeight)
+			slot = c.loadMapLayerChunk(0, x/MapChunkWidth, y/MapChunkHeight)
 			if slot < 0 {
 				return false
 			}
@@ -171,6 +184,22 @@ func mapCellIndex(x, y, width int) (uint32, bool) {
 		return 0, false
 	}
 	index := uint64(y)*uint64(width) + uint64(x)
+	if index > uint64(^uint32(0)) {
+		return 0, false
+	}
+	return uint32(index), true
+}
+
+func mapLayerCellIndex(layer, x, y, width, height, layers int) (uint32, bool) {
+	if layer < 0 || layer >= layers || height < 0 || y >= height {
+		return 0, false
+	}
+	plane, ok := mapCellIndex(x, y, width)
+	if !ok {
+		return 0, false
+	}
+	planeCells := uint64(width) * uint64(height)
+	index := uint64(layer)*planeCells + uint64(plane)
 	if index > uint64(^uint32(0)) {
 		return 0, false
 	}
@@ -262,20 +291,34 @@ func mapEditHash(index uint32) int {
 }
 
 func (c *Context) mapChunkSlotByIndex(index uint32) int {
-	if c.cart.MapW <= 0 {
+	if c.cart.MapW <= 0 || c.cart.MapH <= 0 {
 		return -1
 	}
-	x := int(index % uint32(c.cart.MapW))
-	y := int(index / uint32(c.cart.MapW))
-	return c.mapChunkSlot(x/MapChunkWidth, y/MapChunkHeight)
+	planeCells := uint32(c.cart.MapW * c.cart.MapH)
+	if planeCells == 0 {
+		return -1
+	}
+	storageLayer := int(index / planeCells)
+	layer, ok := mapLogicalPlane(c.cart.MapPlaneMask, storageLayer, c.cart.MapLayers)
+	if !ok {
+		return -1
+	}
+	local := index % planeCells
+	x := int(local % uint32(c.cart.MapW))
+	y := int(local / uint32(c.cart.MapW))
+	return c.mapLayerChunkSlot(layer, x/MapChunkWidth, y/MapChunkHeight)
 }
 
 func (c *Context) mapChunkSlot(chunkX, chunkY int) int {
-	if chunkX < 0 || chunkY < 0 || len(c.cart.MapChunks) != MapCacheSlots {
+	return c.mapLayerChunkSlot(0, chunkX, chunkY)
+}
+
+func (c *Context) mapLayerChunkSlot(layer, chunkX, chunkY int) int {
+	if layer < 0 || c.cart == nil || layer >= c.cart.MapLayers || chunkX < 0 || chunkY < 0 || len(c.cart.MapChunks) != MapCacheSlots {
 		return -1
 	}
 	for slot, chunk := range c.cart.MapChunks {
-		if chunk.Valid != 0 && chunk.X == uint32(chunkX) && chunk.Y == uint32(chunkY) {
+		if chunk.Valid != 0 && chunk.Layer == uint16(layer) && chunk.X == uint32(chunkX) && chunk.Y == uint32(chunkY) {
 			return slot
 		}
 	}
@@ -289,10 +332,15 @@ func (c *Context) touchMapChunk(slot int) {
 	c.cart.MapChunks[slot].Stamp = c.nextMapStamp()
 }
 
-func (c *Context) loadMapChunk(chunkX, chunkY int) int {
+func (c *Context) loadMapLayerChunk(layer, chunkX, chunkY int) int {
 	if len(c.mapROM) == 0 || len(c.cart.Map) != MapCacheCells ||
-		len(c.cart.MapChunks) != MapCacheSlots || len(c.cart.MapEdits) != MapEditCapacity {
+		len(c.cart.MapChunks) != MapCacheSlots || len(c.cart.MapEdits) != MapEditCapacity ||
+		layer < 0 || layer >= c.cart.MapLayers {
 		c.mapError = MapCacheInvalid
+		return -1
+	}
+	storageLayer, present := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
+	if !present {
 		return -1
 	}
 	slot := -1
@@ -312,7 +360,7 @@ func (c *Context) loadMapChunk(chunkX, chunkY int) int {
 	}
 	stamp := c.nextMapStamp()
 	meta := &c.cart.MapChunks[slot]
-	meta.X, meta.Y, meta.Stamp, meta.Valid = uint32(chunkX), uint32(chunkY), stamp, 1
+	meta.X, meta.Y, meta.Stamp, meta.Valid, meta.Layer = uint32(chunkX), uint32(chunkY), stamp, 1, uint16(layer)
 	base := slot * MapChunkCells
 	for localY := 0; localY < MapChunkHeight; localY++ {
 		mapY := chunkY*MapChunkHeight + localY
@@ -320,7 +368,7 @@ func (c *Context) loadMapChunk(chunkX, chunkY int) int {
 			mapX := chunkX*MapChunkWidth + localX
 			value := uint16(0)
 			if mapX >= 0 && mapY >= 0 && mapX < c.cart.MapW && mapY < c.cart.MapH {
-				index, _ := mapCellIndex(mapX, mapY, c.cart.MapW)
+				index, _ := mapLayerCellIndex(storageLayer, mapX, mapY, c.cart.MapW, c.cart.MapH, mapMaskPopulation(c.cart.MapPlaneMask))
 				value = c.mapROM[int(index)]
 				if edited, found := c.mapEditLookup(index); found {
 					value = edited

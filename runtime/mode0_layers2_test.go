@@ -47,6 +47,42 @@ func TestMode0TwoLayersUseSeparateScreenBlocksAndPainterPriority(t *testing.T) {
 	}
 }
 
+func TestMode0MapAllPacksSparseBG1AndBG3IntoTwoHardwareSlots(t *testing.T) {
+	hw.ResetForTest()
+	image := AssetImage{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4, MapPlaneMask: 0x0a,
+		Sheet: make([]byte, 24*8), Map: []uint16{1, 2}, Flags: make([]byte, 3),
+	}
+	ram := &AssetMemory{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4, MapPlaneMask: 0x0a,
+		Sheet: make([]byte, 24*8), Map: make([]uint16, 2), Flags: make([]byte, 3),
+	}
+	var c Context
+	if !c.Init(&image, ram) {
+		t.Fatal("Init rejected compact BG1/BG3 map")
+	}
+	c.InitHardware()
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.MapAll(0x0a)
+	c.PresentRender()
+
+	if got := hw.GetReg16(hw.DISPCNT); got != 0x0300 {
+		t.Fatalf("DISPCNT = %#04x, want only two packed hardware BGs", got)
+	}
+	if got := hw.GetReg16(mode0LayerScreenBase(0)); got != 1 {
+		t.Fatalf("packed slot 0 = %d, want logical BG1 tile 1", got)
+	}
+	if got := hw.GetReg16(mode0LayerScreenBase(1)); got != 2 {
+		t.Fatalf("packed slot 1 = %d, want logical BG3 tile 2", got)
+	}
+	if c.mode0MapSource[0] != 1 || c.mode0MapSource[1] != 3 {
+		t.Fatalf("packed sources = %d,%d, want BG1,BG3", c.mode0MapSource[0], c.mode0MapSource[1])
+	}
+}
+
 func TestMode0MutationsPatchOnlyAffectedLayerShadows(t *testing.T) {
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, []byte{0, 0})
@@ -90,5 +126,33 @@ func TestMode0MutationsPatchOnlyAffectedLayerShadows(t *testing.T) {
 	}
 	if stats := c.RendererUploadStats(); stats.LastMapBytes != 8192 {
 		t.Fatalf("mset affecting both layers uploaded %+v, want 8192 map bytes", stats)
+	}
+}
+
+// Characterize the single-map, multiple-source-region model used today. A
+// mutation belongs to a logical map coordinate, not to a hardware BG number;
+// only a pass whose source rectangle contains that coordinate is dirtied.
+func TestMode0MutationIsIsolatedToMatchingSourceRegion(t *testing.T) {
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 24, 8, 2, 1, make([]byte, 24*8), []uint16{1, 2}, make([]byte, 3))
+	draw := func() {
+		c.BeginRenderFrame()
+		c.Cls(0)
+		c.Map(0, 0, 0, 0, 1, 1, 0)
+		c.Map(1, 0, -8, 0, 1, 1, 0)
+		c.PresentRender()
+	}
+	draw()
+
+	c.Mset(0, 0, 0)
+	draw()
+	if got := hw.GetReg16(mode0LayerScreenBase(0)); got != 0 {
+		t.Fatalf("first source region after mset = %d, want empty", got)
+	}
+	if got := hw.GetReg16(mode0LayerScreenBase(1)); got != 2 {
+		t.Fatalf("unrelated source region after mset = %d, want tile 2", got)
+	}
+	if stats := c.RendererUploadStats(); stats.LastMapBytes != 4096 {
+		t.Fatalf("isolated mset uploaded %+v, want one 4096-byte layer", stats)
 	}
 }

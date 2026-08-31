@@ -74,6 +74,109 @@ func TestLoadFlattensNativeAssets(t *testing.T) {
 	}
 }
 
+func TestLegacyMapRemainsSinglePlaneAndPromotesWithoutDataLoss(t *testing.T) {
+	legacy := Map{Width: 2, Height: 2, Cells: []int{1, 2, 3, 0}}
+	if legacy.IsLayered() || legacy.LayerCount() != 1 {
+		t.Fatalf("legacy shape was not preserved: %#v", legacy)
+	}
+	if got := legacy.Cell(0, 1, 0); got != 2 {
+		t.Fatalf("legacy BG0 cell = %d, want 2", got)
+	}
+	if got := legacy.Cell(1, 1, 0); got != 0 {
+		t.Fatalf("absent legacy BG1 cell = %d, want transparent", got)
+	}
+	changed, err := legacy.SetCell(0, 1, 0, 2)
+	if err != nil || changed || legacy.IsLayered() {
+		t.Fatalf("idempotent BG0 edit migrated legacy map: changed=%v err=%v map=%#v", changed, err, legacy)
+	}
+	changed, err = legacy.SetCell(1, 0, 0, 0)
+	if err != nil || changed || legacy.IsLayered() {
+		t.Fatalf("empty BG1 erase migrated legacy map: changed=%v err=%v map=%#v", changed, err, legacy)
+	}
+	changed, err = legacy.SetCell(2, 0, 1, 3)
+	if err != nil || !changed {
+		t.Fatalf("BG2 edit failed: changed=%v err=%v", changed, err)
+	}
+	if !legacy.IsLayered() || legacy.Version != MapSchemaVersion || len(legacy.Cells) != 0 || len(legacy.Layers) != MapLayerCount {
+		t.Fatalf("promoted map shape = %#v", legacy)
+	}
+	if got := legacy.Cell(0, 1, 0); got != 2 {
+		t.Fatalf("promotion lost BG0: got %d want 2", got)
+	}
+	if got := legacy.Cell(2, 0, 1); got != 3 {
+		t.Fatalf("promotion lost BG2 edit: got %d want 3", got)
+	}
+	if got := legacy.Cell(1, 0, 1); got != 0 {
+		t.Fatalf("untouched BG1 = %d, want transparent", got)
+	}
+}
+
+func TestLayeredMapValidationAndFlattenOrder(t *testing.T) {
+	mapData, err := NewLayeredMap(2, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for layer, id := range []int{1, 2, 3, 1} {
+		if _, err := mapData.SetCell(layer, 0, 0, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	assets, err := Flatten(Project{ActivePalette: CanonicalPaletteName}, Spritesheet{Width: 32, Height: 8}, mapData, canonicalPalette())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if assets.MapLayers != 4 || assets.MapW != 2 || assets.MapH != 1 {
+		t.Fatalf("layered metadata = %dx%dx%d", assets.MapW, assets.MapH, assets.MapLayers)
+	}
+	want := []uint16{1, 0, 2, 0, 3, 0, 1, 0}
+	if !slices.Equal(assets.MapROM, want) {
+		t.Fatalf("flattened map = %#v, want %#v", assets.MapROM, want)
+	}
+
+	broken := mapData
+	broken.Layers = slices.Clone(mapData.Layers)
+	broken.Layers[3].ID = 2
+	if _, err := Flatten(Project{ActivePalette: CanonicalPaletteName}, Spritesheet{Width: 32, Height: 8}, broken, canonicalPalette()); err == nil || !strings.Contains(err.Error(), "duplicated") {
+		t.Fatalf("duplicate layer validation error = %v", err)
+	}
+}
+
+func TestMapSaveRoundTripsLegacyWithoutMigrationAndVersionTwoWithLayers(t *testing.T) {
+	dir := t.TempDir()
+	if err := SaveSpritesheet(dir, &Spritesheet{Width: 16, Height: 8}); err != nil {
+		t.Fatal(err)
+	}
+	legacy := Map{Width: 1, Height: 1, Cells: []int{1}}
+	if err := SaveMap(dir, &legacy); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, "assets", "map.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "version") || strings.Contains(string(raw), "layers") {
+		t.Fatalf("legacy save migrated shape:\n%s", raw)
+	}
+
+	layered, err := NewLayeredMap(1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := layered.SetCell(3, 0, 0, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := SaveMap(dir, &layered); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := LoadMap(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reloaded.IsLayered() || reloaded.Cell(3, 0, 0) != 1 || reloaded.Cell(0, 0, 0) != 0 {
+		t.Fatalf("layered round trip = %#v", reloaded)
+	}
+}
+
 func TestProjectRendererDefaultsPersistsAndValidates(t *testing.T) {
 	dir := t.TempDir()
 	project, err := LoadProject(dir)

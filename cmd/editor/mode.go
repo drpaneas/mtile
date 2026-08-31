@@ -142,12 +142,29 @@ func (g *Game) handleModeNavigation() bool {
 	handled := false
 	textEntry := g.nativeNameTarget != 0 || g.mode == modeCode
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
+	// In Map Lab the unmodified number keys belong to the visible BG0-BG3
+	// stack, as advertised by the layer panel and status bar. Tabs remain
+	// reachable by mouse or Tab; other workspaces retain their 1-4 shortcuts.
+	if g.mode == modeMap && !mod {
+		for layer, key := range []ebiten.Key{ebiten.Key1, ebiten.Key2, ebiten.Key3, ebiten.Key4} {
+			if inpututil.IsKeyJustPressed(key) {
+				g.selectMapLayer(layer)
+				return true
+			}
+		}
+	}
 	switch {
 	case mod && inpututil.IsKeyJustPressed(ebiten.KeyComma):
 		g.preferencesOpen = true
 		return true
-	case inpututil.IsKeyJustPressed(ebiten.KeyF6):
-		g.cycleEffects()
+	case mod && (inpututil.IsKeyJustPressed(ebiten.KeyEqual) || inpututil.IsKeyJustPressed(ebiten.KeyNumpadAdd)):
+		g.zoomInterfaceText(1)
+		return true
+	case mod && (inpututil.IsKeyJustPressed(ebiten.KeyMinus) || inpututil.IsKeyJustPressed(ebiten.KeyNumpadSubtract)):
+		g.zoomInterfaceText(-1)
+		return true
+	case mod && (inpututil.IsKeyJustPressed(ebiten.Key0) || inpututil.IsKeyJustPressed(ebiten.KeyNumpad0)):
+		g.resetInterfaceTextZoom()
 		return true
 	case textEntry && !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft):
 		return false
@@ -184,7 +201,6 @@ func (g *Game) handleModeNavigation() bool {
 
 func (g *Game) drawEditorTabs(screen *ebiten.Image) {
 	fillRect(screen, editorTabsRect, color.RGBA{R: 25, G: 22, B: 46, A: 255})
-	fillRect(screen, editor.Rect{X: 0, Y: 0, W: editorTabsRect.W, H: 2}, colorShellHighlight)
 	drawLine(screen, 0, editorTabsRect.H-1, editorTabsRect.W, editorTabsRect.H-1, colorBorder)
 	brand := editor.Rect{X: 12, Y: 5, W: 104, H: editorTabsHeight - 10}
 	fillRect(screen, brand, colorIndigo)

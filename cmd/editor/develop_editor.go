@@ -87,9 +87,7 @@ func newDevelopLayout() developLayout {
 	codeArea := editor.Rect{X: resolvedSidebarW + padding, Y: bodyY, W: codeW, H: mainH}
 	tabs := editor.Rect{X: codeArea.X, Y: codeArea.Y, W: codeArea.W, H: 34}
 	codeRect := editor.Rect{X: codeArea.X, Y: tabs.Y + tabs.H, W: codeArea.W, H: codeArea.H - tabs.H}
-	gutterWidth := codeCharWidth*4 + 20
-	gutter := editor.Rect{X: codeRect.X, Y: codeRect.Y, W: gutterWidth, H: codeRect.H}
-	textRect := editor.Rect{X: gutter.X + gutter.W, Y: codeRect.Y, W: codeRect.W - gutter.W, H: codeRect.H}
+	gutter, textRect, horizontal := codeViewportLayout(codeRect)
 	previewX := codeArea.X + codeArea.W + padding
 	stage := editor.Rect{X: previewX, Y: bodyY, W: previewW, H: stageH}
 	telemetry := editor.Rect{X: previewX, Y: stage.Y + stage.H + padding, W: previewW, H: telemetryH}
@@ -125,7 +123,7 @@ func newDevelopLayout() developLayout {
 
 	code := codeLayout{
 		Header: header, Sidebar: sidebar, File: fileRect,
-		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect,
+		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal,
 		Diagnostics: diagnostics, Search: search,
 	}
 	play := playLayout{
@@ -231,27 +229,35 @@ func (g *Game) drawDevelopMode(screen *ebiten.Image) {
 }
 
 func (g *Game) drawDevelopHeader(screen *ebiten.Image, layout developLayout) {
-	drawWorkspaceHeader(screen, layout.Header, "DEVELOP", "CODE + LIVE CARTRIDGE", colorCode)
+	drawDevelopWorkspaceHeader(screen, layout.Header, "DEVELOP", "CODE + LIVE CARTRIDGE", colorCode)
 	fillRect(screen, layout.Code.File, colorBackground)
 	strokeRect(screen, layout.Code.File, colorBorder)
 	name := filepath.Base(g.codePath)
 	if g.code.Dirty() {
 		name += "  *"
 	}
-	fileLabel := truncateUIText("ACTIVE FILE  ·  "+name, layout.Code.File.W-24)
-	drawText(screen, fileLabel, layout.Code.File.X+12, layout.Code.File.Y+(layout.Code.File.H-uiTextHeight)/2, colorText)
+	fileLabel := truncateDevelopText("ACTIVE FILE  ·  "+name, layout.Code.File.W-24)
+	drawDevelopText(screen, fileLabel, layout.Code.File.X+12, layout.Code.File.Y+(layout.Code.File.H-developTextHeight)/2, colorText)
 	// This is build-pipeline status, not a selectable input. A compact badge
 	// keeps it visually distinct from the editable ACTIVE FILE field.
+	g.runMu.Lock()
+	globalUsage := cloneGlobalUsage(g.runGlobalUsage)
+	g.runMu.Unlock()
+	globalLabel := "GLOBALS  -- / 256"
+	if globalUsage.Limit != 0 {
+		globalLabel = fmt.Sprintf("GLOBALS  %d / %d  ·  %s", globalUsage.Count, globalUsage.Limit, developGlobalUsageState(globalUsage))
+	}
 	fillRoundedRect(screen, layout.SourceMode, 6, color.RGBA{R: 25, G: 31, B: 51, A: 255})
-	strokeRoundedRect(screen, layout.SourceMode, 6, rgba(colorCode, 150))
-	drawSmallTextCentered(screen, truncateTextToWidth("PIPELINE  ·  LUA TO GO", layout.SourceMode.W-12, uiSmallFace), layout.SourceMode, colorLCD)
+	globalColor := developGlobalUsageColor(globalUsage)
+	strokeRoundedRect(screen, layout.SourceMode, 6, rgba(globalColor, 150))
+	drawDevelopSmallTextCentered(screen, truncateTextToWidth(globalLabel, layout.SourceMode.W-12, developSmallFace), layout.SourceMode, globalColor)
 
 	g.runMu.Lock()
 	busy := g.runBusy
 	g.runMu.Unlock()
-	drawNativeButton(screen, layout.Build, "BUILD + RELOAD", busy, colorRun)
-	drawNativeButton(screen, layout.Reset, "RESET", false, colorHighlight)
-	drawNativeButton(screen, layout.Stop, "STOP", false, colorDanger)
+	drawDevelopButton(screen, layout.Build, "BUILD + RELOAD", busy, colorRun)
+	drawDevelopButton(screen, layout.Reset, "RESET", false, colorHighlight)
+	drawDevelopButton(screen, layout.Stop, "STOP", false, colorDanger)
 }
 
 func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
@@ -263,10 +269,10 @@ func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 		label = "GAME INPUT ACTIVE  /  ESC RELEASE"
 	}
 	strokeRect(screen, layout.Play.Stage, border)
-	left := truncateTextToWidth("GBA PREVIEW  /  mGBA CORE", layout.Play.Stage.W/2-20, uiSmallFace)
-	right := truncateTextToWidth(label, layout.Play.Stage.W/2-20, uiSmallFace)
-	drawSmallText(screen, left, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
-	drawSmallText(screen, right, layout.Play.Stage.X+layout.Play.Stage.W-12-smallTextWidth(right), layout.Play.Stage.Y+10, border)
+	left := truncateTextToWidth("GBA PREVIEW  /  mGBA CORE", layout.Play.Stage.W/2-20, developSmallFace)
+	right := truncateTextToWidth(label, layout.Play.Stage.W/2-20, developSmallFace)
+	drawDevelopSmallText(screen, left, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
+	drawDevelopSmallText(screen, right, layout.Play.Stage.X+layout.Play.Stage.W-12-developSmallTextWidth(right), layout.Play.Stage.Y+10, border)
 	g.drawGBABezel(screen, layout.Play)
 	g.drawDevelopBuildNotice(screen, layout)
 	if g.developGameFocus {
@@ -307,12 +313,12 @@ func (g *Game) developBuildNotice() (string, color.Color) {
 
 func (g *Game) drawDevelopBuildNotice(screen *ebiten.Image, layout developLayout) {
 	label, accent := g.developBuildNotice()
-	label = truncateUIText(label, layout.Play.Bezel.W-42)
-	w := min(layout.Play.Bezel.W-28, uiTextWidth(label)+28)
-	r := editor.Rect{X: layout.Play.Bezel.X + (layout.Play.Bezel.W-w)/2, Y: layout.Play.Bezel.Y + 8, W: w, H: uiTextHeight + 10}
+	label = truncateDevelopText(label, layout.Play.Bezel.W-42)
+	w := min(layout.Play.Bezel.W-28, developTextWidth(label)+28)
+	r := editor.Rect{X: layout.Play.Bezel.X + (layout.Play.Bezel.W-w)/2, Y: layout.Play.Bezel.Y + 8, W: w, H: developTextHeight + 10}
 	fillRoundedRect(screen, r, 5, color.RGBA{R: 11, G: 12, B: 25, A: 238})
 	strokeRoundedRect(screen, r, 5, rgba(accent, 190))
-	drawTextCentered(screen, label, r, accent)
+	drawDevelopTextCentered(screen, label, r, accent)
 }
 
 func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) {
@@ -333,26 +339,26 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	}
 
 	x := r.X + 12
-	drawText(screen, columnText("CARTRIDGE"), x, r.Y+14, colorDim)
-	drawText(screen, columnText(filepath.Base(g.model.Dir)), x, r.Y+40, colorText)
-	drawText(screen, columnText("240 x 160  /  59.73 Hz"), x, r.Y+66, colorLCD)
-	drawText(screen, columnText(fmt.Sprintf("PREVIEW  %.1f FPS", g.playFPS)), x, r.Y+92, colorText)
+	drawDevelopText(screen, columnText("CARTRIDGE"), x, r.Y+14, colorDim)
+	drawDevelopText(screen, columnText(filepath.Base(g.model.Dir)), x, r.Y+40, colorText)
+	drawDevelopText(screen, columnText("240 x 160  /  59.73 Hz"), x, r.Y+66, colorLCD)
+	drawDevelopText(screen, columnText(fmt.Sprintf("PREVIEW  %.1f FPS", g.playFPS)), x, r.Y+92, colorText)
 	g.runMu.Lock()
 	romSize := g.runROMSize
 	inputKeys := g.playKeys | g.playPendingKeys
 	g.runMu.Unlock()
 	if romSize != 0 {
-		drawText(screen, columnText("ROM  "+formatDevelopBytes(uint64(romSize))), x, r.Y+118, colorText)
+		drawDevelopText(screen, columnText("ROM  "+formatDevelopBytes(uint64(romSize))), x, r.Y+118, colorText)
 	}
 	if r.H >= 205 {
-		drawText(screen, columnText("INPUT  "+playKeyLabel(inputKeys)), x, r.Y+146, playInputColor(inputKeys))
+		drawDevelopText(screen, columnText("INPUT  "+playKeyLabel(inputKeys)), x, r.Y+146, playInputColor(inputKeys))
 	}
-	drawNativeButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
+	drawDevelopButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
 
 	x = r.X + colW + 12
-	drawText(screen, columnText("GAME BOY PSG  /  HW"), x, r.Y+14, colorDim)
+	drawDevelopText(screen, columnText("GAME BOY PSG  /  HW"), x, r.Y+14, colorDim)
 	if !g.playTelemetry.Valid {
-		drawText(screen, columnText("Waiting for mGBA telemetry"), x, r.Y+44, colorDim)
+		drawDevelopText(screen, columnText("Waiting for mGBA telemetry"), x, r.Y+44, colorDim)
 	} else {
 		registers := [...]uint16{g.playTelemetry.PSG.CH1Frequency, g.playTelemetry.PSG.CH2Frequency, g.playTelemetry.PSG.CH3Frequency, g.playTelemetry.PSG.CH4Frequency}
 		for channel := 0; channel < 4; channel++ {
@@ -363,9 +369,9 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 				state = "ON "
 				clr = nativeChannelColors[channel]
 			}
-			drawText(screen, columnText(fmt.Sprintf("CH%d  %s  REG %04X", channel+1, state, registers[channel])), x, r.Y+42+channel*24, clr)
+			drawDevelopText(screen, columnText(fmt.Sprintf("CH%d  %s  REG %04X", channel+1, state, registers[channel])), x, r.Y+42+channel*24, clr)
 		}
-		drawText(screen, columnText(fmt.Sprintf("MIX %04X  STATUS %04X", g.playTelemetry.PSG.MixPSG, g.playTelemetry.PSG.Status)), x, r.Y+142, colorLCD)
+		drawDevelopText(screen, columnText(fmt.Sprintf("MIX %04X  STATUS %04X", g.playTelemetry.PSG.MixPSG, g.playTelemetry.PSG.Status)), x, r.Y+142, colorLCD)
 	}
 	if r.H >= 220 && g.playPCM != nil {
 		clr := colorDim
@@ -377,12 +383,12 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 				clr = colorHighlight
 			}
 		}
-		drawText(screen, columnText("HOST AUDIO"), x, r.Y+r.H-54, colorDim)
-		drawText(screen, columnText(label), x, r.Y+r.H-30, clr)
+		drawDevelopText(screen, columnText("HOST AUDIO"), x, r.Y+r.H-54, colorDim)
+		drawDevelopText(screen, columnText(label), x, r.Y+r.H-30, clr)
 	}
 
 	x = r.X + colW*2 + 12
-	drawText(screen, columnText("DEBUG / INSPECTOR"), x, r.Y+14, colorDim)
+	drawDevelopText(screen, columnText("DEBUG / INSPECTOR"), x, r.Y+14, colorDim)
 	g.runMu.Lock()
 	ewramUsed, ewramFree, iwramUsed := g.runEWRAMUsed, g.runEWRAMFree, g.runIWRAMUsed
 	rendererRequested, rendererSelected := g.runRendererRequested, g.runRendererSelected
@@ -391,51 +397,61 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 		rendererRequested = g.model.Project.Renderer
 	}
 	rendererLabel := developRendererLabel(rendererRequested, rendererSelected)
-	drawText(screen, columnText(rendererLabel), x, r.Y+64, developRendererColor(rendererSelected))
+	drawDevelopText(screen, columnText(rendererLabel), x, r.Y+64, developRendererColor(rendererSelected))
 	if !g.playTelemetry.DebugValid {
-		drawText(screen, columnText("CPU  waiting for live preview"), x, r.Y+40, colorDim)
+		drawDevelopText(screen, columnText("CPU  waiting for live preview"), x, r.Y+40, colorDim)
 		if ewramUsed != 0 {
-			drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
-			drawText(screen, columnText(developMemoryHeadroomLabel(ewramFree, iwramUsed)), x, r.Y+112, colorLCD)
+			drawDevelopText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
+			drawDevelopText(screen, columnText(developMemoryHeadroomLabel(ewramFree, iwramUsed)), x, r.Y+112, colorLCD)
 		} else {
-			drawText(screen, columnText("RAM  available after build"), x, r.Y+88, colorDim)
+			drawDevelopText(screen, columnText("RAM  available after build"), x, r.Y+88, colorDim)
 		}
 		return
 	}
 	stats := g.playTelemetry.Stats
 	load := float64(stats.LastFrame) / 561792.0
 	loadColor := developUtilizationColor(load)
-	drawText(screen, columnText(fmt.Sprintf("CPU  %.1f%%  %s cyc", load*100, formatDevelopCount(stats.LastFrame))), x, r.Y+40, loadColor)
+	drawDevelopText(screen, columnText(fmt.Sprintf("CPU  %.1f%%  %s cyc", load*100, formatDevelopCount(stats.LastFrame))), x, r.Y+40, loadColor)
 	if ewramUsed != 0 {
-		drawText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
+		drawDevelopText(screen, columnText(developEWRAMLabel(ewramUsed)), x, r.Y+88, developEWRAMColor(ewramUsed))
 	} else {
-		drawText(screen, columnText("EWRAM  build data unavailable"), x, r.Y+88, colorDim)
+		drawDevelopText(screen, columnText("EWRAM  build data unavailable"), x, r.Y+88, colorDim)
 	}
+	heapVisible := stats.HeapCapacity != 0
 	compact := r.H < 220
-	frameY, watchY := r.Y+112, r.Y+164
-	if compact {
-		watchY = r.Y + 132
-	} else {
-		drawText(screen, columnText(fmt.Sprintf("UPDATE %s  DRAW %s", formatDevelopCount(stats.LastUpdate), formatDevelopCount(stats.LastDraw))), x, r.Y+136, colorText)
+	frameY, updateY, watchY := r.Y+112, r.Y+136, r.Y+164
+	if heapVisible {
+		drawDevelopText(screen, columnText(developHeapLabel(stats)), x, r.Y+112, developHeapColor(stats))
+		frameY, updateY, watchY = r.Y+136, r.Y+160, r.Y+188
+		compact = r.H < 240
+		if r.H >= 300 {
+			drawDevelopText(screen, columnText(developHeapAuxLabel(stats)), x, r.Y+136, developHeapColor(stats))
+			frameY, updateY, watchY = r.Y+160, r.Y+184, r.Y+212
+		}
 	}
-	drawText(screen, columnText(fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames)), x, frameY, colorText)
-	drawText(screen, columnText("WATCH / VARIABLES"), x, watchY, colorDim)
+	if compact {
+		watchY = frameY + 24
+	} else {
+		drawDevelopText(screen, columnText(fmt.Sprintf("UPDATE %s  DRAW %s", formatDevelopCount(stats.LastUpdate), formatDevelopCount(stats.LastDraw))), x, updateY, colorText)
+	}
+	drawDevelopText(screen, columnText(fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames)), x, frameY, colorText)
+	drawDevelopText(screen, columnText("WATCH / VARIABLES"), x, watchY, colorDim)
 	watchRows := min(1, len(g.playTelemetry.Watches))
 	for row := 0; row < watchRows; row++ {
 		watch := g.playTelemetry.Watches[row]
 		label := fmt.Sprintf("%s = %s", watch.Name, developWatchValue(watch))
-		drawText(screen, columnText(label), x, watchY+24+row*22, colorText)
+		drawDevelopText(screen, columnText(label), x, watchY+24+row*22, colorText)
 	}
 	if watchRows == 0 {
-		drawText(screen, columnText("No top-level globals"), x, watchY+24, colorDim)
+		drawDevelopText(screen, columnText("No top-level globals"), x, watchY+24, colorDim)
 	}
-	if r.H >= 250 {
+	if r.H >= 250 && (!heapVisible || r.H >= 300) {
 		g.drawDevelopCPUGraph(screen, editor.Rect{X: x, Y: r.Y + r.H - 42, W: colW - 24, H: 28})
 	}
 }
 
 func truncateDevelopTelemetryText(value string, columnWidth int) string {
-	return truncateUIText(value, max(0, columnWidth-24))
+	return truncateDevelopText(value, max(0, columnWidth-24))
 }
 
 func developRendererLabel(requested, selected string) string {
@@ -483,7 +499,7 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	cell := func(column, row int, value string, clr color.Color) {
 		x := r.X + column*colW + 12
 		y := r.Y + 12 + row*22
-		drawSmallText(screen, truncateTextToWidth(value, colW-24, uiSmallFace), x, y, clr)
+		drawDevelopSmallText(screen, truncateTextToWidth(value, colW-24, developSmallFace), x, y, clr)
 	}
 
 	g.runMu.Lock()
@@ -507,7 +523,7 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	if r.H >= 195 {
 		cell(0, 5, "INPUT  "+playKeyLabel(inputKeys), playInputColor(inputKeys))
 	}
-	drawNativeButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
+	drawDevelopButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
 
 	cell(1, 0, "DEBUG / RUNTIME", colorDim)
 	cell(1, 1, developRendererLabel(rendererRequested, rendererSelected), developRendererColor(rendererSelected))
@@ -539,11 +555,19 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	load := float64(stats.LastFrame) / 561792.0
 	loadColor := developUtilizationColor(load)
 	cell(1, 3, fmt.Sprintf("CPU  %.1f%%  %s CYC", load*100, formatDevelopCount(stats.LastFrame)), loadColor)
-	if ewramUsed != 0 {
+	if stats.HeapError != emulator.HeapOK {
+		cell(1, 4, developHeapCompactLabel(stats), colorDanger)
+	} else if ewramUsed != 0 {
 		cell(1, 4, developEWRAMCompactLabel(ewramUsed), developEWRAMColor(ewramUsed))
 	}
 	if r.H >= 150 {
 		cell(1, 5, fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames), colorText)
+	}
+	if stats.HeapCapacity != 0 && stats.HeapError == emulator.HeapOK && r.H >= 170 {
+		cell(1, 6, developHeapCompactLabel(stats), developHeapColor(stats))
+	}
+	if stats.HeapCapacity != 0 && r.H >= 195 {
+		cell(1, 7, developHeapAuxLabel(stats), developHeapColor(stats))
 	}
 }
 
@@ -608,6 +632,61 @@ func developEWRAMColor(used uint64) color.Color {
 	return developUtilizationColor(float64(used) / float64(build.EWRAMCapacity))
 }
 
+func developHeapLabel(stats emulator.DebugStats) string {
+	if stats.HeapCapacity == 0 {
+		return "HEAP  TELEMETRY UNAVAILABLE"
+	}
+	if stats.HeapError != emulator.HeapOK {
+		return fmt.Sprintf("HEAP %s  %sK LIMIT", developHeapErrorLabel(stats.HeapError), formatDevelopKiB(uint64(stats.HeapCapacity)))
+	}
+	live := "--"
+	if stats.GCCount != 0 {
+		live = formatDevelopKiB(uint64(stats.HeapLive)) + "K"
+	}
+	return fmt.Sprintf("HEAP %sK/%sK  LIVE %s", formatDevelopKiB(uint64(stats.HeapAllocated)), formatDevelopKiB(uint64(stats.HeapCapacity)), live)
+}
+
+func developHeapCompactLabel(stats emulator.DebugStats) string {
+	return developHeapLabel(stats)
+}
+
+func developHeapAuxLabel(stats emulator.DebugStats) string {
+	peak := "--"
+	if stats.GCCount != 0 {
+		peak = formatDevelopKiB(uint64(stats.HeapPeakLive)) + "K"
+	}
+	return fmt.Sprintf("HANDLES %d/%d  PEAK %s  GC %d", stats.HeapHandles, stats.HeapHandleLimit, peak, stats.GCCount)
+}
+
+func developHeapColor(stats emulator.DebugStats) color.Color {
+	if stats.HeapError != emulator.HeapOK {
+		return colorDanger
+	}
+	if stats.HeapCapacity == 0 {
+		return colorDim
+	}
+	used := stats.HeapAllocated
+	if stats.GCCount != 0 {
+		used = stats.HeapLive
+	}
+	return developUtilizationColor(float64(used) / float64(stats.HeapCapacity))
+}
+
+func developHeapErrorLabel(err emulator.HeapError) string {
+	switch err {
+	case emulator.HeapOOM:
+		return "OOM"
+	case emulator.HeapCorrupt:
+		return "CORRUPT"
+	case emulator.HeapCorruptRef:
+		return "BAD REF"
+	case emulator.HeapBusy:
+		return "BUSY"
+	default:
+		return fmt.Sprintf("ERROR %d", err)
+	}
+}
+
 func developUtilizationColor(load float64) color.Color {
 	if load >= .90 {
 		return colorDanger
@@ -616,6 +695,35 @@ func developUtilizationColor(load float64) color.Color {
 		return colorHighlight
 	}
 	return colorRun
+}
+
+func developGlobalUsageState(usage build.GlobalUsage) string {
+	if usage.Limit == 0 {
+		return "PENDING"
+	}
+	if usage.Count > usage.Limit {
+		return "BLOCKED"
+	}
+	if usage.Count == usage.Limit {
+		return "FULL"
+	}
+	if usage.Count*8 >= usage.Limit*7 {
+		return "WARNING"
+	}
+	return "OK"
+}
+
+func developGlobalUsageColor(usage build.GlobalUsage) color.Color {
+	switch developGlobalUsageState(usage) {
+	case "BLOCKED":
+		return colorDanger
+	case "FULL", "WARNING":
+		return colorHighlight
+	case "OK":
+		return colorRun
+	default:
+		return colorDim
+	}
 }
 
 func developUtilizationState(load float64) string {
@@ -701,7 +809,7 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 			clr = colorDanger
 			label += " !"
 		}
-		drawTextCentered(screen, label, tab, clr)
+		drawDevelopTextCentered(screen, label, tab, clr)
 	}
 	drawLine(screen, r.X+8, r.Y+34, r.X+r.W-8, r.Y+34, colorBorder)
 	lines := g.developPanelLines(g.developPanel)
@@ -764,18 +872,20 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 
 func (g *Game) hasDevelopProblems() bool {
 	g.runMu.Lock()
-	runError := g.runError
+	runError, sourceError := g.runError, g.sourceAnalysisError
+	usage := g.runGlobalUsage
 	g.runMu.Unlock()
-	return g.codeDiagnosticLine != 0 || runError != ""
+	return g.codeDiagnosticLine != 0 || runError != "" || sourceError != "" || (usage.Limit != 0 && usage.Count > usage.Limit)
 }
 
 func (g *Game) developPanelLines(panel developPanel) []string {
 	g.runMu.Lock()
-	status, runError := g.runStatus, g.runError
+	status, runError, sourceError := g.runStatus, g.runError, g.sourceAnalysisError
 	romPath, romSize := g.runROMPath, g.runROMSize
 	ewramUsed, ewramFree, iwramUsed := g.runEWRAMUsed, g.runEWRAMFree, g.runIWRAMUsed
 	entry := g.runEntry
 	sources := append([]string(nil), g.runSourceFiles...)
+	globalUsage := cloneGlobalUsage(g.runGlobalUsage)
 	generated := g.runGeneratedGo
 	rendererRequested, rendererSelected := g.runRendererRequested, g.runRendererSelected
 	rendererReason, rendererProfile, rendererDiagnostic := g.runRendererReason, g.runRendererProfile, g.runRendererDiagnostic
@@ -796,6 +906,15 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 		if runError != "" {
 			lines = append(lines, runError)
 		}
+		if sourceError != "" && sourceError != runError {
+			lines = append(lines, sourceError)
+		}
+		if globalUsage.Limit != 0 && globalUsage.Count > globalUsage.Limit {
+			firstExcess := min(globalUsage.Limit, len(globalUsage.Symbols))
+			for _, symbol := range globalUsage.Symbols[firstExcess:] {
+				lines = append(lines, fmt.Sprintf("%s:%d:%d  global %q exceeds the persistent-state slot budget", symbol.Source, symbol.Line, symbol.Column, symbol.Name))
+			}
+		}
 		if len(lines) == 0 {
 			lines = append(lines, "OK  No source or build problems detected.")
 		}
@@ -807,6 +926,9 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 		lines := []string{"STATUS  " + status}
 		if entry != "" {
 			lines = append(lines, "ENTRY   "+entry, fmt.Sprintf("SOURCES %d  %s", len(sources), strings.Join(sources, ", ")))
+		}
+		if globalUsage.Limit != 0 {
+			lines = append(lines, fmt.Sprintf("GLOBALS %d / %d  %s", globalUsage.Count, globalUsage.Limit, developGlobalUsageState(globalUsage)))
 		}
 		if romPath != "" {
 			lines = append(lines,
@@ -829,6 +951,9 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 			fmt.Sprintf("SPRITES %d  /  MAP %d x %d", g.spriteN(), g.model.Map.Width, g.model.Map.Height),
 			"AUDIO   4 Game Boy PSG channels  /  PCM OFF",
 		)
+		for _, symbol := range globalUsage.Symbols {
+			lines = append(lines, fmt.Sprintf("GLOBAL  %s:%d:%d  %s", symbol.Source, symbol.Line, symbol.Column, symbol.Name))
+		}
 		return lines
 	case developBuild:
 		if len(events) == 0 && runError == "" {
@@ -865,6 +990,9 @@ func (g *Game) openDevelopDiagnostic() {
 	}
 	g.runMu.Lock()
 	message := g.runError
+	if message == "" {
+		message = g.sourceAnalysisError
+	}
 	g.runMu.Unlock()
 	match := developDiagnosticLocation.FindStringSubmatch(message)
 	if match == nil {

@@ -10,7 +10,7 @@ func TestDynamicSurfaceActivity(t *testing.T) {
 		everyTick bool
 	}{
 		{name: "idle", game: &Game{}},
-		{name: "theme pulse", game: &Game{theme: themeState{buildPulse: 1}}, active: true},
+		{name: "legacy theme pulse stays idle", game: &Game{theme: themeState{buildPulse: 1}}},
 		{name: "running emulator", game: &Game{mode: modeCode, playStop: make(chan struct{})}, active: true, everyTick: true},
 		{name: "paused emulator", game: &Game{mode: modeCode, playStop: make(chan struct{}), playPaused: true}},
 	}

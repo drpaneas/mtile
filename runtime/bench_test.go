@@ -144,6 +144,40 @@ func newBenchSparseMapContext(tb testing.TB) *Context {
 	return c
 }
 
+func newBenchLayeredContext(b *testing.B, mask uint8) *Context {
+	b.Helper()
+	const mapW, mapH, logicalLayers = 30, 20, 4
+	storedLayers := mapMaskPopulation(mask)
+	sheet := make([]byte, benchSheetW*benchSheetH)
+	for i := range sheet {
+		if (i/4)%2 == 0 {
+			sheet[i] = byte(1 + i%15)
+		}
+	}
+	mapCells := make([]uint16, mapW*mapH*storedLayers)
+	for i := range mapCells {
+		mapCells[i] = uint16(1 + i%(benchSpriteN-1))
+	}
+	flags := make([]byte, benchSpriteN)
+	image := &AssetImage{
+		SheetW: benchSheetW, SheetH: benchSheetH,
+		SpriteCols: benchSheetW / 8, SpriteRows: benchSheetH / 8, SpriteN: benchSpriteN,
+		MapW: mapW, MapH: mapH, MapLayers: logicalLayers, MapPlaneMask: mask,
+		Sheet: sheet, Map: mapCells, Flags: flags,
+	}
+	ram := &AssetMemory{
+		SheetW: benchSheetW, SheetH: benchSheetH,
+		SpriteCols: benchSheetW / 8, SpriteRows: benchSheetH / 8, SpriteN: benchSpriteN,
+		MapW: mapW, MapH: mapH, MapLayers: logicalLayers, MapPlaneMask: mask,
+		Sheet: make([]byte, len(sheet)), Map: make([]uint16, len(mapCells)), Flags: make([]byte, len(flags)),
+	}
+	c := &Context{}
+	if !c.Init(image, ram) {
+		b.Fatal("layered map bench context failed to Init")
+	}
+	return c
+}
+
 // newBenchStreamingContext builds a large map that exceeds
 // MapStreamingThresholdCells, forcing the chunked ROM-streaming path.
 func newBenchStreamingContext(b *testing.B) *Context {
@@ -345,6 +379,26 @@ func BenchmarkMapFullScreenLayerMask(b *testing.B) {
 	}
 }
 
+func BenchmarkMapAllSparseTwoOfFour(b *testing.B) {
+	c := newBenchLayeredContext(b, 0x0a)
+	b.ReportAllocs()
+	b.SetBytes(2 * 30 * 20 * 64)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.MapAll(0x0a)
+	}
+}
+
+func BenchmarkMapAllFour(b *testing.B) {
+	c := newBenchLayeredContext(b, 0x0f)
+	b.ReportAllocs()
+	b.SetBytes(4 * 30 * 20 * 64)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.MapAll(0x0f)
+	}
+}
+
 // BenchmarkMapSparse17Screen draws a 17%-filled 30x20 room like mapdemo.
 func BenchmarkMapSparse17Screen(b *testing.B) {
 	c := newBenchSparseMapContext(b)
@@ -476,6 +530,48 @@ func BenchmarkTableGetHashStringKey(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		v = c.TableGet(t, key)
+	}
+	_ = v
+}
+
+func BenchmarkTableGetHashStringKeyStable(b *testing.B) {
+	c := newBenchContext(b)
+	t, err := c.NewTableWithCaps(0, 16)
+	if err != HeapOK {
+		b.Fatal("table alloc failed")
+	}
+	key := c.InternStatic("player_x")
+	c.TableSet(t, key, IntVal(64))
+	var cache TableFieldCache
+	if c.TableGetStable(t, key, &cache).Int() != 64 || cache == 0 {
+		b.Fatal("stable field cache did not initialize")
+	}
+	var v Value
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		v = c.TableGetStable(t, key, &cache)
+	}
+	_ = v
+}
+
+func BenchmarkTableGetHashStringKeyStableNumber(b *testing.B) {
+	c := newBenchContext(b)
+	t, err := c.NewTableWithCaps(0, 16)
+	if err != HeapOK {
+		b.Fatal("table alloc failed")
+	}
+	key := c.InternStatic("player_x")
+	c.TableSet(t, key, IntVal(64))
+	var cache TableFieldCache
+	if c.TableGetStableNumber(t, key, &cache) != FromInt(64) || cache == 0 {
+		b.Fatal("stable numeric field cache did not initialize")
+	}
+	var v Number
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		v = c.TableGetStableNumber(t, key, &cache)
 	}
 	_ = v
 }

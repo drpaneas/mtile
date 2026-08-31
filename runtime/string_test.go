@@ -46,6 +46,7 @@ func TestSubChrOrdTostrTonum(t *testing.T) {
 }
 
 func TestPrintVDispatchesStringKinds(t *testing.T) {
+	requireSoftwareFramebuffer(t)
 	t.Parallel()
 	c := new(Context)
 	c.Cls(3)

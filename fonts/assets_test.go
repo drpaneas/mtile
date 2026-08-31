@@ -41,3 +41,25 @@ func TestOpenDyslexicUIBoldAssetParses(t *testing.T) {
 		t.Fatalf("bold OpenDyslexic UI face has no advance: %v", got)
 	}
 }
+
+func TestJetBrainsMonoAssetParsesAsMonospacedFace(t *testing.T) {
+	parsed, err := opentype.Parse(JetBrainsMonoRegular)
+	if err != nil {
+		t.Fatalf("parse JetBrains Mono asset: %v", err)
+	}
+	face, err := opentype.NewFace(parsed, &opentype.FaceOptions{Size: 16, DPI: 72, Hinting: font.HintingFull})
+	if err != nil {
+		t.Fatalf("create JetBrains Mono face: %v", err)
+	}
+	defer face.Close()
+
+	want := font.MeasureString(face, "M")
+	if want <= 0 {
+		t.Fatalf("JetBrains Mono face has no advance: %v", want)
+	}
+	for r := rune(32); r <= 126; r++ {
+		if got := font.MeasureString(face, string(r)); got != want {
+			t.Fatalf("JetBrains Mono rune %q advance = %v, want %v", r, got, want)
+		}
+	}
+}

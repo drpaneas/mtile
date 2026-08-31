@@ -26,13 +26,15 @@ import (
 )
 
 const (
-	reportSchemaVersion = 1
+	reportSchemaVersion = 2
 	defaultWarmup       = 20
 	defaultSamples      = 120
 	minimumEWRAMGain    = 24 * 1024
 	minimumP95Headroom  = 56179
 	mode0MedianPercent  = 80
 	twoFrameCycleBudget = 2 * 1232 * 228
+	gateFull            = "full"
+	gateParity          = "parity"
 )
 
 type environmentReport struct {
@@ -47,13 +49,19 @@ type environmentReport struct {
 }
 
 type capture struct {
-	frames  [][]byte
-	cycles  []uint32
-	draw    []uint32
-	commit  []uint32
-	missed  uint32
-	cold    uint32
-	lastRGB []byte
+	frames        [][]byte
+	frameNumbers  []uint32
+	cycles        []uint32
+	draw          []uint32
+	commit        []uint32
+	missed        uint32
+	cold          uint32
+	heapAllocated uint32
+	heapLive      uint32
+	heapPeakLive  uint32
+	heapHandles   uint32
+	gcCount       uint32
+	lastRGB       []byte
 }
 
 type rendererResult struct {
@@ -75,6 +83,7 @@ type rendererResult struct {
 
 type gateReport struct {
 	SchemaVersion       int               `json:"schemaVersion"`
+	GatePolicy          string            `json:"gatePolicy"`
 	Project             string            `json:"project"`
 	WorkloadSource      string            `json:"workloadSource,omitempty"`
 	Helper              string            `json:"helper"`
@@ -109,9 +118,13 @@ func run() error {
 	output := flag.String("out", "", "artifact directory (default: temporary directory)")
 	warmup := flag.Int("warmup", defaultWarmup, "mGBA frames discarded before capture")
 	samples := flag.Int("samples", defaultSamples, "mGBA frames captured per renderer")
+	gate := flag.String("gate", gateFull, "gate policy: full or parity")
 	flag.Parse()
 	if *warmup < 0 || *samples < 2 {
 		return errors.New("warmup must be nonnegative and samples must be at least 2")
+	}
+	if *gate != gateFull && *gate != gateParity {
+		return fmt.Errorf("unknown gate policy %q (want full or parity)", *gate)
 	}
 	projectPath, err := filepath.Abs(*project)
 	if err != nil {
@@ -163,12 +176,16 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("mode4: %w", err)
 	}
-	mode0Build, mode0Capture, err := buildAndCapture(service, transpiler.RendererMode0, buildProjectPath, helperPath, artifactDir, *warmup, *samples)
+	mode0Build, mode0Capture, err := buildAndCaptureAtFrames(service, transpiler.RendererMode0, buildProjectPath, helperPath, artifactDir, *warmup, *samples, mode4Capture.frameNumbers)
 	if err != nil {
 		return fmt.Errorf("mode0: %w", err)
 	}
+	if err := validateSynchronizedFrames(mode4Capture.frameNumbers, mode0Capture.frameNumbers); err != nil {
+		return err
+	}
 
 	differing := compareFrames(mode4Capture.frames, mode0Capture.frames)
+	firstDiffIndex, firstDiffPixels := firstDifferingFrame(mode4Capture.frames, mode0Capture.frames)
 	mode4PNG := filepath.Join(artifactDir, "mode4-final.png")
 	mode0PNG := filepath.Join(artifactDir, "mode0-final.png")
 	if err := writePNG(mode4PNG, mode4Capture.lastRGB); err != nil {
@@ -176,6 +193,15 @@ func run() error {
 	}
 	if err := writePNG(mode0PNG, mode0Capture.lastRGB); err != nil {
 		return err
+	}
+	if firstDiffIndex >= 0 {
+		frameNumber := mode4Capture.frameNumbers[firstDiffIndex]
+		if err := writePNG(filepath.Join(artifactDir, fmt.Sprintf("mode4-first-diff-%d.png", frameNumber)), mode4Capture.frames[firstDiffIndex]); err != nil {
+			return err
+		}
+		if err := writePNG(filepath.Join(artifactDir, fmt.Sprintf("mode0-first-diff-%d.png", frameNumber)), mode0Capture.frames[firstDiffIndex]); err != nil {
+			return err
+		}
 	}
 	mode4Result, err := summarize(mode4Build, mode4Capture, mode4PNG)
 	if err != nil {
@@ -202,7 +228,9 @@ func run() error {
 		P95HeadroomPass: headroom >= minimumP95Headroom,
 		MissedFramePass: mode4Capture.missed == 0 && mode0Capture.missed == 0,
 	}
-	report.Pass = report.ParityPass && report.MemoryPass && report.MedianCyclePass && report.P95HeadroomPass && report.MissedFramePass
+	if err := applyGatePolicy(&report, *gate); err != nil {
+		return err
+	}
 	reportPath := filepath.Join(artifactDir, "report.json")
 	data, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
@@ -213,9 +241,31 @@ func run() error {
 		return err
 	}
 	fmt.Printf("report %s\n", reportPath)
-	fmt.Printf("pixels %d, EWRAM %+d, median %.1f%%, Mode0 p95 headroom %d, pass=%t\n", differing, ewramGain, saving, headroom, report.Pass)
+	fmt.Printf("gate %s, pixels %d, EWRAM %+d, median %.1f%%, Mode0 p95 headroom %d, pass=%t\n", report.GatePolicy, differing, ewramGain, saving, headroom, report.Pass)
+	if firstDiffIndex >= 0 {
+		fmt.Printf("first parity mismatch at runtime frame %d: %d pixels\n", mode4Capture.frameNumbers[firstDiffIndex], firstDiffPixels)
+	}
 	if !report.Pass {
 		return errors.New("one or more renderer gates failed; inspect report.json")
+	}
+	return nil
+}
+
+func applyGatePolicy(report *gateReport, policy string) error {
+	if report == nil {
+		return errors.New("renderer gate report is required")
+	}
+	report.GatePolicy = policy
+	switch policy {
+	case gateFull:
+		report.Pass = report.ParityPass && report.MemoryPass && report.MedianCyclePass && report.P95HeadroomPass && report.MissedFramePass
+	case gateParity:
+		// Characterization workloads lock down exact output. Frame delivery and
+		// resource measurements remain visible evidence, but are not acceptance
+		// criteria and do not widen the AUTO performance profile.
+		report.Pass = report.ParityPass
+	default:
+		return fmt.Errorf("unknown gate policy %q (want full or parity)", policy)
 	}
 	return nil
 }
@@ -368,6 +418,17 @@ func projectFingerprint(root string) (string, error) {
 }
 
 func buildAndCapture(service build.Service, renderer transpiler.Renderer, project, helper, output string, warmup, samples int) (build.Result, capture, error) {
+	return buildAndCaptureAtFrames(service, renderer, project, helper, output, warmup, samples, nil)
+}
+
+// buildAndCaptureAtFrames captures exact runtime frame numbers when targets is
+// non-empty. Paired renderer runs must compare the same game ticks: a slow ROM
+// can publish fewer debug snapshots per host step, so ordinal capture slots are
+// not sufficient synchronization for moving scenes.
+func buildAndCaptureAtFrames(service build.Service, renderer transpiler.Renderer, project, helper, output string, warmup, samples int, targets []uint32) (build.Result, capture, error) {
+	if len(targets) != 0 && len(targets) != samples {
+		return build.Result{}, capture{}, fmt.Errorf("capture target count %d does not match requested samples %d", len(targets), samples)
+	}
 	service.Renderer = renderer
 	rom := filepath.Join(output, renderer.String()+".gba")
 	result, err := service.Build(project, rom)
@@ -380,14 +441,25 @@ func buildAndCapture(service build.Service, renderer transpiler.Renderer, projec
 	}
 	defer func() { _ = session.Close() }()
 
-	resultCapture := capture{frames: make([][]byte, 0, samples), cycles: make([]uint32, 0, samples/2)}
+	resultCapture := capture{
+		frames:       make([][]byte, 0, samples),
+		frameNumbers: make([]uint32, 0, samples),
+		cycles:       make([]uint32, 0, samples),
+	}
 	var lastSequence, lastProfileFrame uint32
 	// Emulator startup reaches the generated loop at a renderer-dependent LCD
 	// scan. Comparing the Nth host Step therefore aliases moving scenes even
 	// when both renderers are exact. Capture unique debug publications keyed by
 	// the runtime's 30 Hz frame counter instead: frame 21 is then frame 21 in
 	// both ROMs, independent of boot and presentation latency.
-	maxSteps := (warmup+samples)*4 + 120
+	// Moving multi-BG Mode 4 scenes can publish slightly fewer unique debug
+	// frames per host step during startup. Keep a generous bounded ceiling so
+	// the requested sample count, rather than startup phase, decides the run.
+	maxProfileFrame := warmup + samples
+	if len(targets) != 0 && int(targets[len(targets)-1]) > maxProfileFrame {
+		maxProfileFrame = int(targets[len(targets)-1])
+	}
+	maxSteps := maxProfileFrame*5 + 240
 	for step := 0; step < maxSteps && len(resultCapture.frames) < samples; step++ {
 		frame, err := session.Step(0, false)
 		if err != nil {
@@ -405,18 +477,45 @@ func buildAndCapture(service build.Service, renderer transpiler.Renderer, projec
 			continue
 		}
 		lastProfileFrame = stats.Frames
+		if len(targets) != 0 {
+			want := targets[len(resultCapture.frames)]
+			if stats.Frames < want {
+				continue
+			}
+			if stats.Frames > want {
+				return build.Result{}, capture{}, fmt.Errorf("debug telemetry skipped target runtime frame %d (next publication is %d)", want, stats.Frames)
+			}
+		}
 		resultCapture.cycles = append(resultCapture.cycles, stats.LastFrame)
 		resultCapture.draw = append(resultCapture.draw, stats.LastDraw)
 		resultCapture.commit = append(resultCapture.commit, stats.LastBlit)
 		resultCapture.missed = stats.MissedFrames
+		resultCapture.heapAllocated = stats.HeapAllocated
+		resultCapture.heapLive = stats.HeapLive
+		resultCapture.heapPeakLive = stats.HeapPeakLive
+		resultCapture.heapHandles = stats.HeapHandles
+		resultCapture.gcCount = stats.GCCount
 		pixels := append([]byte(nil), frame.RGBA...)
 		resultCapture.frames = append(resultCapture.frames, pixels)
+		resultCapture.frameNumbers = append(resultCapture.frameNumbers, stats.Frames)
 		resultCapture.lastRGB = pixels
 	}
 	if len(resultCapture.frames) != samples || len(resultCapture.cycles) != samples {
 		return build.Result{}, capture{}, fmt.Errorf("debug telemetry produced %d/%d synchronized frame samples", len(resultCapture.frames), samples)
 	}
 	return result, resultCapture, nil
+}
+
+func validateSynchronizedFrames(left, right []uint32) error {
+	if len(left) != len(right) {
+		return fmt.Errorf("renderer captures contain %d and %d runtime frame numbers", len(left), len(right))
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return fmt.Errorf("renderer capture %d compares runtime frame %d with %d", index, left[index], right[index])
+		}
+	}
+	return nil
 }
 
 func summarize(result build.Result, captured capture, pngPath string) (rendererResult, error) {
@@ -456,10 +555,29 @@ func compareFrames(left, right [][]byte) int {
 	}
 	differing := 0
 	for frame := 0; frame < count; frame++ {
-		for pixel := 0; pixel+3 < len(left[frame]) && pixel+3 < len(right[frame]); pixel += 4 {
-			if left[frame][pixel] != right[frame][pixel] || left[frame][pixel+1] != right[frame][pixel+1] || left[frame][pixel+2] != right[frame][pixel+2] || left[frame][pixel+3] != right[frame][pixel+3] {
-				differing++
-			}
+		differing += countDifferingPixels(left[frame], right[frame])
+	}
+	return differing
+}
+
+func firstDifferingFrame(left, right [][]byte) (index, pixels int) {
+	count := len(left)
+	if len(right) < count {
+		count = len(right)
+	}
+	for frame := 0; frame < count; frame++ {
+		if differing := countDifferingPixels(left[frame], right[frame]); differing != 0 {
+			return frame, differing
+		}
+	}
+	return -1, 0
+}
+
+func countDifferingPixels(left, right []byte) int {
+	differing := 0
+	for pixel := 0; pixel+3 < len(left) && pixel+3 < len(right); pixel += 4 {
+		if left[pixel] != right[pixel] || left[pixel+1] != right[pixel+1] || left[pixel+2] != right[pixel+2] || left[pixel+3] != right[pixel+3] {
+			differing++
 		}
 	}
 	return differing

@@ -43,6 +43,7 @@ type Bundle struct {
 type resolver struct {
 	root     string
 	rootReal string
+	overlay  map[string]string
 	state    map[string]uint8
 	stack    []string
 	units    []unit
@@ -63,6 +64,17 @@ var staticRequireLine = regexp.MustCompile(`^\s*require\s*(?:\(\s*["']([^"']+)["
 
 // Resolve loads entry and all of its static dependencies from projectDir.
 func Resolve(projectDir, entry string) (Bundle, error) {
+	return resolve(projectDir, entry, nil)
+}
+
+// ResolveWithOverlay resolves the same graph as Resolve while replacing the
+// contents of selected existing project-relative files. The editor uses this
+// to analyze all open buffers without writing unrelated dirty tabs to disk.
+func ResolveWithOverlay(projectDir, entry string, overlay map[string]string) (Bundle, error) {
+	return resolve(projectDir, entry, overlay)
+}
+
+func resolve(projectDir, entry string, overlay map[string]string) (Bundle, error) {
 	root, err := filepath.Abs(projectDir)
 	if err != nil {
 		return Bundle{}, fmt.Errorf("resolve project directory: %w", err)
@@ -78,7 +90,15 @@ func Resolve(projectDir, entry string) (Bundle, error) {
 	if err != nil {
 		return Bundle{}, fmt.Errorf("entry %q: %w", entry, err)
 	}
-	r := &resolver{root: root, rootReal: real, state: make(map[string]uint8)}
+	resolvedOverlay := make(map[string]string, len(overlay))
+	for relative, source := range overlay {
+		path, err := secureProjectPath(root, real, relative)
+		if err != nil {
+			return Bundle{}, fmt.Errorf("source overlay %q: %w", relative, err)
+		}
+		resolvedOverlay[path] = source
+	}
+	r := &resolver{root: root, rootReal: real, overlay: resolvedOverlay, state: make(map[string]uint8)}
 	if err := r.visit(entryPath); err != nil {
 		return Bundle{}, err
 	}
@@ -176,12 +196,16 @@ func (r *resolver) visit(path string) error {
 		return fmt.Errorf("Lua module cycle: %s", strings.Join(cycle, " -> "))
 	}
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read Lua source %q: %w", relativeSlash(r.root, path), err)
+	source, ok := r.overlay[path]
+	if !ok {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read Lua source %q: %w", relativeSlash(r.root, path), err)
+		}
+		source = string(data)
 	}
 	relative := relativeSlash(r.root, path)
-	requirements, stripped, err := parseRequirements(path, string(data))
+	requirements, stripped, err := parseRequirements(path, source)
 	if err != nil {
 		return err
 	}

@@ -4,9 +4,10 @@ package runtime
 
 import "github.com/drpaneas/mtile/runtime/hw"
 
-// Each Mode 0 map() call owns one 64x32 regular BG. Screen-block pairs are
-// allocated downward from 30/31; the remaining lower VRAM holds shared 8bpp
-// character tiles. mode0LayerCount is selected by a link-time build tag.
+// Each Mode 0 map() call owns one 64x32 regular BG. A zero-map build presents
+// only the backdrop and optional OBJs. Screen-block pairs are allocated
+// downward from 30/31; the remaining lower VRAM holds shared 8bpp character
+// tiles. mode0LayerCount is selected by a link-time build tag.
 const (
 	mode0ForceBlank  = 0x0080
 	mode0Display     = 0x0100 // one-layer compatibility value used by tests
@@ -26,8 +27,8 @@ func mode0LayerControl(layer int) uint16 {
 	return uint16(priority) | 0x0080 | uint16(30-layer*2)<<8 | 0x4000
 }
 
-func mode0LayerDisplay() uint16 {
-	return uint16((1<<uint(mode0LayerCount))-1)<<8 | mode0ObjectDisplayBits()
+func mode0LayerDisplay(seen uint8) uint16 {
+	return uint16(seen)<<8 | mode0ObjectDisplayBits()
 }
 
 // InitHardware materializes the cartridge sheet in tile VRAM. Immutable
@@ -147,7 +148,47 @@ func mode0ScreenEntry(x, y int) int {
 // required by the current call. Each statically proven call owns one hardware
 // BG; fine camera movement updates scroll registers without a screen upload.
 func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	if c == nil {
+		return
+	}
+	mapIndex := c.mode0MapCalls
+	c.mapLayerAt(mapIndex, 0, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapBG binds one authored plane to its matching logical hardware BG slot.
+// The transpiler proves stable BG IDs and ordering before selecting Mode 0.
+func (c *Context) MapBG(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	c.mapLayerAt(bg, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapBGAt binds a stable logical source plane to a densely allocated hardware
+// BG slot. Empty gaps in BG0..BG3 therefore consume neither a screen shadow
+// nor a hardware background.
+func (c *Context) MapBGAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	if slot < 0 {
+		return
+	}
+	c.mapLayerAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapAll materializes the selected non-empty logical planes in BG order while
+// packing them into consecutive hardware slots.
+func (c *Context) MapAll(mask uint8) {
+	slot := 0
+	for bg := 0; bg < 4; bg++ {
+		if mask&(1<<uint(bg)) == 0 {
+			continue
+		}
+		c.MapBGAt(slot, bg, 0, 0, 0, 0, 0, 0, 0)
+		slot++
+	}
+}
+
+func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	if c == nil || c.cart == nil {
+		return
+	}
+	if sourceBG < 0 || sourceBG >= c.cart.MapLayers {
 		return
 	}
 	c.ensureDrawState()
@@ -166,11 +207,11 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 	if cellsW <= 0 || cellsH <= 0 || cellsW > 64 || cellsH > 32 {
 		return
 	}
-	mapIndex := c.mode0MapCalls
 	if mapIndex >= mode0LayerCount {
 		return
 	}
 	c.mode0MapCalls++
+	c.mode0MapSeen |= 1 << uint(mapIndex)
 
 	originX := screenX + cellX*8 - c.camX
 	originY := screenY + cellY*8 - c.camY
@@ -188,7 +229,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 	if c.mode0MapSigSet[mapIndex] && c.mode0MapCellX[mapIndex] == cellX && c.mode0MapCellY[mapIndex] == cellY &&
 		c.mode0MapTileX[mapIndex] == tileX && c.mode0MapTileY[mapIndex] == tileY &&
 		c.mode0MapCellsW[mapIndex] == cellsW && c.mode0MapCellsH[mapIndex] == cellsH &&
-		c.mode0MapLayer[mapIndex] == mask {
+		c.mode0MapLayer[mapIndex] == mask && c.mode0MapSource[mapIndex] == uint8(sourceBG) {
 		return
 	}
 
@@ -205,7 +246,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 			if mapX < 0 || mapX >= c.cart.MapW {
 				continue
 			}
-			id := c.Mget(mapX, mapY)
+			id := c.mapGetLayer(sourceBG, mapX, mapY)
 			if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit {
 				continue
 			}
@@ -221,6 +262,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 	c.mode0MapTileX[mapIndex], c.mode0MapTileY[mapIndex] = tileX, tileY
 	c.mode0MapCellsW[mapIndex], c.mode0MapCellsH[mapIndex] = cellsW, cellsH
 	c.mode0MapLayer[mapIndex] = mask
+	c.mode0MapSource[mapIndex] = uint8(sourceBG)
 	c.mode0MapSigSet[mapIndex] = true
 	c.mode0MapReady[mapIndex] = true
 	c.mode0MapDirty[mapIndex] = true
@@ -229,6 +271,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 func (c *Context) BeginRenderFrame() {
 	c.mode0ClsCalled = false
 	c.mode0MapCalls = 0
+	c.mode0MapSeen = 0
 	c.beginMode0Objects()
 }
 
@@ -266,17 +309,27 @@ func (c *Context) uploadMode0DirtyTiles() uint32 {
 }
 
 func (c *Context) PresentRender() {
-	if c == nil || !c.mode0ClsCalled || c.mode0MapCalls != mode0LayerCount {
+	if c == nil || !c.mode0ClsCalled || c.mode0MapCalls > mode0LayerCount {
 		hw.SetReg16(hw.DISPCNT, mode0ForceBlank)
 		return
 	}
 	for layer := 0; layer < mode0LayerCount; layer++ {
-		if !c.mode0MapReady[layer] {
+		if c.mode0MapSeen&(1<<uint(layer)) != 0 && !c.mode0MapReady[layer] {
 			hw.SetReg16(hw.DISPCNT, mode0ForceBlank)
 			return
 		}
 	}
 	commitStart := hw.ReadFrameCycleCounter()
+	// Commit scroll first. A frame that changes several 4 KiB screen blocks
+	// can consume most of VBlank; leaving BGxHOFS/BGxVOFS until after those
+	// DMAs lets the next scan begin with the previous frame's offset and tears
+	// the top lines. The maps are still copied entirely inside the same
+	// presentation window, but their matching offsets are now latched before
+	// active display can resume.
+	for layer := 0; layer < mode0LayerCount; layer++ {
+		hw.SetReg16(hw.BG0HOFS+uintptr(layer*4), c.mode0ScrollX[layer])
+		hw.SetReg16(hw.BG0VOFS+uintptr(layer*4), c.mode0ScrollY[layer])
+	}
 	c.ApplyDisplayPalette()
 	hw.SetPaletteRAM16(0, c.palette[c.displayPal[c.mode0Clear]])
 	coldCycles := c.mode0ColdCycles
@@ -288,19 +341,15 @@ func (c *Context) PresentRender() {
 
 	c.mode0UploadStats.LastTileBytes = c.uploadMode0DirtyTiles()
 	for layer := 0; layer < mode0LayerCount; layer++ {
-		if !c.mode0MapDirty[layer] {
+		if c.mode0MapSeen&(1<<uint(layer)) == 0 || !c.mode0MapDirty[layer] {
 			continue
 		}
 		hw.CopyToVRAM32DMA(c.mode0Screen[layer][:], mode0LayerScreenBase(layer), len(c.mode0Screen[layer])/4)
 		c.mode0UploadStats.LastMapBytes += uint32(len(c.mode0Screen[layer]))
 		c.mode0MapDirty[layer] = false
 	}
-	for layer := 0; layer < mode0LayerCount; layer++ {
-		hw.SetReg16(hw.BG0HOFS+uintptr(layer*4), c.mode0ScrollX[layer])
-		hw.SetReg16(hw.BG0VOFS+uintptr(layer*4), c.mode0ScrollY[layer])
-	}
 	c.mode0UploadStats.LastOAMBytes = c.presentMode0Objects()
-	hw.SetReg16(hw.DISPCNT, mode0LayerDisplay())
+	hw.SetReg16(hw.DISPCNT, mode0LayerDisplay(c.mode0MapSeen))
 	commitEnd := hw.ReadFrameCycleCounter()
 	commitCycles := commitEnd - commitStart
 	c.lastBlitCycles = coldCycles + commitCycles

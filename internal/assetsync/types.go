@@ -13,14 +13,17 @@ import (
 )
 
 const (
-	CanonicalPaletteName = "aurora"
-	DefaultRendererName  = "mode4"
-	MaxPaletteNameLength = 32
-	MaxSpriteN           = 65536
+	CanonicalPaletteName   = "aurora"
+	DefaultRendererName    = "mode4"
+	NewProjectRendererName = "auto"
+	MaxPaletteNameLength   = 32
+	MaxSpriteN             = 65536
 	// MapStreamingThresholdCells must match runtime.MapStreamingThresholdCells.
 	// Maps above this size use the fixed ROM-backed chunk cache instead of a
 	// full EWRAM copy. Keep the value here so assetsync does not import runtime.
 	MapStreamingThresholdCells = 16384
+	MapSchemaVersion           = 2
+	MapLayerCount              = 4
 )
 
 // Project is the small project-level asset configuration. Only one palette
@@ -72,11 +75,23 @@ type Spritesheet struct {
 	Sprites []SpriteRecord `json:"sprites"`
 }
 
-// Map is the native dense uint16-ID map format.
+// MapLayer is one fixed logical background plane. IDs are stable and range
+// from BG0 (back) through BG3 (front); array order is not semantic.
+type MapLayer struct {
+	ID    int   `json:"id"`
+	Cells []int `json:"cells"`
+}
+
+// Map is the native dense uint16-ID map format. Version 0 is the original
+// single-plane shape and stores Cells directly. Version 2 stores four
+// independent background planes in Layers. Readers support both shapes so
+// opening an existing project never rewrites or expands it implicitly.
 type Map struct {
-	Width  int   `json:"width"`
-	Height int   `json:"height"`
-	Cells  []int `json:"cells"`
+	Version int        `json:"version,omitempty"`
+	Width   int        `json:"width"`
+	Height  int        `json:"height"`
+	Cells   []int      `json:"cells,omitempty"`
+	Layers  []MapLayer `json:"layers,omitempty"`
 }
 
 // Assets is the validated, flattened representation used by code generation.
@@ -94,6 +109,7 @@ type Assets struct {
 	SpriteN       int
 	MapW          int
 	MapH          int
+	MapLayers     int
 	MapStreaming  bool
 	SheetROM      []byte
 	MapROM        []uint16

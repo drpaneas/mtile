@@ -50,6 +50,13 @@ type PerformanceStats struct {
 	PresentStart    uint16
 	PresentEnd      uint16
 	DiagnosticSkips uint32
+	HeapCapacity    uint32
+	HeapAllocated   uint32
+	HeapLive        uint32
+	HeapPeakLive    uint32
+	HeapHandles     uint32
+	HeapHandleLimit uint32
+	HeapError       HeapError
 }
 
 func (c *Context) SetProfiling(enabled bool) {
@@ -399,11 +406,21 @@ func (c *Context) PerformanceStats() PerformanceStats {
 		PresentStart:    c.lastPresentStart,
 		PresentEnd:      c.lastPresentEnd,
 		DiagnosticSkips: c.frameSkips,
+		HeapCapacity:    uint32(heapSize),
+		HeapHandleLimit: uint32(maxHandles),
+		HeapError:       c.lastHeapErr,
 	}
 	if c.heapReady {
 		stats.GCCount = c.heap.collectCount
 		stats.LastGC = c.heap.lastCollectCycles
 		stats.MaxGC = c.heap.maxCollectCycles
+		stats.HeapAllocated = c.heap.cursor
+		stats.HeapLive = c.heap.lastLiveBytes
+		stats.HeapPeakLive = c.heap.peakLiveBytes
+		stats.HeapHandles = uint32(c.heap.handleN)
+		if c.heap.terminal != HeapOK {
+			stats.HeapError = c.heap.terminal
+		}
 	}
 	return stats
 }

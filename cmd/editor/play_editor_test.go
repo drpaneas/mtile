@@ -2,9 +2,26 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"github.com/drpaneas/mtile/internal/emulator"
 )
+
+func TestCartridgePlaybackBufferFitsInteractiveLatencyBudget(t *testing.T) {
+	frameDuration := time.Second / 60
+	if cartridgePlaybackBufferSize < frameDuration {
+		t.Fatalf("cartridge buffer = %s, want at least one 60 Hz frame (%s)", cartridgePlaybackBufferSize, frameDuration)
+	}
+	if cartridgePlaybackBufferSize > 25*time.Millisecond {
+		t.Fatalf("cartridge buffer = %s, want no more than 25ms", cartridgePlaybackBufferSize)
+	}
+	// Oto can briefly hold almost twice the configured player buffer. Include
+	// the device queue so future tuning cannot silently restore perceptible lag.
+	hostQueueBudget := 2*cartridgePlaybackBufferSize + editorDeviceBufferSize
+	if hostQueueBudget > 100*time.Millisecond {
+		t.Fatalf("cartridge host queue budget = %s, want no more than 100ms", hostQueueBudget)
+	}
+}
 
 type fakePlayStepper struct {
 	calls int

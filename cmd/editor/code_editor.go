@@ -23,6 +23,11 @@ var (
 	codeCharWidth  = uiFontStyles[textComfort].codeCharWidth
 )
 
+const (
+	codeHorizontalScrollbarHeight = 12
+	codeHorizontalThumbMinWidth   = 36
+)
+
 var (
 	codeKeywordColor = color.RGBA{R: 255, G: 174, B: 112, A: 255}
 	codeStringColor  = color.RGBA{R: 184, G: 210, B: 145, A: 255}
@@ -42,9 +47,19 @@ type codeLayout struct {
 	Editor      editor.Rect
 	Gutter      editor.Rect
 	Text        editor.Rect
+	Horizontal  editor.Rect
 	Inspector   editor.Rect
 	Diagnostics editor.Rect
 	Search      editor.Rect
+}
+
+func codeViewportLayout(editorRect editor.Rect) (gutter, textRect, horizontal editor.Rect) {
+	gutterWidth := codeCharWidth*4 + 20
+	gutter = editor.Rect{X: editorRect.X, Y: editorRect.Y, W: gutterWidth, H: editorRect.H}
+	textHeight := max(1, editorRect.H-codeHorizontalScrollbarHeight)
+	textRect = editor.Rect{X: gutter.X + gutter.W, Y: editorRect.Y, W: editorRect.W - gutter.W, H: textHeight}
+	horizontal = editor.Rect{X: textRect.X, Y: textRect.Y + textRect.H, W: textRect.W, H: editorRect.H - textRect.H}
+	return gutter, textRect, horizontal
 }
 
 type codeTabHit struct {
@@ -156,16 +171,14 @@ func newCodeLayout() codeLayout {
 	sidebar := editor.Rect{X: 0, Y: contentY + headerH, W: sidebarW, H: statusBarRect.Y - contentY - headerH}
 	tabs := editor.Rect{X: sidebarW + padding, Y: contentY + headerH + padding, W: screenWidth - sidebarW - inspectorW - padding*3, H: 34}
 	editorRect := editor.Rect{X: tabs.X, Y: tabs.Y + tabs.H, W: tabs.W, H: statusBarRect.Y - (tabs.Y + tabs.H) - bottomH - padding}
-	gutterWidth := codeCharWidth*4 + 20
-	gutter := editor.Rect{X: editorRect.X, Y: editorRect.Y, W: gutterWidth, H: editorRect.H}
-	textRect := editor.Rect{X: gutter.X + gutter.W, Y: editorRect.Y, W: editorRect.W - gutter.W, H: editorRect.H}
+	gutter, textRect, horizontal := codeViewportLayout(editorRect)
 	inspector := editor.Rect{X: editorRect.X + editorRect.W + padding, Y: editorRect.Y, W: inspectorW, H: editorRect.H}
 	diagnostics := editor.Rect{X: editorRect.X, Y: editorRect.Y + editorRect.H + padding, W: screenWidth - editorRect.X - padding, H: bottomH - padding}
 	fileRect := editor.Rect{X: 178, Y: contentY + 18, W: min(560, screenWidth/3), H: 34}
 	saveRect := editor.Rect{X: screenWidth - 302, Y: contentY + 15, W: 126, H: 38}
 	runRect := editor.Rect{X: screenWidth - 164, Y: contentY + 15, W: 146, H: 38}
 	search := editor.Rect{X: textRect.X + textRect.W - 390, Y: textRect.Y + 8, W: 370, H: 34}
-	return codeLayout{Header: header, Sidebar: sidebar, File: fileRect, Save: saveRect, Run: runRect, Tabs: tabs, Editor: editorRect, Gutter: gutter, Text: textRect, Inspector: inspector, Diagnostics: diagnostics, Search: search}
+	return codeLayout{Header: header, Sidebar: sidebar, File: fileRect, Save: saveRect, Run: runRect, Tabs: tabs, Editor: editorRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Inspector: inspector, Diagnostics: diagnostics, Search: search}
 }
 
 func codeKeyRepeat(key ebiten.Key) bool {
@@ -201,6 +214,8 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 			g.saveCode()
 		case rectContains(layout.Run, mx, my):
 			g.startRun()
+		case rectContains(layout.Horizontal, mx, my):
+			g.beginCodeHorizontalDrag(layout, mx)
 		case rectContains(layout.Text, mx, my):
 			g.code.SetCursor(g.codeOffsetAt(layout, mx, my), ebiten.IsKeyPressed(ebiten.KeyShift))
 			g.codeDragging = true
@@ -209,13 +224,22 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 	}
 	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		g.codeDragging = false
+		g.codeHorizontalDragging = false
+	} else if g.codeHorizontalDragging {
+		g.updateCodeHorizontalDrag(layout, mx)
 	} else if g.codeDragging {
 		g.code.SetCursor(g.codeOffsetAt(layout, mx, my), true)
 	}
 	if rectContains(layout.Text, mx, my) {
-		_, wheelY := ebiten.Wheel()
+		wheelX, wheelY := ebiten.Wheel()
+		if ebiten.IsKeyPressed(ebiten.KeyShift) && wheelX == 0 {
+			wheelX, wheelY = wheelY, 0
+		}
 		if wheelY != 0 {
-			g.codeScrollLine = max(0, g.codeScrollLine-int(wheelY*3))
+			g.codeScrollLine = max(0, g.codeScrollLine-codeWheelSteps(wheelY))
+		}
+		if wheelX != 0 {
+			g.codeScrollColumn = min(max(0, g.codeScrollColumn-codeWheelSteps(wheelX)), g.codeHorizontalScrollLimit(layout))
 		}
 	} else if rectContains(layout.Sidebar, mx, my) {
 		_, wheelY := ebiten.Wheel()
@@ -340,10 +364,86 @@ func (g *Game) codeOffsetAt(layout codeLayout, x, y int) int {
 	return g.code.Offset(line, column)
 }
 
+func codeWheelSteps(offset float64) int {
+	steps := int(math.Round(offset * 3))
+	if steps == 0 && offset > 0 {
+		return 1
+	}
+	if steps == 0 && offset < 0 {
+		return -1
+	}
+	return steps
+}
+
+func (g *Game) codeVisibleColumns(layout codeLayout) int {
+	return max(1, (layout.Text.W-16)/codeCharWidth)
+}
+
+func (g *Game) codeLongestLineColumns() int {
+	longest := 0
+	for line := 0; line < g.code.LineCount(); line++ {
+		longest = max(longest, len([]rune(g.code.Line(line))))
+	}
+	return longest
+}
+
+func (g *Game) codeHorizontalScrollLimit(layout codeLayout) int {
+	// The extra insertion column lets the caret at the end of the longest line
+	// remain visible without creating an arbitrary empty horizontal canvas.
+	return max(0, g.codeLongestLineColumns()+1-g.codeVisibleColumns(layout))
+}
+
+func (g *Game) codeHorizontalThumb(layout codeLayout) editor.Rect {
+	track := editor.Rect{X: layout.Horizontal.X + 3, Y: layout.Horizontal.Y + 3, W: max(1, layout.Horizontal.W-6), H: max(3, layout.Horizontal.H-6)}
+	visible := g.codeVisibleColumns(layout)
+	total := max(visible, g.codeLongestLineColumns()+1)
+	thumbWidth := track.W
+	if total > visible {
+		thumbWidth = min(track.W, max(codeHorizontalThumbMinWidth, track.W*visible/total))
+	}
+	limit := g.codeHorizontalScrollLimit(layout)
+	travel := max(0, track.W-thumbWidth)
+	thumbX := track.X
+	if limit > 0 && travel > 0 {
+		thumbX += min(limit, max(0, g.codeScrollColumn)) * travel / limit
+	}
+	return editor.Rect{X: thumbX, Y: track.Y, W: thumbWidth, H: track.H}
+}
+
+func (g *Game) beginCodeHorizontalDrag(layout codeLayout, x int) {
+	thumb := g.codeHorizontalThumb(layout)
+	if g.codeHorizontalScrollLimit(layout) == 0 {
+		g.codeScrollColumn = 0
+		return
+	}
+	g.codeDragging = false
+	g.codeHorizontalDragging = true
+	if x >= thumb.X && x < thumb.X+thumb.W {
+		g.codeHorizontalDragOffset = x - thumb.X
+	} else {
+		g.codeHorizontalDragOffset = thumb.W / 2
+	}
+	g.updateCodeHorizontalDrag(layout, x)
+}
+
+func (g *Game) updateCodeHorizontalDrag(layout codeLayout, x int) {
+	thumb := g.codeHorizontalThumb(layout)
+	trackX := layout.Horizontal.X + 3
+	trackWidth := max(1, layout.Horizontal.W-6)
+	travel := max(0, trackWidth-thumb.W)
+	limit := g.codeHorizontalScrollLimit(layout)
+	if travel == 0 || limit == 0 {
+		g.codeScrollColumn = 0
+		return
+	}
+	position := min(travel, max(0, x-trackX-g.codeHorizontalDragOffset))
+	g.codeScrollColumn = int(math.Round(float64(position*limit) / float64(travel)))
+}
+
 func (g *Game) keepCodeCursorVisible(layout codeLayout) {
 	line, column := g.code.LineColumn(g.code.Cursor())
 	visibleLines := max(1, (layout.Text.H-8)/codeLineHeight)
-	visibleColumns := max(1, (layout.Text.W-16)/codeCharWidth)
+	visibleColumns := g.codeVisibleColumns(layout)
 	if line < g.codeScrollLine {
 		g.codeScrollLine = line
 	} else if line >= g.codeScrollLine+visibleLines {
@@ -355,6 +455,7 @@ func (g *Game) keepCodeCursorVisible(layout codeLayout) {
 		g.codeScrollColumn = column - visibleColumns + 1
 	}
 	g.codeScrollLine = min(g.codeScrollLine, max(0, g.code.LineCount()-1))
+	g.codeScrollColumn = min(max(0, g.codeScrollColumn), g.codeHorizontalScrollLimit(layout))
 }
 
 func (g *Game) saveCode() bool {
@@ -371,7 +472,12 @@ func (g *Game) saveCode() bool {
 		return false
 	}
 	g.codeClosePending = ""
-	g.statusMsg = document.Relative + " saved"
+	usage, analysisErr := g.refreshProjectSourceAnalysis()
+	if analysisErr != nil {
+		g.statusMsg = document.Relative + " saved; source analysis found a problem"
+	} else {
+		g.statusMsg = fmt.Sprintf("%s saved; globals %d/%d", document.Relative, usage.Count, usage.Limit)
+	}
 	return true
 }
 
@@ -544,17 +650,17 @@ func (g *Game) drawCodeMode(screen *ebiten.Image) {
 	fillRect(screen, editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}, colorInk)
 	fillRect(screen, layout.Header, color.RGBA{R: 30, G: 28, B: 75, A: 255})
 	fillRect(screen, editor.Rect{X: 0, Y: layout.Header.Y, W: layout.Header.W, H: 3}, colorCode)
-	drawTextScale(screen, "MTILE", 20, layout.Header.Y+4, 2, colorText)
-	drawText(screen, "CARTRIDGE WORKSTATION  /  LUA", 20, layout.Header.Y+layout.Header.H-uiTextHeight-4, colorLCD)
+	drawDevelopTextScale(screen, "MTILE", 20, layout.Header.Y+4, 2, colorText)
+	drawDevelopText(screen, "CARTRIDGE WORKSTATION  /  LUA", 20, layout.Header.Y+layout.Header.H-developTextHeight-4, colorLCD)
 	fillRect(screen, layout.File, colorBackground)
 	strokeRect(screen, layout.File, colorBorder)
 	name := filepath.Base(g.codePath)
 	if g.code.Dirty() {
 		name += "  *"
 	}
-	drawText(screen, name, layout.File.X+12, layout.File.Y+(layout.File.H-uiTextHeight)/2, colorText)
-	drawNativeButton(screen, layout.Save, "SAVE", false, colorCode)
-	drawNativeButton(screen, layout.Run, "RUN GAME  >", false, colorRun)
+	drawDevelopText(screen, name, layout.File.X+12, layout.File.Y+(layout.File.H-developTextHeight)/2, colorText)
+	drawDevelopButton(screen, layout.Save, "SAVE", false, colorCode)
+	drawDevelopButton(screen, layout.Run, "RUN GAME  >", false, colorRun)
 
 	g.drawCodeSidebar(screen, layout)
 	g.drawCodeTabs(screen, layout)
@@ -578,7 +684,7 @@ func (g *Game) drawCodeOverlays(screen *ebiten.Image, layout codeLayout) {
 		} else if g.codeSearchDraft != "" {
 			label += "   no matches"
 		}
-		drawText(screen, truncateMusicEditText(label, max(1, layout.Search.W/codeCharWidth-3)), layout.Search.X+10, layout.Search.Y+9, colorText)
+		drawDevelopText(screen, truncateDevelopText(label, layout.Search.W-20), layout.Search.X+10, layout.Search.Y+9, colorText)
 	}
 	if g.codeCompletionOpen {
 		g.drawCodeCompletions(screen, layout)
@@ -588,9 +694,9 @@ func (g *Game) drawCodeOverlays(screen *ebiten.Image, layout codeLayout) {
 func (g *Game) drawCodeSidebar(screen *ebiten.Image, layout codeLayout) {
 	fillRect(screen, layout.Sidebar, colorPanel)
 	drawLine(screen, layout.Sidebar.X+layout.Sidebar.W-1, layout.Sidebar.Y, layout.Sidebar.X+layout.Sidebar.W-1, layout.Sidebar.Y+layout.Sidebar.H, colorBorder)
-	drawText(screen, "PROJECT", 18, layout.Sidebar.Y+20, colorDim)
-	rootName := truncateMusicEditText(filepath.Base(g.model.Dir), max(1, (layout.Sidebar.W-34)/codeCharWidth))
-	drawText(screen, rootName, 18, layout.Sidebar.Y+46, colorText)
+	drawDevelopText(screen, "PROJECT", 18, layout.Sidebar.Y+20, colorDim)
+	rootName := truncateDevelopText(filepath.Base(g.model.Dir), layout.Sidebar.W-34)
+	drawDevelopText(screen, rootName, 18, layout.Sidebar.Y+46, colorText)
 	visible := g.visibleDevelopProjectEntries()
 	rows := max(1, (layout.Sidebar.H-84)/27)
 	g.codeProjectScroll = min(g.codeProjectScroll, max(0, len(visible)-rows))
@@ -613,13 +719,13 @@ func (g *Game) drawCodeSidebar(screen *ebiten.Image, layout codeLayout) {
 		} else if filepath.Ext(entry.Path) != ".lua" {
 			icon, clr = "·  ", colorDim
 		}
-		available := max(1, (r.X+r.W-x)/codeCharWidth-len(icon))
-		drawText(screen, icon+truncateMusicEditText(entry.Name, available), x, r.Y+(r.H-uiTextHeight)/2, clr)
+		available := max(1, r.X+r.W-x-developTextWidth(icon))
+		drawDevelopText(screen, icon+truncateDevelopText(entry.Name, available), x, r.Y+(r.H-developTextHeight)/2, clr)
 	}
 	if len(visible) == 0 {
-		drawText(screen, "No project files", 18, layout.Sidebar.Y+86, colorDim)
+		drawDevelopText(screen, "No project files", 18, layout.Sidebar.Y+86, colorDim)
 	}
-	drawText(screen, "Cmd/Ctrl+P  QUICK OPEN", 16, layout.Sidebar.Y+layout.Sidebar.H-28, colorLCD)
+	drawDevelopText(screen, "Cmd/Ctrl+P  QUICK OPEN", 16, layout.Sidebar.Y+layout.Sidebar.H-28, colorLCD)
 }
 
 func (g *Game) drawCodeTabs(screen *ebiten.Image, layout codeLayout) {
@@ -639,13 +745,13 @@ func (g *Game) drawCodeTabs(screen *ebiten.Image, layout codeLayout) {
 		if document != nil && document.Editor.Dirty() {
 			name += "  *"
 		}
-		name = truncateMusicEditText(name, max(1, (hit.Rect.W-42)/codeCharWidth))
+		name = truncateDevelopText(name, hit.Rect.W-42)
 		clr := colorDim
 		if active {
 			clr = colorText
 		}
-		drawText(screen, name, hit.Rect.X+11, hit.Rect.Y+(hit.Rect.H-uiTextHeight)/2, clr)
-		drawTextCentered(screen, "x", hit.Close, map[bool]color.Color{false: colorDim, true: colorCode}[active])
+		drawDevelopText(screen, name, hit.Rect.X+11, hit.Rect.Y+(hit.Rect.H-developTextHeight)/2, clr)
+		drawDevelopTextCentered(screen, "x", hit.Close, map[bool]color.Color{false: colorDim, true: colorCode}[active])
 	}
 }
 
@@ -655,12 +761,12 @@ func (g *Game) drawCodeQuickOpen(screen *ebiten.Image, layout codeLayout) {
 	box := editor.Rect{X: layout.Editor.X + (layout.Editor.W-width)/2, Y: layout.Editor.Y + 46, W: width, H: height}
 	fillRect(screen, box, colorInk)
 	strokeRoundedRect(screen, box, 4, colorCode)
-	drawText(screen, "QUICK OPEN", box.X+16, box.Y+14, colorCode)
+	drawDevelopText(screen, "QUICK OPEN", box.X+16, box.Y+14, colorCode)
 	query := g.codeQuickDraft
 	if query == "" {
 		query = "type a Lua file name..."
 	}
-	drawText(screen, truncateMusicEditText(query, max(1, (box.W-32)/codeCharWidth)), box.X+16, box.Y+38, map[bool]color.Color{false: colorText, true: colorDim}[g.codeQuickDraft == ""])
+	drawDevelopText(screen, truncateDevelopText(query, box.W-32), box.X+16, box.Y+38, map[bool]color.Color{false: colorText, true: colorDim}[g.codeQuickDraft == ""])
 	visible := min(8, len(g.codeQuickMatches))
 	start := min(max(0, g.codeQuickIndex-visible+1), max(0, len(g.codeQuickMatches)-visible))
 	for row := 0; row < visible; row++ {
@@ -671,10 +777,10 @@ func (g *Game) drawCodeQuickOpen(screen *ebiten.Image, layout codeLayout) {
 		if index == g.codeQuickIndex {
 			fillRect(screen, editor.Rect{X: box.X + 8, Y: y - 5, W: box.W - 16, H: 27}, colorIndigo)
 		}
-		drawText(screen, filepath.ToSlash(relative), box.X+18, y, map[bool]color.Color{false: colorDim, true: colorText}[index == g.codeQuickIndex])
+		drawDevelopText(screen, filepath.ToSlash(relative), box.X+18, y, map[bool]color.Color{false: colorDim, true: colorText}[index == g.codeQuickIndex])
 	}
 	if len(g.codeQuickMatches) == 0 {
-		drawText(screen, "No matching Lua files", box.X+18, box.Y+72, colorDim)
+		drawDevelopText(screen, "No matching Lua files", box.X+18, box.Y+72, colorDim)
 	}
 }
 
@@ -705,9 +811,13 @@ func (g *Game) drawCodeDocument(screen *ebiten.Image, layout codeLayout) {
 				to = lineStart + len(line) + 1
 			}
 			if from < to {
-				x := layout.Text.X + 8 + (from-lineStart-g.codeScrollColumn)*codeCharWidth
-				w := (to - from) * codeCharWidth
-				fillRect(screen, editor.Rect{X: max(layout.Text.X, x), Y: y - 2, W: min(w, layout.Text.X+layout.Text.W-max(layout.Text.X, x)), H: codeLineHeight - 2}, color.RGBA{R: 65, G: 82, B: 122, A: 255})
+				x1 := layout.Text.X + 8 + (from-lineStart-g.codeScrollColumn)*codeCharWidth
+				x2 := x1 + (to-from)*codeCharWidth
+				clipX1 := max(layout.Text.X, x1)
+				clipX2 := min(layout.Text.X+layout.Text.W, x2)
+				if clipX2 > clipX1 {
+					fillRect(screen, editor.Rect{X: clipX1, Y: y - 2, W: clipX2 - clipX1, H: codeLineHeight - 2}, color.RGBA{R: 65, G: 82, B: 122, A: 255})
+				}
 			}
 		}
 		drawCodeText(screen, fmt.Sprintf("%4d", lineNumber+1), layout.Gutter.X+10, y, colorDim)
@@ -717,13 +827,22 @@ func (g *Game) drawCodeDocument(screen *ebiten.Image, layout codeLayout) {
 		x := int(g.theme.codeCaretX)
 		y := int(g.theme.codeCaretY)
 		if x >= layout.Text.X && x < layout.Text.X+layout.Text.W {
-			alpha := uint8(255)
-			if g.theme.level != effectsClean {
-				alpha = uint8(160 + 95*(1+math.Sin(float64(g.theme.frame)*.16))/2)
-			}
-			fillRect(screen, editor.Rect{X: x, Y: y, W: 2, H: codeLineHeight - 3}, rgba(codeCursorColor, alpha))
+			fillRect(screen, editor.Rect{X: x, Y: y, W: 2, H: codeLineHeight - 3}, codeCursorColor)
 		}
 	}
+	g.drawCodeHorizontalScrollbar(screen, layout)
+}
+
+func (g *Game) drawCodeHorizontalScrollbar(screen *ebiten.Image, layout codeLayout) {
+	fillRect(screen, layout.Horizontal, colorInk)
+	drawLine(screen, layout.Horizontal.X, layout.Horizontal.Y, layout.Horizontal.X+layout.Horizontal.W, layout.Horizontal.Y, colorBorder)
+	thumb := g.codeHorizontalThumb(layout)
+	var clr color.Color = color.RGBA{R: 74, G: 75, B: 105, A: 255}
+	mx, my := ebiten.CursorPosition()
+	if g.codeHorizontalScrollLimit(layout) > 0 && (g.codeHorizontalDragging || rectContains(thumb, mx, my)) {
+		clr = rgba(colorCode, 190)
+	}
+	fillRoundedRect(screen, thumb, 2, clr)
 }
 
 type codeSegment struct {
@@ -731,17 +850,43 @@ type codeSegment struct {
 	color color.Color
 }
 
+// clipCodeSegments trims an already-highlighted line to the visible viewport.
+// Highlighting must happen first so scrolling into a comment, string, number,
+// or keyword cannot discard the lexical context that starts off-screen.
+func clipCodeSegments(segments []codeSegment, startColumn, visibleColumns int) []codeSegment {
+	if visibleColumns <= 0 {
+		return nil
+	}
+	startColumn = max(0, startColumn)
+	remaining := visibleColumns
+	result := make([]codeSegment, 0, len(segments))
+	for _, segment := range segments {
+		runes := []rune(segment.text)
+		if startColumn >= len(runes) {
+			startColumn -= len(runes)
+			continue
+		}
+		if startColumn > 0 {
+			runes = runes[startColumn:]
+			startColumn = 0
+		}
+		if len(runes) > remaining {
+			runes = runes[:remaining]
+		}
+		if len(runes) != 0 {
+			result = append(result, codeSegment{text: string(runes), color: segment.color})
+			remaining -= len(runes)
+		}
+		if remaining == 0 {
+			break
+		}
+	}
+	return result
+}
+
 func (g *Game) drawCodeLine(screen *ebiten.Image, source string, x, y, width int) {
-	runes := []rune(source)
-	if g.codeScrollColumn >= len(runes) {
-		return
-	}
-	runes = runes[g.codeScrollColumn:]
 	limit := max(0, width/codeCharWidth)
-	if len(runes) > limit {
-		runes = runes[:limit]
-	}
-	for _, segment := range highlightLuaLine(string(runes)) {
+	for _, segment := range clipCodeSegments(highlightLuaLine(source), g.codeScrollColumn, limit) {
 		drawCodeText(screen, segment.text, x, y, segment.color)
 		x += len([]rune(segment.text)) * codeCharWidth
 	}
@@ -893,10 +1038,10 @@ func highlightGoLine(line string) []codeSegment {
 func (g *Game) drawCodeInspector(screen *ebiten.Image, layout codeLayout) {
 	fillRect(screen, layout.Inspector, colorPanel)
 	strokeRect(screen, layout.Inspector, colorBorder)
-	drawText(screen, "OUTLINE", layout.Inspector.X+16, layout.Inspector.Y+18, colorCode)
+	drawDevelopText(screen, "OUTLINE", layout.Inspector.X+16, layout.Inspector.Y+18, colorCode)
 	functions := codeFunctions(g.code.Text())
 	if len(functions) == 0 {
-		drawText(screen, "No functions yet", layout.Inspector.X+16, layout.Inspector.Y+50, colorDim)
+		drawDevelopText(screen, "No functions yet", layout.Inspector.X+16, layout.Inspector.Y+50, colorDim)
 	}
 	functionLimit := max(1, (350-50-codeTextHeight)/codeLineHeight)
 	for index, item := range functions {
@@ -906,11 +1051,11 @@ func (g *Game) drawCodeInspector(screen *ebiten.Image, layout codeLayout) {
 		drawCodeText(screen, item, layout.Inspector.X+18, layout.Inspector.Y+50+index*codeLineHeight, colorText)
 	}
 	drawLine(screen, layout.Inspector.X+12, layout.Inspector.Y+350, layout.Inspector.X+layout.Inspector.W-12, layout.Inspector.Y+350, colorBorder)
-	drawText(screen, "MTILE API", layout.Inspector.X+16, layout.Inspector.Y+370, colorLCD)
-	for index, item := range []string{"spr(id, x, y)", "map()", "btn(id)", "sfx(id)", "music(id)", "gba_note(ch, note, vol)"} {
+	drawDevelopText(screen, "MTILE API", layout.Inspector.X+16, layout.Inspector.Y+370, colorLCD)
+	for index, item := range []string{"spr(id, x, y)", "map(bg, mx, my, sx, sy, mw, mh, mask)", "btn(id)", "sfx(id)", "music(id)", "gba_note(ch, note, vol)"} {
 		drawCodeText(screen, item, layout.Inspector.X+18, layout.Inspector.Y+402+index*codeLineHeight, codeBuiltinColor)
 	}
-	drawText(screen, "Ctrl+Space  autocomplete", layout.Inspector.X+16, layout.Inspector.Y+layout.Inspector.H-32, colorDim)
+	drawDevelopText(screen, "Ctrl+Space  autocomplete", layout.Inspector.X+16, layout.Inspector.Y+layout.Inspector.H-32, colorDim)
 }
 
 func codeFunctions(source string) []string {
@@ -935,20 +1080,20 @@ func codeFunctions(source string) []string {
 func (g *Game) drawCodeDiagnostics(screen *ebiten.Image, layout codeLayout) {
 	fillRect(screen, layout.Diagnostics, colorPanel)
 	strokeRect(screen, layout.Diagnostics, colorBorder)
-	drawText(screen, "PROBLEMS", layout.Diagnostics.X+16, layout.Diagnostics.Y+16, colorDim)
+	drawDevelopText(screen, "PROBLEMS", layout.Diagnostics.X+16, layout.Diagnostics.Y+16, colorDim)
 	clr := colorRun
 	icon := "OK"
 	if g.codeDiagnosticLine != 0 {
 		clr = colorDanger
 		icon = "ERROR"
 	}
-	drawText(screen, icon, layout.Diagnostics.X+16, layout.Diagnostics.Y+48, clr)
+	drawDevelopText(screen, icon, layout.Diagnostics.X+16, layout.Diagnostics.Y+48, clr)
 	message := g.codeDiagnostic
 	if g.codeDiagnosticLine != 0 {
 		message = fmt.Sprintf("Ln %d, Col %d  %s", g.codeDiagnosticLine, g.codeDiagnosticColumn, message)
 	}
-	drawText(screen, truncateUIText(message, layout.Diagnostics.W-110), layout.Diagnostics.X+94, layout.Diagnostics.Y+48, colorText)
-	drawText(screen, "Lua is parsed and transpiled inside Mtile. No Lua installation is needed.", layout.Diagnostics.X+16, layout.Diagnostics.Y+84, colorLCD)
+	drawDevelopText(screen, truncateDevelopText(message, layout.Diagnostics.W-110), layout.Diagnostics.X+94, layout.Diagnostics.Y+48, colorText)
+	drawDevelopText(screen, "Lua is parsed and transpiled inside Mtile. No Lua installation is needed.", layout.Diagnostics.X+16, layout.Diagnostics.Y+84, colorLCD)
 }
 
 func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {
@@ -956,7 +1101,7 @@ func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {
 	x := layout.Text.X + 8 + (column-g.codeScrollColumn)*codeCharWidth
 	y := layout.Text.Y + 7 + (line-g.codeScrollLine+1)*codeLineHeight
 	visible := min(8, len(g.codeCompletions))
-	box := editor.Rect{X: min(x, layout.Text.X+layout.Text.W-230), Y: min(y, layout.Text.Y+layout.Text.H-visible*24-8) + max(0, 8-g.theme.completionFrame), W: 222, H: visible * 24}
+	box := editor.Rect{X: min(x, layout.Text.X+layout.Text.W-230), Y: min(y, layout.Text.Y+layout.Text.H-visible*24-8), W: 222, H: visible * 24}
 	fillRect(screen, box, colorInk)
 	strokeRect(screen, box, colorCode)
 	start := min(max(0, g.codeCompletionIndex-visible+1), max(0, len(g.codeCompletions)-visible))
@@ -965,6 +1110,6 @@ func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {
 		if index == g.codeCompletionIndex {
 			fillRect(screen, editor.Rect{X: box.X + 1, Y: box.Y + row*24 + 1, W: box.W - 2, H: 22}, colorIndigo)
 		}
-		drawText(screen, g.codeCompletions[index], box.X+10, box.Y+6+row*24, colorText)
+		drawDevelopText(screen, g.codeCompletions[index], box.X+10, box.Y+6+row*24, colorText)
 	}
 }

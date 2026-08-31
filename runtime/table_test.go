@@ -2,6 +2,62 @@ package runtime
 
 import "testing"
 
+func TestNumberArrayUsesCompactNumericStorageAndSurvivesCollection(t *testing.T) {
+	var c Context
+	array, err := c.NewNumberArray(64)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	if got, want := c.heap.cursor, uint32(numberArrayHeader+64*4); got != want {
+		t.Fatalf("allocated bytes = %d, want %d", got, want)
+	}
+	if array.Kind != KindTable || c.heap.handles[array.Ref].Kind() != ObjNumberArray {
+		t.Fatalf("number array identity = %#v kind=%d", array, c.heap.handles[array.Ref].Kind())
+	}
+	want := FromInt(7) + One/2
+	if err := c.NumberArraySet(array, 37, want); err != HeapOK {
+		t.Fatal(err)
+	}
+	if got := c.NumberArrayGet(array, 37); got != want {
+		t.Fatalf("value = %d, want %d", got, want)
+	}
+	if c.NumberArrayLen(array) != 64 || c.NumberArrayGet(array, 0) != 0 || c.NumberArrayGet(array, 65) != 0 {
+		t.Fatal("number array bounds/length contract failed")
+	}
+	if err := c.NumberArraySet(array, 65, FromInt(99)); err != HeapOK {
+		t.Fatal(err)
+	}
+
+	root := array
+	c.RegisterGlobal(&root)
+	if err := c.Collect(); err != HeapOK {
+		t.Fatal(err)
+	}
+	if got := c.NumberArrayGet(root, 37); got != want {
+		t.Fatalf("value after collection = %d, want %d", got, want)
+	}
+}
+
+func TestNumberArrayRejectsInvalidLengthsAndGenericObjects(t *testing.T) {
+	var c Context
+	if _, err := c.NewNumberArray(-1); err != HeapOOM {
+		t.Fatalf("negative length error = %d", err)
+	}
+	if _, err := c.NewNumberArray(maxArrayCap + 1); err != HeapOOM {
+		t.Fatalf("oversized length error = %d", err)
+	}
+	table, err := c.NewTable()
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	if got := c.NumberArrayGet(table, 1); got != 0 {
+		t.Fatalf("generic table numeric read = %d", got)
+	}
+	if err := c.NumberArraySet(table, 1, One); err != HeapCorruptRef {
+		t.Fatalf("generic table numeric write error = %d", err)
+	}
+}
+
 func TestTableAddDelDeliCount(t *testing.T) {
 	t.Parallel()
 	c := new(Context)
@@ -234,5 +290,102 @@ func TestTableRejectsMismatchedHandleKind(t *testing.T) {
 	}
 	if c.stringBytes(Value{Kind: KindString, Ref: tab.Ref}) != nil {
 		t.Fatal("string view of table handle returned bytes")
+	}
+}
+
+func TestStableTableFieldCacheReadsAndWrites(t *testing.T) {
+	t.Parallel()
+	c := new(Context)
+	tab, err := c.NewTableWithCaps(1, 8)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	key := c.InternStatic("x")
+	if err := c.TableSet(tab, key, IntVal(7)); err != HeapOK {
+		t.Fatal(err)
+	}
+
+	var readCache TableFieldCache
+	if got := c.TableGetStable(tab, key, &readCache); got.Int() != 7 || readCache == 0 {
+		t.Fatalf("first stable read = %d cache=%d", got.Int(), readCache)
+	}
+	if got := c.TableGetStable(tab, key, &readCache); got.Int() != 7 {
+		t.Fatalf("cached stable read = %d", got.Int())
+	}
+
+	var writeCache TableFieldCache
+	if err := c.TableSetStable(tab, key, IntVal(11), &writeCache); err != HeapOK || writeCache == 0 {
+		t.Fatalf("first stable write err=%d cache=%d", err, writeCache)
+	}
+	if err := c.TableSetStable(tab, key, IntVal(13), &writeCache); err != HeapOK {
+		t.Fatal(err)
+	}
+	if got := c.TableGet(tab, key); got.Int() != 13 {
+		t.Fatalf("stable write result = %d", got.Int())
+	}
+}
+
+func TestStableTableFieldCacheSurvivesCollection(t *testing.T) {
+	t.Parallel()
+	f := new(gcFixture)
+	tab, err := f.c.NewTableWithCaps(1, 8)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	f.root(0, tab)
+	key := f.c.InternStatic("x")
+	if err := f.c.TableSet(tab, key, IntVal(21)); err != HeapOK {
+		t.Fatal(err)
+	}
+	var cache TableFieldCache
+	if got := f.c.TableGetStable(tab, key, &cache); got.Int() != 21 || cache == 0 {
+		t.Fatalf("first read = %d cache=%d", got.Int(), cache)
+	}
+	if err := f.c.Collect(); err != HeapOK {
+		t.Fatal(err)
+	}
+	if got := f.c.TableGetStable(f.slots[0], key, &cache); got.Int() != 21 {
+		t.Fatalf("post-collection cached read = %d", got.Int())
+	}
+}
+
+func TestStableNumericTableFieldCache(t *testing.T) {
+	t.Parallel()
+	c := new(Context)
+	tab, err := c.NewTableWithCaps(1, 8)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	key := c.InternStatic("x")
+	if err := c.TableSet(tab, key, NumVal(FromInt(3)+One/2)); err != HeapOK {
+		t.Fatal(err)
+	}
+	var readCache TableFieldCache
+	if got := c.TableGetStableNumber(tab, key, &readCache); got != FromInt(3)+One/2 || readCache == 0 {
+		t.Fatalf("first numeric read = %d cache=%d", got, readCache)
+	}
+	var writeCache TableFieldCache
+	if err := c.TableSetStableNumber(tab, key, FromInt(7), &writeCache); err != HeapOK || writeCache == 0 {
+		t.Fatalf("numeric write err=%d cache=%d", err, writeCache)
+	}
+	if got := c.TableGetStableNumber(tab, key, &readCache); got != FromInt(7) {
+		t.Fatalf("cached numeric read after write = %d", got)
+	}
+}
+
+func TestStableNumericTableFieldRejectsNonNumberFirstRead(t *testing.T) {
+	t.Parallel()
+	c := new(Context)
+	tab, err := c.NewTableWithCaps(1, 8)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	key := c.InternStatic("x")
+	if err := c.TableSet(tab, key, BoolVal(true)); err != HeapOK {
+		t.Fatal(err)
+	}
+	var cache TableFieldCache
+	if got := c.TableGetStableNumber(tab, key, &cache); got != 0 || cache != 0 {
+		t.Fatalf("nonnumeric first read = %d cache=%d", got, cache)
 	}
 }

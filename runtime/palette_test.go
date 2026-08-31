@@ -7,6 +7,7 @@ import (
 )
 
 func TestPaletteHas256EntriesAndSeparateLayers(t *testing.T) {
+	requireSoftwareFramebuffer(t)
 	hw.ResetForTest()
 	var c Context
 	var colors [256]uint16

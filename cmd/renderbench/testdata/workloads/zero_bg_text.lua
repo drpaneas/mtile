@@ -1,0 +1,10 @@
+function _init()
+end
+
+function _update()
+end
+
+function _draw()
+  cls(0)
+  print("hello gba",8,8,7)
+end

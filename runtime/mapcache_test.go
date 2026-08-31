@@ -210,6 +210,39 @@ func TestStreamingMapReadsAllCellsAcrossChunkSeams(t *testing.T) {
 	}
 }
 
+func TestStreamingLayeredMapCacheKeysIncludeBackground(t *testing.T) {
+	const width, height, layers = 64, 64, 4
+	planeCells := width * height
+	mapROM := make([]uint16, planeCells*layers)
+	for layer := 0; layer < layers; layer++ {
+		mapROM[layer*planeCells+17*width+33] = uint16(layer + 1)
+	}
+	sheet := make([]byte, 40*8)
+	image := &AssetImage{
+		SheetW: 40, SheetH: 8, SpriteCols: 5, SpriteRows: 1, SpriteN: 5,
+		MapW: width, MapH: height, MapLayers: layers, MapStreaming: true,
+		Sheet: sheet, Map: mapROM, Flags: make([]byte, 5),
+	}
+	ram := &AssetMemory{
+		SheetW: 40, SheetH: 8, SpriteCols: 5, SpriteRows: 1, SpriteN: 5,
+		MapW: width, MapH: height, MapLayers: layers, MapStreaming: true,
+		Sheet: make([]byte, len(sheet)), Map: make([]uint16, MapCacheCells), Flags: make([]byte, 5),
+		MapChunks: make([]MapChunk, MapCacheSlots), MapEdits: make([]MapEdit, MapEditCapacity),
+	}
+	var c Context
+	if !c.Init(image, ram) {
+		t.Fatal("streaming layered Init returned false")
+	}
+	for layer := 0; layer < layers; layer++ {
+		if got := c.mapGetLayer(layer, 33, 17); got != uint16(layer+1) {
+			t.Fatalf("BG%d streamed value = %d, want %d", layer, got, layer+1)
+		}
+	}
+	if got := c.Mget(33, 17); got != 1 {
+		t.Fatalf("legacy Mget read %d, want BG0 value 1", got)
+	}
+}
+
 func TestStreamingMapMsetSurvivesEvictionAndPreservesZeroEdits(t *testing.T) {
 	img, ram := streamingMapFixture(96, 80, func(x, y int) uint16 {
 		return uint16((x + y) & 1)
@@ -257,6 +290,7 @@ func TestStreamingMapEvictionUsesRecentChunkAccess(t *testing.T) {
 }
 
 func TestStreamingMapMapDrawsAcrossChunkSeam(t *testing.T) {
+	requireSoftwareFramebuffer(t)
 	img, ram := streamingMapFixture(96, 80, func(x, y int) uint16 { return 1 })
 	var c Context
 	if !c.Init(img, ram) {

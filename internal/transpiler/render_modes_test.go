@@ -49,6 +49,19 @@ func TestRendererCompatibilityKeepsExactRasterCallsInMode4(t *testing.T) {
 	}
 }
 
+func TestMapBuiltinIncludesExplicitBackgroundForm(t *testing.T) {
+	spec, ok := Builtins["map"]
+	if !ok {
+		t.Fatal("map builtin is missing")
+	}
+	if spec.MinArgs != 0 || spec.MaxArgs != 8 {
+		t.Fatalf("map arity = %d..%d, want 0..8", spec.MinArgs, spec.MaxArgs)
+	}
+	if got := BuiltinRendererCompatibility("map"); got != RendererMode0Conditional {
+		t.Fatalf("map compatibility = %d, want conditional Mode 0", got)
+	}
+}
+
 func TestRenderModeDocumentationMentionsEveryBuiltin(t *testing.T) {
 	document, err := os.ReadFile("../../docs/render-modes.md")
 	if err != nil {

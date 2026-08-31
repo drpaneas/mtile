@@ -4,6 +4,7 @@ import (
 	"github.com/drpaneas/mtile/runtime/gbatarget"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -510,6 +511,9 @@ func TestCreateProjectUsesNativeDefaults(t *testing.T) {
 	if assets.AudioVersion != assetsync.NativeAudioSchemaVersion || assets.NativeAudio == nil {
 		t.Fatalf("default audio = version %d native=%#v", assets.AudioVersion, assets.NativeAudio)
 	}
+	if assets.Project.Renderer != assetsync.NewProjectRendererName {
+		t.Fatalf("new-project renderer = %q, want %q", assets.Project.Renderer, assetsync.NewProjectRendererName)
+	}
 	if assets.NativeAudio.Settings != assetsync.DefaultNativeAudioSettings() ||
 		len(assets.NativeAudio.Library.Sounds) != 0 || len(assets.NativeAudio.Library.Clips) != 0 ||
 		len(assets.NativeAudio.Library.Parts) != 0 || len(assets.NativeAudio.Library.Songs) != 0 {
@@ -531,6 +535,23 @@ func TestCreateProjectUsesNativeDefaults(t *testing.T) {
 	}
 	if !strings.Contains(string(game), "function _draw()") {
 		t.Fatalf("default game is missing _draw: %s", game)
+	}
+	requested, err := transpiler.ParseRenderer(assets.Project.Renderer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport(GameFileName, string(game), transpiler.Options{
+		Renderer: requested,
+		SheetW:   assets.SheetW,
+		SheetH:   assets.SheetH,
+		MapW:     assets.MapW,
+		MapH:     assets.MapH,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || report.Mode0Layers != 0 || !report.Mode0Objects || !report.Mode0Text {
+		t.Fatalf("new-project renderer report = %+v, want zero-BG Mode 0 text", report)
 	}
 	if err := CreateProject(dir, NewProjectOptions{}); err == nil {
 		t.Fatal("expected existing project refusal")
@@ -1040,6 +1061,140 @@ func TestAudioExamplesUseEditableProjectAssets(t *testing.T) {
 				t.Fatalf("map = %dx%d, want native 30x20", assets.MapW, assets.MapH)
 			}
 		})
+	}
+}
+
+// Background-layers is a teaching project users are expected to open in the
+// visual editors, not only build as a ROM. Keep its logical layout aligned to
+// the native 30x20 sheet, exact screen guides, and four authored BG planes.
+func TestBackgroundLayersExampleUsesEditorFriendlyAssets(t *testing.T) {
+	assets, err := assetsync.Load(examplesProjectDir(t, "background-layers"))
+	if err != nil {
+		t.Fatalf("load example: %v", err)
+	}
+	if assets.SheetW != 240 || assets.SheetH != 160 || assets.SpriteCols != 30 || assets.SpriteRows != 20 || assets.SpriteN != 600 {
+		t.Fatalf("sheet = %dx%d pixels (%dx%d sprites, SpriteN=%d), want native 240x160 (30x20, SpriteN=600)",
+			assets.SheetW, assets.SheetH, assets.SpriteCols, assets.SpriteRows, assets.SpriteN)
+	}
+	if assets.MapW != 60 || assets.MapH != 20 || assets.MapLayers != 4 {
+		t.Fatalf("map = %dx%dx%d, want four 60x20 planes", assets.MapW, assets.MapH, assets.MapLayers)
+	}
+	planeCells := assets.MapW * assets.MapH
+	for layer := 0; layer < assets.MapLayers; layer++ {
+		for y := 0; y < assets.MapH; y++ {
+			for x := 0; x < 30; x++ {
+				base := layer*planeCells + y*assets.MapW
+				left := assets.MapROM[base+x]
+				right := assets.MapROM[base+x+30]
+				if left != right {
+					t.Fatalf("BG%d repeat differs at (%d,%d): left=%d right=%d", layer, x, y, left, right)
+				}
+			}
+		}
+	}
+	if colors := len(assets.Palette.Colors); colors != 256 {
+		t.Fatalf("palette colors = %d, want 256 paintable entries", colors)
+	}
+}
+
+func TestBackgroundLayersExampleSelectsFourParallaxBackgrounds(t *testing.T) {
+	gamePath := filepath.Join(examplesProjectDir(t, "background-layers"), GameFileName)
+	source, err := os.ReadFile(gamePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for bg := 0; bg < 4; bg++ {
+		if !strings.Contains(string(source), fmt.Sprintf("map(%d,", bg)) {
+			t.Fatalf("game.lua does not draw explicit BG%d", bg)
+		}
+	}
+	if strings.Count(string(source), "camera(") != 5 || !strings.Contains(string(source), "spr(10,") || !strings.Contains(string(source), "print(") {
+		t.Fatal("game.lua must retain four parallax cameras, the player object, a camera reset, and its overlay text")
+	}
+	assets, err := assetsync.Load(examplesProjectDir(t, "background-layers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	generated, report, err := transpiler.TranspileWithReport("game.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererMode0,
+		SheetW:   assets.SheetW, SheetH: assets.SheetH,
+		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
+		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0Layers != 4 || report.MapDrawMask != 0x0f {
+		t.Fatalf("background-layers report = %+v, want all four logical and hardware BGs", report)
+	}
+	if !report.Mode0Objects || !report.Mode0Text {
+		t.Fatalf("background-layers report = %+v, want the player object and overlay text", report)
+	}
+	for slot := 0; slot < 4; slot++ {
+		if !strings.Contains(generated, fmt.Sprintf("c.MapBGAtV(%d,", slot)) {
+			t.Fatalf("BG%d did not compile to dense hardware slot %d", slot, slot)
+		}
+	}
+}
+
+// Coin-block is the deliberately small current-API proof for an animated map
+// cell which becomes a stable used state. Keep it AUTO-eligible so the example
+// remains evidence for the existing mutation path rather than quietly relying
+// on a forced renderer or a future tile/entity system.
+func TestCoinBlockExampleUsesOneCurrentAPIMutationAndSelectsMode0(t *testing.T) {
+	dir := examplesProjectDir(t, "coin-block")
+	assets, err := assetsync.Load(dir)
+	if err != nil {
+		t.Fatalf("load example: %v", err)
+	}
+	if assets.SheetW != 240 || assets.SheetH != 160 || assets.SpriteN != 600 {
+		t.Fatalf("sheet = %dx%d SpriteN=%d, want native 240x160 SpriteN=600", assets.SheetW, assets.SheetH, assets.SpriteN)
+	}
+	if assets.MapW != 30 || assets.MapH != 20 {
+		t.Fatalf("map = %dx%d, want one 30x20 plane", assets.MapW, assets.MapH)
+	}
+	if got := assets.MapROM[14*assets.MapW+14]; got != 4 {
+		t.Fatalf("initial block tile = %d, want active tile 4", got)
+	}
+	if assets.Project.Renderer != "auto" {
+		t.Fatalf("renderer = %q, want auto", assets.Project.Renderer)
+	}
+
+	game, err := os.ReadFile(filepath.Join(dir, GameFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	source := string(game)
+	for _, snippet := range []string{
+		"btnp(5) or frame==90",
+		"if jump_tick==4 and not block_used then",
+		"coins=1",
+		"mset(block_x,block_y,tile)",
+	} {
+		if !strings.Contains(source, snippet) {
+			t.Fatalf("game.lua is missing coin-block contract %q", snippet)
+		}
+	}
+	if strings.Count(source, "\n  mset(") != 1 {
+		t.Fatalf("game.lua has %d direct mset statements, want one", strings.Count(source, "\n  mset("))
+	}
+
+	requested, err := transpiler.ParseRenderer(assets.Project.Renderer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport(GameFileName, source, transpiler.Options{
+		Renderer: requested,
+		SheetW:   assets.SheetW,
+		SheetH:   assets.SheetH,
+		MapW:     assets.MapW,
+		MapH:     assets.MapH,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || report.Mode0Layers != 1 || !report.Mode0Objects || !report.Mode0Text {
+		t.Fatalf("renderer report = %+v, want AUTO-selected Mode 0 with one BG, objects, and text", report)
 	}
 }
 

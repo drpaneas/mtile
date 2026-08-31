@@ -1,3 +1,5 @@
+//go:build !mtile_mode0
+
 package runtime
 
 import (

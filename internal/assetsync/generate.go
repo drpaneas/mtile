@@ -46,7 +46,8 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 		b.WriteString("\t\"github.com/drpaneas/mtile/runtime/hw\"\n")
 	}
 	b.WriteString(")\n\n")
-	fmt.Fprintf(&b, "const (\n\tSheetW = %d\n\tSheetH = %d\n\tSpriteCols = %d\n\tSpriteRows = %d\n\tSpriteN = %d\n\tMapW = %d\n\tMapH = %d\n\tMapStreaming = %t\n)\n\n", assets.SheetW, assets.SheetH, assets.SpriteCols, assets.SpriteRows, assets.SpriteN, assets.MapW, assets.MapH, assets.MapStreaming)
+	mapPlaneMask := uint8((1 << uint(assets.MapLayers)) - 1)
+	fmt.Fprintf(&b, "const (\n\tSheetW = %d\n\tSheetH = %d\n\tSpriteCols = %d\n\tSpriteRows = %d\n\tSpriteN = %d\n\tMapW = %d\n\tMapH = %d\n\tMapLayers = %d\n\tMapPlaneMask = %d\n\tMapStreaming = %t\n)\n\n", assets.SheetW, assets.SheetH, assets.SpriteCols, assets.SpriteRows, assets.SpriteN, assets.MapW, assets.MapH, assets.MapLayers, mapPlaneMask, assets.MapStreaming)
 
 	b.WriteString("//go:section .rodata\n")
 	writeByteArray(&b, "sheetROM", assets.SheetROM)
@@ -105,7 +106,7 @@ func InitAssets(ctx *rt.Context) bool {
 	}
 	cartData.SheetW, cartData.SheetH = SheetW, SheetH
 	cartData.SpriteCols, cartData.SpriteRows = SpriteCols, SpriteRows
-	cartData.MapW, cartData.MapH = MapW, MapH
+	cartData.MapW, cartData.MapH, cartData.MapLayers, cartData.MapPlaneMask = MapW, MapH, MapLayers, MapPlaneMask
 	cartData.SpriteN = SpriteN
 	cartData.MapStreaming = MapStreaming
 	cartData.Sheet = sheetRAM[:]
@@ -118,7 +119,7 @@ func InitAssets(ctx *rt.Context) bool {
 	b.WriteString(`	image := rt.AssetImage{
 		SheetW: SheetW, SheetH: SheetH,
 		SpriteCols: SpriteCols, SpriteRows: SpriteRows,
-		MapW: MapW, MapH: MapH, SpriteN: SpriteN, MapStreaming: MapStreaming,
+		MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, SpriteN: SpriteN, MapStreaming: MapStreaming,
 		Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
 	}
 	if !ctx.Init(&image, &cartData) {

@@ -1,0 +1,180 @@
+{
+  "version": 2,
+  "sounds": [
+    {
+      "id": 0,
+      "name": "Computer paddle",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 2,
+          "direction": "down",
+          "shift": 2
+        }
+      }
+    },
+    {
+      "id": 1,
+      "name": "Player paddle",
+      "kind": "ch2",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 12,
+          "direction": "down",
+          "pace": 2
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Computer score",
+      "kind": "ch2",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 10,
+          "direction": "down",
+          "pace": 2
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Player score",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 10,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 2,
+          "direction": "up",
+          "shift": 1
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Start fanfare",
+      "kind": "ch2",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 11,
+          "direction": "down",
+          "pace": 1
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Wall",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 12.5,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 9,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 1,
+          "direction": "down",
+          "shift": 2
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Court bass",
+      "kind": "ch3",
+      "route": "both",
+      "wave": {
+        "samples": [
+          8,
+          10,
+          12,
+          14,
+          15,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0,
+          2,
+          4,
+          6,
+          8,
+          10,
+          12,
+          14,
+          15,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0,
+          2,
+          4,
+          6
+        ],
+        "level": 25,
+        "startBank": 0,
+        "length": 0,
+        "useLength": false
+      }
+    },
+    {
+      "id": 7,
+      "name": "Court beat",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 7,
+        "divisor": 3,
+        "shift": 6,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 4,
+          "direction": "down",
+          "pace": 2
+        }
+      }
+    }
+  ]
+}

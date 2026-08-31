@@ -53,10 +53,13 @@ jobs:
       - name: Test Mode 0 runtime matrix
         working-directory: runtime
         run: |
-          go test -tags=mtile_mode0 -run '^TestMode0' .
-          go test -tags=mtile_mode0,mtile_mode0_layers2 -run '^TestMode0(TwoLayers|Mutations)' .
-          go test -tags=mtile_mode0,mtile_mode0_obj -run '^TestMode0(HardwareSprite|AlignedSSpr)' .
-          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text -run '^TestMode0StaticText' .
+          go test -tags=mtile_mode0,mtile_mode0_layers0,mtile_mode0_obj,mtile_mode0_text .
+          go test -tags=mtile_mode0 .
+          go test -tags=mtile_mode0,mtile_mode0_layers2 .
+          go test -tags=mtile_mode0,mtile_mode0_layers3 .
+          go test -tags=mtile_mode0,mtile_mode0_layers4 .
+          go test -tags=mtile_mode0,mtile_mode0_obj .
+          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text .
 
       # One-second fuzz smoke for the strict PSG-only asset/runtime boundaries.
       - name: Audio v2 fuzz smoke (Linux)
@@ -156,6 +159,8 @@ jobs:
           go run ./cmd/mtile build -o /tmp/hello.gba examples/hello/
           go run ./cmd/mtile build -o /tmp/color.gba examples/color/
           go run ./cmd/mtile build \
+            -o /tmp/background-layers.gba examples/background-layers/
+          go run ./cmd/mtile build \
             -o /tmp/audio-gb-melody.gba examples/audio-gb-melody/
           go run ./cmd/mtile build \
             -o /tmp/audio-gb-song.gba examples/audio-gb-song/
@@ -187,7 +192,7 @@ jobs:
       # sub-20%-win shape on Mode 4 and its selector behavior is unit-tested.
       - name: Paired Mode 0 workload matrix
         run: |
-          for workload in camera composite layers2 sset16 mset16; do
+          for workload in zero_bg_text camera composite layers2 sset16 mset16; do
             go run ./cmd/renderbench \
               -project examples/testio \
               -source "cmd/renderbench/testdata/workloads/${workload}.lua" \
@@ -197,11 +202,57 @@ jobs:
               -samples 30
           done
 
+      # Migration baselines need exact pixels. Frame delivery and resource
+      # measurements remain in each report but do not widen AUTO's separately
+      # evidence-backed full performance profile.
+      - name: Paired graphics-model characterization
+        run: |
+          for workload in layers4 parallax_layers map_arities_short map_arities_long map_mutation_isolation object_order_current; do
+            go run ./cmd/renderbench \
+              -project examples/background-layers \
+              -source "cmd/renderbench/testdata/workloads/${workload}.lua" \
+              -player /tmp/mtile-player-build/mtile-player \
+              -out "/tmp/renderer-characterization-${workload}" \
+              -warmup 8 \
+              -samples 30 \
+              -gate parity
+          done
+
+      # Cover more than two foreground repeats. A unit test exhausts the full
+      # 1,920-tick common period; this real mGBA capture proves its early wraps.
+      # One cumulative Mode 0 miss is the initial cold upload, and movement
+      # must not add another through coincident layer boundaries.
+      - name: Background-layers long cadence
+        run: |
+          go run ./cmd/renderbench \
+            -project examples/background-layers \
+            -player /tmp/mtile-player-build/mtile-player \
+            -out /tmp/renderer-characterization-background-layers \
+            -warmup 8 \
+            -samples 520 \
+            -gate parity
+          mode0_misses="$(jq -r '.mode0.missedFrames' /tmp/renderer-characterization-background-layers/report.json)"
+          test "$mode0_misses" -le 1
+
+      # The zero-input teaching demo deterministically animates, awards one
+      # coin, and settles on the used tile, so the paired capture covers the
+      # complete current-API state transition as well as its performance.
+      - name: Coin-block state transition
+        run: |
+          go run ./cmd/renderbench \
+            -project examples/coin-block \
+            -player /tmp/mtile-player-build/mtile-player \
+            -out /tmp/renderer-report-coin-block \
+            -warmup 8 \
+            -samples 120
+
       - name: Upload renderer evidence
         uses: actions/upload-artifact@v4
         with:
           name: renderer-report
-          path: /tmp/renderer-report*
+          path: |
+            /tmp/renderer-report*
+            /tmp/renderer-characterization-*
 
       # Fresh-project path a new user hits first.
       - name: Build a new project

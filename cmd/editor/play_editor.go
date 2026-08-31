@@ -31,6 +31,12 @@ type playSession interface {
 	Close() error
 }
 
+// The live helper delivers about one video frame (16.7 ms) of PCM per tick.
+// Keep Oto's read-ahead just above that chunk: its streaming buffer can briefly
+// approach twice the configured size, so the old 250 ms value produced roughly
+// half a second of sound latency in interactive cartridge previews.
+const cartridgePlaybackBufferSize = 20 * time.Millisecond
+
 type playLayout struct {
 	Header    editor.Rect
 	Reload    editor.Rect
@@ -97,6 +103,8 @@ func (g *Game) startRun() {
 	g.runGeneratedGo = ""
 	g.runEntry = ""
 	g.runSourceFiles = nil
+	g.runGlobalUsage = build.GlobalUsage{}
+	g.sourceAnalysisError = ""
 	g.runRendererRequested = ""
 	g.runRendererSelected = ""
 	g.runRendererReason = ""
@@ -109,7 +117,6 @@ func (g *Game) startRun() {
 	g.runEWRAMFree = 0
 	g.runIWRAMUsed = 0
 	g.runMu.Unlock()
-	g.theme.buildPulse = 48
 	projectDir := g.model.Dir
 	go func() {
 		service, err := build.NewService("", "")
@@ -329,14 +336,18 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		return
 	}
 	g.runBusy = false
+	if launch.result.Entry != "" {
+		g.runEntry = launch.result.Entry
+		g.runSourceFiles = append([]string(nil), launch.result.SourceFiles...)
+		g.runGlobalUsage = cloneGlobalUsage(launch.result.GlobalUsage)
+		g.sourceAnalysisError = ""
+	}
 	if launch.result.ROMPath != "" {
 		g.runROMPath = launch.result.ROMPath
 		g.runROMSize = launch.result.ROMSize
 		g.runEWRAMUsed = launch.result.EWRAMUsed
 		g.runEWRAMFree = launch.result.EWRAMFree
 		g.runIWRAMUsed = launch.result.IWRAMUsed
-		g.runEntry = launch.result.Entry
-		g.runSourceFiles = append([]string(nil), launch.result.SourceFiles...)
 		g.runGeneratedGo = launch.result.GeneratedGo
 		g.runRendererRequested = launch.result.RendererRequested.String()
 		g.runRendererSelected = launch.result.Renderer.String()
@@ -384,7 +395,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		g.runMu.Unlock()
 		return
 	}
-	player.SetBufferSize(250 * time.Millisecond)
+	player.SetBufferSize(cartridgePlaybackBufferSize)
 	g.playPCM = stream
 	g.playAudio = player
 	g.setPreviewPlayerVolume(g.playAudio)

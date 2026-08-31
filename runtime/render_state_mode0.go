@@ -10,25 +10,27 @@ type renderState struct {
 	framebuffer []byte
 	mode0ObjectState
 
-	mode0Screen    [mode0LayerCount][4096]byte
+	mode0Screen    mode0ScreenStorage
 	mode0TileStage [64]byte
-	mode0TileDirty [120]byte // one bit for each of Mode 0's 960 tile slots
+	mode0TileDirty mode0TileDirtyStorage
 
 	mode0Clear       byte
 	mode0ClsCalled   bool
 	mode0MapCalls    int
-	mode0MapReady    [mode0LayerCount]bool
-	mode0MapDirty    [mode0LayerCount]bool
-	mode0MapSigSet   [mode0LayerCount]bool
-	mode0MapCellX    [mode0LayerCount]int
-	mode0MapCellY    [mode0LayerCount]int
-	mode0MapTileX    [mode0LayerCount]int
-	mode0MapTileY    [mode0LayerCount]int
-	mode0MapCellsW   [mode0LayerCount]int
-	mode0MapCellsH   [mode0LayerCount]int
-	mode0MapLayer    [mode0LayerCount]byte
-	mode0ScrollX     [mode0LayerCount]uint16
-	mode0ScrollY     [mode0LayerCount]uint16
+	mode0MapSeen     uint8
+	mode0MapReady    [mode0LayerStorageCount]bool
+	mode0MapDirty    [mode0LayerStorageCount]bool
+	mode0MapSigSet   [mode0LayerStorageCount]bool
+	mode0MapCellX    [mode0LayerStorageCount]int
+	mode0MapCellY    [mode0LayerStorageCount]int
+	mode0MapTileX    [mode0LayerStorageCount]int
+	mode0MapTileY    [mode0LayerStorageCount]int
+	mode0MapCellsW   [mode0LayerStorageCount]int
+	mode0MapCellsH   [mode0LayerStorageCount]int
+	mode0MapLayer    [mode0LayerStorageCount]byte
+	mode0MapSource   [mode0LayerStorageCount]uint8
+	mode0ScrollX     [mode0LayerStorageCount]uint16
+	mode0ScrollY     [mode0LayerStorageCount]uint16
 	mode0ColdCycles  uint32
 	mode0UploadStats RendererUploadStats
 }
@@ -54,6 +56,9 @@ func (c *Context) mapMutated(x, y int) {
 	}
 	id := c.Mget(x, y)
 	for layer := 0; layer < mode0LayerCount; layer++ {
+		if c.mode0MapSource[layer] != 0 {
+			continue
+		}
 		c.patchMode0MapCell(layer, x, y, id)
 	}
 }
@@ -73,7 +78,7 @@ func (c *Context) flagsMutated(id int) {
 			}
 			for mx := 0; mx < c.mode0MapCellsW[layer]; mx++ {
 				mapX := c.mode0MapCellX[layer] + mx
-				if mapX < 0 || mapX >= c.cart.MapW || int(c.Mget(mapX, mapY)) != id {
+				if mapX < 0 || mapX >= c.cart.MapW || int(c.mapGetLayer(int(c.mode0MapSource[layer]), mapX, mapY)) != id {
 					continue
 				}
 				c.patchMode0MapCell(layer, mapX, mapY, uint16(id))

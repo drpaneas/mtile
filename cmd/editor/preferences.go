@@ -35,6 +35,32 @@ func (s interfaceTextSize) String() string {
 	}
 }
 
+func zoomedInterfaceTextSize(current interfaceTextSize, delta int) interfaceTextSize {
+	if current >= interfaceTextSizeCount {
+		current = textComfort
+	}
+	return interfaceTextSize(min(max(int(current)+delta, int(textCompact)), int(textLarge)))
+}
+
+func (g *Game) zoomInterfaceText(delta int) {
+	next := zoomedInterfaceTextSize(g.preferences.TextSize, delta)
+	if next == g.preferences.TextSize {
+		return
+	}
+	g.preferences.TextSize = next
+	g.statusMsg = "editor zoom: " + next.String()
+	g.savePreferences()
+}
+
+func (g *Game) resetInterfaceTextZoom() {
+	if g.preferences.TextSize == textComfort {
+		return
+	}
+	g.preferences.TextSize = textComfort
+	g.statusMsg = "editor zoom: " + textComfort.String()
+	g.savePreferences()
+}
+
 type editorPreferences struct {
 	Version             int               `json:"version"`
 	Effects             effectLevel       `json:"effects"`
@@ -46,7 +72,7 @@ type editorPreferences struct {
 
 func defaultEditorPreferences() editorPreferences {
 	return editorPreferences{
-		Version: editorPreferencesVersion, Effects: effectsSoft,
+		Version: editorPreferencesVersion, Effects: effectsClean,
 		LCDPreview: true, PreviewVolume: 80, AutoSaveBeforeBuild: true, TextSize: textComfort,
 	}
 }
@@ -59,9 +85,9 @@ func normalizeEditorPreferences(preferences editorPreferences) editorPreferences
 	if preferences.Version != editorPreferencesVersion {
 		return defaultEditorPreferences()
 	}
-	if preferences.Effects >= effectLevelCount {
-		preferences.Effects = effectsSoft
-	}
+	// The field remains serialized for backwards compatibility, but editor
+	// chrome no longer exposes or renders decorative effect levels.
+	preferences.Effects = effectsClean
 	preferences.PreviewVolume = min(max(preferences.PreviewVolume, 0), 100)
 	if preferences.TextSize >= interfaceTextSizeCount {
 		preferences.TextSize = textComfort
@@ -139,7 +165,7 @@ func (g *Game) savePreferences() {
 
 func (g *Game) applyPreferences() {
 	g.preferences = normalizeEditorPreferences(g.preferences)
-	g.theme.level = g.preferences.Effects
+	g.theme.level = effectsClean
 	g.theme.playLCD = g.preferences.LCDPreview
 	previousTextHeight := uiTextHeight
 	setInterfaceTextSize(g.preferences.TextSize)
@@ -181,9 +207,9 @@ func (g *Game) setPreviewPlayerVolume(player editorVolumePlayer) {
 
 type preferencesLayout struct {
 	Shade, Panel, Close, Defaults editor.Rect
-	Rows                          [6]editor.Rect
-	Minus                         [6]editor.Rect
-	Plus                          [6]editor.Rect
+	Rows                          [5]editor.Rect
+	Minus                         [5]editor.Rect
+	Plus                          [5]editor.Rect
 }
 
 func newPreferencesLayout() preferencesLayout {
@@ -235,16 +261,14 @@ func (g *Game) updatePreferences() {
 		}
 		switch index {
 		case 0:
-			g.preferences.Effects = effectLevel((int(g.preferences.Effects) + delta + int(effectLevelCount)) % int(effectLevelCount))
-		case 1:
 			g.preferences.LCDPreview = !g.preferences.LCDPreview
-		case 2:
+		case 1:
 			g.preferences.PreviewVolume = min(max(g.preferences.PreviewVolume+delta*10, 0), 100)
-		case 3:
+		case 2:
 			g.preferences.AutoSaveBeforeBuild = !g.preferences.AutoSaveBeforeBuild
-		case 4:
+		case 3:
 			g.preferences.TextSize = interfaceTextSize((int(g.preferences.TextSize) + delta + int(interfaceTextSizeCount)) % int(interfaceTextSizeCount))
-		case 5:
+		case 4:
 			g.cycleProjectRenderer(delta)
 			g.persist()
 			return
@@ -277,9 +301,8 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 	drawText(screen, "Editor behaviour and this project's build renderer", layout.Panel.X+24, layout.Panel.Y+50, colorDim)
 	drawNativeButton(screen, layout.Close, "DONE", false, colorCode)
 
-	labels := [...]string{"VISUAL EFFECTS", "GBA LCD TREATMENT", "PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT", "PROJECT RENDERER"}
+	labels := [...]string{"GBA LCD TREATMENT", "PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT", "PROJECT RENDERER"}
 	details := [...]string{
-		"Motion and shell lighting; work surfaces remain still.",
 		"Dot-matrix shader on the embedded mGBA screen.",
 		"Music, note audition, metronome, and game preview volume.",
 		"OFF refuses dirty builds until source files are saved.",
@@ -287,7 +310,6 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 		"AUTO selects proven Mode 0 builds; incompatible programs fall back to Mode 4.",
 	}
 	values := [...]string{
-		g.preferences.Effects.String(),
 		map[bool]string{false: "OFF", true: "ON"}[g.preferences.LCDPreview],
 		fmt.Sprintf("%d%%", g.preferences.PreviewVolume),
 		map[bool]string{false: "OFF", true: "ON"}[g.preferences.AutoSaveBeforeBuild],
@@ -310,5 +332,5 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 		drawNativeButton(screen, layout.Plus[index], "+", false, colorCode)
 	}
 	drawNativeButton(screen, layout.Defaults, "RESTORE DEFAULTS", false, colorHighlight)
-	drawText(screen, "F6 cycles visual effects  /  Esc closes", layout.Panel.X+layout.Panel.W-334, layout.Panel.Y+layout.Panel.H-45, colorDim)
+	drawText(screen, "Changes apply immediately  /  Esc closes", layout.Panel.X+layout.Panel.W-344, layout.Panel.Y+layout.Panel.H-45, colorDim)
 }

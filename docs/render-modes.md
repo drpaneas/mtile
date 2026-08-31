@@ -6,8 +6,9 @@ tile renderer and which calls require the existing **Mode 4** bitmap renderer.
 The phased implementation, semantic gates, and paired benchmark methodology are
 defined in the [Mode 0 / Mode 4 engineering plan](render-mode-plan.md).
 
-> **Current status:** Mode 4 remains the compatibility default. Mode 0 is a
-> public, compile-time opt-in for the statically proven subset below. `auto`
+> **Current status:** Fresh projects request `auto`; older projects without a
+> renderer setting retain Mode 4 as their compatibility default. Mode 0 is a
+> public, compile-time option for the statically proven subset below. `auto`
 > selects Mode 0 only when both that semantic proof and the versioned cost
 > proof pass; otherwise it falls back exactly to Mode 4 with a source-positioned
 > diagnostic. A ROM always links one backend.
@@ -33,10 +34,16 @@ conditional" still requires the exact call shape and resource proof below.
 `mtile build -renderer mode0 project-dir` succeeds only when the analyzer can
 prove all of these conditions:
 
-- the sheet is 8x8-aligned and the logical map is non-empty;
+- the sheet is 8x8-aligned, and the logical map dimensions are positive whenever
+  `map()` is called (its authored planes may all be transparent);
 - the bundled source contains no Mode 4-only raster/readback builtin;
-- `_draw` has exactly one unconditional direct `cls([color])`, then one to four
-  unconditional direct `map(...)` statements;
+- `_draw` has exactly one unconditional direct `cls([color])`, then zero to
+  four unconditional direct `map(...)` statements;
+- `map()` is the single automatic form and draws every non-empty authored
+  plane. Every call with arguments starts with a unique static BG0..BG3 ID
+  present in the asset; its remaining zero-to-seven arguments retain the
+  source/destination/size/mask order and defaults. Explicit calls appear in
+  ascending back-to-front order and cannot be mixed with `map()`;
 - every map viewport has a static width no greater than 64 cells and a static
   height no greater than 32 cells; map origin, destination, layer mask, camera,
   and the logical map size may be dynamic/large;
@@ -57,16 +64,33 @@ prove all of these conditions:
 - `sset` is a direct unconditional statement in `_init` or `_update`; `_init`
   mutations commit while force-blanked and `_update` permits at most 16 calls
   so the visible dirty-tile upload is bounded to VBlank; and
-- the BG tile budget fits: one/two/three/four map layers allow at most
-  960/896/832/768 sheet cells respectively.
+- the BG tile budget fits: zero/one/two/three/four map layers allow at most
+  1024/960/896/832/768 sheet cells respectively.
 
 `camera`, `sset`, `mset`, and `fset` are supported. Large logical maps use a
 deterministic 64x32 hardware window; mutations patch or invalidate only the
 affected visible tile/map state. Each map pass owns a regular 8bpp BG layer,
 objects/text use OAM and OBJ VRAM, source color 0 remains transparent, and
-`cls` supplies the backdrop. The Mode 4 framebuffer and page-copy code are
-excluded by build tag. Unsupported forced Mode 0 source fails before TinyGo
+`cls` supplies the backdrop. With no `map()` calls, no regular BG is enabled;
+backdrop-only and OBJ/text scenes remain valid Mode 0 frames. The Mode 4
+framebuffer and page-copy code are excluded by build tag. Unsupported forced
+Mode 0 source fails before TinyGo
 with a source position and stable `M0_*` reason code; it is never approximated.
+
+BG identity has two unambiguous forms. `map()` automatically draws all
+authored non-empty planes in logical BG0-to-BG3 order. `map(bg, ...)` selects
+one logical plane; every argument after `bg` is optional. BG0 is back and BG3
+is front. Empty logical gaps are removed from storage and Mode 0 allocation:
+if only BG1 and BG3 contain cells, they occupy two dense hardware BG slots
+while retaining their logical IDs and painter order. An `mset()` call keeps
+initially empty BG0 resident because it may become visible at runtime.
+
+Mixing `map()` with explicit calls, duplicating a plane, using a
+dynamic/missing ID, reversing order, or nesting/conditioning a map call is an
+invalid cross-renderer API program and fails with `MAP_EXPLICIT_CONTRACT`
+rather than falling back. The final optional argument remains the sprite-flag
+mask and defaults to zero. Existing positional calls migrate by prefixing BG0
+or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 
 ## Graphics API
 
@@ -82,7 +106,7 @@ with a source position and stable `M0_*` reason code; it is never approximated.
 | `circfill` | Mode 4 only | Arbitrary span-filled circles require bitmap rasterization. |
 | `spr` | Mode 0 conditional | Can become hardware OBJ/metasprites when tile data and palettes are resident and the frame remains within OAM, scanline, size/shape, flip, layering, and clipping limits. If those limits cannot be proven, use Mode 4. |
 | `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: normally tile-aligned source rectangles and hardware-supported destination transforms. Arbitrary source crops or resampling/scaling require Mode 4. |
-| `map` | Mode 0 conditional | Natural fit for regular/affine BG tilemaps when tile IDs, palette use, layer masks, camera/offset behavior, and the available BG/screen-block budget can be represented. Larger logical maps require deterministic window streaming. Multiple map passes must fit distinct hardware layers or be merged without changing order. |
+| `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. |
 | `camera` | Both | It is logical draw state. Mode 0 can apply it through BG scroll and OBJ coordinates; other reachable calls still decide whether that frame is compatible. |
 | `clip` | Mode 0 conditional | Full-screen clipping is trivial. Other rectangles require the limited hardware window resources, and changing clips between draw groups must preserve call order. Unrepresentable sequences require Mode 4. |
 | `pal` | Mode 0 conditional | Display-time palette remaps are native. Draw-time remaps are compatible only when palette/tile/OBJ assignments can preserve every simultaneous remap without conflicts or excess duplicated assets. |
@@ -108,8 +132,8 @@ visible VRAM tile/map copies are separate.
 | `sset` | Both | Update the mutable logical sheet and invalidate or upload every affected BG/OBJ tile before it is next drawn. Mode 0 additionally applies the statically bounded call-placement rule above. |
 | `fget` | Both | Read the logical sprite flag byte used by map-layer filtering. |
 | `fset` | Both | Update flags so later `map` calls observe the new value in either backend. |
-| `mget` | Both | Read the logical map, including streamed-map edits. |
-| `mset` | Both | Update the logical map and invalidate or patch any visible streamed tilemap entry. |
+| `mget` | Both | Read legacy BG0, including streamed-map edits. Layer-aware mutation is not part of Stage 2. |
+| `mset` | Both | Update legacy BG0 and invalidate or patch any visible BG0-backed streamed tilemap entry. BG1-BG3 are authored but runtime-static in Stage 2. |
 
 ## Renderer-independent API
 
@@ -119,9 +143,9 @@ costs still count toward the frame budget.
 | Area | Builtins | Notes |
 | --- | --- | --- |
 | Input | `btn`, `btnp` | Same GBA keypad state in either backend. |
-| Math | `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`, `atan2`, `sqrt`, `rnd`, `srand` | Fixed-point math and PRNG behavior remain unchanged. |
+| Math | `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`, `atan2`, `sqrt`, `rnd`, `srand` | Fixed-point math and PRNG behavior remain unchanged. First-observed numeric globals, locals, loops, expressions, and numeric record fields lower to native `rt.Number` identically in both renderers and must retain that type. Direct user-function parameters do likewise only when all static call sites are numeric. Return positions specialize independently when every path supplies a number in that slot and no path falls through; a mixed tuple may therefore use both `rt.Number` and `rt.Value`. Missing, mixed, or unproven positions retain `rt.Value` in both renderers. Transitively non-allocating user calls bypass temporary GC-root wrappers identically in both renderers; any possible table/string allocation or unknown call effect retains protection. |
 | Bitwise | `band`, `bor`, `bxor`, `bnot`, `shl`, `shr`, `lshr`, `rotl`, `rotr` | No graphics state. |
-| Tables | `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach` | Lua heap/table behavior remains unchanged. |
+| Tables | `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach` | Renderer-independent. Bracket indexing remains fully dynamic except for fixed global numeric array literals proven not to escape, shadow, use hash fields, or receive an explicit non-number; those use compact native Number slots identically in both renderers and must remain numeric. Static field syntax (`object.x`) resolves and validates its field slot once per access site, then assumes a stable table type/layout in both renderers; use `object["x"]` for dynamic shapes. |
 | Strings | `sub`, `tostr`, `tonum`, `chr`, `ord` | No graphics state. |
 | Time/telemetry | `t`, `time`, `stat` | API shape is unchanged; renderer-dependent CPU counters reported by `stat` will naturally differ. |
 | Audio | `sfx`, `music`, `sample`, `gba_note`, `gba_stop` | PSG/audio scheduling is independent of the display mode. |
@@ -177,9 +201,11 @@ The project preference lives in `project.json`:
 }
 ```
 
-Existing projects with no `renderer` field normalize to `mode4`. The editor's
-Preferences panel changes this project setting and its Develop inspector/build
-log show requested renderer, selected renderer, stable reason, and fallback.
+`mtile new` writes `renderer: "auto"`. Existing projects with no `renderer`
+field normalize to `mode4`, preserving their established framebuffer behavior.
+The editor's Preferences panel changes this project setting and its Develop
+inspector/build log show requested renderer, selected renderer, stable reason,
+and fallback.
 `mtile build -renderer mode4|mode0|auto` is an explicit one-build override;
 without the flag, the project preference is used.
 
@@ -200,3 +226,22 @@ Mode 4. These results apply to this static `cls()+map()` workload; they do not
 justify accepting a call shape that the analyzer cannot prove. The CI renderer
 job now builds Mode 4, forced Mode 0, and AUTO, then runs a frame-synchronized
 paired mGBA parity/memory/cycle gate and uploads its report.
+
+The mapless `cls()+print()` fresh-project shape has its own paired 120-frame
+evidence: zero differing pixels and missed frames, 35,032 more free EWRAM, and
+a 49.84% lower median work cost in Mode 0. It therefore belongs to AUTO's
+evidence-backed subset without requiring an artificial empty `map()` call.
+
+## `examples/coin-block`
+
+`examples/coin-block` is the current-API stateful-background proof. One direct
+`mset()` per update alternates a single active map cell, then leaves it on a
+stable used tile after a deterministic player hit and one coin award. Its
+paired 120-frame Mode 4/Mode 0 capture covers the transition with zero
+differing pixels and zero missed frames.
+
+Mode 0 measured 102,790 median total cycles against Mode 4's 305,554, reclaimed
+30,952 EWRAM bytes, and produced a 23,024-byte ROM instead of 31,564 bytes. The
+Mode 0 cold upload cost 3,273,893 cycles. This supports AUTO for the already
+bounded direct-`mset` shape in a persistent tile scene; it does not remove the
+cold-load trade-off or justify accepting unbounded/indirect mutations.

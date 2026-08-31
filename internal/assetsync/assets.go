@@ -263,9 +263,20 @@ func flatten(project Project, sheet Spritesheet, mapData Map, palette Palette) (
 		}
 	}
 
-	flatMap := make([]uint16, len(mapData.Cells))
-	for i, cell := range mapData.Cells {
-		flatMap[i] = uint16(cell)
+	mapLayers := mapData.LayerCount()
+	planeCells, err := checkedProduct(mapData.Width, mapData.Height)
+	if err != nil {
+		return nil, fmt.Errorf("map: %w", err)
+	}
+	mapCellN, err := checkedProduct(planeCells, mapLayers)
+	if err != nil {
+		return nil, fmt.Errorf("map layers: %w", err)
+	}
+	flatMap := make([]uint16, mapCellN)
+	for layer := 0; layer < mapLayers; layer++ {
+		for i, cell := range mapData.LayerCells(layer) {
+			flatMap[layer*planeCells+i] = uint16(cell)
+		}
 	}
 	return &Assets{
 		Project:      project,
@@ -278,6 +289,7 @@ func flatten(project Project, sheet Spritesheet, mapData Map, palette Palette) (
 		SpriteN:      spriteN,
 		MapW:         mapData.Width,
 		MapH:         mapData.Height,
+		MapLayers:    mapLayers,
 		MapStreaming: len(flatMap) > MapStreamingThresholdCells,
 		SheetROM:     flatSheet,
 		MapROM:       flatMap,
@@ -532,12 +544,47 @@ func validateMap(mapData Map, spriteN int) error {
 	if err != nil {
 		return fmt.Errorf("map: %w", err)
 	}
-	if len(mapData.Cells) != cellN {
-		return fmt.Errorf("map has %d cells, want %d", len(mapData.Cells), cellN)
+	if mapData.Version == 0 {
+		if len(mapData.Layers) != 0 {
+			return fmt.Errorf("legacy map must not contain layers")
+		}
+		if len(mapData.Cells) != cellN {
+			return fmt.Errorf("map has %d cells, want %d", len(mapData.Cells), cellN)
+		}
+		return validateMapCells("map", mapData.Cells, spriteN)
 	}
-	for i, cell := range mapData.Cells {
+	if mapData.Version != MapSchemaVersion {
+		return fmt.Errorf("unsupported map schema version %d", mapData.Version)
+	}
+	if len(mapData.Cells) != 0 {
+		return fmt.Errorf("map schema v%d must store cells inside layers", MapSchemaVersion)
+	}
+	if len(mapData.Layers) != MapLayerCount {
+		return fmt.Errorf("map schema v%d has %d layers, want %d", MapSchemaVersion, len(mapData.Layers), MapLayerCount)
+	}
+	seen := [MapLayerCount]bool{}
+	for _, layer := range mapData.Layers {
+		if layer.ID < 0 || layer.ID >= MapLayerCount {
+			return fmt.Errorf("map layer id %d is outside BG0..BG3", layer.ID)
+		}
+		if seen[layer.ID] {
+			return fmt.Errorf("map layer BG%d is duplicated", layer.ID)
+		}
+		seen[layer.ID] = true
+		if len(layer.Cells) != cellN {
+			return fmt.Errorf("map layer BG%d has %d cells, want %d", layer.ID, len(layer.Cells), cellN)
+		}
+		if err := validateMapCells(fmt.Sprintf("map layer BG%d", layer.ID), layer.Cells, spriteN); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateMapCells(label string, cells []int, spriteN int) error {
+	for i, cell := range cells {
 		if cell < 0 || cell >= spriteN {
-			return fmt.Errorf("map cell %d has sprite id %d outside 0..%d", i, cell, maxInt(spriteN-1, 0))
+			return fmt.Errorf("%s cell %d has sprite id %d outside 0..%d", label, i, cell, maxInt(spriteN-1, 0))
 		}
 	}
 	return nil

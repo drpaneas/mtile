@@ -3,10 +3,15 @@
 ## Status
 
 **Milestones 0–7 and the software portion of Milestone 8 are implemented.
-Mode 4 remains the compatibility default. Forced `mode0` is fail-closed;
-opt-in `auto` uses the versioned `tile-v1` proof and falls back to Mode 4.
+Fresh projects request `auto`, while older projects without a renderer setting
+retain Mode 4 as their compatibility default. Forced `mode0` is fail-closed;
+`auto` uses the versioned `tile-v1` proof and falls back to Mode 4.
 Physical-GBA validation remains an explicit release sign-off, not a hidden
 claim made from emulator results.**
+
+This document is the completed dual-renderer engineering plan. Future graphics
+API, layer, animation, editor, and asset-model work is ordered separately in
+the [graphics evolution roadmap](graphics-model.md#graphics-evolution-roadmap).
 
 The final software matrix used 120 paired headless-mGBA ticks per workload and
 had zero differing pixels and zero missed frames throughout. On
@@ -533,8 +538,9 @@ Deliverables:
 - full build-tag/TinyGo/mGBA CI matrix;
 - physical-GBA sign-off (open external release gate).
 
-Exit: forced Mode 4 remains available permanently. Making `auto` the default is
-a separate product decision based on the checked-in evidence.
+Exit: forced Mode 4 remains available permanently. Fresh projects default to
+`auto` based on the checked-in evidence; changing the legacy missing-field
+fallback from Mode 4 remains a separate compatibility decision.
 
 ## Historical first stop point
 

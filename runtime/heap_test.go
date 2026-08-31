@@ -204,6 +204,10 @@ func TestHeapExhaustionLiveSet(t *testing.T) {
 	if f.c.heap.terminal != HeapOOM {
 		t.Fatal("live-set exhaustion did not put the heap in a terminal state")
 	}
+	stats := f.c.PerformanceStats()
+	if stats.HeapError != HeapOOM || stats.HeapCapacity != heapSize || stats.HeapAllocated > heapSize {
+		t.Fatalf("OOM heap telemetry = %+v", stats)
+	}
 }
 
 func TestTransactionalPreCollectionFailures(t *testing.T) {

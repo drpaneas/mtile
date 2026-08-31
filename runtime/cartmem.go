@@ -6,6 +6,8 @@ type AssetImage struct {
 	SheetW, SheetH         int
 	SpriteCols, SpriteRows int
 	MapW, MapH             int
+	MapLayers              int
+	MapPlaneMask           uint8
 	SpriteN                int
 	MapStreaming           bool
 	// SheetReadOnly avoids a full mutable copy when generated Lua never calls
@@ -24,6 +26,8 @@ type AssetMemory struct {
 	SheetW, SheetH         int
 	SpriteCols, SpriteRows int
 	MapW, MapH             int
+	MapLayers              int
+	MapPlaneMask           uint8
 	SpriteN                int
 	MapStreaming           bool
 	SheetReadOnly          bool
@@ -64,6 +68,11 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 		image.MapW != ram.MapW || image.MapH != ram.MapH {
 		return false
 	}
+	imageLayers := normalizedMapLayers(image.MapLayers)
+	ramLayers := normalizedMapLayers(ram.MapLayers)
+	if imageLayers < 1 || imageLayers != ramLayers {
+		return false
+	}
 	cols := image.SheetW / 8
 	rows := image.SheetH / 8
 	if image.SpriteCols != cols || ram.SpriteCols != cols ||
@@ -78,7 +87,18 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	if !ok {
 		return false
 	}
-	mapN, ok := mulFitInt(image.MapW, image.MapH)
+	mapPlaneN, ok := mulFitInt(image.MapW, image.MapH)
+	if !ok {
+		return false
+	}
+	imageMask := normalizedMapPlaneMask(image.MapPlaneMask, imageLayers, len(image.Map), mapPlaneN)
+	if imageMask < 0 {
+		return false
+	}
+	if ram.MapPlaneMask != 0 && ram.MapPlaneMask != uint8(imageMask) {
+		return false
+	}
+	mapN, ok := mulFitInt(mapPlaneN, mapMaskPopulation(uint8(imageMask)))
 	if !ok || uint64(mapN) > uint64(^uint32(0)) {
 		return false
 	}
@@ -109,6 +129,68 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	return len(ram.Map) == MapCacheCells &&
 		len(ram.MapChunks) == MapCacheSlots &&
 		len(ram.MapEdits) == MapEditCapacity
+}
+
+func normalizedMapLayers(layers int) int {
+	if layers == 0 {
+		return 1
+	}
+	if layers < 1 || layers > 4 {
+		return -1
+	}
+	return layers
+}
+
+func normalizedMapPlaneMask(mask uint8, layers, mapLen, planeCells int) int {
+	valid := uint8((1 << uint(layers)) - 1)
+	if mask&^valid != 0 {
+		return -1
+	}
+	if mask != 0 {
+		return int(mask)
+	}
+	// Compatibility with assets generated before sparse plane metadata: a
+	// full logical-plane payload implied that every plane was stored.
+	if planeCells > 0 && mapLen == planeCells*layers {
+		return int(valid)
+	}
+	if mapLen != 0 {
+		return -1
+	}
+	return 0
+}
+
+func mapMaskPopulation(mask uint8) int {
+	n := 0
+	for mask != 0 {
+		n += int(mask & 1)
+		mask >>= 1
+	}
+	return n
+}
+
+func mapPlaneSlot(mask uint8, layer, layers int) (int, bool) {
+	if layer < 0 || layer >= layers || mask&(1<<uint(layer)) == 0 {
+		return 0, false
+	}
+	return mapMaskPopulation(mask & uint8((1<<uint(layer))-1)), true
+}
+
+func mapLogicalPlane(mask uint8, slot, layers int) (int, bool) {
+	if slot < 0 {
+		return 0, false
+	}
+	seen := 0
+	for layer := 0; layer < layers; layer++ {
+		if mask&(1<<uint(layer)) == 0 {
+			continue
+		}
+		if seen == slot {
+			return layer, true
+		}
+		seen++
+	}
+	return 0, false
 }
 
 // Sget/Sset access the full native 8bpp sheet. They intentionally do not
@@ -146,13 +228,24 @@ func (c *Context) Sset(x, y, color int) {
 }
 
 func (c *Context) Mget(x, y int) uint16 {
+	return c.mapGetLayer(0, x, y)
+}
+
+func (c *Context) mapGetLayer(layer, x, y int) uint16 {
 	if c == nil || c.cart == nil || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return 0
 	}
-	if c.cart.MapStreaming {
-		return c.mapStreamingGet(x, y)
+	if layer < 0 || layer >= c.cart.MapLayers {
+		return 0
 	}
-	return c.cart.Map[y*c.cart.MapW+x]
+	storageLayer, ok := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
+	if !ok {
+		return 0
+	}
+	if c.cart.MapStreaming {
+		return c.mapStreamingGetLayer(layer, x, y)
+	}
+	return c.cart.Map[storageLayer*c.cart.MapW*c.cart.MapH+y*c.cart.MapW+x]
 }
 
 // Mset ignores IDs that cannot name a complete sprite cell. This keeps a bad
@@ -166,6 +259,9 @@ func (c *Context) Mset(x, y, id int) {
 		if c.mapStreamingSet(x, y, uint16(id)) {
 			c.mapMutated(x, y)
 		}
+		return
+	}
+	if c.cart.MapPlaneMask&1 == 0 {
 		return
 	}
 	index := y*c.cart.MapW + x

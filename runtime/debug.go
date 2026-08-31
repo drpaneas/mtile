@@ -12,6 +12,17 @@ const (
 	debugWatchCount     = 68
 	debugWatchBase      = 72
 	debugWatchSize      = 24
+	// Heap telemetry is appended after all legacy watch slots. Keeping the
+	// original header and watch offsets stable lets old editors ignore these
+	// fields and new editors read zeroes from old preview ROMs.
+	debugHeapBase        = debugWatchBase + DebugWatchSlots*debugWatchSize
+	debugHeapCapacity    = debugHeapBase
+	debugHeapAllocated   = debugHeapBase + 4
+	debugHeapLive        = debugHeapBase + 8
+	debugHeapPeakLive    = debugHeapBase + 12
+	debugHeapHandles     = debugHeapBase + 16
+	debugHeapHandleLimit = debugHeapBase + 20
+	debugHeapError       = debugHeapBase + 24
 )
 
 // DebugMailbox is deliberately a byte array: its wire layout is independent
@@ -55,6 +66,13 @@ func (m *DebugMailbox) Begin(stats PerformanceStats) {
 	debugPut16(m[:], 60, stats.PresentStart)
 	debugPut16(m[:], 62, stats.PresentEnd)
 	debugPut32(m[:], 64, stats.DiagnosticSkips)
+	debugPut32(m[:], debugHeapCapacity, stats.HeapCapacity)
+	debugPut32(m[:], debugHeapAllocated, stats.HeapAllocated)
+	debugPut32(m[:], debugHeapLive, stats.HeapLive)
+	debugPut32(m[:], debugHeapPeakLive, stats.HeapPeakLive)
+	debugPut32(m[:], debugHeapHandles, stats.HeapHandles)
+	debugPut32(m[:], debugHeapHandleLimit, stats.HeapHandleLimit)
+	debugPut32(m[:], debugHeapError, uint32(stats.HeapError))
 	m[debugWatchCount] = 0
 }
 

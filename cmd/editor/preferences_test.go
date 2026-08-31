@@ -66,7 +66,7 @@ func TestEditorPreferencesRejectMalformedAndClampValues(t *testing.T) {
 	preferences = normalizeEditorPreferences(preferences)
 	preferences.TextSize = interfaceTextSize(99)
 	preferences = normalizeEditorPreferences(preferences)
-	if preferences.Effects != effectsSoft || preferences.PreviewVolume != 100 || preferences.TextSize != textComfort {
+	if preferences.Effects != effectsClean || preferences.PreviewVolume != 100 || preferences.TextSize != textComfort {
 		t.Fatalf("normalized preferences = %+v", preferences)
 	}
 }
@@ -83,5 +83,27 @@ func TestEditorPreferencesMigratesReadableTextDefault(t *testing.T) {
 	}
 	if got.Version != editorPreferencesVersion || got.TextSize != textComfort || got.PreviewVolume != 60 || got.AutoSaveBeforeBuild {
 		t.Fatalf("migrated preferences = %+v", got)
+	}
+}
+
+func TestEditorTextZoomClampsLikeAConventionalCodeEditor(t *testing.T) {
+	tests := []struct {
+		name    string
+		current interfaceTextSize
+		delta   int
+		want    interfaceTextSize
+	}{
+		{name: "increase", current: textComfort, delta: 1, want: textLarge},
+		{name: "decrease", current: textComfort, delta: -1, want: textCompact},
+		{name: "upper clamp", current: textLarge, delta: 1, want: textLarge},
+		{name: "lower clamp", current: textCompact, delta: -1, want: textCompact},
+		{name: "invalid starts from default", current: interfaceTextSize(99), delta: 1, want: textLarge},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := zoomedInterfaceTextSize(test.current, test.delta); got != test.want {
+				t.Fatalf("zoomedInterfaceTextSize(%v, %d) = %v, want %v", test.current, test.delta, got, test.want)
+			}
+		})
 	}
 }

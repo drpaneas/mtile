@@ -57,6 +57,13 @@ func testTelemetryPayload() []byte {
 	binary.LittleEndian.PutUint16(mailbox[6:8], debugMailboxSize)
 	binary.LittleEndian.PutUint32(mailbox[8:12], 2)
 	binary.LittleEndian.PutUint32(mailbox[12:16], 99)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapCapacity:], 56*1024)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapAllocated:], 41*1024)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapLive:], 24*1024)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapPeakLive:], 28*1024)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapHandles:], 321)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapHandleLimit:], 2048)
+	binary.LittleEndian.PutUint32(mailbox[debugHeapError:], uint32(HeapOOM))
 	mailbox[68] = 1
 	copy(mailbox[debugWatchBase:], "score")
 	mailbox[debugWatchBase+16] = 2
@@ -71,6 +78,12 @@ func TestDecodeTelemetry(t *testing.T) {
 	}
 	if telemetry.Stats.Frames != 99 || len(telemetry.Watches) != 1 || telemetry.Watches[0].Name != "score" || telemetry.Watches[0].Raw != 3<<16 {
 		t.Fatalf("debug telemetry = %+v", telemetry)
+	}
+	if telemetry.Stats.HeapCapacity != 56*1024 || telemetry.Stats.HeapAllocated != 41*1024 || telemetry.Stats.HeapLive != 24*1024 || telemetry.Stats.HeapPeakLive != 28*1024 {
+		t.Fatalf("heap byte telemetry = %+v", telemetry.Stats)
+	}
+	if telemetry.Stats.HeapHandles != 321 || telemetry.Stats.HeapHandleLimit != 2048 || telemetry.Stats.HeapError != HeapOOM {
+		t.Fatalf("heap status telemetry = %+v", telemetry.Stats)
 	}
 }
 
@@ -114,6 +127,7 @@ func TestSessionIntegration(t *testing.T) {
 	}
 	var previous uint32
 	visual, audible := false, false
+	totalAudioFrames := 0
 	var last Frame
 	for index := 0; index < frameCount; index++ {
 		frameKeys := keys
@@ -127,6 +141,10 @@ func TestSessionIntegration(t *testing.T) {
 		if len(frame.RGBA) != Width*Height*4 || len(frame.PCM) == 0 {
 			t.Fatalf("frame %d: rgba=%d pcm=%d", index, len(frame.RGBA), len(frame.PCM))
 		}
+		if frame.Overflow {
+			t.Fatalf("frame %d: emulator audio capture overflowed", index)
+		}
+		totalAudioFrames += len(frame.PCM) / 4
 		if index > 0 && frame.Number <= previous {
 			t.Fatalf("frame counter did not advance: %d after %d", frame.Number, previous)
 		}
@@ -148,6 +166,15 @@ func TestSessionIntegration(t *testing.T) {
 	}
 	if !visual {
 		t.Fatal("emulator returned only flat-color frames")
+	}
+	if frameCount >= 60 {
+		expected := frameCount * SampleRate / 60
+		tolerance := expected / 20
+		if totalAudioFrames < expected-tolerance || totalAudioFrames > expected+tolerance {
+			t.Fatalf("emulator PCM rate = %d frames across %d video frames, want %d +/- %d at %d Hz", totalAudioFrames, frameCount, expected, tolerance, SampleRate)
+		}
+		measuredRate := float64(totalAudioFrames) * 60 / float64(frameCount)
+		t.Logf("emulator PCM rate: %.2f Hz", measuredRate)
 	}
 	if os.Getenv("MTILE_TEST_EXPECT_AUDIO") == "1" && !audible {
 		t.Fatal("emulator returned only silent PCM")

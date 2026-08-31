@@ -1,3 +1,5 @@
+//go:build !mtile_mode0
+
 package runtime
 
 import "testing"
@@ -84,6 +86,85 @@ func TestMapLayerFiltersFlags(t *testing.T) {
 	c.Map(0, 0, 0, 8, 1, 1, 0x05)
 	if c.Pget(1, 8) != 7 {
 		t.Fatal("map layer 0x05 skipped a sprite with all requested flags")
+	}
+}
+
+func TestExplicitMapBackgroundReadsIndependentPlanesBackToFront(t *testing.T) {
+	sheet := make([]byte, 24*8)
+	for y := 0; y < 8; y++ {
+		for x := 8; x < 16; x++ {
+			sheet[y*24+x] = 4
+		}
+		for x := 16; x < 24; x++ {
+			sheet[y*24+x] = 9
+		}
+	}
+	mapData := []uint16{1, 0, 2, 0}
+	img := &AssetImage{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4,
+		Sheet: sheet, Map: mapData, Flags: make([]byte, 3),
+	}
+	ram := &AssetMemory{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4,
+		Sheet: make([]byte, len(sheet)), Map: make([]uint16, len(mapData)), Flags: make([]byte, 3),
+	}
+	var c Context
+	if !c.Init(img, ram) {
+		t.Fatal("Init rejected layered map")
+	}
+	c.Cls(1)
+	c.MapBG(0, 0, 0, 0, 0, 1, 1, 0)
+	c.MapBG(2, 0, 0, 0, 0, 1, 1, 0)
+	if got := c.Pget(0, 0); got != 9 {
+		t.Fatalf("front BG2 pixel = %d, want 9", got)
+	}
+	c.Cls(1)
+	c.MapBG(0, 0, 0, 0, 0, 1, 1, 0)
+	if got := c.Pget(0, 0); got != 4 {
+		t.Fatalf("BG0 pixel = %d, want 4", got)
+	}
+	if c.Mget(0, 0) != 1 {
+		t.Fatalf("legacy Mget no longer addresses BG0")
+	}
+}
+
+func TestMapAllDrawsSparseLogicalPlanesFromCompactStorage(t *testing.T) {
+	sheet := make([]byte, 24*8)
+	for i := 8; i < 16; i++ {
+		sheet[i] = 4
+	}
+	for i := 16; i < 24; i++ {
+		sheet[i] = 9
+	}
+	img := &AssetImage{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4, MapPlaneMask: 0x0a,
+		Sheet: sheet, Map: []uint16{1, 2}, Flags: make([]byte, 3),
+	}
+	ram := &AssetMemory{
+		SheetW: 24, SheetH: 8, SpriteCols: 3, SpriteRows: 1, SpriteN: 3,
+		MapW: 1, MapH: 1, MapLayers: 4, MapPlaneMask: 0x0a,
+		Sheet: make([]byte, len(sheet)), Map: make([]uint16, 2), Flags: make([]byte, 3),
+	}
+	var c Context
+	if !c.Init(img, ram) {
+		t.Fatal("Init rejected compact BG1/BG3 map")
+	}
+	c.Cls(0)
+	c.MapAll(0x0a)
+	if got := c.Pget(0, 0); got != 9 {
+		t.Fatalf("BG3 composite pixel = %d, want 9", got)
+	}
+	if got := c.mapGetLayer(1, 0, 0); got != 1 {
+		t.Fatalf("BG1 compact cell = %d, want 1", got)
+	}
+	if got := c.mapGetLayer(3, 0, 0); got != 2 {
+		t.Fatalf("BG3 compact cell = %d, want 2", got)
+	}
+	if got := c.mapGetLayer(0, 0, 0); got != 0 {
+		t.Fatalf("absent BG0 cell = %d, want 0", got)
 	}
 }
 

@@ -57,3 +57,37 @@ func TestSpritesheetGridKeepsOnlyTileBoundaries(t *testing.T) {
 		t.Fatalf("editing-canvas pixel boundary = (%v, %t), want minor grid color", got, visible)
 	}
 }
+
+func TestJetBrainsMonoCodeFaceKeepsEveryPrintableASCIICharacterOnGrid(t *testing.T) {
+	defer setInterfaceTextSize(textComfort)
+	wantCells := [...]int{7, 8, 10}
+	wantHeights := [...]int{16, 19, 22}
+	for size := interfaceTextSize(0); size < interfaceTextSizeCount; size++ {
+		setInterfaceTextSize(size)
+		if codeCharWidth != wantCells[size] || codeTextHeight != wantHeights[size] {
+			t.Fatalf("preset %d JetBrains Mono metrics = %dx%d, want %dx%d", size, codeCharWidth, codeTextHeight, wantCells[size], wantHeights[size])
+		}
+		for r := rune(32); r <= 126; r++ {
+			if width := codeTextWidth(string(r)); width != codeCharWidth {
+				t.Fatalf("preset %d rune %q width = %d, want cell width %d", size, r, width, codeCharWidth)
+			}
+		}
+		const sample = "local cam_x=(scroll_period+1)%240"
+		if got, want := codeTextWidth(sample), len([]rune(sample))*codeCharWidth; got != want {
+			t.Fatalf("preset %d sample width = %d, want %d", size, got, want)
+		}
+	}
+}
+
+func TestDevelopChromeUsesProportionalSansWhileSourceStaysMonospaced(t *testing.T) {
+	defer setInterfaceTextSize(textComfort)
+	for size := interfaceTextSize(0); size < interfaceTextSizeCount; size++ {
+		setInterfaceTextSize(size)
+		if narrow, wide := developTextWidth("i"), developTextWidth("W"); narrow >= wide {
+			t.Fatalf("preset %d Develop chrome is not proportional: i=%d W=%d", size, narrow, wide)
+		}
+		if codeTextWidth("i") != codeTextWidth("W") {
+			t.Fatalf("preset %d source font lost its fixed grid", size)
+		}
+	}
+}

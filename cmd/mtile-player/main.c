@@ -12,9 +12,11 @@
 #include <string.h>
 
 #include <mgba/core/config.h>
+#include <mgba/core/blip_buf.h>
 #include <mgba/core/core.h>
 #include <mgba/core/interface.h>
 #include <mgba/core/log.h>
+#include <mgba/internal/gba/audio.h>
 
 #define PLAYER_WIDTH 240
 #define PLAYER_HEIGHT 160
@@ -36,7 +38,6 @@ struct PlayerCapture {
 	color_t video[PLAYER_WIDTH * PLAYER_HEIGHT];
 	int16_t audio[PLAYER_AUDIO_MAX * 2];
 	uint32_t audioFrames;
-	uint32_t audioRate;
 	uint32_t overflow;
 };
 
@@ -55,21 +56,6 @@ static struct PlayerCapture* captureFromStream(struct mAVStream* stream) {
 	return (struct PlayerCapture*) stream;
 }
 
-static void captureRate(struct mAVStream* stream, unsigned rate) {
-	captureFromStream(stream)->audioRate = rate;
-}
-
-static void captureAudio(struct mAVStream* stream, int16_t left, int16_t right) {
-	struct PlayerCapture* capture = captureFromStream(stream);
-	if (capture->audioFrames >= PLAYER_AUDIO_MAX) {
-		capture->overflow = 1;
-		return;
-	}
-	capture->audio[capture->audioFrames * 2] = left;
-	capture->audio[capture->audioFrames * 2 + 1] = right;
-	++capture->audioFrames;
-}
-
 static void captureVideo(struct mAVStream* stream, const color_t* buffer, size_t stride) {
 	struct PlayerCapture* capture = captureFromStream(stream);
 	if (!buffer || stride < PLAYER_WIDTH || stride > 4096) {
@@ -78,6 +64,50 @@ static void captureVideo(struct mAVStream* stream, const color_t* buffer, size_t
 	for (size_t row = 0; row < PLAYER_HEIGHT; ++row) {
 		memcpy(&capture->video[row * PLAYER_WIDTH], &buffer[row * stride], PLAYER_WIDTH * sizeof(color_t));
 	}
+}
+
+/* mAVStream.postAudioFrame is the GBA SOUNDBIAS hardware stream (normally
+ * 32768 Hz), not mGBA's configured frontend rate. Drain the same band-limited
+ * blip buffers used by the Qt/SDL frontends so the 48 kHz protocol rate is
+ * truthful and the Develop preview has the same pitch as standalone mGBA. */
+static void configureAudioRate(struct mCore* core) {
+	blip_t* left = core->getAudioChannel(core, 0);
+	blip_t* right = core->getAudioChannel(core, 1);
+	if (!left || !right) {
+		return;
+	}
+	double rateRatio = 1.0;
+	if (core->opts.fpsTarget > 0) {
+		rateRatio = GBAAudioCalculateRatio(1, core->opts.fpsTarget, 1);
+	}
+	double outputRate = PLAYER_RATE * rateRatio;
+	blip_set_rates(left, core->frequency(core), outputRate);
+	blip_set_rates(right, core->frequency(core), outputRate);
+}
+
+static void captureResampledAudio(struct mCore* core, struct PlayerCapture* capture) {
+	blip_t* left = core->getAudioChannel(core, 0);
+	blip_t* right = core->getAudioChannel(core, 1);
+	if (!left || !right) {
+		capture->audioFrames = 0;
+		return;
+	}
+	int available = blip_samples_avail(left);
+	int rightAvailable = blip_samples_avail(right);
+	if (rightAvailable < available) {
+		available = rightAvailable;
+	}
+	if (available > PLAYER_AUDIO_MAX) {
+		available = PLAYER_AUDIO_MAX;
+		capture->overflow = 1;
+	}
+	if (available <= 0) {
+		capture->audioFrames = 0;
+		return;
+	}
+	blip_read_samples(left, capture->audio, available, 1);
+	blip_read_samples(right, capture->audio + 1, available, 1);
+	capture->audioFrames = (uint32_t) available;
 }
 
 static int readExact(void* output, size_t size) {
@@ -221,15 +251,13 @@ static int runPlayer(const char* romPath) {
 
 	struct PlayerCapture capture = {
 		.stream = {
-			.audioRateChanged = captureRate,
 			.postVideoFrame = captureVideo,
-			.postAudioFrame = captureAudio,
 		},
-		.audioRate = PLAYER_RATE,
 	};
 	core->setVideoBuffer(core, capture.video, PLAYER_WIDTH);
 	core->setAVStream(core, &capture.stream);
 	core->reset(core);
+	configureAudioRate(core);
 	if (!writeHandshake() || fflush(stdout)) {
 		goto loaded;
 	}
@@ -251,6 +279,7 @@ static int runPlayer(const char* romPath) {
 		}
 		if (operation == PLAYER_RESET) {
 			core->reset(core);
+			configureAudioRate(core);
 			frameNumber = 0;
 		}
 		capture.audioFrames = 0;
@@ -264,6 +293,7 @@ static int runPlayer(const char* romPath) {
 			tracedKeys = keys;
 		}
 		core->runFrame(core);
+		captureResampledAudio(core, &capture);
 		if (!writeFrame(core, &capture, frameNumber++)) {
 			status = ferror(stdout) ? 1 : 0;
 			break;

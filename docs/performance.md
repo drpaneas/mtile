@@ -251,6 +251,64 @@ must stay well under 32 KB.
 - Keep per-frame table work on the array part (`t[i]` with `i` in
   1..cap). Array access is a direct indexed read; hash access costs a
   probe sequence with 12-byte compares.
+- Static field syntax (`object.x`) is monomorphic by default: its first
+  execution validates the table and resolves the hash slot, then that access
+  site assumes the value remains a table with the same field layout. This
+  removes repeated type/hash/key checks from record-like game state. Replacing
+  the value with another type, adding/removing fields in a way that changes its
+  layout, or using different record shapes at the same function access site is
+  unsupported; use indexed access (`object["x"]`) when the shape is dynamic.
+- First-observed numeric globals, locals, numeric-for counters, arithmetic
+  expressions, and numeric record fields use native 16:16 `rt.Number` storage
+  and operations. Reassigning one of those bindings or fields to a different
+  Lua type is unsupported. Keep genuinely polymorphic values behind bracket
+  indexing or separate bindings. The paired 16-body physics fixture in
+  [`examples/physics-stress`](../examples/physics-stress) measured a 20.14%
+  reduction in update/overhead cycles with zero differing pixels across 600
+  Mode 4 frames.
+- Fixed, non-escaping global numeric array literals use compact 4-byte Number
+  elements instead of 12-byte Value slots. Direct indexed reads/writes and
+  `#array` stay native; an escape, shadow, hash field, or explicit non-number
+  assignment keeps the generic table. The 64-particle, 512-access/tick
+  diagnostic measured 750,595 -> 553,263 median cycles (-26.29%), 3,200 ->
+  1,040 bytes of Lua heap allocation (-67.50%), and 83,348 -> 72,484 ROM bytes
+  (-13.03%), with unchanged linker EWRAM and zero differing pixels across 600
+  Mode 4 frames. Element types are permanent under the same monomorphic
+  contract as numeric bindings.
+- Direct user functions receive native `rt.Number` parameters only when every
+  static call site supplies a proven number. Return positions become native
+  independently when every control-flow path supplies a number in that slot;
+  mixed, nil-padded, falling-through, or unknown positions stay as `rt.Value`.
+  The paired 12-body,
+  ~280-call/tick fixture in
+  [`examples/function-physics-stress`](../examples/function-physics-stress)
+  measured 875,310 -> 649,440 median cycles (-25.80%) and a 39.50% reduction
+  in update/overhead residual, with zero differing pixels across 600 Mode 4
+  frames. This deliberately over-budget workload amplifies call overhead; the
+  percentage is not a promise for ordinary games.
+- Multi-return specialization preserves Lua expansion while allowing mixed Go
+  tuples such as `(rt.Number, rt.Value, rt.Number)`. In the dedicated 240-call
+  fixture at
+  [`examples/multi-return-physics-stress`](../examples/multi-return-physics-stress),
+  TinyGo's normal inliner erased the tagged/native distinction completely:
+  both shipping-path ROMs measured 642,296 median cycles and 43,996 bytes. With
+  the same root-protected out-of-line path in both builds, native tuple results
+  measured 813,269 -> 792,039 median cycles (-2.61%), 539,625 -> 520,425
+  update/overhead cycles (-3.56%), and 50,012 -> 49,456 ROM bytes (-1.11%).
+  Both comparisons had zero differing pixels across 600 Mode 4 frames and
+  unchanged EWRAM. The out-of-line result applies to calls that cannot be
+  inlined or must retain root protection; it is not an extra gain on helpers
+  the compiler already collapses completely.
+- Calls to transitively proven non-allocating functions bypass the generated
+  temporary-root push/pop wrapper. Allocation through table creation/growth,
+  string creation/concatenation, an unknown builtin, or an unproven recursive
+  cycle keeps the protected path. A dedicated workload with one live table
+  root and 384 pure numeric calls per tick in
+  [`examples/noalloc-call-stress`](../examples/noalloc-call-stress) measured
+  334,028 -> 234,519 median cycles (-29.79%) and 112,219 -> 13,873
+  update/overhead cycles (-87.64%), with zero differing pixels across 600 Mode
+  4 frames. Its one cold-start missed tick fell to zero. This fixture isolates
+  wrapper overhead and deliberately overrepresents tiny helper calls.
 - Reuse tables. `local pool = {}` at `_init`, indices recycled, beats
   `add`/`del` churn: `#t` and `add` both walk the array border, and the
   collector's pause grows with live data.
@@ -291,8 +349,9 @@ must stay well under 32 KB.
 | Cartridge ROM | 32 MiB total | GBA address space + `ValidateROM` |
 
 When a limit fails, it fails closed and observably: heap exhaustion returns
-`HeapOOM` (nil result in Lua), map-edit exhaustion sets `LastMapError`, and
-the build refuses ROMs whose static assets cannot fit EWRAM.
+`HeapOOM` (nil result in Lua) and preview builds show `HEAP OOM` in the editor,
+map-edit exhaustion sets `LastMapError`, and the build refuses ROMs whose
+static assets cannot fit EWRAM.
 
 ## Measuring your own game
 

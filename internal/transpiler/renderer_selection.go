@@ -6,6 +6,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/luaparser"
 )
 
@@ -63,6 +64,11 @@ type RendererReport struct {
 	Mode0Layers  int
 	Mode0Objects bool
 	Mode0Text    bool
+	// MapPlaneMask identifies authored (or runtime-mutable) logical planes
+	// that need map storage. MapDrawMask is the subset materialized by map()
+	// calls. Both preserve logical BG numbers while allowing dense allocation.
+	MapPlaneMask uint8
+	MapDrawMask  uint8
 }
 
 const (
@@ -83,6 +89,7 @@ const (
 	reasonMode0TextShape       = "M0_PRINT_SHAPE"
 	reasonMode0ObjectBudget    = "M0_OBJ_BUDGET"
 	reasonMode0ResourceLimit   = "M0_RESOURCE_LIMIT"
+	reasonExplicitMapContract  = "MAP_EXPLICIT_CONTRACT"
 	autoProfileTileV1          = "tile-v1"
 )
 
@@ -94,13 +101,19 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	if chunk == nil {
 		return report, errors.New("transpiler: nil chunk")
 	}
+	plan, err := validateMapContract(chunk, opts)
+	if err != nil {
+		return report, err
+	}
+	report.MapPlaneMask = plan.storageMask
+	report.MapDrawMask = plan.drawMask
 	switch opts.Renderer {
 	case RendererMode4:
 		report.Reason = reasonMode4Forced
 		return report, nil
 	case RendererAuto:
 		report.Profile = autoProfileTileV1
-		layers, objects, text, err := validateMode0Compatible(chunk, opts)
+		layers, objects, text, err := validateMode0Compatible(chunk, opts, plan)
 		if err != nil {
 			report.Reason = reasonAutoMode0Ineligible
 			report.Diagnostic = err.Error()
@@ -118,7 +131,7 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 		report.Mode0Text = text
 		return report, nil
 	case RendererMode0:
-		layers, objects, text, err := validateMode0Compatible(chunk, opts)
+		layers, objects, text, err := validateMode0Compatible(chunk, opts, plan)
 		if err != nil {
 			return report, err
 		}
@@ -131,6 +144,158 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	default:
 		return report, fmt.Errorf("transpiler: unknown renderer value %d", opts.Renderer)
 	}
+}
+
+type mapContractPlan struct {
+	storageMask uint8
+	drawMask    uint8
+}
+
+// validateMapContract defines the deliberately small, unambiguous map API:
+// map() draws every non-empty plane. Every non-empty argument list starts
+// with bg; the remaining source/destination/size/mask arguments keep their
+// established order and defaults. Migrating an old call therefore consists
+// only of prefixing the desired logical BG number.
+func validateMapContract(chunk *luaparser.Chunk, opts Options) (mapContractPlan, error) {
+	plan := mapContractPlan{storageMask: authoredMapMask(opts)}
+	var draw *luaparser.FunctionDeclStmt
+	var calls []*luaparser.CallExpr
+	mutableBG0 := false
+	var visitStmt func(luaparser.Stmt)
+	visitStmt = func(stmt luaparser.Stmt) {
+		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
+			if functionKey(fn) == "_draw" {
+				draw = fn
+			}
+			for _, bodyStmt := range fn.Body.Body {
+				visitStmt(bodyStmt)
+			}
+			return
+		}
+		collectStmtExprs(stmt, func(expr luaparser.Expr) {
+			call, ok := expr.(*luaparser.CallExpr)
+			if !ok {
+				return
+			}
+			name, ok := callKey(call)
+			if ok {
+				switch name {
+				case "map":
+					calls = append(calls, call)
+				case "mset":
+					mutableBG0 = true
+				}
+			}
+		})
+	}
+	for _, stmt := range chunk.Body {
+		visitStmt(stmt)
+	}
+	if mutableBG0 {
+		plan.storageMask |= 1
+	}
+	if len(calls) == 0 {
+		return plan, nil
+	}
+	for _, call := range calls {
+		if len(call.Args) > 8 {
+			return plan, explicitMapError(call, "map() accepts at most eight arguments")
+		}
+	}
+	if draw == nil {
+		return plan, explicitMapError(calls[0], "map() calls must be direct statements in _draw")
+	}
+	direct := make([]*luaparser.CallExpr, 0, len(calls))
+	for _, stmt := range draw.Body.Body {
+		callStmt, ok := stmt.(*luaparser.CallStmt)
+		if !ok {
+			continue
+		}
+		name, ok := callKey(callStmt.Call)
+		if ok && name == "map" {
+			direct = append(direct, callStmt.Call)
+		}
+	}
+	if len(direct) != len(calls) {
+		return plan, explicitMapError(calls[0], "map() calls must be unconditional direct statements in _draw")
+	}
+	mapLayers := opts.MapLayers
+	if mapLayers == 0 {
+		mapLayers = 1
+	}
+	seen := [assetsync.MapLayerCount]bool{}
+	lastBG := -1
+	autoLayers := false
+	for _, call := range direct {
+		if len(call.Args) == 0 {
+			if len(direct) != 1 {
+				return plan, explicitMapError(call, "map() cannot be mixed with map(bg) calls")
+			}
+			autoLayers = true
+			continue
+		}
+		value, literal := staticNumberLiteral(call.Args[0])
+		if !literal || value != math.Trunc(value) || value < 0 || value >= assetsync.MapLayerCount {
+			return plan, explicitMapError(call, "bg must be an integer literal from 0 to 3")
+		}
+		bg := int(value)
+		if bg >= mapLayers {
+			return plan, explicitMapError(call, fmt.Sprintf("BG%d is not present in this %d-layer map asset", bg, mapLayers))
+		}
+		if seen[bg] {
+			return plan, explicitMapError(call, fmt.Sprintf("BG%d is drawn more than once", bg))
+		}
+		if bg < lastBG {
+			return plan, explicitMapError(call, "calls must appear in back-to-front BG0..BG3 order")
+		}
+		seen[bg] = true
+		lastBG = bg
+		if plan.storageMask&(1<<uint(bg)) != 0 {
+			plan.drawMask |= 1 << uint(bg)
+		}
+	}
+	if autoLayers {
+		plan.drawMask = plan.storageMask
+	}
+	return plan, nil
+}
+
+func authoredMapMask(opts Options) uint8 {
+	layers := opts.MapLayers
+	if layers == 0 {
+		layers = 1
+	}
+	planeCells := opts.MapW * opts.MapH
+	if planeCells <= 0 || len(opts.Map) < planeCells*layers {
+		return 0
+	}
+	var mask uint8
+	for bg := 0; bg < layers; bg++ {
+		base := bg * planeCells
+		for _, id := range opts.Map[base : base+planeCells] {
+			if id != 0 {
+				mask |= 1 << uint(bg)
+				break
+			}
+		}
+	}
+	return mask
+}
+
+func mapMaskCount(mask uint8) int {
+	count := 0
+	for mask != 0 {
+		count += int(mask & 1)
+		mask >>= 1
+	}
+	return count
+}
+
+func explicitMapError(call *luaparser.CallExpr, detail string) error {
+	if call == nil {
+		return fmt.Errorf("transpiler: [%s] %s", reasonExplicitMapContract, detail)
+	}
+	return fmt.Errorf("transpiler: %s: [%s] %s", call.Pos(), reasonExplicitMapContract, detail)
 }
 
 // validateAutoMode0Cost is deliberately narrower than semantic Mode 0
@@ -197,15 +362,11 @@ func validateAutoMode0Cost(chunk *luaparser.Chunk) error {
 	return nil
 }
 
-func validateMode0Compatible(chunk *luaparser.Chunk, opts Options) (int, bool, bool, error) {
+func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContractPlan) (int, bool, bool, error) {
 	cols, rows := opts.SheetW/8, opts.SheetH/8
 	if opts.SheetW <= 0 || opts.SheetH <= 0 || opts.SheetW%8 != 0 || opts.SheetH%8 != 0 {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires an 8x8-aligned sheet", reasonMode0ResourceLimit)
 	}
-	if opts.MapW <= 0 || opts.MapH <= 0 {
-		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires a non-empty logical map", reasonMode0ResourceLimit)
-	}
-
 	var initFunction, update, draw *luaparser.FunctionDeclStmt
 	var firstErr error
 	var clsCalls, mapCalls, sprCalls, ssprCalls, printCalls, ssetCalls int
@@ -276,6 +437,9 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options) (int, bool, b
 	if firstErr != nil {
 		return 0, false, false, firstErr
 	}
+	if mapCalls != 0 && (opts.MapW <= 0 || opts.MapH <= 0) {
+		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 map() requires positive map dimensions", reasonMode0ResourceLimit)
+	}
 	const maxMode0SsetPerUpdate = 16
 	directInitSset := countDirectMode0Calls(initFunction, "sset")
 	directUpdateSset := countDirectMode0Calls(update, "sset")
@@ -285,8 +449,8 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options) (int, bool, b
 	if directUpdateSset > maxMode0SsetPerUpdate {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 permits at most %d direct sset() calls per update so dirty tile uploads fit VBlank", reasonMode0ResourceLimit, maxMode0SsetPerUpdate)
 	}
-	if draw == nil || clsCalls != 1 || mapCalls < 1 || mapCalls > 4 {
-		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires one direct cls() and one to four direct map() calls in _draw", reasonMode0DrawShape)
+	if draw == nil || clsCalls != 1 || mapCalls > 4 {
+		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires one direct cls() and at most four direct map() calls in _draw", reasonMode0DrawShape)
 	}
 
 	directCls, directMap, directSpr, directSSpr, directPrint, objectCount := 0, 0, 0, 0, 0, 0
@@ -376,11 +540,15 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options) (int, bool, b
 			return 0, false, false, mode0CallError(paletteCall, reasonMode0DrawShape, "Mode 0 pal()/palt() must run before _draw (for example in _init or _update)")
 		}
 	}
-	if clsIndex > mapIndex {
+	if mapIndex >= 0 && clsIndex > mapIndex {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] cls() must precede map() in _draw", draw.Pos(), reasonMode0ClsShape)
 	}
-	if firstObjectIndex >= 0 && firstObjectIndex < lastMapIndex {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/print() calls must follow every map() call", draw.Pos(), reasonMode0SpriteShape)
+	lastBackgroundIndex := clsIndex
+	if lastMapIndex > lastBackgroundIndex {
+		lastBackgroundIndex = lastMapIndex
+	}
+	if firstObjectIndex >= 0 && firstObjectIndex < lastBackgroundIndex {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/print() calls must follow cls() and every map() call", draw.Pos(), reasonMode0SpriteShape)
 	}
 	if objectCount > 32 {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 sprite/text calls need %d objects; the deterministic scanline budget is 32", draw.Pos(), reasonMode0ObjectBudget, objectCount)
@@ -388,12 +556,13 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options) (int, bool, b
 	if directPrint != 0 && maxSpriteID >= 480 {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text reserves OBJ tiles 480-511; spr() source IDs must stay below 480", draw.Pos(), reasonMode0ResourceLimit)
 	}
-	tileLimit := (30 - 2*(directMap-1)) * 32
+	mode0Layers := mapMaskCount(plan.drawMask)
+	tileLimit := (30 - 2*(mode0Layers-1)) * 32
 	if cols*rows > tileLimit {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] %d Mode 0 map layers leave %d sprite tiles, but the sheet declares %d",
-			reasonMode0ResourceLimit, directMap, tileLimit, cols*rows)
+			reasonMode0ResourceLimit, mode0Layers, tileLimit, cols*rows)
 	}
-	return directMap, objectCount != 0 || directPrint != 0, directPrint != 0, nil
+	return mode0Layers, objectCount != 0 || directPrint != 0, directPrint != 0, nil
 }
 
 func countDirectMode0Calls(function *luaparser.FunctionDeclStmt, name string) int {
@@ -571,14 +740,17 @@ func validateMode0PrintCall(call *luaparser.CallExpr) (int, error) {
 }
 
 func validateMode0MapCall(call *luaparser.CallExpr) error {
-	if call == nil || len(call.Args) > 7 {
-		return mode0CallError(call, reasonMode0MapShape, "Mode 0 map() accepts at most seven arguments")
+	if call == nil || len(call.Args) > 8 {
+		return mode0CallError(call, reasonMode0MapShape, "Mode 0 map() accepts at most eight arguments")
+	}
+	if len(call.Args) == 0 {
+		return nil
 	}
 	limits := []struct {
 		index int
 		name  string
 		max   float64
-	}{{4, "cells_w", 64}, {5, "cells_h", 32}}
+	}{{5, "cells_w", 64}, {6, "cells_h", 32}}
 	for _, limit := range limits {
 		if len(call.Args) <= limit.index {
 			continue

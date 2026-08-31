@@ -5,15 +5,21 @@ package fonts
 
 import _ "embed"
 
-// OpenDyslexic is the monospaced OpenDyslexic font used by the editor UI.
-// The Mono variant keeps the source editor's character grid stable.
+// OpenDyslexic is the legacy monospaced OpenDyslexic asset. The source editor
+// uses JetBrains Mono; this remains available to projects and tooling that explicitly
+// need the accessibility-oriented face.
 //
 //go:embed OpenDyslexic/OpenDyslexicMNerdFontMono-Regular.otf
 var OpenDyslexic []byte
 
-// OpenDyslexicUIBold is the proportional bold face used for editor chrome.
-// Code and logs keep the monospaced face above; labels and controls use the
-// compact proportional face so they do not inherit terminal-like spacing.
+// OpenDyslexicUIBold is the proportional bold face used outside the Develop
+// workspace, where labels and controls keep MTile's distinctive visual identity.
 //
 //go:embed OpenDyslexic/OpenDyslexicNerdFont-Bold.otf
 var OpenDyslexicUIBold []byte
+
+// JetBrainsMonoRegular is the neutral sans-serif monospaced face used for code,
+// logs, and the surrounding Develop workspace chrome.
+//
+//go:embed JetBrainsMono/JetBrainsMono-Regular.ttf
+var JetBrainsMonoRegular []byte

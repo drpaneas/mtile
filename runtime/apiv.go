@@ -61,16 +61,10 @@ func (c *Context) SSprV(sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY Value) {
 	)
 }
 
-func (c *Context) MapV(cellX, cellY, screenX, screenY, cellsW, cellsH, layer Value) {
-	c.Map(
-		cellX.Int(),
-		cellY.Int(),
-		screenX.Int(),
-		screenY.Int(),
-		cellsW.Int(),
-		cellsH.Int(),
-		layer.Int(),
-	)
+// MapBGAtV is the generated-code entry point for the new map contract. slot
+// is a compile-time dense allocation; a is the stable logical BG0..BG3 ID.
+func (c *Context) MapBGAtV(slot int, a, b, c0, d, e, f, g, h Value) {
+	c.MapBGAt(slot, a.Int(), b.Int(), c0.Int(), d.Int(), e.Int(), f.Int(), g.Int(), h.Int())
 }
 
 func (c *Context) CameraV(x, y Value) {

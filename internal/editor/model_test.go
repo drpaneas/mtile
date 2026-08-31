@@ -821,3 +821,40 @@ func TestResizeMapPreservesOverlappingCells(t *testing.T) {
 		t.Fatal("ResizeMap accepted a negative height")
 	}
 }
+
+func TestLayeredMapEditingPromotionResizeUndoDataShape(t *testing.T) {
+	dir := t.TempDir()
+	if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: 16, Height: 16}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SaveMap(dir, &assetsync.Map{Width: 2, Height: 2, Cells: []int{1, 0, 0, 2}}); err != nil {
+		t.Fatal(err)
+	}
+	m, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed, err := m.SetMapCell(3, 1, 0, 3)
+	if err != nil || !changed || !m.Map.IsLayered() {
+		t.Fatalf("BG3 edit: changed=%v err=%v map=%#v", changed, err, m.Map)
+	}
+	if m.MapCell(0, 0, 0) != 1 || m.MapCell(0, 1, 1) != 2 || m.MapCell(3, 1, 0) != 3 {
+		t.Fatalf("promotion changed authored cells: %#v", m.Map)
+	}
+	if err := m.ResizeMap(3, 3); err != nil {
+		t.Fatal(err)
+	}
+	if !m.Map.IsLayered() || m.MapCell(0, 1, 1) != 2 || m.MapCell(3, 1, 0) != 3 || m.MapCell(2, 2, 2) != 0 {
+		t.Fatalf("layered resize lost data: %#v", m.Map)
+	}
+	if err := m.Save(); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reloaded.Map.IsLayered() || reloaded.MapCell(3, 1, 0) != 3 {
+		t.Fatalf("layered save/load lost BG3: %#v", reloaded.Map)
+	}
+}

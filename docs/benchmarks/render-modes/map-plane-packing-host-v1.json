@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "runtime MapAll sparse-plane packing",
+  "environment": {
+    "goVersion": "go1.26.4",
+    "goos": "darwin",
+    "goarch": "arm64",
+    "cpu": "Apple M2 Pro"
+  },
+  "command": "go test -run '^$' -bench 'BenchmarkMapAll(SparseTwoOfFour|Four)$' -benchmem -count=5 .",
+  "logicalMap": {
+    "width": 30,
+    "height": 20,
+    "declaredPlanes": 4
+  },
+  "sparseTwoOfFour": {
+    "planeMask": 10,
+    "samplesNsPerOp": [81509, 82405, 83423, 82937, 83370],
+    "medianNsPerOp": 82937,
+    "allocsPerOp": 0
+  },
+  "allFour": {
+    "planeMask": 15,
+    "samplesNsPerOp": [165915, 167554, 167105, 168010, 168260],
+    "medianNsPerOp": 167554,
+    "allocsPerOp": 0
+  },
+  "sparseMedianSavingPercent": 50.5013,
+  "packingSavingsFor60x20TwoOfFour": {
+    "mapROMBytes": 4800,
+    "smallMapEWRAMBytes": 4800,
+    "mode0ScreenShadowBytes": 8192,
+    "mode0TotalEWRAMBytesBeforeSmallMetadata": 12992
+  }
+}

@@ -227,10 +227,13 @@ func setEditorLayout(width, height int) bool {
 
 // Map editor layout.
 const (
-	mapPadding     = 10
-	mapGap         = 8
-	mapStripHeight = 44
-	mapPreviewSize = 28
+	mapPadding           = 10
+	mapGap               = 8
+	mapStripHeight       = 52
+	mapPreviewSize       = 28
+	mapLayerToolbarWidth = 560
+	mapLayerLabelWidth   = 150
+	mapLayerButtonGap    = 6
 )
 
 type mapLayout struct {
@@ -239,16 +242,29 @@ type mapLayout struct {
 	Strip        editor.Rect
 	SelectedTile editor.Rect
 	Coordinates  editor.Rect
+	Layers       editor.Rect
+	LayerRows    [4]editor.Rect
+	LayerEyes    [4]editor.Rect
 }
 
 func newMapLayout(screenW, screenH int) mapLayout {
 	header := editor.Rect{X: 0, Y: editorTabsHeight, W: screenW, H: workspaceHeaderHeight}
 	usableH := screenH - statusBarRect.H - editorTabsHeight - workspaceHeaderHeight
 	canvasH := usableH - (mapPadding * 2) - mapGap - mapStripHeight
-	canvas := editor.Rect{X: mapPadding, Y: header.Y + header.H + mapPadding, W: screenW - (mapPadding * 2), H: canvasH}
+	canvas := editor.Rect{X: mapPadding, Y: header.Y + header.H + mapPadding, W: screenW - mapPadding*2, H: canvasH}
 	strip := editor.Rect{X: mapPadding, Y: canvas.Y + canvas.H + mapGap, W: canvas.W, H: mapStripHeight}
+	layersW := min(mapLayerToolbarWidth, max(500, screenW/2))
+	layers := editor.Rect{X: strip.X + strip.W - layersW - 6, Y: strip.Y + 6, W: layersW, H: strip.H - 12}
 	selected := editor.Rect{X: strip.X + mapGap, Y: strip.Y + mapGap, W: mapPreviewSize, H: mapPreviewSize}
 	coordX := selected.X + selected.W + 12
-	coords := editor.Rect{X: coordX, Y: strip.Y + (strip.H-20)/2, W: strip.W - (coordX - strip.X) - (mapGap * 2), H: 20}
-	return mapLayout{Header: header, Canvas: canvas, Strip: strip, SelectedTile: selected, Coordinates: coords}
+	coords := editor.Rect{X: coordX, Y: strip.Y + (strip.H-20)/2, W: max(1, layers.X-coordX-mapGap), H: 20}
+	layout := mapLayout{Header: header, Canvas: canvas, Strip: strip, SelectedTile: selected, Coordinates: coords, Layers: layers}
+	buttonsX := layers.X + mapLayerLabelWidth
+	buttonW := (layers.W - mapLayerLabelWidth - 3*mapLayerButtonGap) / 4
+	for bg := 0; bg < 4; bg++ {
+		row := editor.Rect{X: buttonsX + bg*(buttonW+mapLayerButtonGap), Y: layers.Y, W: buttonW, H: layers.H}
+		layout.LayerRows[bg] = row
+		layout.LayerEyes[bg] = editor.Rect{X: row.X + 5, Y: row.Y + (row.H-24)/2, W: 26, H: 24}
+	}
+	return layout
 }

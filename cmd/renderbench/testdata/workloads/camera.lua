@@ -10,5 +10,5 @@ end
 
 function _draw()
   cls(225)
-  map(0,0,0,0,20,15,0)
+  map(0,0,0,0,0,20,15,0)
 end

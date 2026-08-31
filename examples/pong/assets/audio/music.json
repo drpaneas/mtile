@@ -1,0 +1,278 @@
+{
+  "version": 2,
+  "ppqn": 96,
+  "clips": [
+    {
+      "id": 0,
+      "name": "Computer paddle",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 48,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 83,
+          "soundId": 0,
+          "priority": 180
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Player paddle",
+      "kind": "ch2",
+      "sfx": true,
+      "lengthTicks": 48,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 64,
+          "soundId": 1,
+          "priority": 180
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Computer score",
+      "kind": "ch2",
+      "sfx": true,
+      "lengthTicks": 144,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 72,
+          "soundId": 2,
+          "priority": 220
+        },
+        {
+          "tick": 48,
+          "durationTicks": 48,
+          "note": 67,
+          "soundId": 2,
+          "priority": 220
+        },
+        {
+          "tick": 96,
+          "durationTicks": 48,
+          "note": 60,
+          "soundId": 2,
+          "priority": 220
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Player score",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 144,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 72,
+          "soundId": 3,
+          "priority": 220
+        },
+        {
+          "tick": 48,
+          "durationTicks": 48,
+          "note": 79,
+          "soundId": 3,
+          "priority": 220
+        },
+        {
+          "tick": 96,
+          "durationTicks": 48,
+          "note": 84,
+          "soundId": 3,
+          "priority": 220
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Start fanfare",
+      "kind": "ch2",
+      "sfx": true,
+      "lengthTicks": 192,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 48,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 24,
+          "durationTicks": 24,
+          "note": 55,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 48,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 72,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 60,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 120,
+          "durationTicks": 24,
+          "note": 67,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 144,
+          "durationTicks": 24,
+          "note": 72,
+          "soundId": 4,
+          "priority": 200
+        },
+        {
+          "tick": 168,
+          "durationTicks": 24,
+          "note": 79,
+          "soundId": 4,
+          "priority": 200
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Wall",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 48,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 48,
+          "note": 67,
+          "soundId": 5,
+          "priority": 180
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Court bass",
+      "kind": "ch3",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 72,
+          "note": 48,
+          "soundId": 6,
+          "priority": 80
+        },
+        {
+          "tick": 96,
+          "durationTicks": 72,
+          "note": 55,
+          "soundId": 6,
+          "priority": 80
+        },
+        {
+          "tick": 192,
+          "durationTicks": 72,
+          "note": 52,
+          "soundId": 6,
+          "priority": 80
+        },
+        {
+          "tick": 288,
+          "durationTicks": 72,
+          "note": 43,
+          "soundId": 6,
+          "priority": 80
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Court beat",
+      "kind": "ch4",
+      "lengthTicks": 384,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 48,
+          "soundId": 7,
+          "priority": 70
+        },
+        {
+          "tick": 96,
+          "durationTicks": 24,
+          "note": 48,
+          "soundId": 7,
+          "priority": 70
+        },
+        {
+          "tick": 192,
+          "durationTicks": 24,
+          "note": 48,
+          "soundId": 7,
+          "priority": 70
+        },
+        {
+          "tick": 288,
+          "durationTicks": 24,
+          "note": 48,
+          "soundId": 7,
+          "priority": 70
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "Court loop",
+      "lengthTicks": 384,
+      "bars": 1,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": null,
+        "ch2": null,
+        "ch3": 10,
+        "ch4": 11
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "Pong court",
+      "tempo": 132,
+      "sequence": [
+        0
+      ],
+      "loopStart": 0
+    }
+  ]
+}

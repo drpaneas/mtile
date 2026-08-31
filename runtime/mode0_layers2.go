@@ -2,4 +2,7 @@
 
 package runtime
 
-const mode0LayerCount = 2
+const (
+	mode0LayerCount        = 2
+	mode0LayerStorageCount = 2
+)

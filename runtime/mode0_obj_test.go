@@ -9,6 +9,7 @@ import (
 )
 
 func TestMode0HardwareSpriteUsesOBJVRAMCameraFlipAndOAM(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	sheet := make([]byte, 24*8)
 	sheet[8] = 7
@@ -50,6 +51,7 @@ func TestMode0HardwareSpriteUsesOBJVRAMCameraFlipAndOAM(t *testing.T) {
 }
 
 func TestMode0AlignedSSprLowersToMetasprite(t *testing.T) {
+	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 32, 8, 1, 1, make([]byte, 32*8), []uint16{0}, make([]byte, 4))
 	c.BeginRenderFrame()

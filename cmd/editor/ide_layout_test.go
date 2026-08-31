@@ -2,11 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"image/color"
 	"strings"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/build"
+	"github.com/drpaneas/mtile/internal/codeeditor"
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/drpaneas/mtile/internal/emulator"
 )
@@ -51,6 +53,14 @@ func TestGraphicsWorkspacesReserveHeadersWithoutCrowdingEditors(t *testing.T) {
 		if layout.Strip.Y+layout.Strip.H > statusBarRect.Y {
 			t.Fatalf("%dx%d map strip overlaps status bar: %#v", size[0], size[1], layout.Strip)
 		}
+		if !rectInsideIDE(layout.Layers, layout.Strip) {
+			t.Fatalf("%dx%d map layer toolbar escapes strip: layers=%#v strip=%#v", size[0], size[1], layout.Layers, layout.Strip)
+		}
+		for bg, row := range layout.LayerRows {
+			if !rectInsideIDE(row, layout.Layers) || !rectInsideIDE(layout.LayerEyes[bg], row) {
+				t.Fatalf("%dx%d BG%d controls escape layer toolbar: row=%#v eye=%#v layers=%#v", size[0], size[1], bg, row, layout.LayerEyes[bg], layout.Layers)
+			}
+		}
 	}
 }
 
@@ -62,7 +72,7 @@ func TestCodeWorkspaceReflowsWithoutPanelOverlap(t *testing.T) {
 		workspace := editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}
 		for name, rect := range map[string]editor.Rect{
 			"header": layout.Header, "sidebar": layout.Sidebar, "editor": layout.Editor,
-			"gutter": layout.Gutter, "text": layout.Text, "inspector": layout.Inspector,
+			"gutter": layout.Gutter, "text": layout.Text, "horizontal scroll": layout.Horizontal, "inspector": layout.Inspector,
 			"diagnostics": layout.Diagnostics, "save": layout.Save, "run": layout.Run,
 		} {
 			if !rectInsideIDE(rect, workspace) {
@@ -72,12 +82,13 @@ func TestCodeWorkspaceReflowsWithoutPanelOverlap(t *testing.T) {
 		for _, pair := range [][2]editor.Rect{
 			{layout.Sidebar, layout.Editor}, {layout.Editor, layout.Inspector},
 			{layout.Editor, layout.Diagnostics}, {layout.Save, layout.Run},
+			{layout.Text, layout.Horizontal},
 		} {
 			if rectsOverlapIDE(pair[0], pair[1]) {
 				t.Fatalf("%dx%d code panels overlap: %#v and %#v", size[0], size[1], pair[0], pair[1])
 			}
 		}
-		if !rectInsideIDE(layout.Gutter, layout.Editor) || !rectInsideIDE(layout.Text, layout.Editor) {
+		if !rectInsideIDE(layout.Gutter, layout.Editor) || !rectInsideIDE(layout.Text, layout.Editor) || !rectInsideIDE(layout.Horizontal, layout.Editor) {
 			t.Fatalf("%dx%d editor children escape the source panel", size[0], size[1])
 		}
 	}
@@ -130,7 +141,7 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 		workspace := editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}
 		for name, rect := range map[string]editor.Rect{
 			"header": layout.Header, "sidebar": layout.Code.Sidebar,
-			"source": layout.Code.Editor, "gutter": layout.Code.Gutter, "text": layout.Code.Text,
+			"source": layout.Code.Editor, "gutter": layout.Code.Gutter, "text": layout.Code.Text, "horizontal scroll": layout.Code.Horizontal,
 			"preview": layout.Play.Stage, "bezel": layout.Play.Bezel, "screen": layout.Play.Screen,
 			"telemetry": layout.Play.Inspector, "diagnostics": layout.Code.Diagnostics,
 			"active file": layout.Code.File, "source mode": layout.SourceMode,
@@ -153,12 +164,13 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 			{layout.SourceMode, layout.Build},
 			{layout.Build, layout.Reset},
 			{layout.Reset, layout.Stop},
+			{layout.Code.Text, layout.Code.Horizontal},
 		} {
 			if rectsOverlapIDE(pair[0], pair[1]) {
 				t.Fatalf("%dx%d Develop panels overlap: %#v and %#v", size.width, size.height, pair[0], pair[1])
 			}
 		}
-		if !rectInsideIDE(layout.Code.Gutter, layout.Code.Editor) || !rectInsideIDE(layout.Code.Text, layout.Code.Editor) {
+		if !rectInsideIDE(layout.Code.Gutter, layout.Code.Editor) || !rectInsideIDE(layout.Code.Text, layout.Code.Editor) || !rectInsideIDE(layout.Code.Horizontal, layout.Code.Editor) {
 			t.Fatalf("%dx%d code children escape the source panel", size.width, size.height)
 		}
 		if !rectInsideIDE(layout.Play.Screen, layout.Play.Bezel) || !rectInsideIDE(layout.Play.Bezel, layout.Play.Stage) {
@@ -214,20 +226,11 @@ func TestPreferencesLayoutKeepsEveryControlInsideItsPanel(t *testing.T) {
 	}
 }
 
-func TestEffectLevelsCycleThroughAllPresentationModes(t *testing.T) {
-	g := &Game{}
-	g.theme.level = effectsClean
-	g.cycleEffects()
-	if g.theme.level != effectsSoft {
-		t.Fatalf("clean should cycle to soft, got %v", g.theme.level)
-	}
-	g.cycleEffects()
-	if g.theme.level != effectsFull {
-		t.Fatalf("soft should cycle to full, got %v", g.theme.level)
-	}
-	g.cycleEffects()
-	if g.theme.level != effectsClean {
-		t.Fatalf("full should cycle to clean, got %v", g.theme.level)
+func TestApplicationChromeAlwaysUsesCleanPresentation(t *testing.T) {
+	g := &Game{theme: themeState{level: effectsFull, buildPulse: 8, inkPulse: 8, mapPulse: 8}}
+	g.updateTheme()
+	if g.theme.level != effectsClean || g.theme.buildPulse != 0 || g.theme.inkPulse != 0 || g.theme.mapPulse != 0 {
+		t.Fatalf("theme should normalize to a still clean UI, got %+v", g.theme)
 	}
 }
 
@@ -238,7 +241,7 @@ func TestLCDShaderCompiles(t *testing.T) {
 }
 
 func TestStatusMessageColorSeparatesInformationFromErrors(t *testing.T) {
-	if got := statusMessageColor("visual effects: SOFT"); got != color.Color(colorLCD) {
+	if got := statusMessageColor("preferences restored"); got != color.Color(colorLCD) {
 		t.Fatalf("informational message should use LCD color, got %v", got)
 	}
 	if got := statusMessageColor("save failed: disk full"); got != color.Color(colorDanger) {
@@ -304,6 +307,47 @@ func TestDevelopBuildNoticeTracksTheBuildLifecycle(t *testing.T) {
 	}
 }
 
+func TestDevelopGlobalUsageStateTracksBudgetPressure(t *testing.T) {
+	for _, test := range []struct {
+		count int
+		want  string
+	}{
+		{count: 2, want: "OK"},
+		{count: 224, want: "WARNING"},
+		{count: 256, want: "FULL"},
+		{count: 257, want: "BLOCKED"},
+	} {
+		if got := developGlobalUsageState(build.GlobalUsage{Count: test.count, Limit: 256}); got != test.want {
+			t.Fatalf("global state for %d = %q, want %q", test.count, got, test.want)
+		}
+	}
+}
+
+func TestDevelopProblemsListEveryExcessGlobalWithSource(t *testing.T) {
+	symbols := make([]build.GlobalSymbol, 257)
+	for index := range symbols {
+		symbols[index] = build.GlobalSymbol{Name: fmt.Sprintf("g%d", index), Source: "game.lua", Line: index + 1, Column: 1}
+	}
+	g := &Game{runGlobalUsage: build.GlobalUsage{Count: 257, Limit: 256, Symbols: symbols}}
+	lines := g.developPanelLines(developProblems)
+	if len(lines) != 1 || lines[0] != `game.lua:257:1  global "g256" exceeds the persistent-state slot budget` {
+		t.Fatalf("global limit problem lines = %#v", lines)
+	}
+}
+
+func TestFailedBuildKeepsPartialGlobalUsageVisible(t *testing.T) {
+	g := &Game{runID: 4, runBusy: true}
+	usage := build.GlobalUsage{Count: 257, Limit: 256, Symbols: []build.GlobalSymbol{{Name: "overflow", Source: "game.lua", Line: 8, Column: 1}}}
+	g.acceptPlayLaunch(playLaunch{
+		id:     4,
+		result: build.Result{Entry: "game.lua", SourceFiles: []string{"game.lua"}, GlobalUsage: usage},
+		err:    errors.New("global limit"),
+	})
+	if g.runBusy || g.runEntry != "game.lua" || g.runGlobalUsage.Count != 257 || g.runStatus != "BUILD FAILED" {
+		t.Fatalf("failed build metadata = busy %v entry %q globals %#v status %q", g.runBusy, g.runEntry, g.runGlobalUsage, g.runStatus)
+	}
+}
+
 func TestDevelopMemoryAndCycleLabelsStayCompact(t *testing.T) {
 	if got := formatDevelopCount(153773); got != "153.8K" {
 		t.Fatalf("cycle label = %q", got)
@@ -320,6 +364,35 @@ func TestDevelopMemoryAndCycleLabelsStayCompact(t *testing.T) {
 	}
 	if got := formatDevelopHostAudio(160, 0, 0); got != "160ms QUEUED" {
 		t.Fatalf("host audio queued label = %q", got)
+	}
+}
+
+func TestDevelopHeapTelemetryLabelsExposeLivePressureAndFailure(t *testing.T) {
+	stats := emulator.DebugStats{
+		GCCount: 7, HeapCapacity: 56 * 1024, HeapAllocated: 41 * 1024,
+		HeapLive: 24 * 1024, HeapPeakLive: 28 * 1024,
+		HeapHandles: 321, HeapHandleLimit: 2048,
+	}
+	if got := developHeapLabel(stats); got != "HEAP 41K/56K  LIVE 24K" {
+		t.Fatalf("heap label = %q", got)
+	}
+	if got := developHeapAuxLabel(stats); got != "HANDLES 321/2048  PEAK 28K  GC 7" {
+		t.Fatalf("heap auxiliary label = %q", got)
+	}
+	if got := developHeapColor(stats); got != colorRun {
+		t.Fatalf("low live-set color = %v", got)
+	}
+
+	stats.HeapLive = 40 * 1024
+	if got := developHeapColor(stats); got != colorHighlight {
+		t.Fatalf("high live-set color = %v", got)
+	}
+	stats.HeapError = emulator.HeapOOM
+	if got := developHeapLabel(stats); got != "HEAP OOM  56K LIMIT" {
+		t.Fatalf("OOM label = %q", got)
+	}
+	if got := developHeapColor(stats); got != colorDanger {
+		t.Fatalf("OOM color = %v", got)
 	}
 }
 
@@ -353,7 +426,7 @@ func TestDevelopMemoryHealthFitsWideAndCompactInspectors(t *testing.T) {
 	wide := newDevelopLayout().Play.Inspector
 	wideAvailable := wide.W/3 - 24
 	wideLabel := developEWRAMLabel(build.EWRAMCapacity)
-	if width := uiTextWidth(wideLabel); width > wideAvailable {
+	if width := developTextWidth(wideLabel); width > wideAvailable {
 		t.Fatalf("wide memory health label %q uses %d px, available %d", wideLabel, width, wideAvailable)
 	}
 
@@ -361,24 +434,36 @@ func TestDevelopMemoryHealthFitsWideAndCompactInspectors(t *testing.T) {
 	compact := newDevelopLayout().Play.Inspector
 	compactAvailable := compact.W/2 - 24
 	compactLabel := developEWRAMCompactLabel(build.EWRAMCapacity)
-	if width := smallTextWidth(compactLabel); width > compactAvailable {
+	if width := developSmallTextWidth(compactLabel); width > compactAvailable {
 		t.Fatalf("compact memory health label %q uses %d px, available %d", compactLabel, width, compactAvailable)
+	}
+
+	heap := emulator.DebugStats{
+		GCCount: 12, HeapCapacity: 56 * 1024, HeapAllocated: 55 * 1024,
+		HeapLive: 48 * 1024, HeapPeakLive: 50 * 1024,
+		HeapHandles: 2047, HeapHandleLimit: 2048,
+	}
+	if label := developHeapLabel(heap); developTextWidth(label) > wideAvailable {
+		t.Fatalf("wide heap label %q does not fit in %d px", label, wideAvailable)
+	}
+	if label := developHeapCompactLabel(heap); developSmallTextWidth(label) > compactAvailable {
+		t.Fatalf("compact heap label %q does not fit in %d px", label, compactAvailable)
 	}
 }
 
 func TestDevelopTelemetryUsesTheAvailablePixelWidth(t *testing.T) {
 	label := "CPU  96.9%  544.0K cyc"
-	columnWidth := uiTextWidth(label) + 24
+	columnWidth := developTextWidth(label) + 24
 	if got := truncateDevelopTelemetryText(label, columnWidth); got != label {
 		t.Fatalf("exact-fit telemetry label = %q, want %q", got, label)
 	}
 
-	narrowWidth := uiTextWidth("CPU  96.9%") + 24
+	narrowWidth := developTextWidth("CPU  96.9%") + 24
 	got := truncateDevelopTelemetryText(label, narrowWidth)
 	if got == label || !strings.HasSuffix(got, "...") {
 		t.Fatalf("narrow telemetry label = %q, want truncated label", got)
 	}
-	if width := uiTextWidth(got); width > narrowWidth-24 {
+	if width := developTextWidth(got); width > narrowWidth-24 {
 		t.Fatalf("truncated telemetry label width = %d, available = %d", width, narrowWidth-24)
 	}
 }
@@ -406,15 +491,79 @@ func TestInterfaceTextSizeUpdatesMatchingEditorMetrics(t *testing.T) {
 	defer setInterfaceTextSize(textCompact)
 	setInterfaceTextSize(textComfort)
 	comfort := uiFontStyles[textComfort]
-	if uiFace != comfort.face || uiSmallFace != comfort.smallFace || uiTitleFace != comfort.titleFace || codeFace != comfort.codeFace || uiCharWidth != comfort.charWidth || uiSmallTextHeight != comfort.smallTextHeight || codeCharWidth != comfort.codeCharWidth || codeLineHeight != comfort.lineHeight {
+	if uiFace != comfort.face || uiSmallFace != comfort.smallFace || uiTitleFace != comfort.titleFace || codeFace != comfort.codeFace || developFace != comfort.developFace || developSmallFace != comfort.developSmallFace || developTitleFace != comfort.developTitleFace || uiCharWidth != comfort.charWidth || uiSmallTextHeight != comfort.smallTextHeight || codeCharWidth != comfort.codeCharWidth || developCharWidth != comfort.developCharWidth || codeLineHeight != comfort.lineHeight {
 		t.Fatalf("comfort metrics = ui %d code %d line %d", uiCharWidth, codeCharWidth, codeLineHeight)
 	}
 	setInterfaceTextSize(textLarge)
 	large := uiFontStyles[textLarge]
-	if uiFace != large.face || uiSmallFace != large.smallFace || uiTitleFace != large.titleFace || codeFace != large.codeFace || uiCharWidth != large.charWidth || uiSmallTextHeight != large.smallTextHeight || codeCharWidth != large.codeCharWidth || codeLineHeight != large.lineHeight {
+	if uiFace != large.face || uiSmallFace != large.smallFace || uiTitleFace != large.titleFace || codeFace != large.codeFace || developFace != large.developFace || developSmallFace != large.developSmallFace || developTitleFace != large.developTitleFace || uiCharWidth != large.charWidth || uiSmallTextHeight != large.smallTextHeight || codeCharWidth != large.codeCharWidth || developCharWidth != large.developCharWidth || codeLineHeight != large.lineHeight {
 		t.Fatalf("large metrics = ui %d code %d line %d", uiCharWidth, codeCharWidth, codeLineHeight)
 	}
 	if large.size <= comfort.size || large.charWidth <= comfort.charWidth || large.textHeight <= comfort.textHeight {
 		t.Fatalf("large font metrics do not grow: comfort=%+v large=%+v", comfort, large)
+	}
+}
+
+func TestCodeTypographyPresetsStayDenseAndReadable(t *testing.T) {
+	wants := [...]struct {
+		size       float64
+		lineHeight int
+	}{
+		{size: 12, lineHeight: 18},
+		{size: 14, lineHeight: 20},
+		{size: 16, lineHeight: 23},
+	}
+	for index, want := range wants {
+		style := uiFontStyles[index]
+		if style.codeSize != want.size || style.lineHeight != want.lineHeight {
+			t.Fatalf("preset %d code typography = %.0f/%d, want %.0f/%d", index, style.codeSize, style.lineHeight, want.size, want.lineHeight)
+		}
+		if style.codeTextHeight > style.lineHeight {
+			t.Fatalf("preset %d glyph height %d exceeds line height %d", index, style.codeTextHeight, style.lineHeight)
+		}
+	}
+}
+
+func TestCodeHorizontalViewportClampsAndMapsScrollbar(t *testing.T) {
+	defer setInterfaceTextSize(textCompact)
+	setInterfaceTextSize(textComfort)
+	g := &Game{code: codeeditor.New(strings.Repeat("x", 40))}
+	layout := codeLayout{
+		Text:       editor.Rect{X: 50, Y: 10, W: codeCharWidth*10 + 16, H: 200},
+		Horizontal: editor.Rect{X: 50, Y: 210, W: 240, H: codeHorizontalScrollbarHeight},
+	}
+	if got, want := g.codeHorizontalScrollLimit(layout), 31; got != want {
+		t.Fatalf("horizontal limit = %d, want %d", got, want)
+	}
+	left := g.codeHorizontalThumb(layout)
+	if left.X != layout.Horizontal.X+3 {
+		t.Fatalf("left thumb starts at %d, want %d", left.X, layout.Horizontal.X+3)
+	}
+	g.codeScrollColumn = g.codeHorizontalScrollLimit(layout)
+	right := g.codeHorizontalThumb(layout)
+	if got, want := right.X+right.W, layout.Horizontal.X+layout.Horizontal.W-3; got != want {
+		t.Fatalf("right thumb ends at %d, want %d", got, want)
+	}
+
+	g.code.SetText("short")
+	g.keepCodeCursorVisible(layout)
+	if g.codeScrollColumn != 0 {
+		t.Fatalf("horizontal scroll after shortening = %d, want 0", g.codeScrollColumn)
+	}
+}
+
+func TestCodeWheelStepsPreserveFineTrackpadMotion(t *testing.T) {
+	for _, test := range []struct {
+		offset float64
+		want   int
+	}{
+		{offset: 0.1, want: 1},
+		{offset: -0.1, want: -1},
+		{offset: 2, want: 6},
+		{offset: 0, want: 0},
+	} {
+		if got := codeWheelSteps(test.offset); got != test.want {
+			t.Fatalf("codeWheelSteps(%v) = %d, want %d", test.offset, got, test.want)
+		}
 	}
 }

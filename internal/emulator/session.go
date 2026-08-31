@@ -57,12 +57,29 @@ type PSGRegisters struct {
 	MixPSG, MixDMA, Status, Bias        uint16
 }
 
+// HeapError mirrors the stable numeric heap status sent by the preview ROM.
+// Keep these values in lockstep with runtime.HeapError without importing the
+// cartridge runtime into the editor-side emulator protocol.
+type HeapError uint32
+
+const (
+	HeapOK HeapError = iota
+	HeapOOM
+	HeapCorrupt
+	HeapCorruptRef
+	HeapBusy
+)
+
 type DebugStats struct {
 	Frames, MissedFrames, LastFrame, MaxFrame uint32
 	LastUpdate, MaxUpdate, LastDraw, MaxDraw  uint32
 	GCCount, LastGC, MaxGC, LastBlit          uint32
 	PresentStart, PresentEnd                  uint16
 	DiagnosticSkips                           uint32
+	HeapCapacity, HeapAllocated               uint32
+	HeapLive, HeapPeakLive                    uint32
+	HeapHandles, HeapHandleLimit              uint32
+	HeapError                                 HeapError
 }
 
 type Watch struct {
@@ -204,6 +221,14 @@ const (
 	debugWatchBase       = 72
 	debugWatchSize       = 24
 	debugWatchSlots      = 16
+	debugHeapBase        = debugWatchBase + debugWatchSlots*debugWatchSize
+	debugHeapCapacity    = debugHeapBase
+	debugHeapAllocated   = debugHeapBase + 4
+	debugHeapLive        = debugHeapBase + 8
+	debugHeapPeakLive    = debugHeapBase + 12
+	debugHeapHandles     = debugHeapBase + 16
+	debugHeapHandleLimit = debugHeapBase + 20
+	debugHeapError       = debugHeapBase + 24
 )
 
 func decodeTelemetry(data []byte) Telemetry {
@@ -241,6 +266,13 @@ func decodeTelemetry(data []byte) Telemetry {
 		GCCount: values[8], LastGC: values[9], MaxGC: values[10], LastBlit: values[11],
 		PresentStart: binary.LittleEndian.Uint16(mailbox[60:62]), PresentEnd: binary.LittleEndian.Uint16(mailbox[62:64]),
 		DiagnosticSkips: binary.LittleEndian.Uint32(mailbox[64:68]),
+		HeapCapacity:    binary.LittleEndian.Uint32(mailbox[debugHeapCapacity:]),
+		HeapAllocated:   binary.LittleEndian.Uint32(mailbox[debugHeapAllocated:]),
+		HeapLive:        binary.LittleEndian.Uint32(mailbox[debugHeapLive:]),
+		HeapPeakLive:    binary.LittleEndian.Uint32(mailbox[debugHeapPeakLive:]),
+		HeapHandles:     binary.LittleEndian.Uint32(mailbox[debugHeapHandles:]),
+		HeapHandleLimit: binary.LittleEndian.Uint32(mailbox[debugHeapHandleLimit:]),
+		HeapError:       HeapError(binary.LittleEndian.Uint32(mailbox[debugHeapError:])),
 	}
 	count := min(int(mailbox[68]), debugWatchSlots)
 	result.Watches = make([]Watch, 0, count)

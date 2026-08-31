@@ -31,9 +31,10 @@ const (
 type ObjectKind uint8
 
 const (
-	ObjNone   ObjectKind = 0
-	ObjTable  ObjectKind = 1
-	ObjString ObjectKind = 2
+	ObjNone        ObjectKind = 0
+	ObjTable       ObjectKind = 1
+	ObjString      ObjectKind = 2
+	ObjNumberArray ObjectKind = 3
 )
 
 type ObjectHeader struct {
@@ -84,7 +85,10 @@ type Heap struct {
 	scanLen            uint16
 	collecting         bool
 	toCursor           uint32
+	lastLiveBytes      uint32
+	peakLiveBytes      uint32
 	copiedN            uint16
+	handleN            uint16
 	terminal           HeapError
 	roots              RootSet
 	measureCollections bool
@@ -115,7 +119,10 @@ func (h *Heap) initHeap() {
 	h.collecting = false
 	h.scanLen = 0
 	h.toCursor = 0
+	h.lastLiveBytes = 0
+	h.peakLiveBytes = 0
 	h.copiedN = 0
+	h.handleN = 0
 	h.terminal = HeapOK
 }
 
@@ -265,6 +272,7 @@ func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 	hdr.Size = dataSize
 	hdr.Offset = off
 	h.cursor += aligned
+	h.handleN++
 	return ref, HeapOK
 }
 
@@ -336,6 +344,11 @@ func (h *Heap) collectCore() HeapError {
 	}
 	h.active = 1 - h.active
 	h.cursor = h.toCursor
+	h.lastLiveBytes = h.cursor
+	if h.lastLiveBytes > h.peakLiveBytes {
+		h.peakLiveBytes = h.lastLiveBytes
+	}
+	h.handleN = h.copiedN
 	h.collecting = false
 	return HeapOK
 }

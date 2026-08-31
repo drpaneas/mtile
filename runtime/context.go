@@ -103,6 +103,8 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	ram.SheetW, ram.SheetH = image.SheetW, image.SheetH
 	ram.SpriteCols, ram.SpriteRows = image.SpriteCols, image.SpriteRows
 	ram.MapW, ram.MapH = image.MapW, image.MapH
+	ram.MapLayers = normalizedMapLayers(image.MapLayers)
+	ram.MapPlaneMask = uint8(normalizedMapPlaneMask(image.MapPlaneMask, ram.MapLayers, len(image.Map), image.MapW*image.MapH))
 	ram.SpriteN = image.SpriteN
 	ram.MapStreaming = image.MapStreaming
 	ram.SheetReadOnly = image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0

@@ -1,4 +1,6 @@
 runtime/target-gba.json
+celeste
+BPCore-Engine
  .agents/
 gb-studio
 hint:

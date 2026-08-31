@@ -19,7 +19,41 @@ package runtime
 //go:noinline
 //go:section .iwram
 func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	c.mapLayer(0, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapBG draws one authored logical background plane. BG0 is the back plane
+// and BG3 is the front plane; valid transpiled programs issue explicit calls
+// in that order so Mode 4 painter order matches Mode 0 hardware priority.
+func (c *Context) MapBG(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	c.mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapBGAt is shared with generated code for both renderers. Mode 4 uses
+// painter order, so the densely allocated hardware slot is intentionally
+// ignored here.
+func (c *Context) MapBGAt(_ int, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
+	c.mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+}
+
+// MapAll draws only build-proven non-empty logical planes, back to front.
+func (c *Context) MapAll(mask uint8) {
+	for bg := 0; bg < 4; bg++ {
+		if mask&(1<<uint(bg)) != 0 {
+			c.MapBG(bg, 0, 0, 0, 0, 0, 0, 0)
+		}
+	}
+}
+
+func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	if c == nil || c.cart == nil {
+		return
+	}
+	if bg < 0 || bg >= c.cart.MapLayers {
+		return
+	}
+	storageBG, ok := mapPlaneSlot(c.cart.MapPlaneMask, bg, c.cart.MapLayers)
+	if !ok {
 		return
 	}
 	c.ensureDrawState()
@@ -44,6 +78,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 		return
 	}
 	mapW, mapH := c.cart.MapW, c.cart.MapH
+	mapPlaneN := mapW * mapH
 	mapData := c.cart.Map
 	mapStreaming := c.cart.MapStreaming
 	spriteN := c.cart.SpriteN
@@ -90,7 +125,7 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 		if baseY+8 > clipY1 {
 			rowY1 = clipY1 - baseY
 		}
-		mapRowBase := mapY * mapW
+		mapRowBase := storageBG*mapPlaneN + mapY*mapW
 		streamChunkX := -1
 		streamSlot := -1
 
@@ -115,9 +150,9 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 				chunkX := mapX / MapChunkWidth
 				if chunkX != streamChunkX {
 					streamChunkX = chunkX
-					streamSlot = c.mapChunkSlot(chunkX, mapY/MapChunkHeight)
+					streamSlot = c.mapLayerChunkSlot(bg, chunkX, mapY/MapChunkHeight)
 					if streamSlot < 0 {
-						streamSlot = c.loadMapChunk(chunkX, mapY/MapChunkHeight)
+						streamSlot = c.loadMapLayerChunk(bg, chunkX, mapY/MapChunkHeight)
 					} else {
 						c.touchMapChunk(streamSlot)
 					}

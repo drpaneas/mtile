@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/format"
 	"os"
@@ -46,7 +47,6 @@ end
 	got = string(formatted)
 	for _, want := range []string{
 		"func (g *Game) Init(c *rt.Context)",
-		"c.RegisterGlobal(&g.score)",
 		"c.SprV(",
 		"&ctx",
 		"ctx.BeginFramePace()",
@@ -77,11 +77,18 @@ end
 			t.Errorf("generated source does not contain %q", want)
 		}
 	}
-	init := strings.Index(got, "func (g *Game) Init")
-	registered := strings.Index(got[init:], "c.RegisterGlobal(&g.score)")
-	initCall := strings.Index(got[init:], "g.gluInit(c)")
-	if registered < 0 || initCall < 0 || registered > initCall {
-		t.Error("global root registration must precede the _init body")
+	numericScore := false
+	for _, line := range strings.Split(got, "\n") {
+		if strings.Contains(line, "score") && strings.Contains(line, "rt.Number") {
+			numericScore = true
+			break
+		}
+	}
+	if !numericScore {
+		t.Error("generated Game does not store score as rt.Number")
+	}
+	if strings.Contains(got, "c.RegisterGlobal(&g.score)") {
+		t.Error("native numeric global was incorrectly registered as a heap root")
 	}
 	if strings.Contains(got, "func()") {
 		t.Error("generated source contains an immediately-invoked function literal; TinyGo -gc=none cannot link runtime.alloc")
@@ -96,6 +103,58 @@ func TestGenerateRejectsGlobalOverflow(t *testing.T) {
 	}
 	if _, err := Transpile("overflow.lua", source.String(), Options{}); err == nil || !strings.Contains(err.Error(), "maxGlobals") {
 		t.Fatalf("error = %v, want maxGlobals rejection", err)
+	}
+}
+
+func TestAnalyzeGlobalsReportsPersistentNamesAndFirstOrigins(t *testing.T) {
+	report, err := AnalyzeGlobals("game.lua", `local player = {x = 1}
+score = 0
+function update(step)
+  local scratch = step
+  score = score + scratch + misspelled_score
+  player.x = player.x + step
+end
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Count != 3 || report.Limit != GlobalLimit {
+		t.Fatalf("global report = %#v, want 3/%d", report, GlobalLimit)
+	}
+	want := []struct {
+		name   string
+		line   int
+		column int
+	}{
+		{name: "player", line: 1, column: 1},
+		{name: "score", line: 2, column: 1},
+		{name: "misspelled_score", line: 5, column: 29},
+	}
+	for index, symbol := range report.Symbols {
+		if symbol.Name != want[index].name || symbol.Position.Source != "game.lua" ||
+			symbol.Position.Line != want[index].line || symbol.Position.Column != want[index].column {
+			t.Fatalf("symbol %d = %#v, want %#v", index, symbol, want[index])
+		}
+	}
+}
+
+func TestAnalyzeGlobalsReturnsReportWithLimitError(t *testing.T) {
+	var source strings.Builder
+	for i := 0; i < GlobalLimit; i++ {
+		fmt.Fprintf(&source, "g%d = %d\n", i, i)
+	}
+	atLimit, err := AnalyzeGlobals("full.lua", source.String())
+	if err != nil || atLimit.Count != GlobalLimit {
+		t.Fatalf("exact-limit report = %#v / %v", atLimit, err)
+	}
+	fmt.Fprintf(&source, "g%d = %d\n", GlobalLimit, GlobalLimit)
+	report, err := AnalyzeGlobals("overflow.lua", source.String())
+	var limitErr *GlobalLimitError
+	if !errors.As(err, &limitErr) {
+		t.Fatalf("error = %v, want GlobalLimitError", err)
+	}
+	if report.Count != GlobalLimit+1 || len(report.Symbols) != GlobalLimit+1 || limitErr.Report.Count != report.Count {
+		t.Fatalf("overflow report = %#v / %#v", report, limitErr.Report)
 	}
 }
 
@@ -1004,8 +1063,8 @@ func TestTableRoots(t *testing.T) {
 }
 
 // TestFractionalLiteralCodegenPrecision verifies that fractional number
-// literals use NumVal with the correct 16:16 fixed-point encoding, not
-// IntVal which would truncate the fraction.
+// literals use the correct 16:16 fixed-point encoding, whether they remain a
+// Value or lower directly to monomorphic Number storage.
 func TestFractionalLiteralCodegenPrecision(t *testing.T) {
 	got, err := Transpile("frac.lua", `
 function foo()
@@ -1017,8 +1076,8 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(got, "rt.NumVal(rt.Number(") {
-		t.Error("fractional literal must use rt.NumVal(rt.Number(...)), not rt.IntVal")
+	if !strings.Contains(got, "rt.Number(16384)") {
+		t.Error("fractional literal must preserve 0.25 as 16:16 rt.Number(16384)")
 	}
 	harness := `package main
 
@@ -1085,7 +1144,7 @@ end
 function runonce()
   result = combine(noisy(), make())
 end
-`, Options{})
+`, Options{DisableMonomorphicNumbers: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1137,7 +1196,7 @@ function runonce()
   result = combine(noisy(), {%s})
 end
 `, fields)
-	got, err := Transpile("tableliteral-rootgap.lua", source, Options{})
+	got, err := Transpile("tableliteral-rootgap.lua", source, Options{DisableMonomorphicNumbers: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1647,7 +1706,7 @@ function _draw()
   line(1, 2, 3, 4); rect(1, 2, 3, 4); rectfill(1, 2, 3, 4)
   circ(4, 4, 2); circfill(4, 4, 2)
   spr(0, 0, 0); sspr(0, 0, 8, 8, 0, 0)
-  map(); map(0, 0, 0, 0); camera(); clip(); pal(); pal(0); palt(); color(); cursor()
+  map(); camera(); clip(); pal(); pal(0); palt(); color(); cursor()
   print("hello", 0, 0, 7); sget(0, 0); sset(0, 0, 1); fget(0); fset(0, 7); fset(0, 0, true); mget(0, 0); mset(0, 0, 0)
   btn(0); btn(0, 0); btnp(0); btnp(0, 0)
   flr(1); ceil(1); abs(1); sgn(1); min(1, 2); max(1, 2); mid(1, 2, 3)
@@ -1950,7 +2009,7 @@ func TestTranspileLargeMapUsesStreamingCache(t *testing.T) {
 	}
 	got, err := Transpile("large-map.lua", `
 function _draw()
-  map(31, 0, 0, 0, 2, 1)
+  map(0, 31, 0, 0, 0, 2, 1, 0)
 end
 `, Options{
 		SheetW: 16, SheetH: 8, MapW: 192, MapH: 96,
@@ -2004,4 +2063,617 @@ func TestGeneratedLargeMapInitAndEdits(t *testing.T) {
 }
 `
 	runGeneratedHarness(t, string(src), harness, "TestGeneratedLargeMapInitAndEdits")
+}
+
+func TestStaticTableFieldsUseStableCachesByDefault(t *testing.T) {
+	source := `
+local player = {x = 1}
+function _update()
+  player.x = player.x + 1
+end
+`
+	optimized, err := Transpile("stable-fields.lua", source, Options{DisableMonomorphicNumbers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(optimized, "rt.TableFieldCache") ||
+		!strings.Contains(optimized, "c.TableGetStable(") ||
+		!strings.Contains(optimized, "c.TableSetStable(") {
+		t.Fatalf("default lowering did not emit stable field caches:\n%s", optimized)
+	}
+
+	legacy, err := Transpile("dynamic-fields.lua", source, Options{DisableStableTableFields: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(legacy, "rt.TableFieldCache") ||
+		strings.Contains(legacy, "c.TableGetStable(") ||
+		strings.Contains(legacy, "c.TableSetStable(") {
+		t.Fatalf("legacy lowering retained stable field caches:\n%s", legacy)
+	}
+	if !strings.Contains(legacy, "c.TableGet(") || !strings.Contains(legacy, "c.TableSet(") {
+		t.Fatalf("legacy lowering did not retain dynamic field operations:\n%s", legacy)
+	}
+}
+
+func TestMonomorphicNumbersLowerToNativeStorageByDefault(t *testing.T) {
+	source := `
+local gravity = 0.25
+local steps = 0
+local body = {x = 1, vx = 0.5}
+function _update()
+  local delta = body.vx + gravity
+  body.x = body.x + delta
+  steps = steps + 1
+  for i = 1, 3 do
+    body.x = body.x + i * 0.125
+  end
+end
+`
+	optimized, err := Transpile("mono-numbers.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"gravity rt.Number",
+		"steps rt.Number",
+		"c.TableGetStableNumber(",
+		"c.TableSetStableNumber(",
+		"var l_delta_1 rt.Number",
+		"var l_i_2 rt.Number",
+	} {
+		if !strings.Contains(optimized, want) {
+			t.Fatalf("monomorphic lowering is missing %q:\n%s", want, optimized)
+		}
+	}
+
+	legacy, err := Transpile("tagged-numbers.lua", source, Options{DisableMonomorphicNumbers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(legacy, "TableGetStableNumber") || strings.Contains(legacy, "TableSetStableNumber") ||
+		strings.Contains(legacy, "gravity rt.Number") || strings.Contains(legacy, "steps rt.Number") {
+		t.Fatalf("numeric rollback path emitted monomorphic storage:\n%s", legacy)
+	}
+}
+
+func TestGeneratedMonomorphicNumbersPreserveFixedPointResults(t *testing.T) {
+	generated, err := Transpile("mono-results.lua", `
+local body = {x = 1.25, vx = 0.5}
+local total = 0
+function _update()
+  local acceleration = 0.125
+  for i = 1, 4 do
+    body.vx = body.vx + acceleration
+    body.x = body.x + body.vx * i
+  end
+  total = total + body.x
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	harness := `package main
+
+import (
+  rt "github.com/drpaneas/mtile/runtime"
+  "testing"
+)
+
+func TestMonomorphicResults(t *testing.T) {
+  var g Game
+  var c rt.Context
+  g.Init(&c)
+  xKey, vxKey := c.InternStatic("x"), c.InternStatic("vx")
+  x, vx, total := rt.Number(81920), rt.Number(32768), rt.Number(0)
+  acceleration := rt.Number(8192)
+  for tick := 0; tick < 12; tick++ {
+    g.Update(&c)
+    for i := 1; i <= 4; i++ {
+      vx += acceleration
+      x += vx.Mul(rt.FromInt(i))
+    }
+    total += x
+    if got := c.TableGet(g.body, xKey); got.Kind != rt.KindNumber || got.Num != x {
+      t.Fatalf("tick %d x=%d want=%d kind=%d", tick, got.Num, x, got.Kind)
+    }
+    if got := c.TableGet(g.body, vxKey); got.Kind != rt.KindNumber || got.Num != vx {
+      t.Fatalf("tick %d vx=%d want=%d kind=%d", tick, got.Num, vx, got.Kind)
+    }
+    if g.total != total {
+      t.Fatalf("tick %d total=%d want=%d", tick, g.total, total)
+    }
+  }
+}
+`
+	runGeneratedHarness(t, generated, harness, "TestMonomorphicResults")
+}
+
+func TestMonomorphicFunctionSignaturesRequireConsistentCallSitesAndReturns(t *testing.T) {
+	source := `
+local total = 0
+function square(value)
+  return value * value
+end
+function length_squared(x, y)
+  return square(x) + square(y)
+end
+function _update()
+  total = total + length_squared(total, 0.5)
+end
+`
+	optimized, err := Transpile("mono-functions.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"func (g *Game) square(c *rt.Context, a0 rt.Number) rt.Number",
+		"func (g *Game) length_squared(c *rt.Context, a0 rt.Number, a1 rt.Number) rt.Number",
+		"func (g *Game) __glu_call_square(c *rt.Context, a0 rt.Number, roots ...rt.Value) rt.Number",
+	} {
+		if !strings.Contains(optimized, want) {
+			t.Fatalf("numeric function lowering is missing %q:\n%s", want, optimized)
+		}
+	}
+
+	legacy, err := Transpile("tagged-functions.lua", source, Options{DisableMonomorphicFunctions: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(legacy, "func (g *Game) square(c *rt.Context, a0 rt.Number)") ||
+		strings.Contains(legacy, "func (g *Game) length_squared(c *rt.Context, a0 rt.Number") {
+		t.Fatalf("function rollback path retained a numeric signature:\n%s", legacy)
+	}
+	if !strings.Contains(legacy, "func (g *Game) square(c *rt.Context, a0 rt.Value) rt.Value") {
+		t.Fatalf("function rollback path did not retain the tagged ABI:\n%s", legacy)
+	}
+}
+
+func TestMonomorphicFunctionSignaturesStayTaggedForMixedOrFallingThroughFunctions(t *testing.T) {
+	generated, err := Transpile("mixed-functions.lua", `
+function identity(value)
+  return value
+end
+function maybe_number(value)
+  if value > 0 then
+    return value
+  end
+end
+local numeric = identity(1)
+local text = identity("hello")
+local maybe = maybe_number(1)
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"func (g *Game) identity(c *rt.Context, a0 rt.Value) rt.Value",
+		"func (g *Game) maybe_number(c *rt.Context, a0 rt.Number) rt.Value",
+	} {
+		if !strings.Contains(generated, want) {
+			t.Fatalf("conservative function lowering is missing %q:\n%s", want, generated)
+		}
+	}
+}
+
+func TestGeneratedMonomorphicFunctionPreservesFixedPointResults(t *testing.T) {
+	generated, err := Transpile("mono-function-results.lua", `
+local total = 0
+function scale_add(x, y, scale)
+  return x + y * scale
+end
+function _update()
+  total = scale_add(total, 0.5, 2)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	harness := `package main
+
+import (
+  rt "github.com/drpaneas/mtile/runtime"
+  "testing"
+)
+
+func TestMonomorphicFunctionResults(t *testing.T) {
+  var g Game
+  var c rt.Context
+  g.Init(&c)
+  for tick := 1; tick <= 32; tick++ {
+    g.Update(&c)
+    if want := rt.FromInt(tick); g.total != want {
+      t.Fatalf("tick %d total=%d want=%d", tick, g.total, want)
+    }
+  }
+}
+`
+	runGeneratedHarness(t, generated, harness, "TestMonomorphicFunctionResults")
+}
+
+func TestMonomorphicMultiReturnSignaturesSpecializeEachProvenPosition(t *testing.T) {
+	source := `
+local total = 0
+function pair(x, y)
+  return x + 1, y + 2
+end
+function forward_pair(x, y)
+  return x + 3, y + 4
+end
+function forward(x, y)
+  return forward_pair(x, y)
+end
+function mixed(x)
+  if x > 0 then
+    return x, "positive", x + 2
+  else
+    return x + 1, "other", x + 3
+  end
+end
+function padded(x)
+  if x > 0 then
+    return x, x + 1
+  else
+    return x
+  end
+end
+function single(x)
+  return x + 1
+end
+function _update()
+  local a, b = pair(total, 1)
+  local c, d = forward(total, 2)
+  local n, label, m = mixed(total)
+  local p, maybe = padded(total)
+  local first = pair(total, 3)
+  total = first + b + c + d + n + m + p + single(1)
+end
+`
+	generated, err := Transpile("mono-multi-return.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"func (g *Game) pair(c *rt.Context, a0 rt.Number, a1 rt.Number) (rt.Number, rt.Number)",
+		"func (g *Game) forward_pair(c *rt.Context, a0 rt.Number, a1 rt.Number) (rt.Number, rt.Number)",
+		"func (g *Game) forward(c *rt.Context, a0 rt.Number, a1 rt.Number) (rt.Number, rt.Number)",
+		"func (g *Game) mixed(c *rt.Context, a0 rt.Number) (rt.Number, rt.Value, rt.Number)",
+		"func (g *Game) padded(c *rt.Context, a0 rt.Number) (rt.Number, rt.Value)",
+		"func (g *Game) __glu_multi_pair(c *rt.Context, a0 rt.Number, a1 rt.Number, roots ...rt.Value) (rt.Number, rt.Number)",
+		"func (g *Game) __glu_first_pair(c *rt.Context, a0 rt.Number, a1 rt.Number, roots ...rt.Value) rt.Number",
+		"var l_a_1 rt.Number",
+		"var l_b_2 rt.Number",
+		"var l_label_6 rt.Value",
+	} {
+		if !strings.Contains(generated, want) {
+			t.Fatalf("multi-return specialization is missing %q:\n%s", want, generated)
+		}
+	}
+
+	rollback, err := Transpile("tagged-multi-return.lua", source, Options{DisableMonomorphicMultiReturns: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(rollback, "func (g *Game) pair(c *rt.Context, a0 rt.Number, a1 rt.Number) (rt.Value, rt.Value)") {
+		t.Fatalf("multi-return rollback did not retain tagged results:\n%s", rollback)
+	}
+	if !strings.Contains(rollback, "func (g *Game) single(c *rt.Context, a0 rt.Number) rt.Number") {
+		t.Fatalf("multi-return rollback disabled single-return specialization:\n%s", rollback)
+	}
+}
+
+func TestNumericArraysUseCompactNativeAccessors(t *testing.T) {
+	source := `
+local samples = {1, 2, 3, 4}
+local total = 0
+
+function _update()
+  for i = 1, #samples do
+    samples[i] = samples[i] + i
+  end
+  total = samples[1] + samples[4]
+end
+`
+	generated, err := Transpile("numeric-array.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"c.NewNumberArray(4)",
+		"c.NumberArrayGet(g.samples",
+		"c.NumberArraySet(g.samples",
+		"rt.FromInt(4)",
+	} {
+		if !strings.Contains(generated, want) {
+			t.Fatalf("numeric-array lowering is missing %q:\n%s", want, generated)
+		}
+	}
+	if strings.Contains(generated, "c.NewTableWithCaps(4") {
+		t.Fatalf("numeric-array literal retained generic table allocation:\n%s", generated)
+	}
+
+	harness := `package main
+
+import (
+  rt "github.com/drpaneas/mtile/runtime"
+  "testing"
+)
+
+func TestNumericArrayProgram(t *testing.T) {
+  var g Game
+  var c rt.Context
+  g.Init(&c)
+  g.Update(&c)
+  want := []int{2, 4, 6, 8}
+  for i, value := range want {
+    if got := c.NumberArrayGet(g.samples, i+1).Int(); got != value {
+      t.Fatalf("samples[%d] = %d, want %d", i+1, got, value)
+    }
+  }
+  if got := g.total.Int(); got != 10 {
+    t.Fatalf("total = %d, want 10", got)
+  }
+}
+`
+	runGeneratedHarness(t, generated, harness, "TestNumericArrayProgram")
+}
+
+func TestNumericArraysFallbackOnEscapeShadowTypeChangeOrDisabledOption(t *testing.T) {
+	tests := []struct {
+		name    string
+		source  string
+		options Options
+	}{
+		{
+			name: "escape",
+			source: `
+local samples = {1, 2, 3}
+function first(values) return values[1] end
+function _update() first(samples) end
+`,
+			options: Options{},
+		},
+		{
+			name: "shadow",
+			source: `
+local samples = {1, 2, 3}
+function first()
+  local samples = {4, 5, 6}
+  return samples[1]
+end
+`,
+			options: Options{},
+		},
+		{
+			name: "type-change",
+			source: `
+local samples = {1, 2, 3}
+function _update() samples[1] = "changed" end
+`,
+			options: Options{},
+		},
+		{
+			name: "disabled",
+			source: `
+local samples = {1, 2, 3}
+function _update() samples[1] = samples[1] + 1 end
+`,
+			options: Options{DisableNumericArrays: true},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			generated, err := Transpile(test.name+".lua", test.source, test.options)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(generated, "NewNumberArray") || strings.Contains(generated, "NumberArrayGet") || strings.Contains(generated, "NumberArraySet") {
+				t.Fatalf("unsafe/disabled array was specialized:\n%s", generated)
+			}
+			if !strings.Contains(generated, "NewTableWithCaps(3") {
+				t.Fatalf("unsafe/disabled array did not retain generic table storage:\n%s", generated)
+			}
+		})
+	}
+}
+
+func TestGeneratedMonomorphicMultiReturnsPreserveExpansionAndMixedValues(t *testing.T) {
+	generated, err := Transpile("mono-multi-results.lua", `
+local total = 0
+local text = ""
+function pair(x, y)
+  return x + 0.5, y + 1.25
+end
+function forward_pair(x, y)
+  return x + 0.5, y + 1.25
+end
+function forward(x, y)
+  return forward_pair(x, y)
+end
+function mixed(x)
+  return x + 2, "ok", x + 3
+end
+function padded(x)
+  if x > 0 then
+    return x + 4, x + 5
+  end
+  return x + 6
+end
+function _update()
+  local a, b = forward(total, 1)
+  local c, label, d = mixed(total)
+  local e, missing = padded(-1)
+  local first = pair(total, 3)
+  local values = {10, pair(2, 3)}
+  local mixed_values = {mixed(1)}
+  total = first + b + c + d + e + values[2] + values[3] + mixed_values[1] + mixed_values[3]
+  if missing == nil then
+    text = mixed_values[2]
+  end
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	harness := `package main
+
+import (
+  rt "github.com/drpaneas/mtile/runtime"
+  "testing"
+)
+
+func TestMonomorphicMultiReturnResults(t *testing.T) {
+  var g Game
+  var c rt.Context
+  g.Init(&c)
+  g.Update(&c)
+	if want := rt.Number(1736704); g.total != want {
+    t.Fatalf("total=%d want=%d", g.total, want)
+  }
+	if !c.ValuesEqual(g.text, c.InternStatic("ok")) {
+		t.Fatalf("text did not preserve mixed static-string result: %+v", g.text)
+  }
+}
+`
+	runGeneratedHarness(t, generated, harness, "TestMonomorphicMultiReturnResults")
+}
+
+func TestNoAllocFunctionsBypassRootWrappersTransitively(t *testing.T) {
+	source := `
+local state = {value = 1}
+function leaf(value)
+  return abs(value) + 1
+end
+function chain(value)
+  return leaf(value)
+end
+function allocating(value)
+  local temporary = {value}
+  return value
+end
+function through_allocating(value)
+  return allocating(value)
+end
+function recursive(value)
+  if value <= 0 then
+    return value
+  end
+  return recursive(value - 1)
+end
+function _update()
+  state.value = chain(state.value)
+  state.value = through_allocating(state.value)
+  state.value = recursive(state.value)
+end
+`
+	generated, err := Transpile("noalloc-functions.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	functionBody := func(signature string) string {
+		start := strings.Index(generated, signature)
+		if start < 0 {
+			t.Fatalf("generated source is missing %q:\n%s", signature, generated)
+		}
+		rest := generated[start:]
+		end := strings.Index(rest, "\n}\n")
+		if end < 0 {
+			t.Fatalf("generated function %q has no end", signature)
+		}
+		return rest[:end]
+	}
+	if body := functionBody("func (g *Game) chain("); !strings.Contains(body, "return g.leaf(") || strings.Contains(body, "__glu_call_leaf") {
+		t.Fatalf("transitively safe call retained root wrapper:\n%s", body)
+	}
+	if body := functionBody("func (g *Game) gluUpdate("); !strings.Contains(body, "g.chain(") || strings.Contains(body, "__glu_call_chain") {
+		t.Fatalf("safe top-level call retained root wrapper:\n%s", body)
+	}
+	if body := functionBody("func (g *Game) through_allocating("); !strings.Contains(body, "g.__glu_call_allocating(") {
+		t.Fatalf("transitive allocator bypassed root protection:\n%s", body)
+	}
+	if body := functionBody("func (g *Game) recursive("); !strings.Contains(body, "g.__glu_call_recursive(") {
+		t.Fatalf("unproven recursive cycle bypassed root protection:\n%s", body)
+	}
+
+	rollback, err := Transpile("wrapped-functions.lua", source, Options{DisableNoAllocFunctionCalls: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(rollback, "return g.__glu_call_leaf(") || !strings.Contains(rollback, "g.__glu_call_chain(") {
+		t.Fatalf("no-alloc rollback path did not retain root wrappers:\n%s", rollback)
+	}
+}
+
+func TestNoAllocAnalysisRejectsStringAndTableAllocation(t *testing.T) {
+	generated, err := Transpile("allocating-functions.lua", `
+function stringify(value)
+  return tostr(value)
+end
+function concatenate(value)
+  return "value:" .. value
+end
+function store(table_value, value)
+  table_value.dynamic = value
+end
+function _update()
+  stringify(1)
+  concatenate(2)
+  store({}, 3)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"stringify", "concatenate", "store"} {
+		if !strings.Contains(generated, "g.__glu_call_"+name+"(") {
+			t.Fatalf("allocating function %s bypassed its root wrapper:\n%s", name, generated)
+		}
+	}
+}
+
+func TestMonomorphicNumbersAreRendererIndependent(t *testing.T) {
+	source := `
+local counter = 1
+function increment(value)
+  return value + 0.5
+end
+function _update()
+  counter = increment(counter)
+end
+function _draw()
+  cls()
+  map()
+end
+`
+	for _, renderer := range []Renderer{RendererMode4, RendererMode0} {
+		generated, report, err := TranspileWithReport("mono-renderer.lua", source, Options{
+			Renderer: renderer,
+			SheetW:   8,
+			SheetH:   8,
+			MapW:     30,
+			MapH:     20,
+		})
+		if err != nil {
+			t.Fatalf("%s: %v", renderer, err)
+		}
+		if report.Selected != renderer {
+			t.Fatalf("requested %s selected %s", renderer, report.Selected)
+		}
+		if !strings.Contains(generated, "counter rt.Number") ||
+			!strings.Contains(generated, "func (g *Game) increment(c *rt.Context, a0 rt.Number) rt.Number") {
+			t.Fatalf("%s did not emit renderer-independent numeric storage and signature:\n%s", renderer, generated)
+		}
+		updateStart := strings.Index(generated, "func (g *Game) gluUpdate(")
+		if updateStart < 0 {
+			t.Fatalf("%s is missing generated update body:\n%s", renderer, generated)
+		}
+		updateEnd := strings.Index(generated[updateStart:], "\n}\n")
+		if updateEnd < 0 {
+			t.Fatalf("%s generated update body has no end:\n%s", renderer, generated)
+		}
+		updateBody := generated[updateStart : updateStart+updateEnd]
+		if !strings.Contains(updateBody, "g.increment(") || strings.Contains(updateBody, "__glu_call_increment") {
+			t.Fatalf("%s did not emit renderer-independent direct no-alloc call:\n%s", renderer, updateBody)
+		}
+	}
 }

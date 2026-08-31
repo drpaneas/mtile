@@ -9,7 +9,7 @@ import (
 	"runtime"
 )
 
-const helperVersion = "mgba-0.10.3-v3"
+const helperVersion = "mgba-0.10.3-v4"
 
 // ResolveHelper finds the release-bundled sibling first. Source checkouts can
 // build the pinned helper into the user's cache on first use, which keeps

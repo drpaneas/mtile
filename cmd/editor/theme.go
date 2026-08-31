@@ -8,9 +8,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// effectLevel keeps the nostalgic presentation adjustable. The theme itself
-// remains consistent in every mode; this setting controls only motion and
-// display treatment so a developer can always choose a completely still UI.
+// effectLevel is retained in the preferences schema so older editor.json files
+// remain readable. Application chrome is always rendered at effectsClean.
 type effectLevel uint8
 
 const (
@@ -58,7 +57,7 @@ type themeState struct {
 }
 
 func (g *Game) initTheme() {
-	g.theme.level = effectsSoft
+	g.theme.level = effectsClean
 	g.theme.playLCD = true
 	mx, my := ebiten.CursorPosition()
 	g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
@@ -67,22 +66,11 @@ func (g *Game) initTheme() {
 func (g *Game) updateTheme() {
 	g.theme.frame++
 	mx, my := ebiten.CursorPosition()
-	if g.theme.level == effectsClean {
-		g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
-	} else {
-		g.theme.cursorX += (float64(mx) - g.theme.cursorX) * .18
-		g.theme.cursorY += (float64(my) - g.theme.cursorY) * .18
-	}
-
-	if g.theme.buildPulse > 0 {
-		g.theme.buildPulse--
-	}
-	if g.theme.inkPulse > 0 {
-		g.theme.inkPulse--
-	}
-	if g.theme.mapPulse > 0 {
-		g.theme.mapPulse--
-	}
+	g.theme.level = effectsClean
+	g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
+	g.theme.buildPulse = 0
+	g.theme.inkPulse = 0
+	g.theme.mapPulse = 0
 	if g.codeCompletionOpen {
 		g.theme.completionFrame = min(8, g.theme.completionFrame+1)
 	} else {
@@ -93,22 +81,8 @@ func (g *Game) updateTheme() {
 		line, column := g.code.LineColumn(g.code.Cursor())
 		x := float64(layout.Text.X + 8 + (column-g.codeScrollColumn)*codeCharWidth)
 		y := float64(layout.Text.Y + 3 + (line-g.codeScrollLine)*codeLineHeight)
-		if g.theme.codeCaretX == 0 && g.theme.codeCaretY == 0 || g.theme.level == effectsClean {
-			g.theme.codeCaretX, g.theme.codeCaretY = x, y
-		} else {
-			g.theme.codeCaretX += (x - g.theme.codeCaretX) * .55
-			g.theme.codeCaretY += (y - g.theme.codeCaretY) * .55
-		}
+		g.theme.codeCaretX, g.theme.codeCaretY = x, y
 	}
-}
-
-func (g *Game) cycleEffects() {
-	g.theme.level = (g.theme.level + 1) % effectLevelCount
-	g.preferences.Effects = g.theme.level
-	if g.preferences.Version == editorPreferencesVersion {
-		g.savePreferences()
-	}
-	g.statusMsg = "visual effects: " + g.theme.level.String()
 }
 
 func modeSurfaceColor(mode editorMode) color.Color {
@@ -129,59 +103,17 @@ func modeSurfaceColor(mode editorMode) color.Color {
 func (g *Game) drawThemeBackdrop(screen *ebiten.Image) {
 	workspace := editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}
 	fillRect(screen, workspace, modeSurfaceColor(g.mode))
-	// Sprite Lab's panel borders already define its workspace. Keep its outer
-	// shell flat so the canvas remains the visual focus.
-	if g.mode != modeSprites {
-		fillRect(screen, editor.Rect{X: 0, Y: workspace.Y, W: 5, H: workspace.H}, modeAccent(g.mode))
-		fillRect(screen, editor.Rect{X: 5, Y: workspace.Y, W: 3, H: workspace.H}, colorShellGlow)
-		fillRect(screen, editor.Rect{X: 0, Y: statusBarRect.Y - 2, W: screenWidth, H: 2}, colorShellGlow)
-	}
-	if g.theme.level == effectsClean {
-		return
-	}
-	// Cursor-reactive edge light. It is deliberately confined to the shell,
-	// never drawn over code, notes, sprites, or labels.
-	lightX := max(8, min(screenWidth-168, int(g.theme.cursorX)-80))
-	fillRect(screen, editor.Rect{X: lightX, Y: editorTabsHeight, W: 160, H: 1}, rgba(colorShellHighlight, 72))
 }
 
-func (g *Game) drawThemeOverlay(screen *ebiten.Image) {
-	if g.theme.buildPulse > 0 {
-		g.drawBuildBus(screen)
-	}
-}
-
-func (g *Game) drawBuildBus(screen *ebiten.Image) {
-	develop := editorTabRect(modeCode)
-	y := editorTabsHeight + 8
-	x0 := develop.X + 8
-	x1 := develop.X + develop.W - 8
-	drawLine(screen, x0, y, x1, y, rgba(colorRun, 118))
-	progress := 1 - float64(g.theme.buildPulse)/48
-	progress = max(0.0, min(1.0, progress))
-	x := x0 + int(float64(x1-x0)*progress)
-	fillRect(screen, editor.Rect{X: x - 4, Y: y - 4, W: 9, H: 9}, colorRun)
-	fillRect(screen, editor.Rect{X: x - 8, Y: y - 1, W: 17, H: 3}, rgba(colorRun, 92))
-}
+func (g *Game) drawThemeOverlay(_ *ebiten.Image) {}
 
 func drawHardwarePanel(screen *ebiten.Image, rect editor.Rect, fill, accent color.Color) {
 	if rect.W <= 0 || rect.H <= 0 {
 		return
 	}
-	fillRoundedRect(screen, editor.Rect{X: rect.X + 4, Y: rect.Y + 5, W: rect.W, H: rect.H}, 9, color.RGBA{R: 6, G: 7, B: 15, A: 210})
-	fillRoundedRect(screen, rect, 9, fill)
-	strokeRoundedRect(screen, rect, 9, colorShellBorder)
-	drawLine(screen, rect.X+9, rect.Y+1, rect.X+rect.W-10, rect.Y+1, rgba(accent, 150))
-	drawLine(screen, rect.X+9, rect.Y+rect.H-2, rect.X+rect.W-10, rect.Y+rect.H-2, colorShellShadow)
-	if rect.W >= 180 && rect.H >= 90 {
-		drawThemeScrew(screen, rect.X+8, rect.Y+8)
-		drawThemeScrew(screen, rect.X+rect.W-9, rect.Y+rect.H-9)
-	}
-}
-
-func drawThemeScrew(screen *ebiten.Image, x, y int) {
-	fillRect(screen, editor.Rect{X: x - 2, Y: y - 2, W: 5, H: 5}, colorShellShadow)
-	drawLine(screen, x-1, y, x+1, y, colorShellHighlight)
+	_ = accent
+	fillRect(screen, rect, fill)
+	strokeRect(screen, rect, colorBorder)
 }
 
 func rgba(clr color.Color, alpha uint8) color.Color {
@@ -190,30 +122,44 @@ func rgba(clr color.Color, alpha uint8) color.Color {
 }
 
 func drawTactileButton(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color, compact bool) {
+	drawTactileButtonWithTypography(screen, rect, label, active, accent, compact, false)
+}
+
+func drawDevelopTactileButton(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color, compact bool) {
+	drawTactileButtonWithTypography(screen, rect, label, active, accent, compact, true)
+}
+
+func drawDevelopButton(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color) {
+	drawDevelopTactileButton(screen, rect, label, active, accent, false)
+}
+
+func drawTactileButtonWithTypography(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color, compact, develop bool) {
 	mx, my := ebiten.CursorPosition()
 	pressed := rectContains(rect, mx, my) && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	offset := 0
-	if pressed {
-		offset = 2
-	}
-	face := editor.Rect{X: rect.X, Y: rect.Y + offset, W: rect.W, H: rect.H - offset}
-	fillRoundedRect(screen, editor.Rect{X: rect.X + 2, Y: rect.Y + 3, W: rect.W, H: rect.H}, 6, colorShellShadow)
+	face := rect
 	fill := color.Color(colorButtonFace)
 	textColor := color.Color(colorText)
 	if active {
 		fill = color.RGBA{R: 50, G: 48, B: 104, A: 255}
 		textColor = accent
+	} else if pressed {
+		fill = color.RGBA{R: 39, G: 38, B: 67, A: 255}
 	}
-	fillRoundedRect(screen, face, 6, fill)
+	fillRect(screen, face, fill)
 	border := color.Color(colorBorder)
 	if active {
 		border = accent
 	} else if rectContains(rect, mx, my) {
-		border = rgba(accent, 165)
+		border = accent
 	}
-	strokeRoundedRect(screen, face, 6, border)
-	if !pressed {
-		drawLine(screen, face.X+1, face.Y+1, face.X+face.W-2, face.Y+1, rgba(colorShellHighlight, 120))
+	strokeRect(screen, face, border)
+	if develop {
+		if compact {
+			drawDevelopSmallTextCentered(screen, label, face, textColor)
+		} else {
+			drawDevelopTextCentered(screen, label, face, textColor)
+		}
+		return
 	}
 	if compact {
 		drawSmallTextCentered(screen, label, face, textColor)
@@ -237,6 +183,14 @@ func (g *Game) flashMap(x, y int) {
 }
 
 func drawWorkspaceHeader(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color) {
+	drawWorkspaceHeaderWithTypography(screen, r, title, subtitle, accent, false)
+}
+
+func drawDevelopWorkspaceHeader(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color) {
+	drawWorkspaceHeaderWithTypography(screen, r, title, subtitle, accent, true)
+}
+
+func drawWorkspaceHeaderWithTypography(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color, develop bool) {
 	fillRect(screen, r, color.RGBA{R: 29, G: 31, B: 78, A: 255})
 	fillRect(screen, editor.Rect{X: r.X, Y: r.Y, W: r.W, H: 3}, accent)
 	strokeRect(screen, r, colorBorder)
@@ -248,13 +202,31 @@ func drawWorkspaceHeader(screen *ebiten.Image, r editor.Rect, title, subtitle st
 		titleX = r.X + 18
 	}
 	titleY := r.Y + 4
-	drawTextScale(screen, title, titleX, titleY, 2, accent)
-	subtitleY := r.Y + r.H - uiTextHeight - 4
+	if develop {
+		drawDevelopTextScale(screen, title, titleX, titleY, 2, accent)
+	} else {
+		drawTextScale(screen, title, titleX, titleY, 2, accent)
+	}
+	textHeight := uiTextHeight
+	titleHeight := uiTitleHeight
+	if develop {
+		textHeight = developTextHeight
+		titleHeight = developTitleHeight
+	}
+	subtitleY := r.Y + r.H - textHeight - 4
 	if r.W < 1400 && r.H > 84 {
-		drawSmallText(screen, subtitle, titleX, r.Y+uiTitleHeight+2, rgba(accent, 220))
+		if develop {
+			drawDevelopSmallText(screen, subtitle, titleX, r.Y+titleHeight+2, rgba(accent, 220))
+		} else {
+			drawSmallText(screen, subtitle, titleX, r.Y+titleHeight+2, rgba(accent, 220))
+		}
 		return
 	}
-	drawText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
+	if develop {
+		drawDevelopText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
+	} else {
+		drawText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
+	}
 }
 
 const lcdShaderSource = `//kage:unit pixels

@@ -113,7 +113,7 @@ func CreateProject(projectDir string, options NewProjectOptions) error {
 	}
 	if err := assetsync.SaveProject(tmp, assetsync.Project{
 		ActivePalette: assetsync.CanonicalPaletteName,
-		Renderer:      assetsync.DefaultRendererName,
+		Renderer:      assetsync.NewProjectRendererName,
 	}); err != nil {
 		return fmt.Errorf("write project.json: %w", err)
 	}
