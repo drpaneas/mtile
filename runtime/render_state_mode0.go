@@ -54,12 +54,16 @@ func (c *Context) sheetMutated(x, y int) {
 }
 
 func (c *Context) mapMutated(x, y int) {
+	c.mapLayerMutated(0, x, y)
+}
+
+func (c *Context) mapLayerMutated(sourceBG, x, y int) {
 	if c == nil || c.cart == nil {
 		return
 	}
-	id := c.Mget(x, y)
+	id := c.mapGetLayer(sourceBG, x, y)
 	for layer := 0; layer < mode0LayerCount; layer++ {
-		if c.mode0MapSource[layer] != 0 {
+		if int(c.mode0MapSource[layer]) != sourceBG {
 			continue
 		}
 		if c.mode0DrawActive && c.mode0MapSeen&(1<<uint(layer)) != 0 {

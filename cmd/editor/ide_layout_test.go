@@ -56,6 +56,11 @@ func TestGraphicsWorkspacesReserveHeadersWithoutCrowdingEditors(t *testing.T) {
 		if !rectInsideIDE(layout.Layers, layout.Strip) {
 			t.Fatalf("%dx%d map layer toolbar escapes strip: layers=%#v strip=%#v", size[0], size[1], layout.Layers, layout.Strip)
 		}
+		if !rectInsideIDE(layout.MoveArea, layout.Strip) || !rectInsideIDE(layout.CopyArea, layout.Strip) ||
+			rectsOverlapIDE(layout.MoveArea, layout.SelectedTile) || rectsOverlapIDE(layout.MoveArea, layout.CopyArea) ||
+			rectsOverlapIDE(layout.CopyArea, layout.Coordinates) {
+			t.Fatalf("%dx%d map area tools escape or overlap strip content: move=%#v copy=%#v selected=%#v coordinates=%#v", size[0], size[1], layout.MoveArea, layout.CopyArea, layout.SelectedTile, layout.Coordinates)
+		}
 		for bg, row := range layout.LayerRows {
 			if !rectInsideIDE(row, layout.Layers) || !rectInsideIDE(layout.LayerEyes[bg], row) {
 				t.Fatalf("%dx%d BG%d controls escape layer toolbar: row=%#v eye=%#v layers=%#v", size[0], size[1], bg, row, layout.LayerEyes[bg], layout.Layers)

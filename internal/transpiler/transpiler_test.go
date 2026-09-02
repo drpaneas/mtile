@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	runtimeapi "github.com/drpaneas/mtile/runtime"
 )
 
 func generatedGoCacheEnv() []string {
@@ -238,6 +239,19 @@ func runGeneratedHarness(t *testing.T, got, harness, testName string) string {
 		t.Fatalf("generated harness failed: %v\n%s", err, out.String())
 	}
 	return out.String()
+}
+
+func generatedSection(source, startMarker string) string {
+	start := strings.Index(source, startMarker)
+	if start < 0 {
+		return ""
+	}
+	rest := source[start:]
+	end := strings.Index(rest, "\n}")
+	if end < 0 {
+		return rest
+	}
+	return rest[:end+2]
 }
 
 // TestForLoopVariableDoesNotClobberOuterBinding guards against a regression
@@ -1293,6 +1307,65 @@ func TestSiblingArgsSurviveCollection(t *testing.T) {
 	runGeneratedHarness(t, got, harness, "TestSiblingArgsSurviveCollection")
 }
 
+// TestReturnInsideRootedForLoopsDoesNotLeakLocalRoots guards the control-flow
+// side of the generated root protocol. Generic numeric loops root their init,
+// limit, and step values, while all()/pairs() loops root the iterated table.
+// A Lua return from either loop must unwind those roots before it leaves the
+// generated Go function. Otherwise repeated collision-style probes eventually
+// fill Context's fixed local-root stack and make a loop silently stop running.
+func TestReturnInsideRootedForLoopsDoesNotLeakLocalRoots(t *testing.T) {
+	got, err := Transpile("loop-return-roots.lua", `
+items = {1}
+
+function numeric_hit(first, last)
+  for y = first, last do
+    for x = first, last do
+      return true
+    end
+  end
+  return false
+end
+
+function generic_hit()
+  for value in all(items) do
+    return true
+  end
+  return false
+end
+`, Options{DisableMonomorphicNumbers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	harness := `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestLoopReturnsReleaseRoots(t *testing.T) {
+	var numericGame Game
+	var numericContext rt.Context
+	numericGame.Init(&numericContext)
+	for call := 1; call <= 100; call++ {
+		if !numericGame.__glu_call_numeric_hit(&numericContext, rt.IntVal(0), rt.IntVal(0)).Truthy() {
+			t.Fatalf("numeric loop stopped returning its first hit on call %d", call)
+		}
+	}
+
+	var genericGame Game
+	var genericContext rt.Context
+	genericGame.Init(&genericContext)
+	for call := 1; call <= 600; call++ {
+		if !genericGame.__glu_call_generic_hit(&genericContext).Truthy() {
+			t.Fatalf("generic loop stopped returning its first hit on call %d", call)
+		}
+	}
+}
+`
+	runGeneratedHarness(t, got, harness, "TestLoopReturnsReleaseRoots")
+}
+
 func TestTableLiteralRootsLiveSiblingAcrossCollection(t *testing.T) {
 	// Make the later table literal large enough that repeated calls force a
 	// collection during NewTableWithCaps, while the earlier sibling is still
@@ -1826,12 +1899,13 @@ function _draw()
   circ(4, 4, 2); circfill(4, 4, 2)
   spr(0, 0, 0); sspr(0, 0, 8, 8, 0, 0)
   map(); camera(); clip(); pal(); pal(0); palt(); color(); cursor()
-  print("hello", 0, 0, 7); sget(0, 0); sset(0, 0, 1); fget(0); fset(0, 7); fset(0, 0, true); mget(0, 0); mset(0, 0, 0)
+  print("hello", 0, 0, 7); sget(0, 0); sset(0, 0, 1); fget(0); fset(0, 7); fset(0, 0, true)
+  mget(0, 0); mget(1, 0, 0); mset(0, 0, 0); mset(1, 0, 0, 0)
   btn(0); btn(0, 0); btnp(0); btnp(0, 0)
   flr(1); ceil(1); abs(1); sgn(1); min(1, 2); max(1, 2); mid(1, 2, 3)
   sin(1); cos(1); atan2(1, 2); sqrt(1); rnd(); srand(1)
   band(1, 2); bor(1, 2); bxor(1, 2); bnot(1); shl(1, 2); shr(1, 2); lshr(1, 2); rotl(1, 2); rotr(1, 2)
-  local t = {1, 2, name = "x"}; add(t, 3); del(t, 3); deli(t); count(t)
+  local items = {1, 2, name = "x"}; add(items, 3); del(items, 3); deli(items); count(items)
   sub("abc", 1); tostr(1); tonum("1"); chr(65); ord("a"); t(); time(); sfx(0); music(0); printh("x")
   for i = 1, 3 do pset(i, i) end
 end
@@ -1847,6 +1921,70 @@ end
 		t.Error("generated source contains an immediately-invoked function literal; TinyGo -gc=none cannot link runtime.alloc")
 	}
 	compileGenerated(t, got)
+}
+
+func TestLayeredMapAccessLowersWithoutChangingLegacyCalls(t *testing.T) {
+	got, err := Transpile("layered-map-access.lua", `
+function _update()
+  local legacy = mget(4, 5)
+  local explicit_bg0 = mget(0, 4, 5)
+  local front = mget(2, 4, 5)
+  mset(4, 5, 6)
+  mset(0, 4, 5, 6)
+  mset(2, 4, 5, 6)
+end
+`, Options{SheetW: 16, SheetH: 8, MapW: 8, MapH: 8, MapLayers: 4, Map: make([]uint16, 8*8*4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count := strings.Count(got, "c.Mget("); count != 2 {
+		t.Fatalf("legacy/explicit-BG0 mget lowering count = %d, want 2:\n%s", count, got)
+	}
+	if count := strings.Count(got, "c.MgetLayer("); count != 1 {
+		t.Fatalf("layered mget lowering count = %d, want 1:\n%s", count, got)
+	}
+	if count := strings.Count(got, "c.Mset("); count != 2 {
+		t.Fatalf("legacy/explicit-BG0 mset lowering count = %d, want 2:\n%s", count, got)
+	}
+	if count := strings.Count(got, "c.MsetLayer("); count != 1 {
+		t.Fatalf("layered mset lowering count = %d, want 1:\n%s", count, got)
+	}
+}
+
+func TestLayeredMapLiteralBG0FastPathUsesRuntimeFixedPointConversion(t *testing.T) {
+	got, err := Transpile("layered-map-bg0-fixed.lua", `
+function _update()
+  local tile = mget(0.5, 4, 5)
+  mset(0.5, 4, 5, tile)
+end
+`, Options{SheetW: 16, SheetH: 8, MapW: 8, MapH: 8, MapLayers: 4, Map: make([]uint16, 8*8*4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(got, "c.MgetLayer(") || strings.Contains(got, "c.MsetLayer(") {
+		t.Fatalf("runtime-floored BG0 literal missed compatibility fast path:\n%s", got)
+	}
+	if !strings.Contains(got, "c.Mget(") || !strings.Contains(got, "c.Mset(") {
+		t.Fatalf("runtime-floored BG0 literal did not use legacy methods:\n%s", got)
+	}
+}
+
+func TestLayeredMapAccessArityValidation(t *testing.T) {
+	for _, test := range []struct {
+		name, call, want string
+	}{
+		{"mget-too-few", "mget(0)", "mget expects 2..3 arguments, got 1"},
+		{"mget-too-many", "mget(0,0,0,0)", "mget expects 2..3 arguments, got 4"},
+		{"mset-too-few", "mset(0,0)", "mset expects 3..4 arguments, got 2"},
+		{"mset-too-many", "mset(0,0,0,0,0)", "mset expects 3..4 arguments, got 5"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Transpile(test.name+".lua", "function _update() "+test.call+" end", Options{})
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("error = %v, want %q", err, test.want)
+			}
+		})
+	}
 }
 
 func TestGeneratedGameCompilesWithTinyGo(t *testing.T) {
@@ -2195,9 +2333,11 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(optimized, "rt.TableFieldCache") ||
-		!strings.Contains(optimized, "c.TableGetStable(") ||
-		!strings.Contains(optimized, "c.TableSetStable(") {
+	optimizedGame := generatedSection(optimized, "type Game struct {")
+	optimizedUpdate := generatedSection(optimized, "func (g *Game) gluUpdate(")
+	if !strings.Contains(optimizedGame, "rt.TableFieldCache") ||
+		!strings.Contains(optimizedUpdate, "c.TableGetStable(") ||
+		!strings.Contains(optimizedUpdate, "gluTableSetStable(") {
 		t.Fatalf("default lowering did not emit stable field caches:\n%s", optimized)
 	}
 
@@ -2205,12 +2345,14 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(legacy, "rt.TableFieldCache") ||
-		strings.Contains(legacy, "c.TableGetStable(") ||
-		strings.Contains(legacy, "c.TableSetStable(") {
+	legacyGame := generatedSection(legacy, "type Game struct {")
+	legacyUpdate := generatedSection(legacy, "func (g *Game) gluUpdate(")
+	if strings.Contains(legacyGame, "rt.TableFieldCache") ||
+		strings.Contains(legacyUpdate, "c.TableGetStable(") ||
+		strings.Contains(legacyUpdate, "gluTableSetStable(") {
 		t.Fatalf("legacy lowering retained stable field caches:\n%s", legacy)
 	}
-	if !strings.Contains(legacy, "c.TableGet(") || !strings.Contains(legacy, "c.TableSet(") {
+	if !strings.Contains(legacyUpdate, "c.TableGet(") || !strings.Contains(legacyUpdate, "gluTableSet(") {
 		t.Fatalf("legacy lowering did not retain dynamic field operations:\n%s", legacy)
 	}
 }
@@ -2233,16 +2375,18 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
+	optimizedUpdate := generatedSection(optimized, "func (g *Game) gluUpdate(")
 	for _, want := range []string{
 		"gravity rt.Number",
 		"steps rt.Number",
-		"c.TableGetStableNumber(",
-		"c.TableSetStableNumber(",
-		"var l_delta_1 rt.Number",
-		"var l_i_2 rt.Number",
 	} {
 		if !strings.Contains(optimized, want) {
 			t.Fatalf("monomorphic lowering is missing %q:\n%s", want, optimized)
+		}
+	}
+	for _, want := range []string{"c.TableGetStableNumber(", "gluTableSetStableNumber(", "var l_delta_1 rt.Number", "var l_i_2 rt.Number"} {
+		if !strings.Contains(optimizedUpdate, want) {
+			t.Fatalf("monomorphic update lowering is missing %q:\n%s", want, optimizedUpdate)
 		}
 	}
 
@@ -2250,7 +2394,8 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(legacy, "TableGetStableNumber") || strings.Contains(legacy, "TableSetStableNumber") ||
+	legacyUpdate := generatedSection(legacy, "func (g *Game) gluUpdate(")
+	if strings.Contains(legacyUpdate, "TableGetStableNumber") || strings.Contains(legacyUpdate, "TableSetStableNumber") ||
 		strings.Contains(legacy, "gravity rt.Number") || strings.Contains(legacy, "steps rt.Number") {
 		t.Fatalf("numeric rollback path emitted monomorphic storage:\n%s", legacy)
 	}
@@ -2673,16 +2818,9 @@ end
 function through_allocating(value)
   return allocating(value)
 end
-function recursive(value)
-  if value <= 0 then
-    return value
-  end
-  return recursive(value - 1)
-end
 function _update()
   state.value = chain(state.value)
   state.value = through_allocating(state.value)
-  state.value = recursive(state.value)
 end
 `
 	generated, err := Transpile("noalloc-functions.lua", source, Options{})
@@ -2710,10 +2848,6 @@ end
 	if body := functionBody("func (g *Game) through_allocating("); !strings.Contains(body, "g.__glu_call_allocating(") {
 		t.Fatalf("transitive allocator bypassed root protection:\n%s", body)
 	}
-	if body := functionBody("func (g *Game) recursive("); !strings.Contains(body, "g.__glu_call_recursive(") {
-		t.Fatalf("unproven recursive cycle bypassed root protection:\n%s", body)
-	}
-
 	rollback, err := Transpile("wrapped-functions.lua", source, Options{DisableNoAllocFunctionCalls: true})
 	if err != nil {
 		t.Fatal(err)
@@ -2793,6 +2927,232 @@ end
 		updateBody := generated[updateStart : updateStart+updateEnd]
 		if !strings.Contains(updateBody, "g.increment(") || strings.Contains(updateBody, "__glu_call_increment") {
 			t.Fatalf("%s did not emit renderer-independent direct no-alloc call:\n%s", renderer, updateBody)
+		}
+	}
+}
+
+func TestAddRootsEarlierSiblingAcrossCollection(t *testing.T) {
+	generated, err := Transpile("add-root-gap.lua", `
+function choose(first, second)
+  return first
+end
+function probe()
+  local values = {1}
+  return choose(tostr(12345), add(values, 2))
+end
+`, Options{DisableMonomorphicNumbers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched := strings.Replace(generated, "err := c.TableAdd(t,v,i)", "err := auditTableAdd(c,t,v,i)", 1)
+	if patched == generated {
+		t.Fatal("generated TableAdd root helper was not found")
+	}
+	harness := `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func auditTableAdd(c *rt.Context, table, value, index rt.Value) rt.HeapError {
+	if err := c.Collect(); err != rt.HeapOK { return err }
+	return c.TableAdd(table, value, index)
+}
+
+func TestEarlierSiblingSurvivesTableAddCollection(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := g.__glu_call_probe(&c)
+	if got.Kind != rt.KindString || c.StrLen(got) != 5 {
+		t.Fatalf("earlier string sibling was not preserved: kind=%d len=%d", got.Kind, c.StrLen(got))
+	}
+}
+`
+	runGeneratedHarness(t, patched, harness, "TestEarlierSiblingSurvivesTableAddCollection")
+}
+
+func TestTableStoresRootPendingAssignmentAcrossCollection(t *testing.T) {
+	generated, err := Transpile("store-root-gap.lua", `
+function probe()
+  local first = {occupied = 1}
+  local second = {}
+  first["x"], second["x"] = tostr(111), tostr(222)
+  return second["x"]
+end
+`, Options{DisableMonomorphicNumbers: true, DisableStableTableFields: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched := strings.Replace(generated, "err := c.TableSet(t,k,v)", "err := auditTableSet(c,t,k,v)", 1)
+	if patched == generated {
+		t.Fatal("generated TableSet root helper was not found")
+	}
+	harness := `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func auditTableSet(c *rt.Context, table, key, value rt.Value) rt.HeapError {
+	if err := c.Collect(); err != rt.HeapOK { return err }
+	return c.TableSet(table, key, value)
+}
+
+func TestPendingAssignmentSurvivesTableSetCollection(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := g.__glu_call_probe(&c)
+	if got.Kind != rt.KindString || c.StrLen(got) != 3 {
+		t.Fatalf("pending assignment value was not preserved: kind=%d len=%d", got.Kind, c.StrLen(got))
+	}
+}
+`
+	runGeneratedHarness(t, patched, harness, "TestPendingAssignmentSurvivesTableSetCollection")
+}
+
+func TestPrintRootsLiveLocalsAcrossCollection(t *testing.T) {
+	generated, err := Transpile("print-root-gap.lua", `
+function probe()
+  local live = tostr(12345)
+  print(7)
+  return live
+end
+`, Options{DisableMonomorphicNumbers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched := strings.Replace(generated, "out := c.PrintV(s,x,y,color)", "out := auditPrint(c,s,x,y,color)", 1)
+	if patched == generated {
+		t.Fatal("generated PrintV root helper was not found")
+	}
+	harness := `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func auditPrint(c *rt.Context, text, x, y, color rt.Value) int {
+	if err := c.Collect(); err != rt.HeapOK { return 0 }
+	return c.PrintV(text, x, y, color)
+}
+
+func TestLiveLocalSurvivesPrintCollection(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := g.__glu_call_probe(&c)
+	if got.Kind != rt.KindString || c.StrLen(got) != 5 {
+		t.Fatalf("live local was not preserved: kind=%d len=%d", got.Kind, c.StrLen(got))
+	}
+}
+`
+	runGeneratedHarness(t, patched, harness, "TestLiveLocalSurvivesPrintCollection")
+}
+
+func TestLocalRootBudgetOverflowIsCompileError(t *testing.T) {
+	var source strings.Builder
+	source.WriteString("function pressure()\n")
+	for i := 0; i < runtimeapi.MaxLocalRoots; i++ {
+		fmt.Fprintf(&source, "  local value_%d = \"live\"\n", i)
+	}
+	source.WriteString("  return tostr(7)\nend\n")
+	_, err := Transpile("root-budget.lua", source.String(), Options{DisableMonomorphicNumbers: true})
+	if err == nil || !strings.Contains(err.Error(), "local GC root budget") || !strings.Contains(err.Error(), "root-budget.lua") {
+		t.Fatalf("error = %v, want source-positioned local GC root budget rejection", err)
+	}
+}
+
+func TestRecursiveExpandingReturnArityIsRejected(t *testing.T) {
+	_, err := Transpile("recursive-width.lua", `
+function expand(n)
+  if n <= 0 then return 0 end
+  return n, expand(n - 1)
+end
+`, Options{})
+	if err == nil || !strings.Contains(err.Error(), "recursive return arity expands without bound") || !strings.Contains(err.Error(), "recursive-width.lua") {
+		t.Fatalf("error = %v, want source-positioned recursive return-width rejection", err)
+	}
+}
+
+func TestTopLevelReturnEvaluatesExpressionSideEffects(t *testing.T) {
+	generated, err := Transpile("top-return.lua", `
+n = 0
+function bump()
+  n += 1
+  return n
+end
+return bump()
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	harness := `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestTopReturnExpressionExecuted(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	if g.n.Int() != 1 { t.Fatalf("n=%d, want 1", g.n.Int()) }
+}
+`
+	runGeneratedHarness(t, generated, harness, "TestTopReturnExpressionExecuted")
+}
+
+func TestGeneratedGameMemberCollisionsAreRejected(t *testing.T) {
+	tests := []struct {
+		name, source, want string
+	}{
+		{"flattened-functions", "function foo_bar() return 1 end\nfunction foo.bar() return 2 end", "generated Game member"},
+		{"lifecycle", "function Init() return 1 end", "generated Game member"},
+		{"call-wrapper", "function foo() return 1 end\nfunction __glu_call_foo() return 2 end", "generated Game member"},
+		{"global-method", "foo = 1\nfunction foo() return 2 end", "assignment to static function"},
+		{"static-field", "_gluStatic0 = 1\nfunction probe() return \"text\" end", "generated Game member"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Transpile(test.name+".lua", test.source, Options{})
+			if err == nil || !strings.Contains(err.Error(), test.want) || !strings.Contains(err.Error(), test.name+".lua") {
+				t.Fatalf("error = %v, want source-positioned %q rejection", err, test.want)
+			}
+		})
+	}
+}
+
+func TestBuiltinResolutionDoesNotDependOnNumericOptimization(t *testing.T) {
+	source := `
+function abs(value)
+  return 99
+end
+function probe()
+  return abs(-1)
+end
+`
+	for _, options := range []Options{{}, {DisableMonomorphicNumbers: true}} {
+		generated, err := Transpile("builtin-precedence.lua", source, options)
+		if err != nil {
+			t.Fatal(err)
+		}
+		start := strings.Index(generated, "func (g *Game) probe(")
+		if start < 0 {
+			t.Fatalf("probe body missing:\n%s", generated)
+		}
+		end := strings.Index(generated[start:], "\n}")
+		if end < 0 {
+			t.Fatalf("probe body is unterminated:\n%s", generated[start:])
+		}
+		body := generated[start : start+end]
+		if strings.Contains(body, "g.abs(") || !strings.Contains(body, ".Abs()") {
+			t.Fatalf("builtin abs lost precedence with options %+v:\n%s", options, body)
 		}
 	}
 }

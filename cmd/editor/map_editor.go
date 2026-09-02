@@ -45,11 +45,16 @@ func (g *Game) updateMapMode() {
 
 	g.handleMapResizeKeys()
 	g.handleMapLayerPanel(layout)
+	g.handleMapAreaTool(layout)
 	g.handleMapPan(layout)
 	g.handleMapMouseDrag(layout)
 	g.handleMapZoom(layout)
 	mapW, mapH = g.mapBounds()
 	g.mapCam.Clamp(mapW, mapH, layout.Canvas)
+	if g.mapTool.isAreaTool() {
+		g.handleMapAreaInteraction(layout)
+		return
+	}
 	g.handleMapPlaceErase(layout)
 }
 
@@ -57,8 +62,16 @@ func (g *Game) selectMapLayer(layer int) bool {
 	if layer < 0 || layer >= len(g.mapLayerVisible) {
 		return false
 	}
+	changed := layer != g.mapActiveLayer
 	g.mapActiveLayer = layer
-	g.statusMsg = fmt.Sprintf("BG%d selected", layer)
+	if changed {
+		g.resetMapAreaInteraction()
+	}
+	if g.mapTool.isAreaTool() {
+		g.statusMsg = g.mapAreaToolPrompt()
+	} else {
+		g.statusMsg = fmt.Sprintf("BG%d selected", layer)
+	}
 	return true
 }
 
@@ -85,11 +98,18 @@ func (g *Game) handleMapLayerPanel(layout mapLayout) {
 	}
 	if visibility {
 		g.mapLayerVisible[layer] = !g.mapLayerVisible[layer]
+		if layer == g.mapActiveLayer && !g.mapLayerVisible[layer] {
+			g.resetMapAreaInteraction()
+		}
 		state := "hidden"
 		if g.mapLayerVisible[layer] {
 			state = "visible"
 		}
 		g.statusMsg = fmt.Sprintf("BG%d %s", layer, state)
+		return
+	}
+	if g.mapTool.isAreaTool() && g.mapArea != nil {
+		g.setMapAreaTargetLayer(layer)
 		return
 	}
 	g.selectMapLayer(layer)
@@ -173,6 +193,7 @@ func (g *Game) nudgeMapSize(dScreensX, dScreensY int) {
 		g.statusMsg = err.Error()
 		return
 	}
+	g.resetMapAreaInteraction()
 	// Resizing changes the level bounds, not the artist's chosen view. Keep
 	// the current readable zoom and only clamp the camera to the new bounds.
 	g.mapCam.Clamp(newW, newH, mapCanvasRect())
@@ -260,7 +281,11 @@ func (g *Game) drawMapMode(screen *ebiten.Image) {
 	g.drawMapBounds(screen, layout)
 	mx, my := ebiten.CursorPosition()
 	tileX, tileY, ok := g.mapTargetTile(layout, mx, my)
-	g.drawMapHover(screen, layout, tileX, tileY, ok)
+	if g.mapTool.isAreaTool() {
+		g.drawMapAreaSelection(screen, layout)
+	} else {
+		g.drawMapHover(screen, layout, tileX, tileY, ok)
+	}
 	g.drawSceneBoundaries(screen, layout)
 	g.drawMapBottomStrip(screen, layout, tileX, tileY, ok)
 	g.drawMapLayersPanel(screen, layout)
@@ -283,7 +308,7 @@ func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
 		for y := minY; y < maxY; y++ {
 			for x := minX; x < maxX; x++ {
 				sx, sy := g.mapCam.WorldToScreen(x, y, layout.Canvas)
-				id := g.mapCellAtLayer(layer, x, y)
+				id := g.mapCellForDisplay(layer, x, y)
 				if isEraserIndex(id) {
 					continue
 				}
@@ -295,12 +320,20 @@ func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
 
 func (g *Game) drawMapLayersPanel(screen *ebiten.Image, layout mapLayout) {
 	drawText(screen, "LAYERS", layout.Layers.X+4, layout.Layers.Y+1, colorText)
-	drawSmallText(screen, fmt.Sprintf("ACTIVE BG%d  /  1-4", g.mapActiveLayer), layout.Layers.X+4, layout.Layers.Y+layout.Layers.H-uiSmallTextHeight-1, colorMap)
+	layerStatus := fmt.Sprintf("ACTIVE BG%d  /  1-4", g.mapActiveLayer)
+	if g.mapTool.isAreaTool() && g.mapArea != nil {
+		layerStatus = fmt.Sprintf("SOURCE BG%d  >  TARGET BG%d", g.mapArea.layer, g.mapAreaTargetLayer)
+	}
+	drawSmallText(screen, layerStatus, layout.Layers.X+4, layout.Layers.Y+layout.Layers.H-uiSmallTextHeight-1, colorMap)
 	for bg := 0; bg < 4; bg++ {
 		row := layout.LayerRows[bg]
 		if bg == g.mapActiveLayer {
 			fillRect(screen, row, color.RGBA{R: 32, G: 62, B: 48, A: 255})
 			fillRect(screen, editor.Rect{X: row.X, Y: row.Y + row.H - 3, W: row.W, H: 3}, colorMap)
+		}
+		if g.mapTool.isAreaTool() && g.mapArea != nil && bg == g.mapAreaTargetLayer && bg != g.mapArea.layer {
+			fillRect(screen, row, rgba(colorHighlight, 28))
+			fillRect(screen, editor.Rect{X: row.X, Y: row.Y, W: row.W, H: 3}, colorHighlight)
 		}
 		strokeRect(screen, row, rgba(colorBorder, 150))
 		g.drawMapLayerVisibility(screen, layout.LayerEyes[bg], g.mapLayerVisible[bg])
@@ -428,6 +461,8 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 		g.drawSpriteThumb(screen, g.currentSprite, float64(layout.SelectedTile.X), float64(layout.SelectedTile.Y), float64(layout.SelectedTile.W), float64(layout.SelectedTile.H))
 	}
 	strokeRect(screen, layout.SelectedTile, colorBorder)
+	drawTactileButton(screen, layout.MoveArea, "MOVE AREA [M]", g.mapTool == mapToolMoveArea, colorMap, true)
+	drawTactileButton(screen, layout.CopyArea, "COPY AREA [C]", g.mapTool == mapToolCopyArea, colorMap, true)
 
 	hoverText := "tile: -,- sprite: -"
 	if ok {
@@ -440,7 +475,13 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 		selected += " eraser"
 	}
 	drawText(screen, truncateUIText(hoverText, layout.Coordinates.W), layout.Coordinates.X, layout.Coordinates.Y-6, colorText)
-	help := fmt.Sprintf("%s  (1-4 layers, WASD pan, wheel zoom, left place, right erase)", selected)
+	help := fmt.Sprintf("%s  (left paint, right erase, Cmd/Ctrl+drag select, WASD pan, wheel zoom)", selected)
+	if g.mapTool.isAreaTool() {
+		help = fmt.Sprintf("%s: drag select; Cmd/Ctrl+A whole layer; choose target BG0-BG3 (keys 1-4)", g.mapTool.areaTitle())
+		if g.mapArea != nil {
+			help = fmt.Sprintf("BG%d > BG%d: drag to reposition or Enter; Shift confirms overwrite", g.mapArea.layer, g.mapAreaTargetLayer)
+		}
+	}
 	drawText(screen, truncateUIText(help, layout.Coordinates.W), layout.Coordinates.X, layout.Coordinates.Y+8, colorDim)
 }
 

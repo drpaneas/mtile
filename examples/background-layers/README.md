@@ -48,6 +48,15 @@ Turn the eyes back on from BG0 through BG3 to see the same composite produced
 by a bare `map()`. Eye state is preview-only; it never deletes map cells or
 changes runtime visibility.
 
+**Move Area [M]** and **Copy Area [C]** operate on the active plane. Drag to
+select any rectangular region, including a two-tile strip, then drag it to a
+new position. From Paint, Ctrl/Cmd+drag starts a Move Area selection directly;
+press C afterward to switch that selection to Copy. With a selection active,
+click another BG button (or press 1–4) to make it the target plane; Enter keeps
+the same coordinates. Ctrl/Cmd+A selects the entire source plane, which is the
+quick recovery path for artwork authored on the wrong BG. A cross-plane
+collision is rejected unless Shift is held with Enter or mouse release.
+
 The nonzero source Y values skip transparent rows above each silhouette while
 preserving its authored screen height.
 

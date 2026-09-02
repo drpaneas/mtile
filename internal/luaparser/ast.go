@@ -79,6 +79,17 @@ type VarExpr struct {
 
 func (*VarExpr) exprNode() {}
 
+// ParenExpr preserves a syntactic single-value boundary. Parentheses are
+// transparent for ordinary evaluation, but Lua collapses a parenthesized
+// multi-result call to its first result: `(pair())` is one value while a
+// trailing bare `pair()` may expand in an expression list.
+type ParenExpr struct {
+	NodeBase
+	Expr Expr
+}
+
+func (*ParenExpr) exprNode() {}
+
 type UnaryExpr struct {
 	NodeBase
 	Op   Operator
@@ -172,9 +183,10 @@ const (
 
 type AssignStmt struct {
 	NodeBase
-	Targets   []Expr
-	Values    []Expr
-	Synthetic bool
+	Targets        []Expr
+	Values         []Expr
+	Synthetic      bool
+	CompoundTarget Expr // original l-value when compound lowering uses temporaries
 }
 
 func (*AssignStmt) stmtNode() {}

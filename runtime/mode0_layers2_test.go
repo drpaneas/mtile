@@ -156,3 +156,42 @@ func TestMode0MutationIsIsolatedToMatchingSourceRegion(t *testing.T) {
 		t.Fatalf("isolated mset uploaded %+v, want one 4096-byte layer", stats)
 	}
 }
+
+func TestMode0LayeredMsetPatchesOnlyMatchingLogicalBackground(t *testing.T) {
+	hw.ResetForTest()
+	image := AssetImage{
+		SheetW: 32, SheetH: 8, SpriteCols: 4, SpriteRows: 1, SpriteN: 4,
+		MapW: 1, MapH: 1, MapLayers: 2, MapPlaneMask: 0x03,
+		Sheet: make([]byte, 32*8), Map: []uint16{1, 2}, Flags: make([]byte, 4),
+	}
+	ram := &AssetMemory{
+		SheetW: 32, SheetH: 8, SpriteCols: 4, SpriteRows: 1, SpriteN: 4,
+		MapW: 1, MapH: 1, MapLayers: 2, MapPlaneMask: 0x03,
+		Sheet: make([]byte, 32*8), Map: make([]uint16, 2), Flags: make([]byte, 4),
+	}
+	var c Context
+	if !c.Init(&image, ram) {
+		t.Fatal("Init rejected layered mutation fixture")
+	}
+	c.InitHardware()
+	draw := func() {
+		c.BeginRenderFrame()
+		c.Cls(0)
+		c.MapBG(0, 0, 0, 0, 0, 1, 1, 0)
+		c.MapBG(1, 0, 0, 0, 0, 1, 1, 0)
+		c.PresentRender()
+	}
+	draw()
+
+	c.MsetLayer(1, 0, 0, 3)
+	draw()
+	if got := hw.GetReg16(mode0LayerScreenBase(0)); got != 1 {
+		t.Fatalf("BG1 mset changed BG0 shadow to %d", got)
+	}
+	if got := hw.GetReg16(mode0LayerScreenBase(1)); got != 3 {
+		t.Fatalf("BG1 shadow after mset = %d, want 3", got)
+	}
+	if stats := c.RendererUploadStats(); stats.LastMapBytes != 4096 {
+		t.Fatalf("layered mset uploaded %+v, want one 4096-byte shadow", stats)
+	}
+}

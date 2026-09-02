@@ -160,20 +160,44 @@ func normalizedMapPlaneMask(mask uint8, layers, mapLen, planeCells int) int {
 	return 0
 }
 
+//go:section .rodata
+var mapNibblePopulation = [16]uint8{0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4}
+
+// mapPlaneSlots converts a logical BG ID to its dense storage-plane index.
+// Keeping the complete four-plane mapping in ROM avoids a variable-length
+// population-count loop in collision-heavy mget() workloads without spending
+// any per-Context EWRAM.
+//
+//go:section .rodata
+var mapPlaneSlots = [16][4]int8{
+	{-1, -1, -1, -1},
+	{0, -1, -1, -1},
+	{-1, 0, -1, -1},
+	{0, 1, -1, -1},
+	{-1, -1, 0, -1},
+	{0, -1, 1, -1},
+	{-1, 0, 1, -1},
+	{0, 1, 2, -1},
+	{-1, -1, -1, 0},
+	{0, -1, -1, 1},
+	{-1, 0, -1, 1},
+	{0, 1, -1, 2},
+	{-1, -1, 0, 1},
+	{0, -1, 1, 2},
+	{-1, 0, 1, 2},
+	{0, 1, 2, 3},
+}
+
 func mapMaskPopulation(mask uint8) int {
-	n := 0
-	for mask != 0 {
-		n += int(mask & 1)
-		mask >>= 1
-	}
-	return n
+	return int(mapNibblePopulation[mask&0x0f] + mapNibblePopulation[mask>>4])
 }
 
 func mapPlaneSlot(mask uint8, layer, layers int) (int, bool) {
-	if layer < 0 || layer >= layers || mask&(1<<uint(layer)) == 0 {
+	if layer < 0 || layer >= layers || layer >= 4 || mask&^uint8(0x0f) != 0 {
 		return 0, false
 	}
-	return mapMaskPopulation(mask & uint8((1<<uint(layer))-1)), true
+	slot := mapPlaneSlots[mask][layer]
+	return int(slot), slot >= 0
 }
 
 func mapLogicalPlane(mask uint8, slot, layers int) (int, bool) {
@@ -231,6 +255,13 @@ func (c *Context) Mget(x, y int) uint16 {
 	return c.mapGetLayer(0, x, y)
 }
 
+// MgetLayer reads one logical authored background plane. Invalid or
+// non-resident layers follow Mget's out-of-range behavior and return 0.
+// Mget remains the compatibility-fast BG0 entry point used by legacy carts.
+func (c *Context) MgetLayer(layer, x, y int) uint16 {
+	return c.mapGetLayer(layer, x, y)
+}
+
 func (c *Context) mapGetLayer(layer, x, y int) uint16 {
 	if c == nil || c.cart == nil || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return 0
@@ -271,6 +302,39 @@ func (c *Context) Mset(x, y, id int) {
 	}
 	c.cart.Map[index] = value
 	c.mapMutated(x, y)
+}
+
+// MsetLayer updates one logical authored background plane. The build planner
+// retains every statically or dynamically targeted plane, so a valid layer
+// that starts empty has mutable storage in generated carts. Invalid layers,
+// coordinates, and sprite IDs are ignored exactly like legacy Mset inputs.
+func (c *Context) MsetLayer(layer, x, y, id int) {
+	if layer == 0 {
+		c.Mset(x, y, id)
+		return
+	}
+	if c == nil || c.cart == nil || layer < 0 || layer >= c.cart.MapLayers ||
+		id < 0 || id >= c.cart.SpriteN ||
+		x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
+		return
+	}
+	if c.cart.MapStreaming {
+		if c.mapStreamingSetLayer(layer, x, y, uint16(id)) {
+			c.mapLayerMutated(layer, x, y)
+		}
+		return
+	}
+	storageLayer, ok := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
+	if !ok {
+		return
+	}
+	index := storageLayer*c.cart.MapW*c.cart.MapH + y*c.cart.MapW + x
+	value := uint16(id)
+	if c.cart.Map[index] == value {
+		return
+	}
+	c.cart.Map[index] = value
+	c.mapLayerMutated(layer, x, y)
 }
 
 // Fget reports one flag bit for sprite id. Out-of-range id or bit is false.

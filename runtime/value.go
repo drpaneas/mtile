@@ -25,11 +25,16 @@ type Value struct {
 }
 
 const (
-	valueBytes       = 12
-	maxStaticStrings = 256
-	maxArrayCap      = 256
-	maxHashCap       = 128
-	maxStringBytes   = 4096
+	valueBytes = 12
+	// MaxStaticStrings and MaxStringBytes are exported so the transpiler can
+	// reject cartridges which cannot be represented by the fixed runtime
+	// tables instead of letting InternStatic/NewString fail silently.
+	MaxStaticStrings      = 256
+	MaxStringBytes        = 4096
+	MaxTableArrayCapacity = 256
+	MaxTableHashCapacity  = 128
+	maxArrayCap           = MaxTableArrayCapacity
+	maxHashCap            = MaxTableHashCapacity
 )
 
 type StaticString struct {
@@ -164,12 +169,15 @@ func (v Value) Sgn() Value {
 }
 
 func (c *Context) InternStatic(s string) Value {
+	if len(s) > MaxStringBytes {
+		return NilVal()
+	}
 	for i := uint16(0); i < c.staticN; i++ {
 		if c.staticHold[i] == s {
 			return Value{Kind: KindStaticString, SRef: i}
 		}
 	}
-	if int(c.staticN) >= maxStaticStrings {
+	if int(c.staticN) >= MaxStaticStrings {
 		return NilVal()
 	}
 	i := c.staticN
@@ -232,6 +240,34 @@ func (c *Context) ValuesEqual(a, b Value) bool {
 	default:
 		return false
 	}
+}
+
+// CompareStrings performs bytewise lexicographic ordering for both ROM-backed
+// static strings and heap strings. The boolean is false for non-string values.
+func (c *Context) CompareStrings(a, b Value) (int, bool) {
+	if !isStringKind(a.Kind) || !isStringKind(b.Kind) {
+		return 0, false
+	}
+	left, right := c.stringBytes(a), c.stringBytes(b)
+	n := len(left)
+	if len(right) < n {
+		n = len(right)
+	}
+	for i := 0; i < n; i++ {
+		if left[i] < right[i] {
+			return -1, true
+		}
+		if left[i] > right[i] {
+			return 1, true
+		}
+	}
+	if len(left) < len(right) {
+		return -1, true
+	}
+	if len(left) > len(right) {
+		return 1, true
+	}
+	return 0, true
 }
 
 func bytesEqual(a, b []byte) bool {

@@ -234,6 +234,7 @@ const (
 	mapLayerToolbarWidth = 560
 	mapLayerLabelWidth   = 150
 	mapLayerButtonGap    = 6
+	mapMoveToolGap       = 12
 )
 
 type mapLayout struct {
@@ -241,6 +242,8 @@ type mapLayout struct {
 	Canvas       editor.Rect
 	Strip        editor.Rect
 	SelectedTile editor.Rect
+	MoveArea     editor.Rect
+	CopyArea     editor.Rect
 	Coordinates  editor.Rect
 	Layers       editor.Rect
 	LayerRows    [4]editor.Rect
@@ -256,9 +259,12 @@ func newMapLayout(screenW, screenH int) mapLayout {
 	layersW := min(mapLayerToolbarWidth, max(500, screenW/2))
 	layers := editor.Rect{X: strip.X + strip.W - layersW - 6, Y: strip.Y + 6, W: layersW, H: strip.H - 12}
 	selected := editor.Rect{X: strip.X + mapGap, Y: strip.Y + mapGap, W: mapPreviewSize, H: mapPreviewSize}
-	coordX := selected.X + selected.W + 12
+	areaToolW := max(128, max(uiTextWidth("MOVE AREA [M]"), uiTextWidth("COPY AREA [C]"))+20)
+	moveArea := editor.Rect{X: selected.X + selected.W + mapMoveToolGap, Y: selected.Y, W: areaToolW, H: selected.H}
+	copyArea := editor.Rect{X: moveArea.X + moveArea.W + mapLayerButtonGap, Y: moveArea.Y, W: areaToolW, H: moveArea.H}
+	coordX := copyArea.X + copyArea.W + mapMoveToolGap
 	coords := editor.Rect{X: coordX, Y: strip.Y + (strip.H-20)/2, W: max(1, layers.X-coordX-mapGap), H: 20}
-	layout := mapLayout{Header: header, Canvas: canvas, Strip: strip, SelectedTile: selected, Coordinates: coords, Layers: layers}
+	layout := mapLayout{Header: header, Canvas: canvas, Strip: strip, SelectedTile: selected, MoveArea: moveArea, CopyArea: copyArea, Coordinates: coords, Layers: layers}
 	buttonsX := layers.X + mapLayerLabelWidth
 	buttonW := (layers.W - mapLayerLabelWidth - 3*mapLayerButtonGap) / 4
 	for bg := 0; bg < 4; bg++ {

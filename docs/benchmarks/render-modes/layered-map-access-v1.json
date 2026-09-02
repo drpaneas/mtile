@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "profile": "tile-v1-layered-map-access",
+  "decision": {
+    "legacyAritiesPreserved": true,
+    "literalLayerMsetAutoEligible": true,
+    "dynamicLayerMsetAutoEligible": false,
+    "dynamicLayerReason": "One dynamic write per tick is exact and fast, but the widest 16-write dynamic-layer AUTO shape has not been separately measured. Forced Mode 0 remains exact."
+  },
+  "environment": {
+    "goVersion": "go1.26.4",
+    "goos": "darwin",
+    "goarch": "arm64",
+    "cpu": "Apple M2 Pro",
+    "tinygo": "tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)",
+    "gitRevision": "1f091a66709b4e3980584720ec9196cb4407834c",
+    "gitDirty": true,
+    "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+    "warmupFrames": 20,
+    "capturedFrames": 120
+  },
+  "hostMicrobenchmarks": {
+    "command": "cd runtime && go test -run '^$' -bench 'BenchmarkM(get|set)BG(0|1)(Compact|Streaming)' -benchmem -benchtime=300ms -count=5",
+    "allocationsPerOperation": 0,
+    "medianNanosecondsPerOperation": {
+      "mgetBG0Compact": 3.178,
+      "mgetBG1Compact": 3.773,
+      "mgetBG0StreamingWarm": 12.35,
+      "mgetBG1StreamingWarm": 12.48,
+      "msetBG0CompactChanged": 3.047,
+      "msetBG1CompactChanged": 3.966,
+      "msetBG0StreamingChanged": 15.13,
+      "msetBG1StreamingChanged": 16.07
+    }
+  },
+  "workloads": [
+    {
+      "name": "layered_mget",
+      "source": "cmd/renderbench/testdata/workloads/layered_mget.lua",
+      "projectSha256": "33063280ba5ba3124eabd0f883a469fe4388307f803685b614bc658d758ad849",
+      "callShape": "sixteen mget(1,x,y) reads per update",
+      "autoDecision": "mode0",
+      "differingPixels": 0,
+      "ewramGainBytes": 21652,
+      "medianSavingPercent": 97.19293130015714,
+      "mode0P95HeadroomCycles": 526943,
+      "mode4": {
+        "romSha256": "ab99bdb7b8b7aeab4aae9abcfd6e72d3299bd31d2feca89dc827bd29f227d939",
+        "romBytes": 31056,
+        "ewramFree": 62340,
+        "medianCycles": 1241473,
+        "p95Cycles": 1241473,
+        "drawCycles": 1158636,
+        "commitCycles": 76916,
+        "missedFrames": 140
+      },
+      "mode0": {
+        "romSha256": "42941d3cfdbc94cb088fe72a900a5ffa46014122eed9f5af81369b98e7174deb",
+        "romBytes": 30732,
+        "ewramFree": 83992,
+        "medianCycles": 34849,
+        "p95Cycles": 34849,
+        "drawCycles": 2795,
+        "commitCycles": 26463,
+        "coldUploadCycles": 1905534,
+        "missedFrames": 1
+      },
+      "parityGatePass": true
+    },
+    {
+      "name": "layered_mset16",
+      "source": "cmd/renderbench/testdata/workloads/layered_mset16.lua",
+      "projectSha256": "8832183d0197f0049157a7334af3cb38b289590534d6e21def0a6a330bffa681",
+      "callShape": "sixteen direct mset(1,x,y,id) writes per update",
+      "autoDecision": "mode0",
+      "differingPixels": 0,
+      "ewramGainBytes": 34040,
+      "medianSavingPercent": 90.78801902984951,
+      "mode0P95HeadroomCycles": 506297,
+      "mode4": {
+        "romSha256": "abea6237542af73403a45599e5729df52629a26ee519cffb728e8bab311cbb7c",
+        "romBytes": 31260,
+        "ewramFree": 62340,
+        "medianCycles": 602422,
+        "p95Cycles": 603542,
+        "drawCycles": 519594,
+        "commitCycles": 76920,
+        "missedFrames": 140
+      },
+      "mode0": {
+        "romSha256": "6b816e74db88f6179112707065222416f4a7f194e90ce253b6c67f0273734210",
+        "romBytes": 28232,
+        "ewramFree": 96380,
+        "medianCycles": 55495,
+        "p95Cycles": 55495,
+        "drawCycles": 628,
+        "commitCycles": 36894,
+        "coldUploadCycles": 1882821,
+        "missedFrames": 0
+      },
+      "parityGatePass": true
+    },
+    {
+      "name": "layered_map_dynamic",
+      "source": "cmd/renderbench/testdata/workloads/layered_map_dynamic.lua",
+      "projectSha256": "ec5c15e17488e8ed6b6e4d1988d4ce6c64e7a5f19edfd9aa44099fe4bbe633cf",
+      "callShape": "one dynamic mget(layer,x,y) and mset(layer,x,y,id) per update",
+      "autoDecision": "mode4",
+      "autoReason": "M0_COST_UNPROVEN",
+      "forcedMode0Exact": true,
+      "differingPixels": 0,
+      "ewramGainBytes": 29912,
+      "medianSavingPercent": 96.95758233515342,
+      "mode0P95HeadroomCycles": 532021,
+      "mode4": {
+        "romSha256": "e9d93061105e7dafcb329108bff2bce9d586bb7cfd2e57167392873d094010dc",
+        "romBytes": 28932,
+        "ewramFree": 62340,
+        "medianCycles": 978531,
+        "p95Cycles": 978531,
+        "drawCycles": 899429,
+        "commitCycles": 76912,
+        "missedFrames": 140
+      },
+      "mode0": {
+        "romSha256": "b7b43445c1254cc2cac265e89884c82abdbe4adc75cff84796914c087bd6320c",
+        "romBytes": 29984,
+        "ewramFree": 92252,
+        "medianCycles": 29771,
+        "p95Cycles": 29771,
+        "drawCycles": 1366,
+        "commitCycles": 26297,
+        "coldUploadCycles": 1891192,
+        "missedFrames": 0
+      },
+      "parityGatePass": true
+    }
+  ]
+}

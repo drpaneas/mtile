@@ -9,11 +9,12 @@ type renderState struct {
 	framebuffer [FramebufferSize]byte
 }
 
-func (c *Context) resetRendererState()   {}
-func (c *Context) sheetMutated(x, y int) {}
-func (c *Context) mapMutated(x, y int)   {}
-func (c *Context) flagsMutated(id int)   {}
-func (c *Context) drawPaletteMutated()   {}
+func (c *Context) resetRendererState()             {}
+func (c *Context) sheetMutated(x, y int)           {}
+func (c *Context) mapMutated(x, y int)             {}
+func (c *Context) mapLayerMutated(layer, x, y int) {}
+func (c *Context) flagsMutated(id int)             {}
+func (c *Context) drawPaletteMutated()             {}
 
 func (c *Context) rendererPaletteIndex(index int) byte {
 	return c.displayPal[index]

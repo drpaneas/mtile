@@ -103,6 +103,10 @@ func (g *Game) setMode(mode editorMode) {
 		// workspaces cancels it without touching project data.
 		g.spritePaste = nil
 	}
+	if g.mode == modeMap {
+		g.mapTool = mapToolPaint
+		g.resetMapAreaInteraction()
+	}
 	if g.mode == modeMusic {
 		g.finishNativeNoteDrag()
 		g.stopAudioPreview()
@@ -147,13 +151,17 @@ func (g *Game) handleModeNavigation() bool {
 	handled := false
 	textEntry := g.nativeNameTarget != 0 || g.mode == modeCode
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
-	// In Map Lab the unmodified number keys belong to the visible BG0-BG3
-	// stack, as advertised by the layer panel and status bar. Tabs remain
-	// reachable by mouse or Tab; other workspaces retain their 1-4 shortcuts.
+	// In Map Lab the unmodified number keys select BG0-BG3, or the target BG
+	// while an area transfer is selected. Tabs remain reachable by mouse or
+	// Tab; other workspaces retain their 1-4 shortcuts.
 	if g.mode == modeMap && !mod {
 		for layer, key := range []ebiten.Key{ebiten.Key1, ebiten.Key2, ebiten.Key3, ebiten.Key4} {
 			if inpututil.IsKeyJustPressed(key) {
-				g.selectMapLayer(layer)
+				if g.mapTool.isAreaTool() && g.mapArea != nil {
+					g.setMapAreaTargetLayer(layer)
+				} else {
+					g.selectMapLayer(layer)
+				}
 				return true
 			}
 		}

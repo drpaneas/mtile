@@ -190,6 +190,23 @@ func TestMode0ObjectBudgetRejectsCameraRebaseThroughHelper(t *testing.T) {
 	}
 }
 
+func TestMode0CallGraphUsesGeneratorBuiltinPrecedence(t *testing.T) {
+	calls := mode0BudgetRepeatedCall(38, "spr(32,0,0,4,4)")
+	calls = append(calls, "abs(1)", "spr(1,0,32)", "spr(1,8,32)")
+	source := "function abs(n) camera(0,32) end\n" + mode0BudgetTestSource(calls...)
+	_, report, err := TranspileWithReport("builtin-precedence-budget.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatalf("builtin call followed the unreachable user body: %v", err)
+	}
+	if report.Selected != RendererMode0 || report.Mode0OBJLineCycles != 1216 {
+		t.Fatalf("Mode 0 report = %+v, want builtin abs() resolution and a 1216-cycle static band", report)
+	}
+}
+
 func TestMode0ObjectBudgetAutoFallsBackOnScanlineOverflow(t *testing.T) {
 	source := mode0BudgetTestSource(mode0BudgetRepeatedCall(39, "spr(32,0,64,4,4)")...)
 	_, report, err := TranspileWithReport("auto-scanline-overflow.lua", source, Options{

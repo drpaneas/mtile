@@ -22,6 +22,7 @@ The array must contain exactly `width * height` entries. Loading, viewing,
 editing BG0, and saving this shape does not migrate it. It is the logical BG0
 plane: `map()` draws it when it is non-empty and `map(0)` selects it directly.
 `mget(x,y)` and `mset(x,y,id)` continue to address BG0.
+The explicit forms `mget(0,x,y)` and `mset(0,x,y,id)` are equivalent.
 
 ## Version 2: four background planes
 
@@ -71,8 +72,9 @@ The on-disk version-2 schema always contains four planes, but the build scans
 their cells and stores only non-empty planes. Their logical IDs remain BG0-BG3;
 a plane mask maps those IDs to dense ROM/EWRAM storage. For example, authored
 BG1 and BG3 occupy two planes of map storage, not four. A source that calls
-`mset()` keeps BG0 allocated even when it starts empty, because it can become
-non-empty at runtime.
+legacy `mset(x,y,id)` keeps BG0 allocated even when it starts empty.
+`mset(bg,x,y,id)` keeps a statically named target plane; if `bg` is dynamic,
+the build conservatively retains all four logical planes.
 
 Mode 0 independently allocates one hardware screen shadow per plane actually
 drawn. `map()` draws every stored non-empty plane in BG0-to-BG3 order, so the
@@ -82,8 +84,8 @@ complete mutable EWRAM copy of the compact data; maps whose compact cell count
 crosses the streaming threshold keep ROM authoritative and include the logical
 BG ID in each cache key.
 
-The standalone `assetsync` generator has no Lua source to analyze for a future
-`mset()`, so it conservatively retains every schema plane. Normal `mtile build`
+The standalone `assetsync` generator has no Lua source to analyze for an
+`mset`, so it conservatively retains every schema plane. Normal `mtile build`
 has the complete source bundle and performs the sparse packing described above.
 
 The Lua forms are:
@@ -92,6 +94,12 @@ The Lua forms are:
 map()
 map(bg)
 map(bg, cell_x, cell_y, screen_x, screen_y, cells_w, cells_h, mask)
+
+mget(x, y)
+mget(bg, x, y)
+
+mset(x, y, sprite_id)
+mset(bg, x, y, sprite_id)
 ```
 
 `map()` draws all authored non-empty planes. For every call with arguments,
@@ -100,9 +108,11 @@ following argument is optional and retains the established order and default;
 for example `map(2, 10, 4)` draws BG2 starting at source cell `(10,4)`.
 Migrating an old `map(cell_x, cell_y, ...)` call means prefixing its intended
 BG: `map(0, cell_x, cell_y, ...)`. The final `mask` remains a spritesheet-flag
-filter, not a background number.
+filter, not a background number. The two-argument `mget` and three-argument
+`mset` forms remain source-compatible BG0 operations. Their longer forms put
+the logical BG first. Invalid BGs and coordinates make `mget` return 0 and
+`mset` do nothing, matching the existing out-of-range policy.
 
 See [Graphics model](graphics-model.md) and
-[Render-mode compatibility](render-modes.md) for its ordering and renderer
-contract. Stage 2 deliberately leaves `mget`/`mset` on BG0; layer-aware runtime
-mutation requires a separately versioned public API decision.
+[Render-mode compatibility](render-modes.md) for ordering, storage retention,
+AUTO restrictions, and the renderer contract.

@@ -29,6 +29,16 @@ builtin to be classified here and in code.
 "Both" describes API semantics implemented by both linked backends. "Mode 0
 conditional" still requires the exact call shape and resource proof below.
 
+All public builtin arities are measured after Lua expression-list adjustment.
+Only a bare final call expands to its declared result count; `(call())` is one
+value, and a final zero-result builtin contributes no argument while still
+executing. Mode 4 accepts every otherwise valid adjusted list. For a Mode 0
+conditional drawing builtin, an expanded multi/zero-result argument list is
+currently rejected with a source-positioned shape diagnostic because its
+resource proof requires explicit argument expressions; adding parentheses or
+spelling the arguments explicitly removes that ambiguity without changing the
+runtime API.
+
 ## Implemented Mode 0 subset
 
 `mtile build -renderer mode0 project-dir` succeeds only when the analyzer can
@@ -98,10 +108,11 @@ prove all of these conditions:
 - the BG tile budget fits: zero/one/two/three/four map layers allow at most
   1024/960/896/832/768 sheet cells respectively.
 
-`camera`, `sset`, `mset`, and `fset` are supported. Large logical maps use a
-deterministic 64x32 hardware window; mutations patch or invalidate only the
+`camera`, `sset`, both `mget`/`mset` arities, and `fset` are supported. Large
+logical maps use a deterministic 64x32 hardware window; mutations patch or invalidate only the
 affected visible tile/map state and off-screen cells never alias a wrapped
-screen-block entry. An `mset`/`fset` after a map pass leaves that already
+screen-block entry. Layered mutation patches only hardware passes backed by
+the same logical source BG. An `mset`/`fset` after a map pass leaves that already
 rasterized frame unchanged and rematerializes the affected layer on the next
 pass, matching Mode 4 call-order semantics. Each map pass owns a regular 8bpp
 BG layer, objects/text use OAM and OBJ VRAM, source color 0 remains transparent, and
@@ -211,8 +222,9 @@ authored non-empty planes in logical BG0-to-BG3 order. `map(bg, ...)` selects
 one logical plane; every argument after `bg` is optional. BG0 is back and BG3
 is front. Empty logical gaps are removed from storage and Mode 0 allocation:
 if only BG1 and BG3 contain cells, they occupy two dense hardware BG slots
-while retaining their logical IDs and painter order. An `mset()` call keeps
-initially empty BG0 resident because it may become visible at runtime.
+while retaining their logical IDs and painter order. A legacy `mset(x,y,id)`
+keeps initially empty BG0 resident; `mset(bg,x,y,id)` keeps a literal target
+resident, while a dynamic target conservatively retains every logical plane.
 
 Mixing `map()` with explicit calls, duplicating a plane, using a
 dynamic/missing ID, reversing order, or nesting/conditioning a map call is an
@@ -261,8 +273,8 @@ visible VRAM tile/map copies are separate.
 | `sset` | Both | Update the mutable logical sheet and invalidate or upload every affected BG/OBJ tile before it is next drawn. Mode 0 additionally applies the statically bounded call-placement rule above. |
 | `fget` | Both | Read the logical sprite flag byte used by map-layer filtering. |
 | `fset` | Both | Update flags so later `map` calls observe the new value in either backend. |
-| `mget` | Both | Read legacy BG0, including streamed-map edits. Layer-aware mutation is not part of Stage 2. |
-| `mset` | Both | Update legacy BG0 and invalidate or patch any visible BG0-backed streamed tilemap entry. BG1-BG3 are authored but runtime-static in Stage 2. |
+| `mget` | Both | `mget(x,y)` reads legacy BG0; `mget(bg,x,y)` reads logical BG0..BG3. Invalid layers/coordinates and sparse absent planes return 0. Both forms read the authoritative compact or streamed map plus its edit overlay, independently of renderer. |
+| `mset` | Both | `mset(x,y,id)` updates legacy BG0; `mset(bg,x,y,id)` updates logical BG0..BG3. Invalid inputs are no-ops. Mode 0 patches or invalidates only visible passes whose logical source matches the target, preserving draw-call order exactly. A literal target retains that plane in compact generated storage; a dynamic target retains all logical planes. AUTO additionally requires a literal layer and the bounded placement/count rule, while forced Mode 0 supports dynamic layers exactly. |
 
 ## Renderer-independent API
 
@@ -272,10 +284,10 @@ costs still count toward the frame budget.
 | Area | Builtins | Notes |
 | --- | --- | --- |
 | Input | `btn`, `btnp` | Same GBA keypad state in either backend. |
-| Math | `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`, `atan2`, `sqrt`, `rnd`, `srand` | Fixed-point math and PRNG behavior remain unchanged. First-observed numeric globals, locals, loops, expressions, and numeric record fields lower to native `rt.Number` identically in both renderers and must retain that type. Direct user-function parameters do likewise only when all static call sites are numeric. Return positions specialize independently when every path supplies a number in that slot and no path falls through; a mixed tuple may therefore use both `rt.Number` and `rt.Value`. Missing, mixed, or unproven positions retain `rt.Value` in both renderers. Transitively non-allocating user calls bypass temporary GC-root wrappers identically in both renderers; any possible table/string allocation or unknown call effect retains protection. |
+| Math | `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`, `atan2`, `sqrt`, `rnd`, `srand` | Fixed-point math and PRNG behavior remain unchanged. `%` uses Lua floor-modulo signs and `^` requires an integer literal exponent; both rules are renderer-independent. First-observed numeric globals, locals, loops, expressions, and numeric record fields lower to native `rt.Number` identically in both renderers and must retain that type. Direct user-function parameters do likewise only when all static call sites are numeric. Return positions specialize independently when every path supplies a number in that slot and no path falls through; a mixed tuple may therefore use both `rt.Number` and `rt.Value`. Missing, mixed, or unproven positions retain `rt.Value` in both renderers. Transitively non-allocating user calls bypass temporary GC-root wrappers identically in both renderers; any possible table/string allocation or unknown call effect retains protection. Transitive root-stack overflow and root-growing recursion fail during transpilation in either renderer. |
 | Bitwise | `band`, `bor`, `bxor`, `bnot`, `shl`, `shr`, `lshr`, `rotl`, `rotr` | No graphics state. |
 | Tables | `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach` | Renderer-independent. Bracket indexing remains fully dynamic except for fixed global numeric array literals proven not to escape, shadow, use hash fields, or receive an explicit non-number; those use compact native Number slots identically in both renderers and must remain numeric. Static field syntax (`object.x`) resolves and validates its field slot once per access site, then assumes a stable table type/layout in both renderers; use `object["x"]` for dynamic shapes. |
-| Strings | `sub`, `tostr`, `tonum`, `chr`, `ord` | No graphics state. |
+| Strings | `sub`, `tostr`, `tonum`, `chr`, `ord` | No graphics state. Static and heap strings compare with the same bytewise lexicographic ordering in both renderers; over-capacity static strings fail during transpilation instead of becoming nil at runtime. |
 | Time/telemetry | `t`, `time`, `stat` | API shape is unchanged; renderer-dependent CPU counters reported by `stat` will naturally differ. |
 | Audio | `sfx`, `music`, `sample`, `gba_note`, `gba_stop` | PSG/audio scheduling is independent of the display mode. |
 | Debug | `printh` | Does not affect display-mode selection. |
@@ -316,10 +328,13 @@ Selection is build-time:
 AUTO profile `tile-v1` accepts the semantic subset above plus only these
 mutation shapes: the already bounded direct `sset` calls, at most 16 direct
 `mset` calls per `_update` (any number of direct initialization calls), and
-`fset` during `_init` only. Nested/unbounded `mset` and runtime `fset` remain
-available under forced `mode0`, but AUTO chooses Mode 4 because their cost is
-not statically proven. The checked-in [paired benchmark evidence](benchmarks/render-modes/README.md)
-records the crossover that drives this rule.
+`fset` during `_init` only. Four-argument `mset` calls additionally use a
+numeric-literal layer. Nested/unbounded or dynamic-layer `mset` and runtime
+`fset` remain available under forced `mode0`, but AUTO chooses Mode 4 because
+their widest cost is not statically proven. `mget(bg,x,y)` adds no renderer
+upload and has no extra AUTO restriction. The checked-in
+[paired benchmark evidence](benchmarks/render-modes/README.md) records the
+accepted shapes and crossover decisions.
 
 The project preference lives in `project.json`:
 

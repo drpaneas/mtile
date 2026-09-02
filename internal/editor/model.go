@@ -718,6 +718,137 @@ func (m *Model) SetMapCell(layer, x, y, id int) (bool, error) {
 	return m.Map.SetCell(layer, x, y, id)
 }
 
+// MoveMapArea atomically relocates one rectangular region within a single
+// background plane. Source cells are snapshotted before any clearing so
+// overlapping moves behave like a real cut-and-place operation. Moving BG0
+// keeps a legacy map compact; moving authored data on BG1-BG3 promotes it via
+// Map.SetCell using the same compatibility path as ordinary painting.
+func (m *Model) MoveMapArea(layer, sourceX, sourceY, width, height, destinationX, destinationY int) (bool, error) {
+	return m.placeMapArea(layer, layer, sourceX, sourceY, width, height, destinationX, destinationY, true, true)
+}
+
+// CopyMapArea atomically duplicates one rectangular region within a single
+// background plane. Source cells are snapshotted before writing, so an
+// overlapping destination receives the original area rather than a partially
+// updated one.
+func (m *Model) CopyMapArea(layer, sourceX, sourceY, width, height, destinationX, destinationY int) (bool, error) {
+	return m.placeMapArea(layer, layer, sourceX, sourceY, width, height, destinationX, destinationY, false, true)
+}
+
+// MoveMapAreaToLayer relocates an area between logical background planes.
+// Transparent source cells merge without erasing destination art. Occupied
+// destination cells are rejected unless overwrite is explicitly enabled.
+func (m *Model) MoveMapAreaToLayer(sourceLayer, destinationLayer, sourceX, sourceY, width, height, destinationX, destinationY int, overwrite bool) (bool, error) {
+	return m.placeMapArea(sourceLayer, destinationLayer, sourceX, sourceY, width, height, destinationX, destinationY, true, overwrite)
+}
+
+// CopyMapAreaToLayer duplicates an area between logical background planes
+// with the same transparent-merge and collision rules as MoveMapAreaToLayer.
+func (m *Model) CopyMapAreaToLayer(sourceLayer, destinationLayer, sourceX, sourceY, width, height, destinationX, destinationY int, overwrite bool) (bool, error) {
+	return m.placeMapArea(sourceLayer, destinationLayer, sourceX, sourceY, width, height, destinationX, destinationY, false, overwrite)
+}
+
+func (m *Model) placeMapArea(sourceLayer, destinationLayer, sourceX, sourceY, width, height, destinationX, destinationY int, clearSource, overwrite bool) (bool, error) {
+	if m == nil {
+		return false, fmt.Errorf("editor model is required")
+	}
+	if sourceLayer < 0 || sourceLayer >= assetsync.MapLayerCount {
+		return false, fmt.Errorf("source map layer BG%d is outside BG0..BG3", sourceLayer)
+	}
+	if destinationLayer < 0 || destinationLayer >= assetsync.MapLayerCount {
+		return false, fmt.Errorf("destination map layer BG%d is outside BG0..BG3", destinationLayer)
+	}
+	if width < 1 || height < 1 {
+		return false, fmt.Errorf("map area dimensions must be positive, got %dx%d", width, height)
+	}
+	if sourceX < 0 || sourceY < 0 || sourceX+width > m.Map.Width || sourceY+height > m.Map.Height {
+		return false, fmt.Errorf("source map area (%d,%d %dx%d) exceeds the %dx%d map", sourceX, sourceY, width, height, m.Map.Width, m.Map.Height)
+	}
+	if destinationX < 0 || destinationY < 0 || destinationX+width > m.Map.Width || destinationY+height > m.Map.Height {
+		return false, fmt.Errorf("destination map area (%d,%d %dx%d) exceeds the %dx%d map", destinationX, destinationY, width, height, m.Map.Width, m.Map.Height)
+	}
+	if sourceLayer == destinationLayer && sourceX == destinationX && sourceY == destinationY {
+		return false, nil
+	}
+
+	area := make([]int, width*height)
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			area[y*width+x] = m.Map.Cell(sourceLayer, sourceX+x, sourceY+y)
+		}
+	}
+
+	if sourceLayer != destinationLayer && !overwrite {
+		collisions := 0
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				if area[y*width+x] != ReservedSpriteID && m.Map.Cell(destinationLayer, destinationX+x, destinationY+y) != ReservedSpriteID {
+					collisions++
+				}
+			}
+		}
+		if collisions > 0 {
+			return false, fmt.Errorf("destination BG%d contains %d occupied tile(s); enable overwrite to replace them", destinationLayer, collisions)
+		}
+	}
+
+	candidate := cloneMap(m.Map)
+	if clearSource {
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				if _, err := candidate.SetCell(sourceLayer, sourceX+x, sourceY+y, ReservedSpriteID); err != nil {
+					return false, err
+				}
+			}
+		}
+	}
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			id := area[y*width+x]
+			if sourceLayer != destinationLayer && id == ReservedSpriteID {
+				continue
+			}
+			if _, err := candidate.SetCell(destinationLayer, destinationX+x, destinationY+y, id); err != nil {
+				return false, err
+			}
+		}
+	}
+
+	changed := mapAreaChanged(m.Map, candidate, sourceLayer, sourceX, sourceY, width, height)
+	if !changed {
+		changed = mapAreaChanged(m.Map, candidate, destinationLayer, destinationX, destinationY, width, height)
+	}
+	if !changed {
+		return false, nil
+	}
+	if _, err := assetsync.Flatten(m.Project, m.Sheet, candidate, m.ActivePalette); err != nil {
+		return false, err
+	}
+	m.Map = candidate
+	return true, nil
+}
+
+func mapAreaChanged(before, after assetsync.Map, layer, x, y, width, height int) bool {
+	for dy := 0; dy < height; dy++ {
+		for dx := 0; dx < width; dx++ {
+			if before.Cell(layer, x+dx, y+dy) != after.Cell(layer, x+dx, y+dy) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func cloneMap(value assetsync.Map) assetsync.Map {
+	cloned := value
+	cloned.Cells = slices.Clone(value.Cells)
+	cloned.Layers = slices.Clone(value.Layers)
+	for i := range cloned.Layers {
+		cloned.Layers[i].Cells = slices.Clone(value.Layers[i].Cells)
+	}
+	return cloned
+}
+
 func newCellSprite(id, x, y int) assetsync.SpriteRecord {
 	pixels := make([][]int, 8)
 	for row := range pixels {

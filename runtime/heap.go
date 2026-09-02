@@ -8,8 +8,13 @@ const (
 	heapSize   = 56 * 1024
 	maxHandles = 2048
 	maxGlobals = 256
-	maxLocals  = 512
-	maxTemps   = 64
+	// MaxLocalRoots is exported so the transpiler can reject generated call
+	// sites whose statically known roots cannot fit in Context's fixed stack.
+	// Keeping the compiler and runtime on the same constant prevents a silent
+	// nil result if that capacity changes in either package.
+	MaxLocalRoots = 512
+	maxLocals     = MaxLocalRoots
+	maxTemps      = 64
 )
 
 // heapSpacePair is used only by the host implementation to give each test

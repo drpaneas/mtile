@@ -71,8 +71,8 @@ type Context struct {
 	heap        Heap
 	heapReady   bool
 	lastHeapErr HeapError
-	staticTab   [maxStaticStrings]StaticString
-	staticHold  [maxStaticStrings]string
+	staticTab   [MaxStaticStrings]StaticString
+	staticHold  [MaxStaticStrings]string
 	staticN     uint16
 
 	sfxPlayer   *audio.SFXPlayer

@@ -77,10 +77,6 @@ func (c *Context) ClearMapError() {
 	}
 }
 
-func (c *Context) mapStreamingGet(x, y int) uint16 {
-	return c.mapStreamingGetLayer(0, x, y)
-}
-
 func (c *Context) mapStreamingGetLayer(layer, x, y int) uint16 {
 	if c == nil || c.cart == nil || !c.cart.MapStreaming || layer < 0 || layer >= c.cart.MapLayers || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return 0
@@ -157,6 +153,68 @@ func (c *Context) mapStreamingSet(x, y int, value uint16) bool {
 		if c.cart.Map[cacheIndex] == value {
 			// A write that already matches ROM (or the current cached value)
 			// needs no overlay entry and cannot consume the edit budget.
+			return false
+		}
+		editSlot = c.mapEditInsert(index, value)
+		if editSlot < 0 {
+			c.mapError = MapEditFull
+			return false
+		}
+	} else {
+		if c.cart.MapEdits[editSlot].Value == value {
+			return false
+		}
+		c.cart.MapEdits[editSlot].Value = value
+	}
+	if slot >= 0 {
+		c.touchMapChunk(slot)
+		localX := x % MapChunkWidth
+		localY := y % MapChunkHeight
+		c.cart.Map[slot*MapChunkCells+localY*MapChunkWidth+localX] = value
+	}
+	return true
+}
+
+// mapStreamingSetLayer is the layered counterpart of the deliberately
+// BG0-specialized compatibility path above. Sparse edit indices use compact
+// storage-plane order, while cache keys retain the logical background ID.
+func (c *Context) mapStreamingSetLayer(layer, x, y int, value uint16) bool {
+	if c == nil || c.cart == nil || !c.cart.MapStreaming || layer < 0 || layer >= c.cart.MapLayers ||
+		x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
+		return false
+	}
+	storageLayer, present := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
+	if !present {
+		c.mapError = MapCacheInvalid
+		return false
+	}
+	index, ok := mapLayerCellIndex(storageLayer, x, y, c.cart.MapW, c.cart.MapH, mapMaskPopulation(c.cart.MapPlaneMask))
+	if !ok {
+		c.mapError = MapCacheInvalid
+		return false
+	}
+	slot, editSlot := c.mapEditLookupSlot(index)
+	if editSlot < 0 {
+		if c.mapEditCount >= MapEditFillLimit {
+			if uint64(index) >= uint64(len(c.mapROM)) {
+				c.mapError = MapCacheInvalid
+				return false
+			}
+			if c.mapROM[int(index)] != value {
+				c.mapError = MapEditFull
+			}
+			return false
+		}
+		if slot < 0 {
+			slot = c.loadMapLayerChunk(layer, x/MapChunkWidth, y/MapChunkHeight)
+			if slot < 0 {
+				return false
+			}
+		}
+		localX := x % MapChunkWidth
+		localY := y % MapChunkHeight
+		cacheIndex := slot*MapChunkCells + localY*MapChunkWidth + localX
+		if c.cart.Map[cacheIndex] == value {
 			return false
 		}
 		editSlot = c.mapEditInsert(index, value)

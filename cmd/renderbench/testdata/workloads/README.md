@@ -120,6 +120,9 @@ contract and its renderer parity:
 | `map_arities_short.lua` | `map(bg, ...)` argument counts 1–4 preserve every omitted default. |
 | `map_arities_long.lua` | `map(bg, ...)` argument counts 5–8 preserve the positional viewport/mask contract. |
 | `map_mutation_isolation.lua` | `mset()` targets one logical map coordinate and only matching source regions are dirtied. |
+| `layered_mget.lua` | Sixteen `mget(1,x,y)` reads per update exercise a platformer-style collision workload on BG1. |
+| `layered_mset16.lua` | Sixteen literal-layer `mset(1,x,y,id)` writes exercise the widest layered mutation shape admitted by AUTO. |
+| `layered_map_dynamic.lua` | Dynamic `mget(layer,...)` and `mset(layer,...)` remain exact in forced Mode 0; AUTO deliberately withholds dynamic-layer mutation pending a separate cost proof. |
 | `object_order_current.lua` | Mode 0 objects follow every map and remain in front with OBJ priority 0. |
 | `object_depth_lanes.lua` | Interleaved objects occupy the four exact BG-relative OBJ priority lanes. |
 

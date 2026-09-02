@@ -23,6 +23,79 @@ end
 	}
 }
 
+func TestExpandedMsetArgumentsRetainConservativeMapPlanes(t *testing.T) {
+	generated, report, err := TranspileWithReport("expanded-mset.lua", `
+function edit() return 2, 0, 0, 7 end
+function _update() mset(edit()) end
+`, Options{Renderer: RendererMode4, MapW: 1, MapH: 1, MapLayers: 4, Map: make([]uint16, 4)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.MapPlaneMask != 0x0f {
+		t.Fatalf("map plane mask = %04b, want all planes for expanded dynamic layer", report.MapPlaneMask)
+	}
+	if !strings.Contains(generated, "c.MsetLayer(") {
+		t.Fatalf("expanded four-result mset did not lower to layered mutation:\n%s", generated)
+	}
+}
+
+func TestMode0RejectsExpandedConditionalBuiltinShape(t *testing.T) {
+	source := `
+function draw_args() return 1, 8, 8 end
+function _draw()
+  cls()
+  spr(draw_args())
+end
+`
+	_, _, err := TranspileWithReport("expanded-spr.lua", source, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8})
+	if err == nil || !strings.Contains(err.Error(), "M0_DRAW_SHAPE") || !strings.Contains(err.Error(), "expanded multi-results") {
+		t.Fatalf("forced Mode 0 error = %v, want explicit expanded-shape rejection", err)
+	}
+	_, report, err := TranspileWithReport("expanded-spr.lua", source, Options{Renderer: RendererAuto, SheetW: 16, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "expanded multi-results") {
+		t.Fatalf("AUTO report = %+v, want conservative Mode 4 fallback", report)
+	}
+}
+
+func TestMode0TreatsOrdinaryParenthesesAsStaticShapes(t *testing.T) {
+	_, report, err := TranspileWithReport("parenthesized-mode0.lua", `
+local frame = 1
+function _init() palt((0), (true)) end
+function _draw()
+  cls((0))
+  print(("ok"), (8), (8), (7))
+  spr((frame), (16), (16))
+end
+`, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || !report.Mode0Text || !report.Mode0Objects {
+		t.Fatalf("report = %+v, want parenthesized static Mode 0 proof", report)
+	}
+}
+
+func TestAutoTreatsExpandedLayeredMsetAsDynamicCost(t *testing.T) {
+	source := `
+function edit() return 1, 0, 0, 7 end
+function _update() mset(edit()) end
+function _draw() cls() map() end
+`
+	_, report, err := TranspileWithReport("expanded-auto-mset.lua", source, Options{
+		Renderer: RendererAuto, SheetW: 8, SheetH: 8,
+		MapW: 1, MapH: 1, MapLayers: 2, Map: []uint16{1, 0},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || report.Reason != reasonAutoMode0CostUnknown || !strings.Contains(report.Diagnostic, "layer argument") {
+		t.Fatalf("AUTO report = %+v, want dynamic-layer cost fallback", report)
+	}
+}
+
 func TestMode0AcceptsBackdropAndStaticTextWithoutMap(t *testing.T) {
 	for _, renderer := range []Renderer{RendererMode0, RendererAuto} {
 		_, report, err := TranspileWithReport("text-only.lua", `
@@ -225,6 +298,54 @@ function _draw() cls() map() end
 	}
 	if !strings.Contains(generated, "var mapROM = [ 2 ]uint16") || !strings.Contains(generated, "c.MapAll(1)") {
 		t.Fatalf("mutable BG0 storage was omitted:\n%s", generated)
+	}
+}
+
+func TestLayeredMsetKeepsTargetedEmptyPlaneAllocated(t *testing.T) {
+	generated, report, err := TranspileWithReport("mutable-bg2.lua", `
+function _update() mset(2,0,0,1) end
+function _draw() cls() map() end
+`, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8, MapW: 2, MapH: 1, MapLayers: 4, Map: make([]uint16, 8)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0Layers != 1 || report.MapPlaneMask != 0x04 || report.MapDrawMask != 0x04 {
+		t.Fatalf("mutable BG2 report = %+v", report)
+	}
+	for _, want := range []string{"var mapROM = [ 2 ]uint16", "c.MsetLayer(", "c.MapAll(4)"} {
+		if !strings.Contains(generated, want) {
+			t.Fatalf("mutable BG2 generation missing %q:\n%s", want, generated)
+		}
+	}
+}
+
+func TestLayeredMsetStorageUsesRuntimeFixedPointLayer(t *testing.T) {
+	generated, report, err := TranspileWithReport("fractional-layer.lua", `
+function _update() mset(1.5,0,0,1) end
+function _draw() cls() map() end
+`, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8, MapW: 2, MapH: 1, MapLayers: 4, Map: make([]uint16, 8)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.MapPlaneMask != 0x02 || report.MapDrawMask != 0x02 {
+		t.Fatalf("fractional literal report = %+v, want runtime-floored BG1", report)
+	}
+	if !strings.Contains(generated, "c.MsetLayer(") {
+		t.Fatalf("fractional BG1 generation missing layered write:\n%s", generated)
+	}
+}
+
+func TestDynamicLayeredMsetRetainsEveryLogicalPlane(t *testing.T) {
+	_, report, err := TranspileWithReport("mutable-dynamic.lua", `
+bg = 2
+function _update() mset(bg,0,0,1) end
+function _draw() cls() map() end
+`, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8, MapW: 2, MapH: 1, MapLayers: 4, Map: make([]uint16, 8)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0Layers != 4 || report.MapPlaneMask != 0x0f || report.MapDrawMask != 0x0f {
+		t.Fatalf("dynamic layered mset report = %+v, want all four retained planes", report)
 	}
 }
 
@@ -809,7 +930,7 @@ func TestMode0RejectsDynamicOrControlCodeText(t *testing.T) {
 	tests := []string{
 		`function _draw() cls() map() print(label,0,0,7) end`,
 		"function _draw() cls() map() print(\"line\\n\",0,0,7) end",
-		`function _draw() cls() map() print("text",0,0,color) end`,
+		`function _draw() cls() map() print("text",0,0,ink) end`,
 		`function _draw() cls() map() print("implicit") end`,
 	}
 	for index, source := range tests {
@@ -941,15 +1062,49 @@ func TestRendererAutoFallsBackForRuntimeAssetMutationCost(t *testing.T) {
 }
 
 func TestRendererAutoAcceptsEvidenceBoundedRuntimeMutations(t *testing.T) {
-	updates := "  sset(8,0,12)\n" + strings.Repeat("  mset(0,0,1)\n", 16)
+	updates := "  sset(8,0,12)\n" + strings.Repeat("  mset(1,0,0,1)\n", 16)
 	source := "function _init() fset(1,0,true) end\nfunction _update()\n" + updates + "end\nfunction _draw() cls() map() end"
 	_, report, err := TranspileWithReport("bounded.lua", source,
-		Options{Renderer: RendererAuto, SheetW: 16, SheetH: 8, MapW: 30, MapH: 20})
+		Options{Renderer: RendererAuto, SheetW: 16, SheetH: 8, MapW: 30, MapH: 20, MapLayers: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if report.Selected != RendererMode0 || report.Reason != reasonAutoMode0Eligible {
 		t.Fatalf("report = %+v", report)
+	}
+}
+
+func TestRendererAutoFallsBackForDynamicLayeredMsetCost(t *testing.T) {
+	source := `
+bg = 1
+function _update()
+  mset(bg,0,0,1)
+end
+function _draw()
+  cls()
+  map()
+end`
+	_, report, err := TranspileWithReport("dynamic-layer-mset.lua", source,
+		Options{Renderer: RendererAuto, SheetW: 16, SheetH: 8, MapW: 30, MapH: 20, MapLayers: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || report.Reason != reasonAutoMode0CostUnknown {
+		t.Fatalf("report = %+v", report)
+	}
+	if !strings.Contains(report.Diagnostic, reasonMode0CostUnproven) ||
+		!strings.Contains(report.Diagnostic, "dynamic-layer-mset.lua:4") ||
+		!strings.Contains(report.Diagnostic, "numeric literal") {
+		t.Fatalf("diagnostic = %q", report.Diagnostic)
+	}
+
+	_, forced, err := TranspileWithReport("dynamic-layer-mset.lua", source,
+		Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8, MapW: 30, MapH: 20, MapLayers: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if forced.Selected != RendererMode0 || forced.MapPlaneMask != 0x0f {
+		t.Fatalf("forced report = %+v, want exact Mode 0 with all planes retained", forced)
 	}
 }
 

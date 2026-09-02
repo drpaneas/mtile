@@ -185,7 +185,9 @@ Projects contain one shared sheet and either a legacy BG0 map or four versioned
 BG0-BG3 planes. The Map Editor selects and hides planes like a layer stack;
 `map()` draws every non-empty authored plane, while every non-empty
 `map(bg, ...)` call uses its first argument as the selected plane. Old
-positional calls migrate by prefixing the intended BG number.
+positional calls migrate by prefixing the intended BG number. Map data access
+similarly accepts `mget(bg,x,y)` and `mset(bg,x,y,id)`, while the legacy shorter
+forms remain exact BG0 aliases.
 See the [graphics model](docs/graphics-model.md) and
 [map asset schema](docs/map-assets.md) for ordering, migration, masks,
 parallax, mutation, and Mode 0 BG/OBJ behavior.
@@ -267,8 +269,9 @@ statically proven map layers, camera/streaming/mutations, bounded sprites and
 text, palette remaps, full clip reset, and aligned unscaled `sspr`; unsupported
 forms fail before TinyGo. `auto` combines that semantic proof with the
 benchmark-backed `tile-v1` cost profile: bounded `sset`/`mset` remain eligible,
-while runtime `fset` and unbounded mutation fall back exactly to Mode 4 with a
-diagnostic. The corresponding
+including literal-layer `mset(bg,...)`, while runtime `fset`, dynamic-layer
+mutation, and unbounded mutation fall back exactly to Mode 4 with a diagnostic.
+The corresponding
 [engineering and benchmark plan](docs/render-mode-plan.md) defines the semantic
 and performance gates.
 
@@ -330,10 +333,40 @@ are analyzed slot by slot, so `(number, string, number)` becomes
 `(rt.Number, rt.Value, rt.Number)`. Mixed, missing, recursive-unknown, or
 otherwise unproven positions retain general Lua values. A specialized
 parameter or result position must remain numeric for the duration of the call.
+Lua expression-list adjustment is preserved at assignments, returns, table
+constructors, and calls: only a bare final call expands to its declared result
+count; parentheses collapse it to one value; a zero-result final call supplies
+no value but still executes; missing destinations are nil-filled and excess
+results are discarded. Builtin arity checks use that effective list rather
+than the number of written argument expressions.
 Calls to transitively proven non-allocating user functions bypass the temporary
 GC-root wrapper. Functions that may create/grow tables or strings, contain an
 unknown allocation effect, or participate in an unproven recursive cycle keep
-the protected call path. This changes call cost, not Lua-visible semantics.
+the protected call path. The transpiler proves the complete transitive root
+budget and rejects an over-capacity call chain or a recursive cycle whose live
+roots can grow without bound; it never defers that case to a silent runtime
+nil/OOM fallback. This changes call cost, not Lua-visible semantics.
+
+Arithmetic uses the runtime's signed 16:16 domain. `%` follows Lua floor-modulo
+sign rules, string ordering is bytewise lexicographic for both static and heap
+strings, and `^` currently requires an integer literal exponent (including a
+parenthesized or negated literal) so the fixed-point result is exact and
+bounded. Dynamic or fractional exponents fail at their source position.
+Table literals, static strings, and their generated registries are checked
+against runtime capacities before Go generation.
+
+Calls are statically bound. Function/builtin values, dynamic calls, local
+function declarations, namespace aliases/escapes, and later mutation of a
+statically lowered function or namespace are rejected explicitly. Every
+explicitly initialized table that backs such a namespace must use a fresh table
+constructor, including nested namespace fields; this prevents an older table
+alias from mutating statically lowered dispatch. An implicit method `self` may
+access and mutate ordinary data fields, but it cannot escape, be rebound, or be
+shadowed. A genuinely local data table may shadow a namespace for ordinary
+field/index access, but calling through that shadow is still dynamic and
+unsupported. Top-level locals have declaration-order
+visibility and become persistent Game fields; nested block locals remain
+lexical, including compiler-generated temporaries for compound assignment.
 
 Rejected at parse time: closures, `goto` / labels, variadic functions, and
 `string.format`. PICO-8-style `foreach(table, function_name)` is supported as

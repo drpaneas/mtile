@@ -88,8 +88,9 @@ hardware BG0 and BG1, so they reserve two screen shadows rather than four.
 
 The generated map payload uses the same dense idea. Only non-empty authored
 planes are emitted to ROM/EWRAM, with a logical-plane mask translating BG IDs
-to storage slots. `mset()` keeps BG0 allocated even if it starts empty because
-runtime mutation can make it visible.
+to storage slots. Legacy `mset(x,y,id)` keeps BG0 allocated even if it starts
+empty. `mset(bg,x,y,id)` keeps its literal target plane; a dynamic target
+conservatively keeps all logical planes because any one may become visible.
 
 Each Mode 0 pass owns a 64x32 regular 8bpp hardware background window and two
 screen blocks. Zero, one, two, three, and four passes therefore allow at most
@@ -129,10 +130,11 @@ corresponding streamed tile window.
 
 The logical assets remain authoritative in both renderers:
 
-- `mset(x, y, id)` and `mget(x,y)` retain their legacy BG0 meaning. Explicit
-  mutation of BG1-BG3 is intentionally not added in this stage; those planes
-  are static at runtime until a separately specified layer-aware mutation API
-  is accepted.
+- `mget(x,y)` and `mset(x,y,id)` retain their legacy BG0 meaning.
+  `mget(bg,x,y)` and `mset(bg,x,y,id)` put the logical BG0..BG3 first. Missing
+  planes and invalid reads return 0; invalid writes are no-ops. Compact and
+  streamed maps share this contract, including edits that survive cache
+  eviction.
 - `sset(x, y, color)` changes one spritesheet pixel. If that cell is used by
   both a map and an object, both Mode 0 VRAM copies are synchronized.
 - `fset(id, bit, value)` changes the flags for a tile ID, potentially changing
@@ -142,7 +144,7 @@ A stateful block normally changes its own map cell:
 
 ```lua
 if block_hit then
-  mset(block_x, block_y, used_block_tile)
+  mset(1, block_x, block_y, used_block_tile)
 end
 ```
 
@@ -172,7 +174,11 @@ order through the OAM compaction pass.
 The Sprite Editor exposes the shared sheet and eight generic flag bits. The
 Map Editor exposes a fixed horizontal BG0-to-BG3 toolbar below the canvas,
 per-layer visibility, active-layer selection, composite preview, and isolated
-painting/erasing. It does not yet show:
+painting/erasing. Move Area and Copy Area select rectangular cell regions and
+place them within one plane or onto a selected target plane. Cross-plane
+transfers merge transparent source cells, require explicit Shift confirmation
+before replacing occupied target cells, and commit atomically for undo. It does
+not yet show:
 
 - the camera captured by each pass;
 - BG/OBJ VRAM residency; or
@@ -232,7 +238,8 @@ The baseline includes:
 - this document and [Render-mode compatibility](render-modes.md);
 - host tests for independent two- and four-background state;
 - checked-in `layers4`, `parallax_layers`, `map_arities_short`,
-  `map_arities_long`, `map_mutation_isolation`, and `object_order_current`
+  `map_arities_long`, `map_mutation_isolation`, `layered_mget`,
+  `layered_mset16`, `layered_map_dynamic`, and `object_order_current`
   characterization workloads; and
 - the [`background-layers`](../examples/background-layers/README.md) project,
   which supplies four editor-visible authored planes and draws them with four

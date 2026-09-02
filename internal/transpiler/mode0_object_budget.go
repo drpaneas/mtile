@@ -133,7 +133,7 @@ func mode0ObjectBudgetForDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 			}
 			addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
 		case "print":
-			text, ok := call.Args[0].(*luaparser.StringExpr)
+			text, ok := unparenExpr(call.Args[0]).(*luaparser.StringExpr)
 			if !ok {
 				continue
 			}

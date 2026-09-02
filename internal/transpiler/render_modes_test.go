@@ -62,6 +62,20 @@ func TestMapBuiltinIncludesExplicitBackgroundForm(t *testing.T) {
 	}
 }
 
+func TestLayeredMapMemoryBuiltinsPreserveLegacyArities(t *testing.T) {
+	for name, want := range map[string]BuiltinSpec{
+		"mget": {GoName: "Mget", MinArgs: 2, MaxArgs: 3, Results: 1},
+		"mset": {GoName: "Mset", MinArgs: 3, MaxArgs: 4, Results: 0},
+	} {
+		if got := Builtins[name]; got != want {
+			t.Fatalf("%s spec = %+v, want %+v", name, got, want)
+		}
+		if got := BuiltinRendererCompatibility(name); got != RendererBoth {
+			t.Fatalf("%s renderer class = %v, want RendererBoth", name, got)
+		}
+	}
+}
+
 func TestRenderModeDocumentationMentionsEveryBuiltin(t *testing.T) {
 	document, err := os.ReadFile("../../docs/render-modes.md")
 	if err != nil {

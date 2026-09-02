@@ -100,7 +100,7 @@ func (c *Context) NumberArrayLen(array Value) int {
 type TableFieldCache uint16
 
 func tableLayoutSize(arrayCap, hashCap uint16) (uint32, uint32, bool) {
-	if arrayCap > maxArrayCap || hashCap > maxHashCap {
+	if arrayCap > MaxTableArrayCapacity || hashCap > MaxTableHashCapacity {
 		return 0, 0, false
 	}
 	slots := uint32(arrayCap) + 2*uint32(hashCap)

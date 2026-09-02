@@ -41,6 +41,49 @@ end
 	}
 }
 
+func TestMode0ResolvesChainedParenthesizedSpriteConstantsDeterministically(t *testing.T) {
+	source := `
+FRAME_BASE = 1
+FRAME_ALIAS = (FRAME_BASE)
+player_sprite = (FRAME_ALIAS)
+
+function _draw()
+  cls()
+  spr(player_sprite, 0, 0)
+end
+`
+	for run := 0; run < 20; run++ {
+		_, report, err := TranspileWithReport("finite-constant-chain.lua", source, Options{
+			Renderer: RendererMode0,
+			SheetW:   16,
+			SheetH:   8,
+		})
+		if err != nil {
+			t.Fatalf("run %d: %v", run, err)
+		}
+		if report.Selected != RendererMode0 {
+			t.Fatalf("run %d report = %+v, want Mode 0", run, report)
+		}
+	}
+}
+
+func TestMode0RejectsForwardReferencedTopLevelSpriteConstant(t *testing.T) {
+	_, _, err := TranspileWithReport("forward-sprite-constant.lua", `
+FRAME_ALIAS = FRAME_BASE
+FRAME_BASE = 1
+player_sprite = FRAME_ALIAS
+
+function _draw()
+  cls()
+  spr(player_sprite, 0, 0)
+end
+`, Options{Renderer: RendererMode0, SheetW: 16, SheetH: 8})
+	if err == nil || !strings.Contains(err.Error(), reasonMode0SpriteShape) ||
+		!strings.Contains(err.Error(), "non-enumerated assignment") {
+		t.Fatalf("error = %v, want forward-reference sprite proof rejection", err)
+	}
+}
+
 func TestMode0AcceptsTopLevelLocalFiniteSpriteSet(t *testing.T) {
 	source := `
 local PLAYER_IDLE = 2

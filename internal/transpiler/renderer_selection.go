@@ -127,7 +127,7 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 			report.Diagnostic = err.Error()
 			return report, nil
 		}
-		if err := validateAutoMode0Cost(chunk); err != nil {
+		if err := validateAutoMode0Cost(chunk, plan.analysis); err != nil {
 			report.Reason = reasonAutoMode0CostUnknown
 			report.Diagnostic = err.Error()
 			return report, nil
@@ -261,6 +261,7 @@ func mode0SSprCallPackedCells(call *luaparser.CallExpr) int {
 type mapContractPlan struct {
 	storageMask uint8
 	drawMask    uint8
+	analysis    *generator
 }
 
 // validateMapContract defines the deliberately small, unambiguous map API:
@@ -269,10 +270,41 @@ type mapContractPlan struct {
 // established order and defaults. Migrating an old call therefore consists
 // only of prefixing the desired logical BG number.
 func validateMapContract(chunk *luaparser.Chunk, opts Options) (mapContractPlan, error) {
+	layers := opts.MapLayers
+	if layers == 0 {
+		layers = 1
+	}
+	if layers < 1 || layers > assetsync.MapLayerCount {
+		return mapContractPlan{}, fmt.Errorf("transpiler: map layer count %d is outside 1..%d", layers, assetsync.MapLayerCount)
+	}
+	if opts.MapW < 0 || opts.MapH < 0 {
+		return mapContractPlan{}, errors.New("transpiler: invalid map dimensions")
+	}
+	if _, ok := checkedProduct(opts.MapW, opts.MapH); !ok {
+		return mapContractPlan{}, errors.New("transpiler: map dimensions overflow")
+	}
 	plan := mapContractPlan{storageMask: authoredMapMask(opts)}
+	analysis := newGenerator(chunk, Options{})
+	if err := analysis.discoverFunctions(); err != nil {
+		return plan, err
+	}
+	if err := analysis.validateSemantics(); err != nil {
+		return plan, err
+	}
+	if err := analysis.resolveReturnArities(); err != nil {
+		return plan, err
+	}
+	if err := analysis.validateBuiltinCallArities(); err != nil {
+		return plan, err
+	}
+	plan.analysis = analysis
+	mapLayers := opts.MapLayers
+	if mapLayers == 0 {
+		mapLayers = 1
+	}
 	var draw *luaparser.FunctionDeclStmt
 	var calls []*luaparser.CallExpr
-	mutableBG0 := false
+	var mutableMask uint8
 	var visitStmt func(luaparser.Stmt)
 	visitStmt = func(stmt luaparser.Stmt) {
 		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
@@ -295,7 +327,22 @@ func validateMapContract(chunk *luaparser.Chunk, opts Options) (mapContractPlan,
 				case "map":
 					calls = append(calls, call)
 				case "mset":
-					mutableBG0 = true
+					argCount := analysis.exprListWidth(call.Args)
+					if argCount == 3 {
+						mutableMask |= 1
+						break
+					}
+					if argCount != 4 {
+						break
+					}
+					value, literal := mode0StaticRuntimeInt(call.Args[0])
+					if literal {
+						if value >= 0 && value < mapLayers {
+							mutableMask |= 1 << uint(value)
+						}
+						break
+					}
+					mutableMask |= uint8((1 << uint(mapLayers)) - 1)
 				}
 			}
 		})
@@ -303,14 +350,12 @@ func validateMapContract(chunk *luaparser.Chunk, opts Options) (mapContractPlan,
 	for _, stmt := range chunk.Body {
 		visitStmt(stmt)
 	}
-	if mutableBG0 {
-		plan.storageMask |= 1
-	}
+	plan.storageMask |= mutableMask
 	if len(calls) == 0 {
 		return plan, nil
 	}
 	for _, call := range calls {
-		if len(call.Args) > 8 {
+		if analysis.exprListWidth(call.Args) > 8 {
 			return plan, explicitMapError(call, "map() accepts at most eight arguments")
 		}
 	}
@@ -331,15 +376,11 @@ func validateMapContract(chunk *luaparser.Chunk, opts Options) (mapContractPlan,
 	if len(direct) != len(calls) {
 		return plan, explicitMapError(calls[0], "map() calls must be unconditional direct statements in _draw")
 	}
-	mapLayers := opts.MapLayers
-	if mapLayers == 0 {
-		mapLayers = 1
-	}
 	seen := [assetsync.MapLayerCount]bool{}
 	lastBG := -1
 	autoLayers := false
 	for _, call := range direct {
-		if len(call.Args) == 0 {
+		if analysis.exprListWidth(call.Args) == 0 {
 			if len(direct) != 1 {
 				return plan, explicitMapError(call, "map() cannot be mixed with map(bg) calls")
 			}
@@ -377,8 +418,12 @@ func authoredMapMask(opts Options) uint8 {
 	if layers == 0 {
 		layers = 1
 	}
-	planeCells := opts.MapW * opts.MapH
-	if planeCells <= 0 || len(opts.Map) < planeCells*layers {
+	planeCells, ok := checkedProduct(opts.MapW, opts.MapH)
+	if !ok || planeCells <= 0 {
+		return 0
+	}
+	totalCells, ok := checkedProduct(planeCells, layers)
+	if !ok || len(opts.Map) < totalCells {
 		return 0
 	}
 	var mask uint8
@@ -416,9 +461,9 @@ func explicitMapError(call *luaparser.CallExpr, detail string) error {
 // measurements prove the bounded sset/mset shapes below; runtime fset remains
 // below the profile's material-win threshold, and unbounded shapes stay on
 // Mode 4 until a later profile supplies evidence.
-func validateAutoMode0Cost(chunk *luaparser.Chunk) error {
+func validateAutoMode0Cost(chunk *luaparser.Chunk, analysis *generator) error {
 	var initFunction, update *luaparser.FunctionDeclStmt
-	var firstMset, firstFset *luaparser.CallExpr
+	var firstMset, firstDynamicLayerMset, firstFset *luaparser.CallExpr
 	var msetCalls, fsetCalls int
 	var visitStmt func(luaparser.Stmt)
 	visitStmt = func(stmt luaparser.Stmt) {
@@ -449,6 +494,11 @@ func validateAutoMode0Cost(chunk *luaparser.Chunk) error {
 				if firstMset == nil {
 					firstMset = call
 				}
+				if analysis != nil && analysis.exprListWidth(call.Args) == 4 {
+					if _, literal := staticNumberLiteral(call.Args[0]); !literal && firstDynamicLayerMset == nil {
+						firstDynamicLayerMset = call
+					}
+				}
 			case "fset":
 				fsetCalls++
 				if firstFset == nil {
@@ -461,6 +511,10 @@ func validateAutoMode0Cost(chunk *luaparser.Chunk) error {
 		visitStmt(stmt)
 	}
 	const maxAutoMsetPerUpdate = 16
+	if firstDynamicLayerMset != nil {
+		return mode0CallError(firstDynamicLayerMset, reasonMode0CostUnproven,
+			"auto requires the layer argument of mset(layer,x,y,id) to be a numeric literal; dynamic-layer mutation is exact in forced mode0 but its retained-plane and upload cost is not yet benchmark-proven")
+	}
 	directInitMset := countDirectMode0Calls(initFunction, "mset")
 	directUpdateMset := countDirectMode0Calls(update, "mset")
 	if msetCalls != directInitMset+directUpdateMset || directUpdateMset > maxAutoMsetPerUpdate {
@@ -517,6 +571,12 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			}
 			name, ok := callKey(call)
 			if !ok {
+				return
+			}
+			if plan.analysis != nil && BuiltinRendererCompatibility(name) == RendererMode0Conditional &&
+				plan.analysis.exprListWidth(call.Args) != len(call.Args) {
+				firstErr = mode0CallError(call, reasonMode0DrawShape,
+					name+"() receives expanded multi-results; Mode 0 requires explicit arguments so its static shape and object budget can be proven")
 				return
 			}
 			switch name {
@@ -780,7 +840,7 @@ func validateMode0PaltCall(call *luaparser.CallExpr) error {
 		return mode0CallError(call, reasonMode0UnsupportedCall, "Mode 0 palt() supports only default-transparency no-op forms")
 	}
 	color, literal := staticNumberLiteral(call.Args[0])
-	transparent, boolean := call.Args[1].(*luaparser.BoolExpr)
+	transparent, boolean := unparenExpr(call.Args[1]).(*luaparser.BoolExpr)
 	if !literal || color != math.Trunc(color) || color < 0 || color > 255 || !boolean ||
 		(color == 0) != transparent.Value {
 		return mode0CallError(call, reasonMode0UnsupportedCall, "Mode 0 palt() requires palt(0,true) or palt(nonzero,false)")
@@ -934,7 +994,7 @@ func validateMode0PrintCall(call *luaparser.CallExpr) (int, error) {
 	if call == nil || len(call.Args) != 4 {
 		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() requires explicit string, x, y, and color arguments")
 	}
-	text, ok := call.Args[0].(*luaparser.StringExpr)
+	text, ok := unparenExpr(call.Args[0]).(*luaparser.StringExpr)
 	if !ok {
 		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() text must be a static string literal")
 	}

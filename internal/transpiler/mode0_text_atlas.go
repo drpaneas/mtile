@@ -31,7 +31,7 @@ func mode0TextAtlasKeysForDraw(draw *luaparser.FunctionDeclStmt) []uint16 {
 		if !ok || name != "print" || len(callStmt.Call.Args) != 4 {
 			continue
 		}
-		text, ok := callStmt.Call.Args[0].(*luaparser.StringExpr)
+		text, ok := unparenExpr(callStmt.Call.Args[0]).(*luaparser.StringExpr)
 		if !ok {
 			continue
 		}

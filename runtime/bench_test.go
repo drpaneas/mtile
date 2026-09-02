@@ -188,6 +188,37 @@ func newBenchStreamingSparseContext(b *testing.B) *Context {
 	return newBenchStreamingContextWithDensity(b, true)
 }
 
+func newBenchStreamingLayeredContext(b *testing.B) *Context {
+	b.Helper()
+	const mapW, mapH, logicalLayers = 256, 256, 4
+	const mask = uint8(0x03)
+	storedLayers := mapMaskPopulation(mask)
+	sheet := make([]byte, benchSheetW*benchSheetH)
+	mapCells := make([]uint16, mapW*mapH*storedLayers)
+	for i := range mapCells {
+		mapCells[i] = uint16(1 + i%(benchSpriteN-1))
+	}
+	flags := make([]byte, benchSpriteN)
+	image := &AssetImage{
+		SheetW: benchSheetW, SheetH: benchSheetH,
+		SpriteCols: benchSheetW / 8, SpriteRows: benchSheetH / 8, SpriteN: benchSpriteN,
+		MapW: mapW, MapH: mapH, MapLayers: logicalLayers, MapPlaneMask: mask, MapStreaming: true,
+		Sheet: sheet, Map: mapCells, Flags: flags,
+	}
+	ram := &AssetMemory{
+		SheetW: benchSheetW, SheetH: benchSheetH,
+		SpriteCols: benchSheetW / 8, SpriteRows: benchSheetH / 8, SpriteN: benchSpriteN,
+		MapW: mapW, MapH: mapH, MapLayers: logicalLayers, MapPlaneMask: mask, MapStreaming: true,
+		Sheet: make([]byte, len(sheet)), Map: make([]uint16, MapCacheCells), Flags: make([]byte, len(flags)),
+		MapChunks: make([]MapChunk, MapCacheSlots), MapEdits: make([]MapEdit, MapEditCapacity),
+	}
+	c := &Context{}
+	if !c.Init(image, ram) {
+		b.Fatal("bench layered streaming context failed to Init")
+	}
+	return c
+}
+
 func newBenchStreamingContextWithDensity(b *testing.B, sparse bool) *Context {
 	b.Helper()
 	const mapW, mapH = 256, 256 // 65,536 cells > 16,384 threshold
@@ -236,6 +267,99 @@ func newBenchStreamingContextWithDensity(b *testing.B, sparse bool) *Context {
 	}
 	c.Cls(0)
 	return c
+}
+
+// --- Map data access ---
+
+var benchMapValue uint16
+
+// MgetBG0Compact is the compatibility baseline for the legacy two-argument
+// Lua mget(x,y) path. Keep this separate from layered access benchmarks so an
+// API expansion cannot hide a regression in existing collision-heavy games.
+func BenchmarkMgetBG0Compact(b *testing.B) {
+	c := newBenchContext(b)
+	var value uint16
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		value = c.Mget(i&(benchMapW-1), (i>>6)&(benchMapH-1))
+	}
+	benchMapValue = value
+}
+
+// MgetBG0StreamingWarm measures the legacy read path after its four-slot chunk
+// cache contains the queried chunk. Streaming overlays are still empty.
+func BenchmarkMgetBG0StreamingWarm(b *testing.B) {
+	c := newBenchStreamingContext(b)
+	_ = c.Mget(7, 9)
+	var value uint16
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		value = c.Mget(7, 9)
+	}
+	benchMapValue = value
+}
+
+func BenchmarkMgetBG1Compact(b *testing.B) {
+	c := newBenchLayeredContext(b, 0x03)
+	var value uint16
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		value = c.MgetLayer(1, i%30, (i/30)%20)
+	}
+	benchMapValue = value
+}
+
+func BenchmarkMgetBG1StreamingWarm(b *testing.B) {
+	c := newBenchStreamingLayeredContext(b)
+	_ = c.MgetLayer(1, 7, 9)
+	var value uint16
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		value = c.MgetLayer(1, 7, 9)
+	}
+	benchMapValue = value
+}
+
+func BenchmarkMsetBG0CompactChanged(b *testing.B) {
+	c := newBenchContext(b)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Mset(7, 9, 1+(i&1))
+	}
+}
+
+func BenchmarkMsetBG0StreamingChanged(b *testing.B) {
+	c := newBenchStreamingContext(b)
+	c.Mset(7, 9, 1)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Mset(7, 9, 1+(i&1))
+	}
+}
+
+func BenchmarkMsetBG1CompactChanged(b *testing.B) {
+	c := newBenchLayeredContext(b, 0x03)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.MsetLayer(1, 7, 9, 1+(i&1))
+	}
+}
+
+func BenchmarkMsetBG1StreamingChanged(b *testing.B) {
+	c := newBenchStreamingLayeredContext(b)
+	c.MsetLayer(1, 7, 9, 1)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.MsetLayer(1, 7, 9, 1+(i&1))
+	}
 }
 
 // --- Frame-level primitives ---

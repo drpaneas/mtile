@@ -129,12 +129,15 @@ type Options struct {
 }
 
 // BuiltinSpec is the public mapping table used by the generator and by the
-// CLI/editor validation layer. MinArgs and MaxArgs describe the Lua call surface; omitted arguments
-// are emitted as zero/nil Value defaults.
+// CLI/editor validation layer. MinArgs and MaxArgs describe the effective Lua
+// argument list after a bare trailing call expands. Results is the number of
+// values this builtin contributes when it is that trailing call. Omitted
+// arguments are emitted as zero/nil Value defaults.
 type BuiltinSpec struct {
 	GoName  string
 	MinArgs int
 	MaxArgs int
+	Results int
 }
 
 // Builtins is the Lua-to-runtime mapping table. Functions that are iterator
@@ -144,31 +147,31 @@ type BuiltinSpec struct {
 // BuiltinRendererCompatibility; adding a builtin requires classifying it there
 // and documenting its Mode 0/Mode 4 semantics in docs/render-modes.md.
 var Builtins = map[string]BuiltinSpec{
-	"cls": {"ClsV", 0, 1}, "pset": {"PsetV", 2, 3}, "pget": {"PgetV", 2, 2},
-	"line": {"LineV", 4, 5}, "rect": {"RectV", 4, 5}, "rectfill": {"RectfillV", 4, 5},
-	"circ": {"CircV", 3, 4}, "circfill": {"CircfillV", 3, 4},
-	"spr": {"SprV", 3, 7}, "sspr": {"SSprV", 6, 10}, "map": {"MapBGAtV", 0, 8},
-	"camera": {"CameraV", 0, 2}, "clip": {"ClipV", 0, 4}, "pal": {"PalV", 0, 3},
-	"palt": {"PaltV", 0, 2}, "color": {"ColorV", 0, 1}, "cursor": {"CursorV", 0, 3},
-	"print": {"PrintV", 1, 4},
-	"sget":  {"Sget", 2, 2}, "sset": {"Sset", 3, 3}, "fget": {"Fget", 1, 2},
-	"fset": {"Fset", 2, 3}, "mget": {"Mget", 2, 2}, "mset": {"Mset", 3, 3},
-	"btn": {"BtnV", 1, 2}, "btnp": {"BtnpV", 1, 2},
-	"flr": {"Flr", 1, 1}, "ceil": {"Ceil", 1, 1}, "abs": {"Abs", 1, 1},
-	"sgn": {"Sgn", 1, 1}, "min": {"Min", 2, 2}, "max": {"Max", 2, 2},
-	"mid": {"Mid", 3, 3}, "sin": {"Sin", 1, 1}, "cos": {"Cos", 1, 1},
-	"atan2": {"Atan2", 2, 2}, "sqrt": {"Sqrt", 1, 1}, "rnd": {"RndV", 0, 1},
-	"srand": {"SrandV", 1, 1}, "band": {"Band", 2, 2}, "bor": {"Bor", 2, 2},
-	"bxor": {"Bxor", 2, 2}, "bnot": {"Bnot", 1, 1}, "shl": {"Shl", 2, 2},
-	"shr": {"Shr", 2, 2}, "lshr": {"Lshr", 2, 2}, "rotl": {"Rotl", 2, 2},
-	"rotr": {"Rotr", 2, 2},
-	"add":  {"TableAdd", 2, 3}, "del": {"TableDel", 2, 2}, "deli": {"TableDeli", 1, 2},
-	"count": {"TableCount", 1, 2}, "all": {"all", 1, 1}, "pairs": {"pairs", 1, 1}, "foreach": {"foreach", 2, 2},
-	"sub": {"Sub", 2, 3}, "tostr": {"Tostr", 1, 2}, "tonum": {"Tonum", 1, 1},
-	"chr": {"Chr", 1, 1}, "ord": {"Ord", 1, 2},
-	"t": {"T", 0, 0}, "time": {"Time", 0, 0}, "stat": {"StatV", 1, 1}, "sfx": {"SFXV", 1, 4},
-	"music": {"MusicV", 0, 2}, "sample": {"SampleV", 1, 3},
-	"gba_note": {"GBANoteV", 3, 4}, "gba_stop": {"GBAStopV", 1, 1}, "printh": {"noop", 1, 2},
+	"cls": {"ClsV", 0, 1, 0}, "pset": {"PsetV", 2, 3, 0}, "pget": {"PgetV", 2, 2, 1},
+	"line": {"LineV", 4, 5, 0}, "rect": {"RectV", 4, 5, 0}, "rectfill": {"RectfillV", 4, 5, 0},
+	"circ": {"CircV", 3, 4, 0}, "circfill": {"CircfillV", 3, 4, 0},
+	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0}, "map": {"MapBGAtV", 0, 8, 0},
+	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
+	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
+	"print": {"PrintV", 1, 4, 1},
+	"sget":  {"Sget", 2, 2, 1}, "sset": {"Sset", 3, 3, 0}, "fget": {"Fget", 1, 2, 1},
+	"fset": {"Fset", 2, 3, 0}, "mget": {"Mget", 2, 3, 1}, "mset": {"Mset", 3, 4, 0},
+	"btn": {"BtnV", 1, 2, 1}, "btnp": {"BtnpV", 1, 2, 1},
+	"flr": {"Flr", 1, 1, 1}, "ceil": {"Ceil", 1, 1, 1}, "abs": {"Abs", 1, 1, 1},
+	"sgn": {"Sgn", 1, 1, 1}, "min": {"Min", 2, 2, 1}, "max": {"Max", 2, 2, 1},
+	"mid": {"Mid", 3, 3, 1}, "sin": {"Sin", 1, 1, 1}, "cos": {"Cos", 1, 1, 1},
+	"atan2": {"Atan2", 2, 2, 1}, "sqrt": {"Sqrt", 1, 1, 1}, "rnd": {"RndV", 0, 1, 1},
+	"srand": {"SrandV", 1, 1, 0}, "band": {"Band", 2, 2, 1}, "bor": {"Bor", 2, 2, 1},
+	"bxor": {"Bxor", 2, 2, 1}, "bnot": {"Bnot", 1, 1, 1}, "shl": {"Shl", 2, 2, 1},
+	"shr": {"Shr", 2, 2, 1}, "lshr": {"Lshr", 2, 2, 1}, "rotl": {"Rotl", 2, 2, 1},
+	"rotr": {"Rotr", 2, 2, 1},
+	"add":  {"TableAdd", 2, 3, 1}, "del": {"TableDel", 2, 2, 1}, "deli": {"TableDeli", 1, 2, 1},
+	"count": {"TableCount", 1, 2, 1}, "all": {"all", 1, 1, 1}, "pairs": {"pairs", 1, 1, 1}, "foreach": {"foreach", 2, 2, 0},
+	"sub": {"Sub", 2, 3, 1}, "tostr": {"Tostr", 1, 2, 1}, "tonum": {"Tonum", 1, 1, 1},
+	"chr": {"Chr", 1, 1, 1}, "ord": {"Ord", 1, 2, 1},
+	"t": {"T", 0, 0, 1}, "time": {"Time", 0, 0, 1}, "stat": {"StatV", 1, 1, 1}, "sfx": {"SFXV", 1, 4, 0},
+	"music": {"MusicV", 0, 2, 0}, "sample": {"SampleV", 1, 3, 0},
+	"gba_note": {"GBANoteV", 3, 4, 0}, "gba_stop": {"GBAStopV", 1, 1, 0}, "printh": {"noop", 1, 2, 0},
 }
 
 // Transpile parses source and returns generated Go source. Existing callers
@@ -223,6 +226,15 @@ func AnalyzeChunkGlobals(chunk *luaparser.Chunk) (GlobalReport, error) {
 	if err := g.discoverFunctions(); err != nil {
 		return g.globalReport(), err
 	}
+	if err := g.validateSemantics(); err != nil {
+		return g.globalReport(), err
+	}
+	if err := g.resolveReturnArities(); err != nil {
+		return g.globalReport(), err
+	}
+	if err := g.validateBuiltinCallArities(); err != nil {
+		return g.globalReport(), err
+	}
 	g.discoverGlobals()
 	report := g.globalReport()
 	if report.Count > report.Limit {
@@ -272,6 +284,9 @@ func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
 	if g.err != nil {
 		return "", g.err
 	}
+	if err := g.validateTransitiveRootBudget(); err != nil {
+		return "", err
+	}
 	return source, nil
 }
 
@@ -299,6 +314,14 @@ type functionInfo struct {
 	params      []string
 	paramKinds  []monoKind
 	noAlloc     bool
+	rootPeak    int
+}
+
+type rootCallEdge struct {
+	caller *functionInfo
+	callee *functionInfo
+	held   int
+	pos    luaparser.Position
 }
 
 type numericArrayInfo struct {
@@ -364,6 +387,10 @@ type generator struct {
 	scopes             []*localScope
 	err                error
 	extraRoots         []string
+	activeRootCounts   []string
+	activeRootSlots    int
+	topRootPeak        int
+	rootCalls          []rootCallEdge
 	pending            []string
 	spriteN            int
 	sheetMutable       bool
@@ -399,14 +426,10 @@ func (g *generator) declareLocalKind(name string, kind monoKind) string {
 	return goVar
 }
 
-// bindParam records a Lua parameter name as an alias for the Go function
-// parameter directly (a0, a1, ...). Go parameters are already mutable
-// locals, so no extra copy is needed even though Lua allows reassigning a
-// parameter like any other local.
-func (g *generator) bindParam(name, goVar string) {
-	g.bindParamKind(name, goVar, monoValue)
-}
-
+// bindParamKind records a Lua parameter name as an alias for the Go function
+// parameter directly (a0, a1, ...). Go parameters are already mutable locals,
+// so no extra copy is needed even though Lua allows reassigning a parameter
+// like any other local.
 func (g *generator) bindParamKind(name, goVar string, kind monoKind) {
 	top := g.scopes[len(g.scopes)-1]
 	top.entries = append(top.entries, localEntry{name: name, goVar: goVar, kind: kind})
@@ -496,6 +519,21 @@ func (g *generator) prepare() error {
 	if err := validateTargetSamples(g.opts.Samples, g.opts.SamplePCM); err != nil {
 		return err
 	}
+	if err := g.discoverFunctions(); err != nil {
+		return err
+	}
+	if err := g.validateSemantics(); err != nil {
+		return err
+	}
+	if err := g.resolveReturnArities(); err != nil {
+		return err
+	}
+	if err := g.validateBuiltinCallArities(); err != nil {
+		return err
+	}
+	if err := g.validateTableLiteralLimits(); err != nil {
+		return err
+	}
 	g.legacyAudioEnabled = len(g.opts.SFX) != 0 || len(g.opts.Music) != 0 || len(g.opts.Samples) != 0
 	if g.opts.NativeAudio != nil && g.legacyAudioEnabled {
 		return errors.New("transpiler: audio v2 cannot be combined with legacy SFX/music/sample records")
@@ -521,10 +559,6 @@ func (g *generator) prepare() error {
 		return err
 	}
 	g.opts.MapStreaming = len(g.mapCompact) > assetsync.MapStreamingThresholdCells
-	if err := g.discoverFunctions(); err != nil {
-		return err
-	}
-	g.resolveReturnArities()
 	for _, info := range g.funcList {
 		info.returnKinds = make([]monoKind, info.returnN)
 	}
@@ -560,6 +594,74 @@ func (g *generator) prepare() error {
 	}
 	for _, info := range g.funcList {
 		g.collectBlockStatics(info.decl.Body)
+	}
+	if g.err != nil {
+		return g.err
+	}
+	if err := g.validateGeneratedMemberNames(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateGeneratedMemberNames catches Lua names which are distinct in the
+// source but collapse onto the same Go selector, or collide with lifecycle,
+// wrapper, static-string, or field-cache members generated by Mtile.
+func (g *generator) validateGeneratedMemberNames() error {
+	type owner struct {
+		description string
+	}
+	members := make(map[string]owner)
+	claim := func(name, description string, position luaparser.Position) error {
+		if previous, exists := members[name]; exists {
+			where := ""
+			if position.Line != 0 {
+				where = " at " + position.String()
+			}
+			return fmt.Errorf("transpiler: generated Game member %q for %s collides with %s%s", name, description, previous.description, where)
+		}
+		members[name] = owner{description: description}
+		return nil
+	}
+	for _, name := range []string{"Init", "Update", "Draw"} {
+		if err := claim(name, "the generated lifecycle method", luaparser.Position{}); err != nil {
+			return err
+		}
+	}
+	for i := range g.statics {
+		if err := claim(fmt.Sprintf("_gluStatic%d", i), "a generated static-string field", luaparser.Position{}); err != nil {
+			return err
+		}
+	}
+	for i := 0; i < g.fieldCacheN; i++ {
+		if err := claim(fmt.Sprintf("_gluField%d", i), "a generated table-field cache", luaparser.Position{}); err != nil {
+			return err
+		}
+	}
+	for _, fn := range g.funcList {
+		position := fn.decl.Pos()
+		names := []struct {
+			name, kind string
+		}{
+			{fn.goName, fmt.Sprintf("Lua function %q", fn.key)},
+			{"__glu_call_" + fn.goName, fmt.Sprintf("the call wrapper for Lua function %q", fn.key)},
+		}
+		if fn.returnN > 1 {
+			names = append(names,
+				struct{ name, kind string }{"__glu_multi_" + fn.goName, fmt.Sprintf("the multi-return wrapper for Lua function %q", fn.key)},
+				struct{ name, kind string }{"__glu_first_" + fn.goName, fmt.Sprintf("the first-result wrapper for Lua function %q", fn.key)},
+			)
+		}
+		for _, member := range names {
+			if err := claim(member.name, member.kind, position); err != nil {
+				return err
+			}
+		}
+	}
+	for _, name := range g.globals {
+		if err := claim(g.globalGo[name], fmt.Sprintf("Lua global %q", name), g.globalOrigins[name]); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -609,8 +711,11 @@ func (g *generator) analyzeNumericArrays() {
 }
 
 func (g *generator) numericArrayUsesAreSafe(name string, declaration *luaparser.LocalAssignStmt) bool {
-	obviouslyNonNumeric := func(expr luaparser.Expr) bool {
+	var obviouslyNonNumeric func(luaparser.Expr) bool
+	obviouslyNonNumeric = func(expr luaparser.Expr) bool {
 		switch x := expr.(type) {
+		case *luaparser.ParenExpr:
+			return obviouslyNonNumeric(x.Expr)
 		case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.StringExpr, *luaparser.TableExpr:
 			return true
 		case *luaparser.UnaryExpr:
@@ -630,6 +735,8 @@ func (g *generator) numericArrayUsesAreSafe(name string, declaration *luaparser.
 		switch x := expr.(type) {
 		case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.NumberExpr, *luaparser.StringExpr:
 			return true
+		case *luaparser.ParenExpr:
+			return safeExpr(x.Expr)
 		case *luaparser.VarExpr:
 			return x.Name != name
 		case *luaparser.UnaryExpr:
@@ -858,6 +965,8 @@ func (g *generator) analyzeMonomorphicNumbers() {
 
 func numericIntent(expr luaparser.Expr) bool {
 	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return numericIntent(x.Expr)
 	case *luaparser.NumberExpr:
 		return true
 	case *luaparser.UnaryExpr:
@@ -865,7 +974,7 @@ func numericIntent(expr luaparser.Expr) bool {
 	case *luaparser.BinaryExpr:
 		switch x.Op {
 		case luaparser.OpAdd, luaparser.OpSubtract, luaparser.OpMultiply,
-			luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo,
+			luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo, luaparser.OpPower,
 			luaparser.OpBitOr, luaparser.OpBitXor, luaparser.OpBitAnd,
 			luaparser.OpShiftL, luaparser.OpShiftR, luaparser.OpShiftRLogical,
 			luaparser.OpRotateL, luaparser.OpRotateR:
@@ -1089,40 +1198,47 @@ func (g *generator) analyzeMonomorphicBlock(block *luaparser.Block, env *monomor
 }
 
 // analyzeMonomorphicValues applies Lua's expression-list width rules while
-// retaining the inferred kind of each expanded result. Only a trailing known
-// user call expands; missing positions are nil and therefore remain Value.
+// retaining the inferred kind of each expanded result. A trailing call expands
+// to its declared result arity; missing positions are nil and therefore remain
+// Value.
 func (g *generator) analyzeMonomorphicValues(values []luaparser.Expr, nWanted int, env *monomorphicAnalysisEnv, params map[*functionInfo][]functionParamObservation) []monoKind {
 	out := make([]monoKind, nWanted)
-	slot := 0
+	kinds := g.analyzeMonomorphicExprList(values, env, params)
+	for i := 0; i < len(kinds) && i < len(out); i++ {
+		out[i] = kinds[i]
+	}
+	return out
+}
+
+func (g *generator) analyzeMonomorphicExprList(values []luaparser.Expr, env *monomorphicAnalysisEnv, params map[*functionInfo][]functionParamObservation) []monoKind {
+	out := make([]monoKind, 0, len(values))
 	last := len(values) - 1
 	for i, value := range values {
 		kind := g.analyzeMonomorphicExpr(value, env, params)
 		if i == last {
 			if call, ok := value.(*luaparser.CallExpr); ok {
-				if fn := g.calledFunction(call); fn != nil {
-					if fn.returnN == 0 {
+				if arity, known := g.callResultArity(call); known {
+					if arity == 0 {
 						continue
 					}
-					if fn.returnN > 1 {
-						for j := 0; j < fn.returnN && slot < nWanted; j++ {
-							out[slot] = fn.returnKind(j)
-							slot++
+					if fn := g.calledFunction(call); fn != nil && arity > 1 {
+						for j := 0; j < fn.returnN; j++ {
+							out = append(out, fn.returnKind(j))
 						}
 						continue
 					}
 				}
 			}
 		}
-		if slot < nWanted {
-			out[slot] = kind
-			slot++
-		}
+		out = append(out, kind)
 	}
 	return out
 }
 
 func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphicAnalysisEnv, params map[*functionInfo][]functionParamObservation) monoKind {
 	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return g.analyzeMonomorphicExpr(x.Expr, env, params)
 	case *luaparser.NumberExpr:
 		return monoNumber
 	case *luaparser.VarExpr:
@@ -1154,7 +1270,7 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 		if left == monoNumber && right == monoNumber {
 			switch x.Op {
 			case luaparser.OpAdd, luaparser.OpSubtract, luaparser.OpMultiply,
-				luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo,
+				luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo, luaparser.OpPower,
 				luaparser.OpBitOr, luaparser.OpBitXor, luaparser.OpBitAnd,
 				luaparser.OpShiftL, luaparser.OpShiftR, luaparser.OpShiftRLogical,
 				luaparser.OpRotateL, luaparser.OpRotateR:
@@ -1162,11 +1278,11 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 			}
 		}
 	case *luaparser.CallExpr:
-		expressions := operandExprs(x)
-		kinds := make([]monoKind, len(expressions))
-		for i, argument := range expressions {
-			kinds[i] = g.analyzeMonomorphicExpr(argument, env, params)
+		kinds := make([]monoKind, 0, len(x.Args)+1)
+		if x.Method != "" {
+			kinds = append(kinds, g.analyzeMonomorphicExpr(x.Callee, env, params))
 		}
+		kinds = append(kinds, g.analyzeMonomorphicExprList(x.Args, env, params)...)
 		if fn := g.calledFunction(x); fn != nil {
 			observations := params[fn]
 			for i := range observations {
@@ -1335,6 +1451,8 @@ func (g *generator) exprNoAlloc(expr luaparser.Expr) bool {
 	case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.NumberExpr,
 		*luaparser.StringExpr, *luaparser.VarExpr:
 		return true
+	case *luaparser.ParenExpr:
+		return g.exprNoAlloc(x.Expr)
 	case *luaparser.UnaryExpr:
 		return g.exprNoAlloc(x.Expr)
 	case *luaparser.BinaryExpr:
@@ -1406,35 +1524,41 @@ func (g *generator) validateStaticAudioCalls() error {
 			if !ok {
 				return
 			}
+			argCount := g.exprListWidth(call.Args)
+			expanded := argCount != len(call.Args)
 			if g.opts.NativeAudio != nil {
 				switch name {
 				case "sample":
 					firstErr = fmt.Errorf("transpiler: %s: sample() is not part of four-channel audio v2", call.Pos())
 					return
 				case "sfx":
-					if len(call.Args) < 1 || len(call.Args) > 2 {
+					if argCount < 1 || argCount > 2 {
 						firstErr = fmt.Errorf("transpiler: %s: audio v2 sfx() takes id and optional priority", call.Pos())
 						return
 					}
 				case "music":
-					if len(call.Args) != 1 {
+					if argCount != 1 {
 						firstErr = fmt.Errorf("transpiler: %s: audio v2 music() takes exactly one id", call.Pos())
 						return
 					}
 				case "gba_note":
-					if len(call.Args) < 3 || len(call.Args) > 4 {
+					if argCount < 3 || argCount > 4 {
 						firstErr = fmt.Errorf("transpiler: %s: gba_note() takes channel, note, sound id, and optional duration", call.Pos())
 						return
 					}
-					g.validateStaticNativeNote(call, &firstErr)
+					if !expanded {
+						g.validateStaticNativeNote(call, &firstErr)
+					}
 					return
 				case "gba_stop":
-					if len(call.Args) != 1 {
+					if argCount != 1 {
 						firstErr = fmt.Errorf("transpiler: %s: gba_stop() takes one channel", call.Pos())
 						return
 					}
-					if channel, literal := staticNumberLiteral(call.Args[0]); literal && (channel != math.Trunc(channel) || channel < 1 || channel > 4) {
-						firstErr = fmt.Errorf("transpiler: %s: GBA channel must be an integer from 1 through 4", call.Pos())
+					if !expanded {
+						if channel, literal := staticNumberLiteral(call.Args[0]); literal && (channel != math.Trunc(channel) || channel < 1 || channel > 4) {
+							firstErr = fmt.Errorf("transpiler: %s: GBA channel must be an integer from 1 through 4", call.Pos())
+						}
 					}
 					return
 				}
@@ -1442,7 +1566,7 @@ func (g *generator) validateStaticAudioCalls() error {
 				firstErr = fmt.Errorf("transpiler: %s: %s() requires four-channel audio v2 assets", call.Pos(), name)
 				return
 			}
-			if (name != "sfx" && name != "music" && name != "sample") || len(call.Args) == 0 {
+			if (name != "sfx" && name != "music" && name != "sample") || argCount == 0 || expanded {
 				return
 			}
 			value, literal := staticNumberLiteral(call.Args[0])
@@ -1516,17 +1640,29 @@ func (g *generator) validateStaticNativeNote(call *luaparser.CallExpr, firstErr 
 
 func staticNumberLiteral(expr luaparser.Expr) (float64, bool) {
 	switch value := expr.(type) {
+	case *luaparser.ParenExpr:
+		return staticNumberLiteral(value.Expr)
 	case *luaparser.NumberExpr:
 		return value.Value, true
 	case *luaparser.UnaryExpr:
 		if value.Op != luaparser.OpNegate {
 			return 0, false
 		}
-		if number, ok := value.Expr.(*luaparser.NumberExpr); ok {
-			return -number.Value, true
+		if number, ok := staticNumberLiteral(value.Expr); ok {
+			return -number, true
 		}
 	}
 	return 0, false
+}
+
+func unparenExpr(expr luaparser.Expr) luaparser.Expr {
+	for {
+		paren, ok := expr.(*luaparser.ParenExpr)
+		if !ok {
+			return expr
+		}
+		expr = paren.Expr
+	}
 }
 
 func (g *generator) hasAudioID(name string, id int) bool {
@@ -1692,18 +1828,650 @@ func (g *generator) discoverFunctions() error {
 	return nil
 }
 
-func (g *generator) discoverGlobals() {
-	for _, stmt := range g.chunk.Body {
-		if _, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
+// validateSemantics rejects source shapes which the static Mtile dialect
+// cannot represent without silently changing Lua name binding or numeric
+// behavior. Calls are intentionally static: a lexical binding may not shadow
+// a user function/builtin at a call site, and callable names cannot be used as
+// first-class values. Top-level locals remain Game fields, but only functions
+// declared after them may capture them.
+func (g *generator) validateSemantics() error {
+	allTopLocals := make(map[string]luaparser.Position)
+	namespaceDeclOrder := make(map[string]int)
+	namespaceChildren := make(map[string]map[string]bool)
+	callableMembers := make(map[string]map[string]bool)
+	for order, stmt := range g.chunk.Body {
+		if local, ok := stmt.(*luaparser.LocalAssignStmt); ok {
+			for _, name := range local.Names {
+				if previous, exists := allTopLocals[name]; exists {
+					return fmt.Errorf("transpiler: %s: top-level local %q redeclaration is unsupported because the generated Game state has one slot (first declared at %s)", local.Pos(), name, previous)
+				}
+				allTopLocals[name] = local.Pos()
+			}
+		}
+		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok && (len(fn.Name) > 1 || fn.Method != "") {
+			key := functionKey(fn)
+			separator := strings.LastIndexAny(key, ".:")
+			if separator > 0 && separator+1 < len(key) {
+				namespace, member := key[:separator], key[separator+1:]
+				// Every prefix is part of the statically lowered callable
+				// namespace. Replacing a nested prefix such as actor.body after
+				// declaring actor.body:draw() would change Lua dispatch while the
+				// generated direct call would keep invoking the old function.
+				for prefix := namespace; prefix != ""; {
+					if _, exists := namespaceDeclOrder[prefix]; !exists {
+						namespaceDeclOrder[prefix] = order
+					}
+					dot := strings.LastIndexByte(prefix, '.')
+					if dot < 0 {
+						break
+					}
+					prefix = prefix[:dot]
+				}
+				if callableMembers[namespace] == nil {
+					callableMembers[namespace] = make(map[string]bool)
+				}
+				callableMembers[namespace][member] = true
+			}
+		}
+	}
+	for path := range namespaceDeclOrder {
+		if dot := strings.LastIndexByte(path, '.'); dot >= 0 {
+			parent, child := path[:dot], path[dot+1:]
+			if namespaceChildren[parent] == nil {
+				namespaceChildren[parent] = make(map[string]bool)
+			}
+			namespaceChildren[parent][child] = true
+		}
+	}
+
+	// Static lowering does not materialize Lua function values in their tables.
+	// Consequently, a table backing a function namespace must not be shared
+	// through an older alias: that alias could later replace a callable field in
+	// Lua while generated direct calls kept invoking the original Go function.
+	// Requiring a fresh constructor at every explicitly initialized namespace
+	// boundary makes that invariant syntactically provable.
+	var validateNamespaceInitializer func(string, luaparser.Expr, luaparser.Position) error
+	validateNamespaceInitializer = func(path string, value luaparser.Expr, position luaparser.Position) error {
+		if _, namespace := namespaceDeclOrder[path]; !namespace {
+			return nil
+		}
+		table, fresh := unparenExpr(value).(*luaparser.TableExpr)
+		if !fresh {
+			return fmt.Errorf("transpiler: %s: static function namespace %q must be initialized with a fresh table constructor", position, path)
+		}
+		children := namespaceChildren[path]
+		if len(children) == 0 {
+			return nil
+		}
+		for _, field := range table.Fields {
+			if field.Array {
+				continue
+			}
+			switch key := unparenExpr(field.Key).(type) {
+			case *luaparser.StringExpr:
+				if children[key.Value] {
+					if err := validateNamespaceInitializer(path+"."+key.Value, field.Value, field.Value.Pos()); err != nil {
+						return err
+					}
+				}
+			case *luaparser.NumberExpr, *luaparser.BoolExpr, *luaparser.NilExpr:
+				// Literal non-string keys cannot name a dotted namespace child.
+			default:
+				return fmt.Errorf("transpiler: %s: dynamic initializer field may alias a nested static function namespace below %q", field.Pos(), path)
+			}
+		}
+		return nil
+	}
+
+	type lexicalScopes []map[string]bool
+	currentSelfNamespace := ""
+	isLocal := func(scopes lexicalScopes, name string) bool {
+		for i := len(scopes) - 1; i >= 0; i-- {
+			if scopes[i][name] {
+				return true
+			}
+		}
+		return false
+	}
+	resolveStaticPath := func(scopes lexicalScopes, path string) (string, bool) {
+		if currentSelfNamespace != "" && (path == "self" || strings.HasPrefix(path, "self.")) {
+			return currentSelfNamespace + strings.TrimPrefix(path, "self"), true
+		}
+		root := path
+		if dot := strings.IndexByte(root, '.'); dot >= 0 {
+			root = root[:dot]
+		}
+		return path, !isLocal(scopes, root)
+	}
+	copyScope := func(source map[string]bool) map[string]bool {
+		out := make(map[string]bool, len(source))
+		for name := range source {
+			out[name] = true
+		}
+		return out
+	}
+	lateLocalError := func(name string, use luaparser.Position) error {
+		declaration := allTopLocals[name]
+		return fmt.Errorf("transpiler: %s: top-level local %q is declared after this use/function and cannot share the generated global slot (declared at %s)", use, name, declaration)
+	}
+
+	var walkExpr func(luaparser.Expr, lexicalScopes, bool, bool) error
+	walkExpr = func(expr luaparser.Expr, scopes lexicalScopes, directCallee, memberBase bool) error {
+		if expr == nil {
+			return nil
+		}
+		switch x := expr.(type) {
+		case *luaparser.ParenExpr:
+			// Parenthesizing a callable first evaluates it as a value, which the
+			// static-call dialect deliberately does not support.
+			return walkExpr(x.Expr, scopes, false, false)
+		case *luaparser.VarExpr:
+			if x.Name == "self" && currentSelfNamespace != "" && !memberBase && !directCallee {
+				return fmt.Errorf("transpiler: %s: first-class function namespace %q is unsupported", x.Pos(), currentSelfNamespace)
+			}
+			if isLocal(scopes, x.Name) {
+				if directCallee {
+					return fmt.Errorf("transpiler: %s: dynamic call through local %q is unsupported", x.Pos(), x.Name)
+				}
+				return nil
+			}
+			if _, later := allTopLocals[x.Name]; later {
+				return lateLocalError(x.Name, x.Pos())
+			}
+			if !directCallee {
+				if _, callable := g.funcs[x.Name]; callable {
+					return fmt.Errorf("transpiler: %s: first-class function value %q is unsupported", x.Pos(), x.Name)
+				}
+				if _, callable := Builtins[x.Name]; callable {
+					return fmt.Errorf("transpiler: %s: first-class builtin value %q is unsupported", x.Pos(), x.Name)
+				}
+				if !memberBase {
+					if _, namespace := namespaceDeclOrder[x.Name]; namespace {
+						return fmt.Errorf("transpiler: %s: first-class function namespace %q is unsupported", x.Pos(), x.Name)
+					}
+				}
+			}
+		case *luaparser.UnaryExpr:
+			return walkExpr(x.Expr, scopes, false, false)
+		case *luaparser.BinaryExpr:
+			if x.Op == luaparser.OpPower {
+				exponent, literal := staticNumberLiteral(x.Right)
+				if !literal || exponent != math.Trunc(exponent) {
+					return fmt.Errorf("transpiler: %s: power requires an integer literal exponent", x.Right.Pos())
+				}
+			}
+			if err := walkExpr(x.Left, scopes, false, false); err != nil {
+				return err
+			}
+			return walkExpr(x.Right, scopes, false, false)
+		case *luaparser.IndexExpr:
+			if path, ok := staticMemberPath(x); ok && !memberBase {
+				if path, static := resolveStaticPath(scopes, path); static {
+					if _, namespace := namespaceDeclOrder[path]; namespace {
+						return fmt.Errorf("transpiler: %s: first-class function namespace %q is unsupported", x.Pos(), path)
+					}
+				}
+			}
+			if base, ok := staticMemberPath(x.Base); ok {
+				base, static := resolveStaticPath(scopes, base)
+				if static {
+					if key, literal := unparenExpr(x.Key).(*luaparser.StringExpr); literal {
+						path := base + "." + key.Value
+						if callableMembers[base][key.Value] {
+							return fmt.Errorf("transpiler: %s: first-class function value %q is unsupported", x.Pos(), path)
+						}
+					} else if _, namespace := namespaceDeclOrder[base]; namespace {
+						return fmt.Errorf("transpiler: %s: dynamic indexed access to static function namespace %q is unsupported", x.Pos(), base)
+					}
+				}
+			}
+			if err := walkExpr(x.Base, scopes, false, true); err != nil {
+				return err
+			}
+			return walkExpr(x.Key, scopes, false, false)
+		case *luaparser.FieldExpr:
+			if directCallee {
+				if path, ok := calleePath(x); ok {
+					root := strings.SplitN(path, ".", 2)[0]
+					if isLocal(scopes, root) {
+						return fmt.Errorf("transpiler: %s: dynamic call through local %q is unsupported", x.Pos(), root)
+					}
+					if _, later := allTopLocals[root]; later {
+						return lateLocalError(root, x.Pos())
+					}
+					return nil
+				}
+			}
+			if path, ok := staticMemberPath(x); ok {
+				path, static := resolveStaticPath(scopes, path)
+				if !static {
+					return walkExpr(x.Base, scopes, false, true)
+				}
+				if _, callable := g.funcs[path]; callable {
+					return fmt.Errorf("transpiler: %s: first-class function value %q is unsupported", x.Pos(), path)
+				}
+				if dot := strings.LastIndexByte(path, '.'); dot >= 0 {
+					method := path[:dot] + ":" + path[dot+1:]
+					if _, callable := g.funcs[method]; callable {
+						return fmt.Errorf("transpiler: %s: first-class function value %q is unsupported", x.Pos(), path)
+					}
+				}
+				if !memberBase {
+					if _, namespace := namespaceDeclOrder[path]; namespace {
+						return fmt.Errorf("transpiler: %s: first-class function namespace %q is unsupported", x.Pos(), path)
+					}
+				}
+			}
+			return walkExpr(x.Base, scopes, false, true)
+		case *luaparser.CallExpr:
+			if err := walkExpr(x.Callee, scopes, true, false); err != nil {
+				return err
+			}
+			for _, argument := range x.Args {
+				if err := walkExpr(argument, scopes, false, false); err != nil {
+					return err
+				}
+			}
+		case *luaparser.TableExpr:
+			for _, field := range x.Fields {
+				if err := walkExpr(field.Key, scopes, false, false); err != nil {
+					return err
+				}
+				if err := walkExpr(field.Value, scopes, false, false); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	var walkBlock func(*luaparser.Block, lexicalScopes, bool) error
+	var walkStmt func(luaparser.Stmt, lexicalScopes) error
+	currentTopOrder := -1
+	insideFunction := false
+	walkBlock = func(block *luaparser.Block, scopes lexicalScopes, newScope bool) error {
+		if newScope {
+			scopes = append(scopes, map[string]bool{})
+		}
+		for _, stmt := range block.Body {
+			if err := walkStmt(stmt, scopes); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	walkStmt = func(stmt luaparser.Stmt, scopes lexicalScopes) error {
+		walkValues := func(values []luaparser.Expr) error {
+			for _, value := range values {
+				if err := walkExpr(value, scopes, false, false); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		switch s := stmt.(type) {
+		case *luaparser.AssignStmt:
+			targets := s.Targets
+			if s.CompoundTarget != nil {
+				targets = []luaparser.Expr{s.CompoundTarget}
+			}
+			for _, target := range targets {
+				switch target := target.(type) {
+				case *luaparser.VarExpr:
+					if target.Name == "self" && currentSelfNamespace != "" {
+						return fmt.Errorf("transpiler: %s: reassignment of method receiver self is unsupported", target.Pos())
+					}
+					if !isLocal(scopes, target.Name) {
+						if _, later := allTopLocals[target.Name]; later {
+							return lateLocalError(target.Name, target.Pos())
+						}
+						if _, callable := g.funcs[target.Name]; callable {
+							return fmt.Errorf("transpiler: %s: assignment to static function name %q is unsupported", target.Pos(), target.Name)
+						}
+						if _, callable := Builtins[target.Name]; callable {
+							return fmt.Errorf("transpiler: %s: assignment to static builtin name %q is unsupported", target.Pos(), target.Name)
+						}
+						if declarationOrder, namespace := namespaceDeclOrder[target.Name]; namespace &&
+							(insideFunction || currentTopOrder > declarationOrder) {
+							return fmt.Errorf("transpiler: %s: assignment to static function namespace %q after its declaration is unsupported", target.Pos(), target.Name)
+						}
+					}
+				case *luaparser.FieldExpr:
+					if path, ok := staticMemberPath(target); ok {
+						path, static := resolveStaticPath(scopes, path)
+						if !static {
+							if err := walkExpr(target.Base, scopes, false, true); err != nil {
+								return err
+							}
+							continue
+						}
+						if _, callable := g.funcs[path]; callable {
+							return fmt.Errorf("transpiler: %s: assignment to static function field %q is unsupported", target.Pos(), path)
+						}
+						if dot := strings.LastIndexByte(path, '.'); dot >= 0 {
+							method := path[:dot] + ":" + path[dot+1:]
+							if _, callable := g.funcs[method]; callable {
+								return fmt.Errorf("transpiler: %s: assignment to static method field %q is unsupported", target.Pos(), path)
+							}
+						}
+						if declarationOrder, namespace := namespaceDeclOrder[path]; namespace &&
+							(insideFunction || currentTopOrder > declarationOrder) {
+							return fmt.Errorf("transpiler: %s: assignment to static function namespace %q after its declaration is unsupported", target.Pos(), path)
+						}
+					}
+					if err := walkExpr(target.Base, scopes, false, true); err != nil {
+						return err
+					}
+				case *luaparser.IndexExpr:
+					if base, ok := staticMemberPath(target.Base); ok {
+						base, static := resolveStaticPath(scopes, base)
+						if !static {
+							if err := walkExpr(target.Base, scopes, false, true); err != nil {
+								return err
+							}
+							if err := walkExpr(target.Key, scopes, false, false); err != nil {
+								return err
+							}
+							continue
+						}
+						if key, literal := unparenExpr(target.Key).(*luaparser.StringExpr); literal {
+							path := base + "." + key.Value
+							if _, callable := g.funcs[path]; callable {
+								return fmt.Errorf("transpiler: %s: assignment to static function field %q is unsupported", target.Pos(), path)
+							}
+							method := base + ":" + key.Value
+							if _, callable := g.funcs[method]; callable {
+								return fmt.Errorf("transpiler: %s: assignment to static method field %q is unsupported", target.Pos(), path)
+							}
+							if declarationOrder, namespace := namespaceDeclOrder[path]; namespace &&
+								(insideFunction || currentTopOrder > declarationOrder) {
+								return fmt.Errorf("transpiler: %s: assignment to static function namespace %q after its declaration is unsupported", target.Pos(), path)
+							}
+						} else if declarationOrder, namespace := namespaceDeclOrder[base]; namespace &&
+							(insideFunction || currentTopOrder > declarationOrder) {
+							return fmt.Errorf("transpiler: %s: dynamic indexed assignment to static function namespace %q is unsupported", target.Pos(), base)
+						}
+					}
+					if err := walkExpr(target.Base, scopes, false, true); err != nil {
+						return err
+					}
+					if err := walkExpr(target.Key, scopes, false, false); err != nil {
+						return err
+					}
+				}
+			}
+			if s.CompoundTarget == nil && !insideFunction {
+				for index, target := range targets {
+					path, static := staticMemberPath(target)
+					if !static {
+						continue
+					}
+					path, static = resolveStaticPath(scopes, path)
+					declarationOrder, namespace := namespaceDeclOrder[path]
+					if !static || !namespace || currentTopOrder > declarationOrder {
+						continue
+					}
+					var value luaparser.Expr
+					if index < len(s.Values) {
+						value = s.Values[index]
+					}
+					if err := validateNamespaceInitializer(path, value, target.Pos()); err != nil {
+						return err
+					}
+				}
+			}
+			return walkValues(s.Values)
+		case *luaparser.LocalAssignStmt:
+			if s.Synthetic {
+				// Compound lowering creates block-local aliases solely to evaluate
+				// an l-value base once. They cannot escape; the companion synthetic
+				// assignment validates CompoundTarget, the original source l-value.
+				for _, value := range s.Values {
+					if err := walkExpr(value, scopes, false, true); err != nil {
+						return err
+					}
+				}
+			} else if err := walkValues(s.Values); err != nil {
+				return err
+			}
+			for _, name := range s.Names {
+				if name == "self" && currentSelfNamespace != "" {
+					return fmt.Errorf("transpiler: %s: shadowing method receiver self is unsupported", s.Pos())
+				}
+				scopes[len(scopes)-1][name] = true
+			}
+		case *luaparser.CallStmt:
+			return walkExpr(s.Call, scopes, false, false)
+		case *luaparser.IfStmt:
+			if err := walkExpr(s.Condition, scopes, false, false); err != nil {
+				return err
+			}
+			if err := walkBlock(s.Then, scopes, true); err != nil {
+				return err
+			}
+			for _, branch := range s.ElseIf {
+				if err := walkExpr(branch.Condition, scopes, false, false); err != nil {
+					return err
+				}
+				if err := walkBlock(branch.Body, scopes, true); err != nil {
+					return err
+				}
+			}
+			if s.Else != nil {
+				return walkBlock(s.Else, scopes, true)
+			}
+		case *luaparser.WhileStmt:
+			if err := walkExpr(s.Condition, scopes, false, false); err != nil {
+				return err
+			}
+			return walkBlock(s.Body, scopes, true)
+		case *luaparser.RepeatStmt:
+			repeatScopes := append(scopes, map[string]bool{})
+			if err := walkBlock(s.Body, repeatScopes, false); err != nil {
+				return err
+			}
+			return walkExpr(s.Condition, repeatScopes, false, false)
+		case *luaparser.DoStmt:
+			return walkBlock(s.Body, scopes, true)
+		case *luaparser.NumericForStmt:
+			if err := walkExpr(s.Init, scopes, false, false); err != nil {
+				return err
+			}
+			if err := walkExpr(s.Limit, scopes, false, false); err != nil {
+				return err
+			}
+			if err := walkExpr(s.Step, scopes, false, false); err != nil {
+				return err
+			}
+			if s.Name == "self" && currentSelfNamespace != "" {
+				return fmt.Errorf("transpiler: %s: shadowing method receiver self is unsupported", s.Pos())
+			}
+			loopScopes := append(scopes, map[string]bool{s.Name: true})
+			return walkBlock(s.Body, loopScopes, true)
+		case *luaparser.GenericForStmt:
+			if err := walkValues(s.Values); err != nil {
+				return err
+			}
+			bindings := map[string]bool{}
+			for _, name := range s.Names {
+				if name == "self" && currentSelfNamespace != "" {
+					return fmt.Errorf("transpiler: %s: shadowing method receiver self is unsupported", s.Pos())
+				}
+				bindings[name] = true
+			}
+			return walkBlock(s.Body, append(scopes, bindings), true)
+		case *luaparser.ReturnStmt:
+			return walkValues(s.Values)
+		}
+		return nil
+	}
+
+	topVisible := map[string]bool{}
+	for order, stmt := range g.chunk.Body {
+		currentTopOrder = order
+		if local, ok := stmt.(*luaparser.LocalAssignStmt); ok {
+			for index, name := range local.Names {
+				declarationOrder, namespace := namespaceDeclOrder[name]
+				if !namespace || order > declarationOrder {
+					continue
+				}
+				var value luaparser.Expr
+				if index < len(local.Values) {
+					value = local.Values[index]
+				}
+				if err := validateNamespaceInitializer(name, value, local.Pos()); err != nil {
+					return err
+				}
+			}
+		}
+		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
+			if fn.Local {
+				return fmt.Errorf("transpiler: %s: local function declarations are unsupported; use a top-level function declaration", fn.Pos())
+			}
+			functionScope := copyScope(topVisible)
+			for _, parameter := range fn.Params {
+				functionScope[parameter] = true
+			}
+			currentSelfNamespace = ""
+			if fn.Method != "" {
+				currentSelfNamespace = strings.Join(fn.Name, ".")
+				for _, parameter := range fn.Params[1:] {
+					if parameter == "self" {
+						return fmt.Errorf("transpiler: %s: shadowing method receiver self is unsupported", fn.Pos())
+					}
+				}
+			}
+			insideFunction = true
+			err := walkBlock(fn.Body, lexicalScopes{functionScope}, false)
+			insideFunction = false
+			currentSelfNamespace = ""
+			if err != nil {
+				return err
+			}
 			continue
 		}
-		g.collectTopLevel(stmt)
+		if err := walkStmt(stmt, lexicalScopes{topVisible}); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func (g *generator) discoverGlobals() {
+	g.collectChunkGlobals()
 	for _, info := range g.funcList {
 		g.current = info
 		g.collectBlockGlobals(info.decl.Body)
 	}
 	g.current = nil
+}
+
+// collectChunkGlobals mirrors chunk code generation: only locals declared
+// directly in the chunk become persistent Game fields. Locals inside a
+// top-level do/if/loop are ordinary lexical stack values and must not inflate
+// the global report or consume runtime global-root slots.
+func (g *generator) collectChunkGlobals() {
+	scopes := []map[string]bool{}
+	isLocal := func(name string) bool {
+		for i := len(scopes) - 1; i >= 0; i-- {
+			if scopes[i][name] {
+				return true
+			}
+		}
+		return false
+	}
+	add := func(name string, position luaparser.Position) {
+		if !isLocal(name) {
+			g.addGlobal(name, position)
+		}
+	}
+	var visitBlock func(*luaparser.Block, bool)
+	var visitStmt func(luaparser.Stmt)
+	visitBlock = func(block *luaparser.Block, newScope bool) {
+		if newScope {
+			scopes = append(scopes, map[string]bool{})
+		}
+		for _, stmt := range block.Body {
+			visitStmt(stmt)
+		}
+		if newScope {
+			scopes = scopes[:len(scopes)-1]
+		}
+	}
+	visitStmt = func(stmt luaparser.Stmt) {
+		switch s := stmt.(type) {
+		case *luaparser.AssignStmt:
+			collectStmt(s, add, isLocal, g.funcs, Builtins)
+		case *luaparser.LocalAssignStmt:
+			for _, value := range s.Values {
+				collectExpr(value, add, isLocal, g.funcs, Builtins)
+			}
+			if len(scopes) > 0 {
+				for _, name := range s.Names {
+					scopes[len(scopes)-1][name] = true
+				}
+			}
+		case *luaparser.CallStmt:
+			collectExpr(s.Call, add, isLocal, g.funcs, Builtins)
+		case *luaparser.IfStmt:
+			collectExpr(s.Condition, add, isLocal, g.funcs, Builtins)
+			visitBlock(s.Then, true)
+			for _, branch := range s.ElseIf {
+				collectExpr(branch.Condition, add, isLocal, g.funcs, Builtins)
+				visitBlock(branch.Body, true)
+			}
+			if s.Else != nil {
+				visitBlock(s.Else, true)
+			}
+		case *luaparser.WhileStmt:
+			collectExpr(s.Condition, add, isLocal, g.funcs, Builtins)
+			visitBlock(s.Body, true)
+		case *luaparser.RepeatStmt:
+			scopes = append(scopes, map[string]bool{})
+			visitBlock(s.Body, false)
+			collectExpr(s.Condition, add, isLocal, g.funcs, Builtins)
+			scopes = scopes[:len(scopes)-1]
+		case *luaparser.DoStmt:
+			visitBlock(s.Body, true)
+		case *luaparser.NumericForStmt:
+			collectExpr(s.Init, add, isLocal, g.funcs, Builtins)
+			collectExpr(s.Limit, add, isLocal, g.funcs, Builtins)
+			collectExpr(s.Step, add, isLocal, g.funcs, Builtins)
+			scopes = append(scopes, map[string]bool{s.Name: true})
+			visitBlock(s.Body, true)
+			scopes = scopes[:len(scopes)-1]
+		case *luaparser.GenericForStmt:
+			for _, value := range s.Values {
+				collectExpr(value, add, isLocal, g.funcs, Builtins)
+			}
+			bindings := map[string]bool{}
+			for _, name := range s.Names {
+				bindings[name] = true
+			}
+			scopes = append(scopes, bindings)
+			visitBlock(s.Body, true)
+			scopes = scopes[:len(scopes)-1]
+		case *luaparser.ReturnStmt:
+			for _, value := range s.Values {
+				collectExpr(value, add, isLocal, g.funcs, Builtins)
+			}
+		}
+	}
+	for _, stmt := range g.chunk.Body {
+		if _, function := stmt.(*luaparser.FunctionDeclStmt); function {
+			continue
+		}
+		if local, ok := stmt.(*luaparser.LocalAssignStmt); ok {
+			for _, value := range local.Values {
+				collectExpr(value, add, isLocal, g.funcs, Builtins)
+			}
+			for _, name := range local.Names {
+				g.addGlobal(name, local.Pos())
+			}
+			continue
+		}
+		visitStmt(stmt)
+	}
 }
 
 func (g *generator) globalReport() GlobalReport {
@@ -1719,20 +2487,112 @@ func (g *generator) globalReport() GlobalReport {
 // function that only `return pair()` must have pair's full result count, not
 // 1, or `local a, b = wrap()` would nil-fill b. Starting every known function
 // at zero also lets a trailing zero-result call remove its syntactic call slot.
-func (g *generator) resolveReturnArities() {
-	for {
+func (g *generator) resolveReturnArities() error {
+	for pass := 0; ; pass++ {
 		changed := false
+		var changedInfo *functionInfo
 		for _, info := range g.funcList {
 			n := g.adjustedReturnN(info.decl.Body)
 			if n != info.returnN {
 				info.returnN = n
 				changed = true
+				changedInfo = info
 			}
 		}
 		if !changed {
-			return
+			return nil
+		}
+		// With N functions, every finite return-width dependency reaches its
+		// fixed point after at most N changing passes. A later change proves a
+		// positive recursive cycle such as `return n, expand(n-1)`, whose
+		// statically generated Go tuple would grow without bound.
+		if pass >= len(g.funcList) {
+			return fmt.Errorf("transpiler: recursive return arity expands without bound in function %q at %s", changedInfo.key, changedInfo.decl.Pos())
 		}
 	}
+}
+
+func (g *generator) validateTableLiteralLimits() error {
+	var firstErr error
+	check := func(expr luaparser.Expr) {
+		if firstErr != nil {
+			return
+		}
+		table, ok := expr.(*luaparser.TableExpr)
+		if !ok {
+			return
+		}
+		arrayN, hashN := 0, 0
+		for _, field := range table.Fields {
+			if field.Array {
+				arrayN++
+			} else {
+				hashN++
+			}
+		}
+		if n := len(table.Fields); n > 0 && table.Fields[n-1].Array {
+			if call, ok := table.Fields[n-1].Value.(*luaparser.CallExpr); ok {
+				if arity, known := g.callResultArity(call); known {
+					arrayN += arity - 1
+				}
+			}
+		}
+		if arrayN > runtimeapi.MaxTableArrayCapacity {
+			firstErr = fmt.Errorf("transpiler: %s: table literal requires %d array slots, runtime limit is %d", table.Pos(), arrayN, runtimeapi.MaxTableArrayCapacity)
+			return
+		}
+		if hashN > runtimeapi.MaxTableHashCapacity {
+			firstErr = fmt.Errorf("transpiler: %s: table literal requires %d hash slots, runtime limit is %d", table.Pos(), hashN, runtimeapi.MaxTableHashCapacity)
+		}
+	}
+	for _, stmt := range g.chunk.Body {
+		collectStmtExprs(stmt, check)
+	}
+	for _, fn := range g.funcList {
+		for _, stmt := range fn.decl.Body.Body {
+			collectStmtExprs(stmt, check)
+		}
+	}
+	return firstErr
+}
+
+// validateBuiltinCallArities runs after user-function return widths have
+// reached their fixed point. That timing matters because a trailing call may
+// contribute zero or multiple arguments to the surrounding builtin call.
+// Keeping this out of lowering also prevents numeric optimized calls from
+// bypassing public API validation.
+func (g *generator) validateBuiltinCallArities() error {
+	var firstErr error
+	check := func(expr luaparser.Expr) {
+		if firstErr != nil {
+			return
+		}
+		call, ok := expr.(*luaparser.CallExpr)
+		if !ok {
+			return
+		}
+		name, ok := callKey(call)
+		if !ok {
+			return
+		}
+		spec, builtin := Builtins[name]
+		if !builtin {
+			return
+		}
+		got := g.exprListWidth(call.Args)
+		if got < spec.MinArgs || got > spec.MaxArgs {
+			firstErr = fmt.Errorf("transpiler: %s: %s expects %d..%d arguments, got %d", call.Pos(), name, spec.MinArgs, spec.MaxArgs, got)
+		}
+	}
+	for _, stmt := range g.chunk.Body {
+		collectStmtExprs(stmt, check)
+	}
+	for _, fn := range g.funcList {
+		for _, stmt := range fn.decl.Body.Body {
+			collectStmtExprs(stmt, check)
+		}
+	}
+	return firstErr
 }
 
 func (g *generator) adjustedReturnN(block *luaparser.Block) int {
@@ -1780,14 +2640,11 @@ func (g *generator) exprListWidth(values []luaparser.Expr) int {
 	if !ok {
 		return n
 	}
-	fn := g.calledFunction(call)
-	if fn == nil {
+	arity, known := g.callResultArity(call)
+	if !known {
 		return n
 	}
-	if fn.returnN == 0 {
-		return n - 1
-	}
-	return n - 1 + fn.returnN
+	return n - 1 + arity
 }
 
 func (g *generator) addGlobal(name string, position luaparser.Position) {
@@ -1800,15 +2657,6 @@ func (g *generator) addGlobal(name string, position luaparser.Position) {
 	g.globalGo[name] = goIdent(name)
 	g.globalOrigins[name] = position
 	g.globals = append(g.globals, name)
-}
-
-func (g *generator) collectTopLevel(stmt luaparser.Stmt) {
-	if local, ok := stmt.(*luaparser.LocalAssignStmt); ok {
-		for _, name := range local.Names {
-			g.addGlobal(name, local.Pos())
-		}
-	}
-	collectStmt(stmt, g.addGlobal, func(_ string) bool { return false }, g.funcs, Builtins)
 }
 
 func (g *generator) collectBlockGlobals(block *luaparser.Block) {
@@ -1917,7 +2765,7 @@ func (g *generator) collectBlockGlobals(block *luaparser.Block) {
 }
 
 func (g *generator) collectStmtStatics(stmt luaparser.Stmt) {
-	collectStmtExprs(stmt, func(e luaparser.Expr) { g.collectExprStatic(e) })
+	collectStmtExprs(stmt, g.collectExprStatic)
 }
 
 func (g *generator) collectBlockStatics(block *luaparser.Block) {
@@ -1929,7 +2777,7 @@ func (g *generator) collectBlockStatics(block *luaparser.Block) {
 func (g *generator) collectExprStatic(e luaparser.Expr) {
 	switch x := e.(type) {
 	case *luaparser.StringExpr:
-		g.staticValue(x.Value)
+		g.staticValueAt(x.Value, x.Pos())
 	case *luaparser.FieldExpr:
 		if !g.opts.DisableStableTableFields {
 			if _, exists := g.fieldCaches[x]; !exists {
@@ -1937,34 +2785,29 @@ func (g *generator) collectExprStatic(e luaparser.Expr) {
 				g.fieldCacheN++
 			}
 		}
-		g.staticValue(x.Name)
-		g.collectExprStatic(x.Base)
-	case *luaparser.IndexExpr:
-		g.collectExprStatic(x.Base)
-		g.collectExprStatic(x.Key)
-	case *luaparser.UnaryExpr:
-		g.collectExprStatic(x.Expr)
-	case *luaparser.BinaryExpr:
-		g.collectExprStatic(x.Left)
-		g.collectExprStatic(x.Right)
-	case *luaparser.CallExpr:
-		g.collectExprStatic(x.Callee)
-		for _, a := range x.Args {
-			g.collectExprStatic(a)
-		}
-	case *luaparser.TableExpr:
-		for _, f := range x.Fields {
-			if f.Key != nil {
-				g.collectExprStatic(f.Key)
-			}
-			g.collectExprStatic(f.Value)
-		}
+		g.staticValueAt(x.Name, x.Pos())
 	}
 }
 
 func (g *generator) staticValue(s string) string {
+	return g.staticValueAt(s, luaparser.Position{})
+}
+
+func (g *generator) staticValueAt(s string, position luaparser.Position) string {
 	if name, ok := g.staticGo[s]; ok {
 		return name
+	}
+	where := ""
+	if position.Line != 0 {
+		where = " at " + position.String()
+	}
+	if len(s) > runtimeapi.MaxStringBytes {
+		g.setErr(fmt.Errorf("transpiler: static string has %d bytes, runtime limit is %d bytes%s", len(s), runtimeapi.MaxStringBytes, where))
+		return ""
+	}
+	if len(g.statics) >= runtimeapi.MaxStaticStrings {
+		g.setErr(fmt.Errorf("transpiler: cartridge requires more than %d static strings%s", runtimeapi.MaxStaticStrings, where))
+		return ""
 	}
 	name := fmt.Sprintf("_gluStatic%d", len(g.statics))
 	g.staticGo[s] = name
@@ -2046,6 +2889,8 @@ func collectStmt(stmt luaparser.Stmt, add func(string, luaparser.Position), isLo
 
 func collectExpr(e luaparser.Expr, add func(string, luaparser.Position), isLocal func(string) bool, funcs map[string]*functionInfo, builtins map[string]BuiltinSpec) {
 	switch x := e.(type) {
+	case *luaparser.ParenExpr:
+		collectExpr(x.Expr, add, isLocal, funcs, builtins)
 	case *luaparser.VarExpr:
 		if !isLocal(x.Name) {
 			if _, fn := funcs[x.Name]; !fn {
@@ -2090,7 +2935,6 @@ func collectExpr(e luaparser.Expr, add func(string, luaparser.Position), isLocal
 }
 
 func collectStmtExprs(stmt luaparser.Stmt, add func(luaparser.Expr)) {
-	collectStmt(stmt, func(string, luaparser.Position) {}, func(string) bool { return true }, nil, nil)
 	var expr func(luaparser.Expr)
 	expr = func(e luaparser.Expr) {
 		if e == nil {
@@ -2098,6 +2942,8 @@ func collectStmtExprs(stmt luaparser.Stmt, add func(luaparser.Expr)) {
 		}
 		add(e)
 		switch x := e.(type) {
+		case *luaparser.ParenExpr:
+			expr(x.Expr)
 		case *luaparser.UnaryExpr:
 			expr(x.Expr)
 		case *luaparser.BinaryExpr:
@@ -2223,18 +3069,25 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
 	b.line("}")
 	b.line("func gluPopRoots(c *rt.Context, n int) { if n > 0 { c.PopLocals(n) } }")
 	b.line("func gluMust(v rt.Value, err rt.HeapError) rt.Value { if err != rt.HeapOK { return rt.NilVal() }; return v }")
-	b.line("func gluCmp(a, z rt.Value, op string) bool {")
-	b.line("\tif a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return false }")
-	b.line("\tswitch op { case \"<\": return a.Num < z.Num; case \"<=\": return a.Num <= z.Num; case \">\": return a.Num > z.Num; case \">=\": return a.Num >= z.Num }; return false")
+	b.line("func gluCmp(c *rt.Context, a, z rt.Value, op string) bool {")
+	b.line("\tcmp := 0")
+	b.line("\tif a.Kind == rt.KindNumber && z.Kind == rt.KindNumber { if a.Num < z.Num { cmp = -1 } else if a.Num > z.Num { cmp = 1 } } else { var ok bool; cmp, ok = c.CompareStrings(a,z); if !ok { return false } }")
+	b.line("\tswitch op { case \"<\": return cmp < 0; case \"<=\": return cmp <= 0; case \">\": return cmp > 0; case \">=\": return cmp >= 0 }; return false")
 	b.line("}")
 	b.line("func gluLen(c *rt.Context, v rt.Value) rt.Value { if v.Kind == rt.KindString || v.Kind == rt.KindStaticString { return rt.IntVal(c.StrLen(v)) }; if v.Kind == rt.KindTable { return rt.IntVal(c.TableLen(v)) }; return rt.IntVal(0) }")
-	b.line("func gluMod(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber || z.Num == 0 { return rt.IntVal(0) }; return rt.NumVal(a.Num % z.Num) }")
-	b.line("func gluNumberMod(a, z rt.Number) rt.Number { if z == 0 { return 0 }; return a % z }")
-	b.line("func gluPow(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; n := z.Int(); if n == 0 { return rt.IntVal(1) }; neg := n < 0; if neg { n = -n }; out := rt.IntVal(1); for n > 0 { if n&1 != 0 { out = out.Mul(a) }; a = a.Mul(a); n >>= 1 }; if neg { out = rt.IntVal(1).Div(out) }; return out }")
+	b.line("func gluNumberMod(a, z rt.Number) rt.Number { if z == 0 { return 0 }; r := a % z; if r != 0 && ((r < 0) != (z < 0)) { r += z }; return r }")
+	b.line("func gluMod(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberMod(a.Num,z.Num)) }")
+	b.line("func gluNumberPow(a, z rt.Number) rt.Number { n := z.Int(); if n == 0 { return rt.One }; neg := n < 0; if neg { n = -n }; out := rt.One; for n > 0 { if n&1 != 0 { out = out.Mul(a) }; a = a.Mul(a); n >>= 1 }; if neg { out = rt.One.Div(out) }; return out }")
+	b.line("func gluPow(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberPow(a.Num,z.Num)) }")
 	b.line("func gluConcat(c *rt.Context, a, z rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c, a, z); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c, roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v, err := c.Concat(a,z); gluPopRoots(c,n+m); return gluMust(v,err) }")
 	b.line("func gluSub(c *rt.Context, s, i, j rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c,s,i,j); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v,err := c.Sub(s,i,j); gluPopRoots(c,n+m); return gluMust(v,err) }")
 	b.line("func gluChr(c *rt.Context, n rt.Value, roots ...rt.Value) rt.Value { k := gluPushRoots(c,n); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; v,err := c.Chr(n); gluPopRoots(c,k+m); return gluMust(v,err) }")
 	b.line("func gluTostr(c *rt.Context, v rt.Value, hex bool, roots ...rt.Value) rt.Value { k := gluPushRoots(c,v); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; out,err := c.Tostr(v,hex); gluPopRoots(c,k+m); return gluMust(out,err) }")
+	b.line("func gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableSet(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableSetStable(c *rt.Context, t, k, v rt.Value, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStable(t,k,v,cache); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableSetStableNumber(c *rt.Context, t, k rt.Value, v rt.Number, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStableNumber(t,k,v,cache); gluPopRoots(c,n+m); return err }")
+	b.line("func gluPrintV(c *rt.Context, s, x, y, color rt.Value, roots ...rt.Value) int { n := gluPushRoots(c,s,x,y,color); if n < 0 { return x.Int() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return x.Int() }; out := c.PrintV(s,x,y,color); gluPopRoots(c,n+m); return out }")
 }
 
 func (g *generator) renderGame(b *sourceBuilder) {
@@ -2700,33 +3553,47 @@ func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) 
 		initExpr := g.emitExprFlush(b, indent, s.Init)
 		b.line(pad + id + "Init := " + initExpr)
 		initRoots := id + "Roots"
+		rootSlots := g.activeRootSlots
+		g.requireActiveRootSlots(1, s.Init.Pos())
 		b.line(pad + initRoots + " := gluPushRoots(c, " + id + "Init)")
 		b.line(pad + "if " + initRoots + " >= 0 {")
-		oldRoots := g.extraRoots
-		g.extraRoots = append(append([]string(nil), oldRoots...), id+"Init")
+		// Init is already on Context's root stack while limit is evaluated.
+		// Track that occupied slot instead of passing the same value again as
+		// an extra helper root.
+		g.activeRootSlots = rootSlots + 1
 		limitExpr := g.emitExprFlush(b, indent+1, s.Limit)
-		g.extraRoots = append(append([]string(nil), oldRoots...), id+"Init", id+"Limit")
-		stepExpr := g.emitExprFlush(b, indent+1, s.Step)
-		g.extraRoots = oldRoots
 		b.line(pad + "\t" + id + "Limit := " + limitExpr)
 		limitRoots := id + "LimitRoots"
+		g.requireActiveRootSlots(1, s.Limit.Pos())
 		b.line(pad + "\t" + limitRoots + " := gluPushRoots(c, " + id + "Limit)")
 		b.line(pad + "\tif " + limitRoots + " >= 0 {")
+		// The step may allocate and therefore needs the already evaluated limit
+		// as a root. Generate and flush it only after Limit has been declared;
+		// otherwise root arguments inside the step can reference a Go name before
+		// its declaration.
+		g.activeRootSlots = rootSlots + 2
+		stepExpr := g.emitExprFlush(b, indent+2, s.Step)
 		b.line(pad + "\t\t" + id + "Step := " + stepExpr)
 		stepRoots := id + "StepRoots"
+		g.requireActiveRootSlots(1, s.Step.Pos())
 		b.line(pad + "\t\t" + stepRoots + " := gluPushRoots(c, " + id + "Step)")
 		b.line(pad + "\t\tif " + stepRoots + " >= 0 {")
+		rootDepth := len(g.activeRootCounts)
+		g.activeRootCounts = append(g.activeRootCounts, initRoots, limitRoots, stepRoots)
+		g.activeRootSlots = rootSlots + 3
 		g.pushScope()
 		loopVar := g.declareLocal(s.Name)
 		b.line(pad + "\t\t\tvar " + loopVar + " rt.Value")
 		b.line(pad + "\t\t\t_ = " + loopVar)
-		b.line(pad + "\t\t\tfor " + id + "Init.Kind == rt.KindNumber && " + id + "Limit.Kind == rt.KindNumber && ((" + id + "Step.Num >= 0 && " + id + "Init.Num <= " + id + "Limit.Num) || (" + id + "Step.Num < 0 && " + id + "Init.Num >= " + id + "Limit.Num)) {")
+		b.line(pad + "\t\t\tfor " + id + "Init.Kind == rt.KindNumber && " + id + "Limit.Kind == rt.KindNumber && " + id + "Step.Kind == rt.KindNumber && ((" + id + "Step.Num >= 0 && " + id + "Init.Num <= " + id + "Limit.Num) || (" + id + "Step.Num < 0 && " + id + "Init.Num >= " + id + "Limit.Num)) {")
 		b.line(pad + "\t\t\t\t" + loopVar + " = " + id + "Init")
 		g.pushScope()
 		for _, q := range s.Body.Body {
 			g.emitStmt(b, q, indent+4)
 		}
 		g.popScope()
+		g.activeRootCounts = g.activeRootCounts[:rootDepth]
+		g.activeRootSlots = rootSlots
 		b.line(pad + "\t\t\t\t" + id + "Init = " + id + "Init.Add(" + id + "Step)")
 		b.line(pad + "\t\t\t}")
 		g.popScope()
@@ -2736,6 +3603,7 @@ func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) 
 		b.line(pad + "\t}")
 		b.line(pad + "\tgluPopRoots(c, " + initRoots + ")")
 		b.line(pad + "}")
+		g.activeRootSlots = rootSlots
 	case *luaparser.GenericForStmt:
 		g.emitGenericFor(b, s, indent)
 	case *luaparser.ReturnStmt:
@@ -2862,6 +3730,14 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 		}
 	}
 	values := g.emitAdjustedValues(b, s.Values, len(s.Targets), indent)
+	// Every table store may grow its table and collect. Keep all RHS results
+	// alive until all stores have completed, because Lua evaluates the whole
+	// assignment before performing its first write.
+	for _, value := range values {
+		if value.kind == monoValue && value.code != "rt.NilVal()" {
+			g.extraRoots = append(g.extraRoots, value.code)
+		}
+	}
 	for i, slot := range slots {
 		switch slot.kind {
 		case lhsVar:
@@ -2871,16 +3747,16 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 				b.line(pad + slot.dest + " = " + adjustedLuaValue(values[i]))
 			}
 		case lhsIndex:
-			b.line(pad + "_ = c.TableSet(" + slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i]) + ")")
+			b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 		case lhsNumberArray:
 			b.line(pad + "_ = c.NumberArraySet(" + slot.base + ", " + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
 		case lhsField:
 			if slot.mono == monoNumber && slot.cache != "" {
-				b.line(pad + "_ = c.TableSetStableNumber(" + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedNumber(values[i]) + ", " + slot.cache + ")")
+				b.line(pad + "_ = gluTableSetStableNumber(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedNumber(values[i]) + ", " + slot.cache + g.rootArgsFor(5, s.Pos()) + ")")
 			} else if slot.cache != "" {
-				b.line(pad + "_ = c.TableSetStable(" + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + ", " + slot.cache + ")")
+				b.line(pad + "_ = gluTableSetStable(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + ", " + slot.cache + g.rootArgsFor(6, s.Pos()) + ")")
 			} else {
-				b.line(pad + "_ = c.TableSet(" + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + ")")
+				b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 			}
 		}
 	}
@@ -2946,6 +3822,11 @@ func (g *generator) emitLocalAssign(b *sourceBuilder, s *luaparser.LocalAssignSt
 func (g *generator) emitReturn(b *sourceBuilder, s *luaparser.ReturnStmt, indent int) {
 	pad := strings.Repeat("\t", indent)
 	if g.current == nil {
+		// A Lua chunk may return values even though Game.Init has no Go return
+		// slots. The values are discarded, but their expressions must still run
+		// left-to-right for side effects before the chunk exits.
+		g.emitAdjustedValues(b, s.Values, 0, indent)
+		g.emitActiveRootCleanup(b, indent)
 		b.line(pad + "return")
 		return
 	}
@@ -2953,17 +3834,20 @@ func (g *generator) emitReturn(b *sourceBuilder, s *luaparser.ReturnStmt, indent
 		// Even a zero-result trailing call must execute for side effects:
 		// `return bump()` is not equivalent to a bare return.
 		g.emitAdjustedValues(b, s.Values, 0, indent)
+		g.emitActiveRootCleanup(b, indent)
 		b.line(pad + "return")
 		return
 	}
-	if g.current.returnN == 1 && g.current.returnKind(0) == monoNumber {
-		if len(s.Values) != 1 || !g.exprNumber(s.Values[0]) {
-			g.setErr(fmt.Errorf("transpiler: internal numeric return mismatch in %s at %s", g.current.key, s.Pos()))
-			b.line(pad + "return 0")
-			return
-		}
+	if g.current.returnN == 1 && g.current.returnKind(0) == monoNumber &&
+		len(s.Values) == 1 && g.exprNumber(s.Values[0]) {
 		value := g.emitNumberExpr(s.Values[0])
 		g.writePending(b, indent)
+		if len(g.activeRootCounts) > 0 {
+			result := g.next("return")
+			b.line(pad + result + " := " + value)
+			g.emitActiveRootCleanup(b, indent)
+			value = result
+		}
 		b.line(pad + "return " + value)
 		return
 	}
@@ -2979,7 +3863,25 @@ func (g *generator) emitReturn(b *sourceBuilder, s *luaparser.ReturnStmt, indent
 			parts[i] = adjustedLuaValue(value)
 		}
 	}
+	if len(g.activeRootCounts) > 0 {
+		for i, part := range parts {
+			result := g.next("return")
+			b.line(pad + result + " := " + part)
+			parts[i] = result
+		}
+		g.emitActiveRootCleanup(b, indent)
+	}
 	b.line(pad + "return " + strings.Join(parts, ", "))
+}
+
+// emitActiveRootCleanup unwinds roots owned by every generated control-flow
+// scope that a Lua return exits. Counts are popped in reverse push order so
+// nested numeric and generic loops obey Context's local-root stack protocol.
+func (g *generator) emitActiveRootCleanup(b *sourceBuilder, indent int) {
+	pad := strings.Repeat("\t", indent)
+	for i := len(g.activeRootCounts) - 1; i >= 0; i-- {
+		b.line(pad + "gluPopRoots(c, " + g.activeRootCounts[i] + ")")
+	}
 }
 
 type adjustedValue struct {
@@ -3002,9 +3904,9 @@ func adjustedNumber(value adjustedValue) string {
 }
 
 // emitAdjustedValues evaluates a Lua expression list: every expression runs
-// (extra results still execute for side effects), a trailing user-function
-// call expands to all of its results, and the list is then truncated or
-// nil-padded to nWanted slots.
+// (extra results still execute for side effects), a trailing call expands to
+// its declared results, and the list is then truncated or nil-padded to
+// nWanted slots.
 func (g *generator) emitAdjustedValues(b *sourceBuilder, values []luaparser.Expr, nWanted, indent int) []adjustedValue {
 	pad := strings.Repeat("\t", indent)
 	out := make([]adjustedValue, nWanted)
@@ -3021,9 +3923,9 @@ func (g *generator) emitAdjustedValues(b *sourceBuilder, values []luaparser.Expr
 	for i, v := range values {
 		if i == last {
 			if call, ok := v.(*luaparser.CallExpr); ok {
-				fn := g.calledFunction(call)
-				if fn != nil && fn.returnN == 0 {
-					// A known zero-result user call expands to no value slots,
+				arity, known := g.callResultArity(call)
+				if known && arity == 0 {
+					// A known zero-result call expands to no value slots,
 					// but it still executes when it is the trailing expression.
 					if callExpr := g.emitCall(call, false); callExpr != "" {
 						g.writePending(b, indent)
@@ -3033,7 +3935,7 @@ func (g *generator) emitAdjustedValues(b *sourceBuilder, values []luaparser.Expr
 					}
 					continue
 				}
-				if fn != nil && fn.returnN > 1 {
+				if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
 					parts := make([]string, fn.returnN)
 					used := 0
 					for j := range parts {
@@ -3178,7 +4080,7 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 	if v, ok := call.Callee.(*luaparser.VarExpr); ok {
 		name = v.Name
 	}
-	if (name != "all" && name != "pairs") || len(call.Args) != 1 {
+	if (name != "all" && name != "pairs") || g.exprListWidth(call.Args) != 1 {
 		g.setErr(errors.New("transpiler: generic for requires all(t) or pairs(t) with one table argument"))
 		return
 	}
@@ -3194,8 +4096,13 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 	tableExpr := g.emitExprFlush(b, indent, firstArg(call))
 	b.line(pad + table + " := " + tableExpr)
 	root := g.next("iterRoot")
+	g.requireActiveRootSlots(1, s.Pos())
 	b.line(pad + root + " := gluPushRoots(c, " + table + ")")
 	b.line(pad + "if " + root + " >= 0 {")
+	rootDepth := len(g.activeRootCounts)
+	g.activeRootCounts = append(g.activeRootCounts, root)
+	rootSlots := g.activeRootSlots
+	g.activeRootSlots++
 	g.pushScope()
 	loopVars := make([]string, len(s.Names))
 	for i, n := range s.Names {
@@ -3239,6 +4146,8 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 		g.setErr(fmt.Errorf("transpiler: unsupported iterator %q; use all or pairs", name))
 	}
 	g.popScope()
+	g.activeRootCounts = g.activeRootCounts[:rootDepth]
+	g.activeRootSlots = rootSlots
 	b.line(pad + "\tgluPopRoots(c, " + root + ")")
 	b.line(pad + "}")
 }
@@ -3287,6 +4196,8 @@ func (g *generator) emitExpr(e luaparser.Expr) string {
 		return fmt.Sprintf("rt.NumVal(rt.Number(%d))", fixedNumberLiteral(x.Value))
 	case *luaparser.StringExpr:
 		return g.staticExpr(x.Value)
+	case *luaparser.ParenExpr:
+		return g.emitExpr(x.Expr)
 	case *luaparser.VarExpr:
 		return g.lookup(x.Name)
 	case *luaparser.UnaryExpr:
@@ -3333,6 +4244,8 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 		return false
 	}
 	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return g.exprNumber(x.Expr)
 	case *luaparser.NumberExpr:
 		return true
 	case *luaparser.VarExpr:
@@ -3356,7 +4269,7 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 	case *luaparser.BinaryExpr:
 		switch x.Op {
 		case luaparser.OpAdd, luaparser.OpSubtract, luaparser.OpMultiply,
-			luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo,
+			luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo, luaparser.OpPower,
 			luaparser.OpBitOr, luaparser.OpBitXor, luaparser.OpBitAnd,
 			luaparser.OpShiftL, luaparser.OpShiftR, luaparser.OpShiftRLogical,
 			luaparser.OpRotateL, luaparser.OpRotateR:
@@ -3371,7 +4284,19 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 			return fn.returnN > 0 && fn.returnKind(0) == monoNumber
 		}
 		requireNumbers := func() bool {
-			for _, arg := range x.Args {
+			for i, arg := range x.Args {
+				if i == len(x.Args)-1 {
+					if call, ok := arg.(*luaparser.CallExpr); ok {
+						if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
+							for result := 0; result < fn.returnN; result++ {
+								if fn.returnKind(result) != monoNumber {
+									return false
+								}
+							}
+							continue
+						}
+					}
+				}
 				if !g.exprNumber(arg) {
 					return false
 				}
@@ -3389,6 +4314,8 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 
 func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return g.emitNumberExpr(x.Expr)
 	case *luaparser.NumberExpr:
 		if x.Integer {
 			if value, ok := targetIntLiteral(x.Value); ok {
@@ -3442,6 +4369,8 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 			return "(" + left + ").IDiv(" + right + ")"
 		case luaparser.OpModulo:
 			return "gluNumberMod(" + left + ", " + right + ")"
+		case luaparser.OpPower:
+			return "gluNumberPow(" + left + ", " + right + ")"
 		case luaparser.OpBitOr:
 			return "(" + left + ").Bor(" + right + ")"
 		case luaparser.OpBitXor:
@@ -3467,7 +4396,11 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 			return g.emitFirstCall(x, fn)
 		}
 		name, _ := callKey(x)
-		args := g.sequenceNumberExprs(x.Args)
+		values := g.sequenceAdjustedExprs(x.Args)
+		args := make([]string, len(values))
+		for i, value := range values {
+			args[i] = adjustedNumber(value)
+		}
 		arg := func(i int, fallback string) string {
 			if i >= len(args) {
 				return fallback
@@ -3570,7 +4503,7 @@ func (g *generator) emitBinary(x *luaparser.BinaryExpr) string {
 	}
 	if x.Op == luaparser.OpConcat {
 		names := g.sequenceExprs([]luaparser.Expr{x.Left, x.Right})
-		return "gluConcat(c," + names[0] + "," + names[1] + g.rootArgs() + ")"
+		return "gluConcat(c," + names[0] + "," + names[1] + g.rootArgsFor(2, x.Pos()) + ")"
 	}
 	if g.exprNumber(x.Left) && g.exprNumber(x.Right) {
 		parts := g.sequenceNumberExprs([]luaparser.Expr{x.Left, x.Right})
@@ -3593,7 +4526,7 @@ func (g *generator) emitEagerBinary(op luaparser.Operator, left, right string) s
 	case luaparser.OpNotEqual:
 		return "rt.BoolVal(!c.ValuesEqual(" + left + "," + right + "))"
 	case luaparser.OpLess, luaparser.OpLessEq, luaparser.OpGreater, luaparser.OpGreaterEq:
-		return "rt.BoolVal(gluCmp(" + left + "," + right + ",\"" + string(op) + "\"))"
+		return "rt.BoolVal(gluCmp(c," + left + "," + right + ",\"" + string(op) + "\"))"
 	case luaparser.OpAdd:
 		return "(" + left + ").Add(" + right + ")"
 	case luaparser.OpSubtract:
@@ -3636,9 +4569,12 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 	// same as any other expression context.
 	var trailingFn *functionInfo
 	var trailingCall *luaparser.CallExpr
+	trailingZero := false
 	if n := len(x.Fields); n > 0 && x.Fields[n-1].Array {
 		if call, ok := x.Fields[n-1].Value.(*luaparser.CallExpr); ok {
-			if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
+			if arity, known := g.callResultArity(call); known && arity == 0 {
+				trailingZero, trailingCall = true, call
+			} else if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
 				trailingFn, trailingCall = fn, call
 			}
 		}
@@ -3652,7 +4588,9 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 			hashN++
 		}
 	}
-	if trailingFn != nil {
+	if trailingZero {
+		arrayN--
+	} else if trailingFn != nil {
 		arrayN += trailingFn.returnN - 1
 	}
 	tbl := g.next("tbl")
@@ -3662,7 +4600,13 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 	g.pending = append(g.pending, "var "+tbl+" rt.Value")
 	g.pending = append(g.pending, fail+" := false")
 	g.pending = append(g.pending, pushed+" := 0")
-	for _, root := range g.rootVars() {
+	// Existing Values only need to remain rooted across the allocation itself.
+	// Once the table exists, release those temporary copies and keep just the
+	// new table persistently rooted; nested field expressions will root the
+	// caller's still-live Go Values only while they allocate.
+	initialRoots := g.rootVars()
+	g.requireActiveRootSlots(len(initialRoots), x.Pos())
+	for _, root := range initialRoots {
 		g.pending = append(g.pending, "if !"+fail+" {")
 		g.pending = append(g.pending, "\tif c.PushLocal("+root+") { "+pushed+"++ } else { "+fail+" = true }")
 		g.pending = append(g.pending, "}")
@@ -3670,15 +4614,50 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 	g.pending = append(g.pending, "if !"+fail+" {")
 	g.pending = append(g.pending, "\tvar "+errName+" rt.HeapError")
 	g.pending = append(g.pending, "\t"+tbl+", "+errName+" = c.NewTableWithCaps("+strconv.Itoa(max(arrayN, 1))+", "+strconv.Itoa(max(hashN, 1))+")")
-	g.pending = append(g.pending, "\tif "+errName+" != rt.HeapOK { "+fail+" = true } else if !c.PushLocal("+tbl+") { "+fail+" = true } else { "+pushed+"++ }")
+	g.pending = append(g.pending, "\tif "+errName+" != rt.HeapOK { "+fail+" = true }")
+	g.pending = append(g.pending, "}")
+	g.pending = append(g.pending, "c.PopLocals("+pushed+")")
+	g.pending = append(g.pending, pushed+" = 0")
+	g.requireActiveRootSlots(1, x.Pos())
+	g.pending = append(g.pending, "if !"+fail+" {")
+	g.pending = append(g.pending, "\tif c.PushLocal("+tbl+") { "+pushed+" = 1 } else { "+fail+" = true }")
 	g.pending = append(g.pending, "}")
 	oldRoots := g.extraRoots
-	g.extraRoots = append(append([]string(nil), oldRoots...), tbl)
+	g.extraRoots = append([]string(nil), oldRoots...)
+	rootSlots := g.activeRootSlots
+	g.activeRootSlots++
+	if trailingFn != nil {
+		resultRoots := 0
+		for i := 0; i < trailingFn.returnN; i++ {
+			if trailingFn.returnKind(i) == monoValue {
+				resultRoots++
+			}
+		}
+		g.requireActiveRootSlots(resultRoots, x.Pos())
+	}
+	arrayIndex := 0
 	for i, f := range x.Fields {
 		last := i == len(x.Fields)-1
+		firstArrayIndex := arrayIndex + 1
+		if f.Array {
+			if last && trailingZero {
+				// A trailing zero-result call contributes no list field.
+			} else if last && trailingFn != nil {
+				arrayIndex += trailingFn.returnN
+			} else {
+				arrayIndex++
+			}
+		}
 		g.pending = append(g.pending, "if !"+fail+" {")
 		inner, _ := g.capturePending(func() string {
 			if f.Array {
+				if last && trailingZero {
+					statement := g.emitCall(trailingCall, false)
+					if statement != "" {
+						g.pending = append(g.pending, statement)
+					}
+					return ""
+				}
 				if last && trailingFn != nil {
 					results := make([]string, trailingFn.returnN)
 					for j := range results {
@@ -3694,13 +4673,13 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 					for j, r := range results {
 						value := adjustedLuaValue(adjustedValue{code: r, kind: trailingFn.returnKind(j)})
 						g.pending = append(g.pending, "if !"+fail+" {")
-						g.pending = append(g.pending, "\tif c.TableAdd("+tbl+","+value+",rt.NilVal()) != rt.HeapOK { "+fail+" = true }")
+						g.pending = append(g.pending, "\tif c.TableSet("+tbl+",rt.IntVal("+strconv.Itoa(firstArrayIndex+j)+"),"+value+") != rt.HeapOK { "+fail+" = true }")
 						g.pending = append(g.pending, "}")
 					}
 					return ""
 				}
 				v := g.emitExpr(f.Value)
-				g.pending = append(g.pending, "if c.TableAdd("+tbl+","+v+",rt.NilVal()) != rt.HeapOK { "+fail+" = true }")
+				g.pending = append(g.pending, "if c.TableSet("+tbl+",rt.IntVal("+strconv.Itoa(firstArrayIndex)+"),"+v+") != rt.HeapOK { "+fail+" = true }")
 				return ""
 			}
 			names := g.sequenceExprs([]luaparser.Expr{f.Key, f.Value})
@@ -3711,6 +4690,7 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 		g.pending = append(g.pending, "}")
 	}
 	g.extraRoots = oldRoots
+	g.activeRootSlots = rootSlots
 	g.pending = append(g.pending, "c.PopLocals("+pushed+")")
 	g.pending = append(g.pending, "if "+fail+" { "+tbl+" = rt.NilVal() }")
 	return tbl
@@ -3777,8 +4757,9 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		name = call.Method
 	}
 	if spec, ok := Builtins[name]; ok {
-		if len(call.Args) < spec.MinArgs || len(call.Args) > spec.MaxArgs {
-			g.setErr(fmt.Errorf("transpiler: %s expects %d..%d arguments, got %d", name, spec.MinArgs, spec.MaxArgs, len(call.Args)))
+		argCount := g.exprListWidth(call.Args)
+		if argCount < spec.MinArgs || argCount > spec.MaxArgs {
+			g.setErr(fmt.Errorf("transpiler: %s expects %d..%d arguments, got %d", name, spec.MinArgs, spec.MaxArgs, argCount))
 			return "rt.NilVal()"
 		}
 		return g.emitBuiltin(name, call.Args, value)
@@ -3815,7 +4796,15 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 }
 
 func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bool) string {
-	names := g.sequenceExprs(argExprs)
+	adjusted := g.sequenceAdjustedExprs(argExprs)
+	names := make([]string, len(adjusted))
+	for i, value := range adjusted {
+		names[i] = adjustedLuaValue(value)
+	}
+	callPos := luaparser.Position{}
+	if len(argExprs) > 0 {
+		callPos = argExprs[0].Pos()
+	}
 	arg := func(i int) string {
 		if i >= len(names) {
 			return "rt.Value{}"
@@ -3841,7 +4830,7 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "camera", "clip", "color", "cursor":
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "map":
-		if len(argExprs) == 0 {
+		if len(names) == 0 {
 			return void(fmt.Sprintf("c.MapAll(%d)", g.opts.MapDrawMask))
 		}
 		bgValue, _ := staticNumberLiteral(argExprs[0])
@@ -3849,11 +4838,11 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		slot := mapMaskSlot(g.opts.MapDrawMask, bg)
 		return void(fmt.Sprintf("c.MapBGAtV(%d,%s)", slot, argsUpTo(8)))
 	case "pal":
-		switch len(argExprs) {
+		switch len(names) {
 		case 0:
 			return void("c.PalReset()")
 		case 1:
-			if n, ok := argExprs[0].(*luaparser.NumberExpr); ok && n.Value == 2 {
+			if n, ok := staticNumberLiteral(argExprs[0]); ok && n == 2 {
 				g.setErr(fmt.Errorf("transpiler: pal(2) is unsupported while fillp is deferred"))
 				return "rt.NilVal()"
 			}
@@ -3862,14 +4851,14 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 			return void("c.PalV(" + argsUpTo(3) + ")")
 		}
 	case "palt":
-		if len(argExprs) == 0 {
+		if len(names) == 0 {
 			return void("c.PaltReset()")
 		}
 		return void("c.PaltV(" + argsUpTo(2) + ")")
 	case "pget":
 		return wrap("c.PgetV(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "print":
-		call := "c.PrintV(" + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + ")"
+		call := "gluPrintV(c," + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + g.rootArgsFor(4, callPos) + ")"
 		if value {
 			return wrap("rt.IntVal(" + call + ")")
 		}
@@ -3879,19 +4868,31 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 	case "sset":
 		return void("c.Sset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())")
 	case "fget":
-		if len(argExprs) < 2 {
+		if len(names) < 2 {
 			return wrap("rt.IntVal(c.FgetByte(" + arg(0) + ".Int()))")
 		}
 		return wrap("rt.BoolVal(c.Fget(" + arg(0) + ".Int()," + arg(1) + ".Int()))")
 	case "fset":
-		if len(argExprs) < 3 {
+		if len(names) < 3 {
 			return void("c.FsetByte(" + arg(0) + ".Int()," + arg(1) + ".Int())")
 		}
 		return void("c.Fset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Truthy())")
 	case "mget":
-		return wrap("rt.IntVal(int(c.Mget(" + arg(0) + ".Int()," + arg(1) + ".Int())))")
+		if len(names) == 2 {
+			return wrap("rt.IntVal(int(c.Mget(" + arg(0) + ".Int()," + arg(1) + ".Int())))")
+		}
+		if bg, literal := mode0StaticRuntimeInt(argExprs[0]); literal && bg == 0 {
+			return wrap("rt.IntVal(int(c.Mget(" + arg(1) + ".Int()," + arg(2) + ".Int())))")
+		}
+		return wrap("rt.IntVal(int(c.MgetLayer(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())))")
 	case "mset":
-		return void("c.Mset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())")
+		if len(names) == 3 {
+			return void("c.Mset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())")
+		}
+		if bg, literal := mode0StaticRuntimeInt(argExprs[0]); literal && bg == 0 {
+			return void("c.Mset(" + arg(1) + ".Int()," + arg(2) + ".Int()," + arg(3) + ".Int())")
+		}
+		return void("c.MsetLayer(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int()," + arg(3) + ".Int())")
 	case "btn":
 		if len(names) > 1 {
 			g.pending = append(g.pending, "_ = "+names[1])
@@ -3928,10 +4929,10 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		if value {
 			v := g.next("add")
 			g.pending = append(g.pending, v+" := "+val)
-			g.pending = append(g.pending, "_ = c.TableAdd("+table+", "+v+", "+idx+")")
+			g.pending = append(g.pending, "_ = gluTableAdd(c,"+table+", "+v+", "+idx+g.rootArgsFor(5, callPos)+")")
 			return v
 		}
-		return "_ = c.TableAdd(" + table + "," + val + "," + idx + ")"
+		return "_ = gluTableAdd(c," + table + "," + val + "," + idx + g.rootArgsFor(5, callPos) + ")"
 	case "del":
 		return wrap("c.TableDel(" + arg(0) + "," + arg(1) + ")")
 	case "deli":
@@ -3945,13 +4946,13 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		g.setErr(errors.New("transpiler: foreach is only valid as a standalone statement"))
 		return "rt.NilVal()"
 	case "sub":
-		return wrap("gluSub(c," + arg(0) + "," + arg(1) + "," + arg(2) + g.rootArgs() + ")")
+		return wrap("gluSub(c," + arg(0) + "," + arg(1) + "," + arg(2) + g.rootArgsFor(3, callPos) + ")")
 	case "tostr":
-		return wrap("gluTostr(c," + arg(0) + "," + arg(1) + ".Truthy()" + g.rootArgs() + ")")
+		return wrap("gluTostr(c," + arg(0) + "," + arg(1) + ".Truthy()" + g.rootArgsFor(1, callPos) + ")")
 	case "tonum":
 		return wrap("c.Tonum(" + arg(0) + ")")
 	case "chr":
-		return wrap("gluChr(c," + arg(0) + g.rootArgs() + ")")
+		return wrap("gluChr(c," + arg(0) + g.rootArgsFor(1, callPos) + ")")
 	case "ord":
 		return wrap("c.Ord(" + arg(0) + "," + arg(1) + ")")
 	case "t":
@@ -4199,6 +5200,38 @@ func calleePath(e luaparser.Expr) (string, bool) {
 	}
 }
 
+// staticMemberPath is deliberately validation-only. It recognizes literal
+// bracket members as aliases of dot members so writes such as
+// actor["body"]["draw"] cannot mutate a statically lowered function behind
+// the generator's back. callKey remains narrower; this does not introduce
+// bracket-call syntax or dynamic dispatch into the public dialect.
+func staticMemberPath(e luaparser.Expr) (string, bool) {
+	switch x := e.(type) {
+	case *luaparser.ParenExpr:
+		return staticMemberPath(x.Expr)
+	case *luaparser.VarExpr:
+		return x.Name, true
+	case *luaparser.FieldExpr:
+		base, ok := staticMemberPath(x.Base)
+		if !ok {
+			return "", false
+		}
+		return base + "." + x.Name, true
+	case *luaparser.IndexExpr:
+		base, ok := staticMemberPath(x.Base)
+		if !ok {
+			return "", false
+		}
+		key, ok := unparenExpr(x.Key).(*luaparser.StringExpr)
+		if !ok {
+			return "", false
+		}
+		return base + "." + key.Value, true
+	default:
+		return "", false
+	}
+}
+
 func callKey(call *luaparser.CallExpr) (string, bool) {
 	path, ok := calleePath(call.Callee)
 	if !ok {
@@ -4215,7 +5248,33 @@ func (g *generator) calledFunction(call *luaparser.CallExpr) *functionInfo {
 	if !ok {
 		return nil
 	}
+	// Builtins have precedence in emitCall. Keep every analysis and optimized
+	// lowering path on that same resolution rule; otherwise a user declaration
+	// named `abs`, for example, changes meaning when monomorphic numbers are
+	// enabled even though the generic path still calls the builtin.
+	if _, builtin := Builtins[key]; builtin {
+		return nil
+	}
 	return g.funcs[key]
+}
+
+// callResultArity resolves the exact number of values contributed by a bare
+// trailing call in a Lua expression list. Builtins and user functions share
+// this path so zero-result builtins cannot accidentally manufacture a nil
+// element or argument.
+func (g *generator) callResultArity(call *luaparser.CallExpr) (int, bool) {
+	key, ok := callKey(call)
+	if !ok {
+		return 0, false
+	}
+	if spec, builtin := Builtins[key]; builtin {
+		return spec.Results, true
+	}
+	fn := g.funcs[key]
+	if fn == nil {
+		return 0, false
+	}
+	return fn.returnN, true
 }
 
 // operandExprs returns a method call's receiver (bound to the callee's
@@ -4242,41 +5301,84 @@ func namesToArgs(names []string) string {
 // roots while later arguments execute; Number temporaries never enter the
 // root stack.
 func (g *generator) sequenceFunctionOperands(exprs []luaparser.Expr, fn *functionInfo) []string {
-	names := make([]string, len(exprs))
+	values := g.sequenceAdjustedExprs(exprs)
+	names := make([]string, len(values))
+	for i, value := range values {
+		want := monoValue
+		if i < len(fn.paramKinds) {
+			want = fn.paramKinds[i]
+		}
+		if want == monoNumber {
+			if value.kind != monoNumber {
+				g.setErr(fmt.Errorf("transpiler: internal numeric argument mismatch for %s", fn.key))
+				names[i] = "0"
+			} else {
+				names[i] = value.code
+			}
+		} else {
+			names[i] = adjustedLuaValue(value)
+		}
+	}
+	return names
+}
+
+// sequenceAdjustedExprs evaluates a Lua expression list into stable generated
+// temporaries. A bare trailing call contributes its declared result count;
+// parentheses keep that call in a single-value context. Value temporaries
+// remain roots while later expressions execute, matching Lua's left-to-right
+// evaluation rule.
+func (g *generator) sequenceAdjustedExprs(exprs []luaparser.Expr) []adjustedValue {
 	if len(exprs) == 0 {
-		return names
+		return nil
 	}
 	savedRoots := g.extraRoots
 	g.extraRoots = append([]string(nil), savedRoots...)
+	defer func() { g.extraRoots = savedRoots }()
+	out := make([]adjustedValue, 0, g.exprListWidth(exprs))
+	last := len(exprs) - 1
 	for i, expr := range exprs {
-		kind := monoValue
-		if i < len(fn.paramKinds) {
-			kind = fn.paramKinds[i]
-		}
-		var code string
-		if kind == monoNumber {
-			if !g.exprNumber(expr) {
-				g.setErr(fmt.Errorf("transpiler: internal numeric argument mismatch for %s at %s", fn.key, expr.Pos()))
-				code = "0"
-			} else {
-				code = g.emitNumberExpr(expr)
+		if i == last {
+			if call, ok := expr.(*luaparser.CallExpr); ok {
+				if arity, known := g.callResultArity(call); known && arity == 0 {
+					if statement := g.emitCall(call, false); statement != "" {
+						g.pending = append(g.pending, statement)
+					}
+					continue
+				}
+				if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
+					results := make([]string, fn.returnN)
+					for j := range results {
+						results[j] = g.next("arg")
+					}
+					rhs := g.emitMultiCall(call, fn)
+					g.pending = append(g.pending, strings.Join(results, ", ")+" := "+rhs)
+					for j, result := range results {
+						kind := fn.returnKind(j)
+						out = append(out, adjustedValue{code: result, kind: kind})
+						if kind == monoValue {
+							g.extraRoots = append(g.extraRoots, result)
+						}
+					}
+					continue
+				}
 			}
+		}
+		kind := monoValue
+		code := ""
+		if g.exprNumber(expr) {
+			kind = monoNumber
+			code = g.emitNumberExpr(expr)
 		} else {
 			code = g.emitExpr(expr)
 		}
-		if len(exprs) == 1 {
-			names[i] = code
-			continue
-		}
 		tmp := g.next("arg")
 		g.pending = append(g.pending, tmp+" := "+code)
-		names[i] = tmp
+		out = append(out, adjustedValue{code: tmp, kind: kind})
 		if kind == monoValue {
 			g.extraRoots = append(g.extraRoots, tmp)
 		}
 	}
-	g.extraRoots = savedRoots
-	return names
+	return out
 }
 
 func (g *generator) emitUserCall(call *luaparser.CallExpr, fn *functionInfo) string {
@@ -4294,10 +5396,11 @@ func (g *generator) emitUserCall(call *luaparser.CallExpr, fn *functionInfo) str
 	for i := len(fn.params); i < len(names); i++ {
 		g.pending = append(g.pending, "_ = "+names[i])
 	}
+	rootArgs := g.userCallRootArgs(fn, call.Pos())
 	if fn.noAlloc {
 		return "g." + fn.goName + "(c" + namesToArgs(args) + ")"
 	}
-	return "g.__glu_call_" + fn.goName + "(c" + namesToArgs(args) + g.rootArgs() + ")"
+	return "g.__glu_call_" + fn.goName + "(c" + namesToArgs(args) + rootArgs + ")"
 }
 
 func (g *generator) emitMultiCall(call *luaparser.CallExpr, fn *functionInfo) string {
@@ -4315,10 +5418,11 @@ func (g *generator) emitMultiCall(call *luaparser.CallExpr, fn *functionInfo) st
 	for i := len(fn.params); i < len(names); i++ {
 		g.pending = append(g.pending, "_ = "+names[i])
 	}
+	rootArgs := g.userCallRootArgs(fn, call.Pos())
 	if fn.noAlloc {
 		return "g." + fn.goName + "(c" + namesToArgs(args) + ")"
 	}
-	return "g.__glu_multi_" + fn.goName + "(c" + namesToArgs(args) + g.rootArgs() + ")"
+	return "g.__glu_multi_" + fn.goName + "(c" + namesToArgs(args) + rootArgs + ")"
 }
 
 func (g *generator) emitFirstCall(call *luaparser.CallExpr, fn *functionInfo) string {
@@ -4336,7 +5440,7 @@ func (g *generator) emitFirstCall(call *luaparser.CallExpr, fn *functionInfo) st
 	for i := len(fn.params); i < len(names); i++ {
 		g.pending = append(g.pending, "_ = "+names[i])
 	}
-	return "g.__glu_first_" + fn.goName + "(c" + namesToArgs(args) + g.rootArgs() + ")"
+	return "g.__glu_first_" + fn.goName + "(c" + namesToArgs(args) + g.userCallRootArgs(fn, call.Pos()) + ")"
 }
 
 // rootVars lists every Go variable currently reachable in the lexical scope
@@ -4346,25 +5450,141 @@ func (g *generator) emitFirstCall(call *luaparser.CallExpr, fn *functionInfo) st
 // caller-supplied extraRoots.
 func (g *generator) rootVars() []string {
 	var p []string
+	seen := make(map[string]bool)
+	appendRoot := func(root string) {
+		if root == "" || seen[root] {
+			return
+		}
+		seen[root] = true
+		p = append(p, root)
+	}
 	for _, scope := range g.scopes {
 		for _, e := range scope.entries {
 			if e.kind == monoValue {
-				p = append(p, e.goVar)
+				appendRoot(e.goVar)
 			}
 		}
 	}
-	p = append(p, g.extraRoots...)
+	for _, root := range g.extraRoots {
+		appendRoot(root)
+	}
 	return p
 }
 
-// rootArgs formats the current root variables for variadic generated runtime
-// calls.
-func (g *generator) rootArgs() string {
+// userCallRootArgs records the Context root-stack occupancy that remains in
+// place while a statically known callee executes. Allocating callees receive
+// every live caller Value through their wrapper; proven no-allocation calls
+// are direct and retain only roots already owned by surrounding loops.
+func (g *generator) userCallRootArgs(fn *functionInfo, pos luaparser.Position) string {
 	p := g.rootVars()
+	held := g.activeRootSlots
+	if !fn.noAlloc {
+		held += len(p)
+	}
+	g.noteRootPeak(held)
+	g.rootCalls = append(g.rootCalls, rootCallEdge{caller: g.current, callee: fn, held: held, pos: pos})
+	if held > runtimeapi.MaxLocalRoots {
+		g.rootBudgetError(held, pos, "user-call GC root budget")
+	}
+	if fn.noAlloc || len(p) == 0 {
+		return ""
+	}
+	return "," + strings.Join(p, ",")
+}
+
+func (g *generator) noteRootPeak(total int) {
+	if g.current == nil {
+		if total > g.topRootPeak {
+			g.topRootPeak = total
+		}
+		return
+	}
+	if total > g.current.rootPeak {
+		g.current.rootPeak = total
+	}
+}
+
+func (g *generator) rootBudgetError(total int, pos luaparser.Position, label string) {
+	where := ""
+	if pos.Line != 0 {
+		where = " at " + pos.String()
+	}
+	g.setErr(fmt.Errorf("transpiler: %s requires %d slots, runtime limit is %d%s", label, total, runtimeapi.MaxLocalRoots, where))
+}
+
+// requireActiveRootSlots validates roots which remain on Context's stack
+// across generated control flow, rather than roots pushed only for one helper
+// call. Without this check deeply nested loops could make gluPushRoots fail and
+// silently skip a loop even when its body performs no allocating operation.
+func (g *generator) requireActiveRootSlots(additional int, pos luaparser.Position) {
+	total := g.activeRootSlots + additional
+	g.noteRootPeak(total)
+	if total > runtimeapi.MaxLocalRoots {
+		g.rootBudgetError(total, pos, "active GC root budget")
+	}
+}
+
+// rootArgsFor also proves that the roots already held by surrounding loops,
+// the helper/runtime operation's peak operand roots, and the currently live
+// lexical/temporary Values fit in the runtime's fixed local-root stack. This
+// turns an otherwise silent nil/HeapOOM result into a deterministic,
+// source-positioned compile error.
+func (g *generator) rootArgsFor(helperRoots int, pos luaparser.Position) string {
+	p := g.rootVars()
+	total := g.activeRootSlots + helperRoots + len(p)
+	g.noteRootPeak(total)
+	if total > runtimeapi.MaxLocalRoots {
+		g.rootBudgetError(total, pos, "local GC root budget")
+	}
 	if len(p) == 0 {
 		return ""
 	}
 	return "," + strings.Join(p, ",")
+}
+
+// validateTransitiveRootBudget solves the maximum additional Context-root
+// demand of each statically known function. A call contributes roots already
+// held by its caller plus the callee's peak. Any positive recursive cycle is
+// unbounded because Mtile has no static recursion-depth limit, so accepting it
+// would merely postpone a deterministic root-stack failure to runtime.
+func (g *generator) validateTransitiveRootBudget() error {
+	for pass := 0; ; pass++ {
+		changed := false
+		var changedEdge rootCallEdge
+		var changedTotal int
+		for _, edge := range g.rootCalls {
+			if edge.callee == nil {
+				continue
+			}
+			total := edge.held + edge.callee.rootPeak
+			if total > runtimeapi.MaxLocalRoots {
+				where := ""
+				if edge.pos.Line != 0 {
+					where = " at " + edge.pos.String()
+				}
+				return fmt.Errorf("transpiler: transitive GC root budget calling %q requires %d slots, runtime limit is %d%s", edge.callee.key, total, runtimeapi.MaxLocalRoots, where)
+			}
+			if edge.caller == nil {
+				if total > g.topRootPeak {
+					g.topRootPeak = total
+					changed, changedEdge, changedTotal = true, edge, total
+				}
+			} else if total > edge.caller.rootPeak {
+				edge.caller.rootPeak = total
+				changed, changedEdge, changedTotal = true, edge, total
+			}
+		}
+		if !changed {
+			return nil
+		}
+		if pass >= len(g.funcList) {
+			where := ""
+			if changedEdge.pos.Line != 0 {
+				where = " at " + changedEdge.pos.String()
+			}
+			return fmt.Errorf("transpiler: recursive call cycle can grow the GC root stack without bound while calling %q (reached %d slots)%s", changedEdge.callee.key, changedTotal, where)
+		}
+	}
 }
 func (g *generator) staticExpr(s string) string {
 	if _, ok := g.staticGo[s]; !ok {

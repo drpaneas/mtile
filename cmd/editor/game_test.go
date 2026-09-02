@@ -191,6 +191,11 @@ func TestMapLayerToolbarUsesBackToFrontHorizontalOrderAndSeparateEyeTargets(t *t
 	if layout.Coordinates.X+layout.Coordinates.W > layout.Layers.X {
 		t.Fatalf("map information overlaps layer toolbar: coordinates=%#v layers=%#v", layout.Coordinates, layout.Layers)
 	}
+	if !rectInsideIDE(layout.MoveArea, layout.Strip) || !rectInsideIDE(layout.CopyArea, layout.Strip) ||
+		rectsOverlapIDE(layout.MoveArea, layout.SelectedTile) || rectsOverlapIDE(layout.MoveArea, layout.CopyArea) ||
+		rectsOverlapIDE(layout.CopyArea, layout.Coordinates) {
+		t.Fatalf("area tools are not isolated in the strip: move=%#v copy=%#v selected=%#v coordinates=%#v", layout.MoveArea, layout.CopyArea, layout.SelectedTile, layout.Coordinates)
+	}
 	if layout.LayerRows[0].X >= layout.LayerRows[1].X || layout.LayerRows[1].X >= layout.LayerRows[2].X || layout.LayerRows[2].X >= layout.LayerRows[3].X {
 		t.Fatalf("horizontal order is not BG0..BG3: %#v", layout.LayerRows)
 	}
@@ -436,6 +441,27 @@ func TestSnapshotRestoreRoundTrip(t *testing.T) {
 	// Sprite 2 on this 16x16 (2x2-sprite) sheet sits at col=2%2=0, row=2/2=1.
 	if got := g.pixelAt(0*8+1, 1*8+1); got != 5 {
 		t.Fatalf("restore did not reapply sheet pixel: got %d, want 5", got)
+	}
+}
+
+func TestMapRestorePreservesPaintingSpriteSelection(t *testing.T) {
+	g := newTestGame(t, 32, 32, 10, 10)
+	g.mode = modeMap
+	g.currentSprite = 6
+	g.currentColor = 5
+	g.gridCols = 2
+	g.gridRows = 1
+
+	previous := g.snapshot().clone()
+	previous.CurrentSprite = 1
+	previous.CurrentColor = 2
+	previous.GridCols = 1
+	previous.GridRows = 2
+
+	g.restore(previous)
+
+	if g.currentSprite != 6 || g.currentColor != 5 || g.gridCols != 2 || g.gridRows != 1 {
+		t.Fatalf("map undo changed painting selection: sprite=%d color=%d grid=%dx%d", g.currentSprite, g.currentColor, g.gridCols, g.gridRows)
 	}
 }
 
@@ -1183,6 +1209,12 @@ func TestMapLayoutSitsAboveStatusBar(t *testing.T) {
 	}
 	if bottom := layout.SelectedTile.Y + layout.SelectedTile.H; bottom > statusBarRect.Y {
 		t.Fatalf("selected-tile preview bottom %d overlaps status bar Y=%d", bottom, statusBarRect.Y)
+	}
+	if bottom := layout.MoveArea.Y + layout.MoveArea.H; bottom > statusBarRect.Y {
+		t.Fatalf("move-area tool bottom %d overlaps status bar Y=%d", bottom, statusBarRect.Y)
+	}
+	if bottom := layout.CopyArea.Y + layout.CopyArea.H; bottom > statusBarRect.Y {
+		t.Fatalf("copy-area tool bottom %d overlaps status bar Y=%d", bottom, statusBarRect.Y)
 	}
 	if layout.Canvas.Y+layout.Canvas.H > layout.Strip.Y {
 		t.Fatalf("map canvas bottom %d overlaps strip Y=%d", layout.Canvas.Y+layout.Canvas.H, layout.Strip.Y)

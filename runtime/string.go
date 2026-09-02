@@ -17,7 +17,7 @@ func (c *Context) heapStringBytes(ref Ref) []byte {
 
 func (c *Context) NewString(b []byte) (Value, HeapError) {
 	c.ensureHeap()
-	if len(b) > maxStringBytes {
+	if len(b) > MaxStringBytes {
 		return NilVal(), HeapOOM
 	}
 	size := uint16(2 + len(b))
@@ -67,7 +67,7 @@ func (c *Context) Concat(a, b Value) (Value, HeapError) {
 	}
 	c.heap.roots.temps[c.heap.roots.tempCount-1] = b
 	total := c.stringLen(a) + c.stringLen(b)
-	if total > maxStringBytes {
+	if total > MaxStringBytes {
 		c.PopTemps(2)
 		return NilVal(), HeapOOM
 	}

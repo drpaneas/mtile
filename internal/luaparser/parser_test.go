@@ -120,20 +120,24 @@ func TestCompoundIndexedAssignmentLowersWithTemps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(chunk.Body) != 3 {
-		t.Fatalf("lowered statements = %d, want 3", len(chunk.Body))
+	if len(chunk.Body) != 1 {
+		t.Fatalf("lowered statements = %d, want one lexical do block", len(chunk.Body))
 	}
-	baseLocal, ok := chunk.Body[0].(*LocalAssignStmt)
+	scope, ok := chunk.Body[0].(*DoStmt)
+	if !ok || len(scope.Body.Body) != 3 {
+		t.Fatalf("lowered statement = %#v, want do block containing three statements", chunk.Body[0])
+	}
+	baseLocal, ok := scope.Body.Body[0].(*LocalAssignStmt)
 	if !ok || !baseLocal.Synthetic {
-		t.Fatalf("first lowered statement = %#v, want synthetic base local", chunk.Body[0])
+		t.Fatalf("first lowered statement = %#v, want synthetic base local", scope.Body.Body[0])
 	}
-	keyLocal, ok := chunk.Body[1].(*LocalAssignStmt)
+	keyLocal, ok := scope.Body.Body[1].(*LocalAssignStmt)
 	if !ok || !keyLocal.Synthetic {
-		t.Fatalf("second lowered statement = %#v, want synthetic key local", chunk.Body[1])
+		t.Fatalf("second lowered statement = %#v, want synthetic key local", scope.Body.Body[1])
 	}
-	assign, ok := chunk.Body[2].(*AssignStmt)
+	assign, ok := scope.Body.Body[2].(*AssignStmt)
 	if !ok || !assign.Synthetic {
-		t.Fatalf("third lowered statement = %#v, want synthetic assignment", chunk.Body[2])
+		t.Fatalf("third lowered statement = %#v, want synthetic assignment", scope.Body.Body[2])
 	}
 	target, ok := assign.Targets[0].(*IndexExpr)
 	if !ok {
@@ -150,6 +154,13 @@ func TestCompoundIndexedAssignmentLowersWithTemps(t *testing.T) {
 	}
 	if assign.Targets[0] == rhs.Left {
 		t.Fatal("compound assignment aliased the l-value node as the read")
+	}
+	original, ok := assign.CompoundTarget.(*IndexExpr)
+	if !ok {
+		t.Fatalf("original compound target = %#v, want source index expression", assign.CompoundTarget)
+	}
+	if originalBase, ok := original.Base.(*VarExpr); !ok || originalBase.Name != "items" {
+		t.Fatalf("original compound base = %#v, want items", original.Base)
 	}
 	if baseValue, ok := baseLocal.Values[0].(*VarExpr); !ok || baseValue.Name != "items" {
 		t.Fatalf("base local value = %#v, want original table variable", baseLocal.Values[0])
@@ -900,5 +911,47 @@ func mustNumber(t *testing.T, expr Expr, want float64) {
 	num, ok := expr.(*NumberExpr)
 	if !ok || num.Value != want {
 		t.Fatalf("expr = %#v, want number %v", expr, want)
+	}
+}
+
+func TestBreakRequiresEnclosingLoop(t *testing.T) {
+	for _, source := range []string{
+		"break",
+		"function bad() break end",
+		"if true then break end",
+		"do break end",
+	} {
+		if _, err := ParseString("break.lua", source); err == nil || !strings.Contains(err.Error(), "break is only valid inside a loop") {
+			t.Fatalf("source %q: error = %v, want loop-context rejection", source, err)
+		}
+	}
+
+	for _, source := range []string{
+		"while true do break end",
+		"repeat break until true",
+		"for i=1,2 do if true then break end end",
+		"for value in all(items) do do break end end",
+	} {
+		if _, err := ParseString("break.lua", source); err != nil {
+			t.Fatalf("source %q: valid loop break rejected: %v", source, err)
+		}
+	}
+}
+
+func TestParenthesizedExpressionRetainsAdjustmentBoundary(t *testing.T) {
+	chunk, err := ParseString("paren.lua", "local a, b = (pair())")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assignment, ok := chunk.Body[0].(*LocalAssignStmt)
+	if !ok || len(assignment.Values) != 1 {
+		t.Fatalf("statement = %#v, want one-value local assignment", chunk.Body[0])
+	}
+	paren, ok := assignment.Values[0].(*ParenExpr)
+	if !ok {
+		t.Fatalf("value = %T, want *ParenExpr", assignment.Values[0])
+	}
+	if _, ok := paren.Expr.(*CallExpr); !ok {
+		t.Fatalf("parenthesized value = %T, want *CallExpr", paren.Expr)
 	}
 }

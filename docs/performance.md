@@ -48,6 +48,14 @@ passed parity, memory, p95, missed-frame, and ≥20% median-speed gates. Runtime
 failed the conservative 20% AUTO gate; `tile-v1` therefore selects Mode 4 for
 that source shape.
 
+Layer-first map access has its own
+[`layered-map-access-v1`](benchmarks/render-modes/layered-map-access-v1.json)
+record. Sixteen `mget(1,x,y)` reads and sixteen literal-layer
+`mset(1,x,y,id)` writes per tick are pixel-exact and retain large Mode 0 cycle
+savings. Host microbenchmarks keep the unchanged BG0 arities as explicit
+regression controls and report zero allocations. Dynamic-layer mutation stays
+forced-Mode-0-only in AUTO until its widest 16-write shape is measured.
+
 ### Compile-time OBJ glyph interning
 
 Mode 0 `print()` admits only static printable-ASCII strings and literal colors,

@@ -14,7 +14,9 @@ record the full OAM and near-limit scanline proofs.
 from the statically enumerated set `{1,32,35}`;
 `inactive-sprite-slots-v1.json` records the bounded `{0,1}` inactive-slot path;
 `object-depth-lanes-v1.json` records four interleaved BG-relative OBJ lanes;
-and `glyph-intern-v1.json` records 32 text occurrences sharing one static tile.
+`glyph-intern-v1.json` records 32 text occurrences sharing one static tile;
+and `layered-map-access-v1.json` records the layer-first `mget`/`mset` API,
+legacy hot-path controls, literal-layer AUTO bound, and dynamic-layer holdback.
 The original matrix, packed-sprite, and OAM-budget records use
 `examples/testio`; the other focused records use their own authored projects.
 Every record uses TinyGo 0.41.1, a pinned headless mGBA helper, 20 warm-up
@@ -41,6 +43,9 @@ included in total cycles.
 | four BG-relative object-depth lanes | 0 | 95.82% | 20,616 B | Mode 0 |
 | 16 dirty tiles/tick | 0 | 84.91% | 34,040 B | Mode 0 |
 | 16 map cells/tick | 0 | 85.03% | 34,040 B | Mode 0 |
+| 16 BG1 reads/tick (`mget(1,...)`) | 0 | 97.19% | 21,652 B | Mode 0 |
+| 16 BG1 writes/tick (`mset(1,...)`) | 0 | 90.79% | 34,040 B | Mode 0 |
+| dynamic-layer read/write, one per tick | 0 | 96.96% | 29,912 B | Mode 4 pending widest-shape proof |
 | runtime flag reclassification | 0 | 15.67% | 34,040 B | Mode 4 |
 
 The coin-block capture includes active tile animation, its deterministic hit,
@@ -87,6 +92,17 @@ returns 37,016 EWRAM bytes, remains pixel-exact, and misses no frames.
 The final row is not a correctness failure: both renderers are pixel-identical
 and miss no frames. It is the measured cost crossover that makes runtime
 `fset` a forced-Mode-0-only feature in AUTO profile `tile-v1`.
+
+The layered-map record separates compatibility from performance. Legacy
+`mget(x,y)`/`mset(x,y,id)` still lower to their original BG0 runtime methods.
+Five-run host medians show warm streamed BG1 access within 1.1% for reads and
+6.3% for changed writes versus BG0, with zero allocations; compact BG1 access
+pays the small logical-to-dense-plane lookup (3.773 ns/read and 3.966 ns/write).
+On ARM7TDMI, all three 120-frame workloads are pixel-exact with ample p95
+headroom. Literal-layer writes are therefore admitted under the existing
+16-direct-calls bound. The dynamic workload proves exact forced Mode 0 behavior
+for one write per tick, but AUTO remains conservative until a 16-write dynamic
+target workload is measured.
 
 The packed-sprite captures additionally compare the Mode 0 implementation with
 commit `e2fc183` immediately before the cache. For eight draws of one immutable

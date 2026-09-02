@@ -80,6 +80,37 @@ func TestStaticAndHeapStringEquality(t *testing.T) {
 	}
 }
 
+func TestCompareStringsIsLexicographicAcrossStorageKinds(t *testing.T) {
+	t.Parallel()
+	c := new(Context)
+	alpha := c.InternStatic("alpha")
+	betaStatic := c.InternStatic("beta")
+	betaHeap, err := c.NewString([]byte("beta"))
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	if cmp, ok := c.CompareStrings(alpha, betaStatic); !ok || cmp >= 0 {
+		t.Fatalf("alpha vs static beta = %d/%t, want negative/true", cmp, ok)
+	}
+	if cmp, ok := c.CompareStrings(betaHeap, alpha); !ok || cmp <= 0 {
+		t.Fatalf("heap beta vs alpha = %d/%t, want positive/true", cmp, ok)
+	}
+	if cmp, ok := c.CompareStrings(betaStatic, betaHeap); !ok || cmp != 0 {
+		t.Fatalf("static beta vs heap beta = %d/%t, want zero/true", cmp, ok)
+	}
+	if _, ok := c.CompareStrings(alpha, IntVal(1)); ok {
+		t.Fatal("string/number comparison was accepted as string ordering")
+	}
+}
+
+func TestInternStaticRejectsStringsBeyondRuntimeLimit(t *testing.T) {
+	t.Parallel()
+	c := new(Context)
+	if got := c.InternStatic(string(make([]byte, MaxStringBytes+1))); got.Kind != KindNil {
+		t.Fatalf("oversized static string kind = %d, want nil", got.Kind)
+	}
+}
+
 func TestNewTableUsesHintsAndRejectsOversizedHints(t *testing.T) {
 	t.Parallel()
 	c := new(Context)
@@ -94,10 +125,10 @@ func TestNewTableUsesHintsAndRejectsOversizedHints(t *testing.T) {
 	if readU16(data, 2) != 2 || readU16(data, 6) != 1 {
 		t.Fatal("table capacity hints were not stored")
 	}
-	if _, err := c.NewTableWithCaps(maxArrayCap+1, 1); err != HeapOOM {
+	if _, err := c.NewTableWithCaps(MaxTableArrayCapacity+1, 1); err != HeapOOM {
 		t.Fatalf("oversized array hint = %d, want HeapOOM", err)
 	}
-	if _, err := c.NewTableWithCaps(1, maxHashCap+1); err != HeapOOM {
+	if _, err := c.NewTableWithCaps(1, MaxTableHashCapacity+1); err != HeapOOM {
 		t.Fatalf("oversized hash hint = %d, want HeapOOM", err)
 	}
 }

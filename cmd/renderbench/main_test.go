@@ -97,6 +97,9 @@ func TestGraphicsCharacterizationWorkloadsRemainMode0Eligible(t *testing.T) {
 		{"map_arities_short", 4, false},
 		{"map_arities_long", 4, false},
 		{"map_mutation_isolation", 2, false},
+		{"layered_mget", 4, false},
+		{"layered_mset16", 1, false},
+		{"layered_map_dynamic", 2, false},
 		{"object_order_current", 2, true},
 		{"object_depth_lanes", 4, true},
 	}

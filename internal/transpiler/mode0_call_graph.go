@@ -92,6 +92,13 @@ func (g *mode0CallGraph) firstBuiltinInStmt(stmt luaparser.Stmt, targets map[str
 			found = call
 			return
 		}
+		// Code generation gives public builtins precedence over a user
+		// declaration with the same key. The proof must resolve calls the same
+		// way; following the unreachable user body can otherwise invent a
+		// camera/palette side effect and reject an exact Mode 0 program.
+		if _, builtin := Builtins[name]; builtin {
+			return
+		}
 		for _, fn := range g.functions[name] {
 			if visiting[fn] {
 				continue

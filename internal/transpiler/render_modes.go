@@ -31,7 +31,12 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		return RendererMode4Only
 	case "cls", "spr", "sspr", "map", "clip", "pal", "palt", "print":
 		return RendererMode0Conditional
-	case "camera", "color", "cursor", "sget", "sset", "fget", "fset", "mget", "mset":
+	case "camera", "color", "cursor", "sget", "sset", "fget", "fset":
+		return RendererBoth
+	case "mget", "mset":
+		// Both the legacy BG0 arities and the layer-first arities access the
+		// shared logical map exactly. AUTO applies a separate cost proof to
+		// layered mset; renderer compatibility itself is unconditional.
 		return RendererBoth
 	case "btn", "btnp",
 		"flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",

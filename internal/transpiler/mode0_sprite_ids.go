@@ -192,25 +192,41 @@ func (a *mode0SpriteIDAnalysis) collectStmt(stmt luaparser.Stmt, context mode0Sp
 }
 
 func (a *mode0SpriteIDAnalysis) discoverConstants() {
-	for name, writes := range a.writes {
-		if len(writes) != 1 || a.shadowed[name] || a.functionNames[name] {
-			continue
-		}
-		write := writes[0]
-		if !write.valid || !write.topLevel {
-			continue
-		}
-		if localOrder, local := a.topLocals[name]; local {
-			if localOrder != write.order || a.firstFunctionOrder >= 0 && localOrder >= a.firstFunctionOrder {
+	names := make([]string, 0, len(a.writes))
+	for name := range a.writes {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for {
+		changed := false
+		for _, name := range names {
+			if _, resolved := a.constants[name]; resolved {
 				continue
 			}
+			writes := a.writes[name]
+			if len(writes) != 1 || a.shadowed[name] || a.functionNames[name] {
+				continue
+			}
+			write := writes[0]
+			if !write.valid || !write.topLevel {
+				continue
+			}
+			if localOrder, local := a.topLocals[name]; local {
+				if localOrder != write.order || a.firstFunctionOrder >= 0 && localOrder >= a.firstFunctionOrder {
+					continue
+				}
+			}
+			value, resolved := a.finiteWriteValue(write)
+			if !resolved {
+				continue
+			}
+			a.constants[name] = value
+			a.constantWrite[name] = write
+			changed = true
 		}
-		value, literal := staticNumberLiteral(write.value)
-		if !literal || value != math.Trunc(value) {
-			continue
+		if !changed {
+			return
 		}
-		a.constants[name] = int(value)
-		a.constantWrite[name] = write
 	}
 }
 
@@ -221,7 +237,7 @@ func (a *mode0SpriteIDAnalysis) finiteIDs(expr luaparser.Expr) ([]int, bool, str
 	if value, literal := staticNumberLiteral(expr); literal && value == math.Trunc(value) {
 		return []int{int(value)}, true, ""
 	}
-	variable, ok := expr.(*luaparser.VarExpr)
+	variable, ok := unparenExpr(expr).(*luaparser.VarExpr)
 	if !ok {
 		return nil, false, "the id expression is not a scalar variable"
 	}
@@ -283,7 +299,7 @@ func (a *mode0SpriteIDAnalysis) finiteWriteValue(write mode0SpriteIDWrite) (int,
 	if value, literal := staticNumberLiteral(write.value); literal && value == math.Trunc(value) {
 		return int(value), true
 	}
-	variable, ok := write.value.(*luaparser.VarExpr)
+	variable, ok := unparenExpr(write.value).(*luaparser.VarExpr)
 	if !ok {
 		return 0, false
 	}

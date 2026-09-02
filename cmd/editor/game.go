@@ -77,6 +77,17 @@ type Game struct {
 	middleWasDown                bool
 	mapActiveLayer               int
 	mapLayerVisible              [assetsync.MapLayerCount]bool
+	mapTool                      mapTool
+	mapArea                      *mapAreaSelection
+	mapAreaSelecting             bool
+	mapAreaPlacing               bool
+	mapAreaAnchorX               int
+	mapAreaAnchorY               int
+	mapAreaGrabX                 int
+	mapAreaGrabY                 int
+	mapAreaTargetLayer           int
+	mapAreaTargetX               int
+	mapAreaTargetY               int
 
 	copiedSprite [8][8]int
 	hasCopied    bool
@@ -449,7 +460,12 @@ func (g *Game) snapshot() undoSnapshot {
 }
 
 func (g *Game) restore(s undoSnapshot) {
+	currentSprite, currentColor := g.currentSprite, g.currentColor
+	gridCols, gridRows := g.gridCols, g.gridRows
+	preserveMapPaintingSelection := g.mode == modeMap
+
 	g.stopAudioPreview()
+	g.resetMapAreaInteraction()
 	g.model.Sheet = s.Sheet
 	g.model.Map = s.Map
 	g.model.SFX = s.SFX
@@ -463,6 +479,12 @@ func (g *Game) restore(s undoSnapshot) {
 	g.currentColor = s.CurrentColor
 	g.gridCols = s.GridCols
 	g.gridRows = s.GridRows
+	// In Map Lab this selection is the current paint brush, not authored map
+	// data. Undo/redo must not silently switch the tile or stamp footprint.
+	if preserveMapPaintingSelection {
+		g.currentSprite, g.currentColor = currentSprite, currentColor
+		g.gridCols, g.gridRows = gridCols, gridRows
+	}
 	g.nativeChannel = s.NativeChannel
 	g.model.NativeSongIndex = s.NativeSong
 	g.nativeSequence = s.NativeSequence
@@ -614,8 +636,8 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 		if visible == "" {
 			visible = "none"
 		}
-		msg = fmt.Sprintf("[map editor]  BG%d  visible:%s  sprite:%d/%d  (1-4: layer, eye: preview, left: paint, right: erase, Cmd/Ctrl+S: save)",
-			g.mapActiveLayer, visible, g.currentSprite, lastSprite)
+		msg = fmt.Sprintf("[map editor]  BG%d  visible:%s  tool:%s  sprite:%d/%d  (1-4: layer/target, M: move, C: copy, Cmd/Ctrl+S: save)",
+			g.mapActiveLayer, visible, g.mapTool.String(), g.currentSprite, lastSprite)
 	}
 	if g.mode == modeMusic {
 		sections := 0

@@ -205,8 +205,10 @@ widened only with new parity tests and paired measurements.
 The shared `sset` API has an additional scheduling proof: calls must be direct
 statements in `_init` or `_update`; initialization commits while force-blanked,
 and visible updates are capped at 16 calls per tick so tile DMA stays bounded.
-AUTO additionally permits at most 16 direct `mset` calls per update and only
-init-time `fset`; forced Mode 0 retains exact runtime `fset` semantics.
+AUTO additionally permits at most 16 direct `mset` calls per update, requires
+a numeric-literal layer in the four-argument form, and permits only init-time
+`fset`; forced Mode 0 retains exact dynamic-layer `mset` and runtime `fset`
+semantics.
 
 Calls classified Both have shared logical semantics and Mode 0 invalidation or
 upload paths. Unsupported conditional forms still fail with an explicit

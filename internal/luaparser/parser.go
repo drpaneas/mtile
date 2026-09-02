@@ -67,6 +67,7 @@ type Parser struct {
 	tempNumber    int
 	functionDepth int
 	controlDepth  int
+	loopDepth     int
 }
 
 func (p *Parser) peek(n int) Token {
@@ -183,6 +184,9 @@ func (p *Parser) parseStatement() ([]Stmt, error) {
 	case "return":
 		return p.parseReturn()
 	case "break":
+		if p.loopDepth == 0 {
+			return nil, p.errorAt(token, "break is only valid inside a loop")
+		}
 		p.take()
 		return []Stmt{&BreakStmt{NodeBase: NodeBase{At: token.Pos}}}, nil
 	case "goto", "::":
@@ -482,6 +486,16 @@ func (p *Parser) parseControlBlock(stops ...string) (*Block, error) {
 	return p.parseBlock(stops...)
 }
 
+func (p *Parser) parseLoopBlock(stops ...string) (*Block, error) {
+	p.controlDepth++
+	p.loopDepth++
+	defer func() {
+		p.loopDepth--
+		p.controlDepth--
+	}()
+	return p.parseBlock(stops...)
+}
+
 func (p *Parser) parseSameLineStatements(line int) ([]Stmt, error) {
 	var statements []Stmt
 	for {
@@ -517,7 +531,7 @@ func (p *Parser) parseWhile() ([]Stmt, error) {
 	if _, err := p.expect("do"); err != nil {
 		return nil, err
 	}
-	body, err := p.parseControlBlock("end")
+	body, err := p.parseLoopBlock("end")
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +544,7 @@ func (p *Parser) parseWhile() ([]Stmt, error) {
 
 func (p *Parser) parseRepeat() ([]Stmt, error) {
 	start := p.take()
-	body, err := p.parseControlBlock("until")
+	body, err := p.parseLoopBlock("until")
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +597,7 @@ func (p *Parser) parseFor() ([]Stmt, error) {
 		if _, err := p.expect("do"); err != nil {
 			return nil, err
 		}
-		body, err := p.parseControlBlock("end")
+		body, err := p.parseLoopBlock("end")
 		if err != nil {
 			return nil, err
 		}
@@ -611,7 +625,7 @@ func (p *Parser) parseFor() ([]Stmt, error) {
 	if _, err := p.expect("do"); err != nil {
 		return nil, err
 	}
-	body, err := p.parseControlBlock("end")
+	body, err := p.parseLoopBlock("end")
 	if err != nil {
 		return nil, err
 	}
@@ -899,15 +913,16 @@ func (p *Parser) parsePrimary() (Expr, error) {
 	case TokenSymbol:
 		switch token.Text {
 		case "(":
-			p.take()
+			open := p.take()
 			expr, err := p.parseExpression(0)
 			if err != nil {
 				return nil, err
 			}
-			if _, err := p.expect(")"); err != nil {
+			close, err := p.expect(")")
+			if err != nil {
 				return nil, err
 			}
-			return expr, nil
+			return &ParenExpr{NodeBase: NodeBase{At: open.Pos, Last: close.Pos}, Expr: expr}, nil
 		case "{":
 			return p.parseTable()
 		case "...":
@@ -1049,8 +1064,14 @@ func (p *Parser) lowerCompound(target Expr, spelling string, value Expr) ([]Stmt
 		read := &FieldExpr{NodeBase: NodeBase{At: target.Pos()}, Base: readBase, Name: target.Name}
 		write := &FieldExpr{NodeBase: NodeBase{At: target.Pos()}, Base: writeBase, Name: target.Name}
 		local := &LocalAssignStmt{NodeBase: NodeBase{At: target.Pos()}, Names: []string{baseName}, Values: []Expr{target.Base}, Synthetic: true}
-		assign := &AssignStmt{NodeBase: NodeBase{At: target.Pos()}, Targets: []Expr{write}, Values: []Expr{&BinaryExpr{NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()}, Left: read, Op: op, Right: value}}, Synthetic: true}
-		return []Stmt{local, assign}, nil
+		assign := &AssignStmt{NodeBase: NodeBase{At: target.Pos()}, Targets: []Expr{write}, Values: []Expr{&BinaryExpr{NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()}, Left: read, Op: op, Right: value}}, Synthetic: true, CompoundTarget: target}
+		return []Stmt{&DoStmt{
+			NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()},
+			Body: &Block{
+				NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()},
+				Body:     []Stmt{local, assign},
+			},
+		}}, nil
 	default:
 		indexed := target.(*IndexExpr)
 		baseName := p.newTemp()
@@ -1063,8 +1084,14 @@ func (p *Parser) lowerCompound(target Expr, spelling string, value Expr) ([]Stmt
 		write := &IndexExpr{NodeBase: NodeBase{At: indexed.Pos()}, Base: writeBase, Key: writeKey}
 		baseLocal := &LocalAssignStmt{NodeBase: NodeBase{At: target.Pos()}, Names: []string{baseName}, Values: []Expr{indexed.Base}, Synthetic: true}
 		keyLocal := &LocalAssignStmt{NodeBase: NodeBase{At: target.Pos()}, Names: []string{keyName}, Values: []Expr{indexed.Key}, Synthetic: true}
-		assign := &AssignStmt{NodeBase: NodeBase{At: target.Pos()}, Targets: []Expr{write}, Values: []Expr{&BinaryExpr{NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()}, Left: read, Op: op, Right: value}}, Synthetic: true}
-		return []Stmt{baseLocal, keyLocal, assign}, nil
+		assign := &AssignStmt{NodeBase: NodeBase{At: target.Pos()}, Targets: []Expr{write}, Values: []Expr{&BinaryExpr{NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()}, Left: read, Op: op, Right: value}}, Synthetic: true, CompoundTarget: target}
+		return []Stmt{&DoStmt{
+			NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()},
+			Body: &Block{
+				NodeBase: NodeBase{At: target.Pos(), Last: value.Pos()},
+				Body:     []Stmt{baseLocal, keyLocal, assign},
+			},
+		}}, nil
 	}
 }
 
