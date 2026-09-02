@@ -18,8 +18,8 @@ func TestMode0TwoLayersUseSeparateScreenBlocksAndPainterPriority(t *testing.T) {
 	c.Map(2, 0, -16, 0, 2, 1, 2)
 	c.PresentRender()
 
-	if got := hw.GetReg16(hw.DISPCNT); got != 0x0300 {
-		t.Fatalf("DISPCNT = %#04x, want BG0+BG1", got)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(0x03); got != want {
+		t.Fatalf("DISPCNT = %#04x, want BG0+BG1/optional-OBJ display %#04x", got, want)
 	}
 	if got := hw.GetReg16(hw.BG0CNT); got != mode0LayerControl(0) || got&3 != 1 {
 		t.Fatalf("BG0CNT = %#04x, want back priority 1", got)
@@ -69,8 +69,8 @@ func TestMode0MapAllPacksSparseBG1AndBG3IntoTwoHardwareSlots(t *testing.T) {
 	c.MapAll(0x0a)
 	c.PresentRender()
 
-	if got := hw.GetReg16(hw.DISPCNT); got != 0x0300 {
-		t.Fatalf("DISPCNT = %#04x, want only two packed hardware BGs", got)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(0x03); got != want {
+		t.Fatalf("DISPCNT = %#04x, want two packed BGs/optional-OBJ display %#04x", got, want)
 	}
 	if got := hw.GetReg16(mode0LayerScreenBase(0)); got != 1 {
 		t.Fatalf("packed slot 0 = %d, want logical BG1 tile 1", got)

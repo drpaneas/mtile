@@ -69,6 +69,35 @@ end
 	}
 }
 
+func TestParseSpriteCallRetainsRuntimeIDVariable(t *testing.T) {
+	chunk, err := ParseString("dynamic-sprite.lua", `
+PLAYER_RUN_3 = 35
+player_sprite = PLAYER_RUN_3
+function _draw()
+  cls()
+  spr(player_sprite, 10, 20)
+end
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(chunk.Body) != 3 {
+		t.Fatalf("statements = %d, want two assignments and _draw", len(chunk.Body))
+	}
+	function, ok := chunk.Body[2].(*FunctionDeclStmt)
+	if !ok || len(function.Body.Body) != 2 {
+		t.Fatalf("draw declaration = %#v", chunk.Body[2])
+	}
+	call, ok := function.Body.Body[1].(*CallStmt)
+	if !ok || len(call.Call.Args) != 3 {
+		t.Fatalf("spr statement = %#v", function.Body.Body[1])
+	}
+	id, ok := call.Call.Args[0].(*VarExpr)
+	if !ok || id.Name != "player_sprite" {
+		t.Fatalf("spr id = %#v, want runtime player_sprite variable", call.Call.Args[0])
+	}
+}
+
 func TestParseSingleLineIf(t *testing.T) {
 	chunk, err := ParseString("single-line-if.lua", "if (ready != 0) score += 1\nprint(score)")
 	if err != nil {

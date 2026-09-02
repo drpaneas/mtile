@@ -79,6 +79,8 @@ type rendererResult struct {
 	MissedFrames    uint32 `json:"missedFrames"`
 	FinalFramePNG   string `json:"finalFramePng"`
 	SelectionReason string `json:"selectionReason"`
+	OAMEntries      int    `json:"mode0OAMEntries,omitempty"`
+	OBJLineCycles   int    `json:"mode0OBJLineCycles,omitempty"`
 }
 
 type gateReport struct {
@@ -532,6 +534,7 @@ func summarize(result build.Result, captured capture, pngPath string) (rendererR
 		CycleSamples: len(captured.cycles), MedianCycles: percentile(captured.cycles, 50), P95Cycles: percentile(captured.cycles, 95),
 		MedianDraw: percentile(captured.draw, 50), MedianCommit: percentile(captured.commit, 50), ColdUpload: coldUpload, MissedFrames: captured.missed,
 		FinalFramePNG: pngPath, SelectionReason: result.RendererReason,
+		OAMEntries: result.RendererOAMEntries, OBJLineCycles: result.RendererLineCycles,
 	}, nil
 }
 

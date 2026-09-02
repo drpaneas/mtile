@@ -159,6 +159,136 @@ func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
 	}
 }
 
+func TestMode0DefaultMapSizeCoversViewportAfterWholeTileCameraOffset(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	hw.ResetForTest()
+	mapData := make([]uint16, 40*30)
+	for i := range mapData {
+		mapData[i] = 1
+	}
+	c := newMode0TestContext(t, 16, 8, 40, 30, make([]byte, 16*8), mapData, make([]byte, 2))
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Camera(16, 16)
+	c.Map(0, 0, 0, 0, 0, 0, 0)
+	c.PresentRender()
+	if got := mode0VRAMEntry(29, 0); got != 1 {
+		t.Fatalf("right-edge entry = %d, want tile 1", got)
+	}
+	if got := mode0VRAMEntry(0, 19); got != 1 {
+		t.Fatalf("bottom-edge entry = %d, want tile 1", got)
+	}
+}
+
+func TestMode0SubtilePanRevealsRightAndBottomGuardCells(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	tests := []struct {
+		name        string
+		initialX    int
+		initialY    int
+		pannedX     int
+		pannedY     int
+		entryX      int
+		entryY      int
+		wantScrollX uint16
+		wantScrollY uint16
+	}{
+		{name: "right", initialX: 240, pannedX: 239, entryX: 30, wantScrollX: 1},
+		{name: "bottom", initialY: 160, pannedY: 159, entryY: 20, wantScrollY: 1},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			hw.ResetForTest()
+			c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, make([]byte, 2))
+
+			c.BeginRenderFrame()
+			c.Cls(0)
+			c.Map(0, 0, test.initialX, test.initialY, 1, 1, 0)
+			c.PresentRender()
+
+			c.BeginRenderFrame()
+			c.Cls(0)
+			c.Map(0, 0, test.pannedX, test.pannedY, 1, 1, 0)
+			c.PresentRender()
+			if got := mode0VRAMEntry(test.entryX, test.entryY); got != 1 {
+				t.Fatalf("newly visible guard entry (%d,%d) = %d, want tile 1", test.entryX, test.entryY, got)
+			}
+			if got := hw.GetReg16(hw.BG0HOFS); got != test.wantScrollX {
+				t.Fatalf("BG0HOFS = %d, want %d", got, test.wantScrollX)
+			}
+			if got := hw.GetReg16(hw.BG0VOFS); got != test.wantScrollY {
+				t.Fatalf("BG0VOFS = %d, want %d", got, test.wantScrollY)
+			}
+			if stats := c.RendererUploadStats(); stats.LastMapBytes != 0 {
+				t.Fatalf("subtile guard-cell pan uploaded %d map bytes, want 0", stats.LastMapBytes)
+			}
+		})
+	}
+}
+
+func TestMode0MutationUpdatesRightGuardCellBeforeSubtilePan(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 240, 0, 1, 1, 0)
+	c.PresentRender()
+
+	c.Mset(0, 0, 1)
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 239, 0, 1, 1, 0)
+	c.PresentRender()
+	if got := mode0VRAMEntry(30, 0); got != 1 {
+		t.Fatalf("mutated right guard entry = %d, want tile 1", got)
+	}
+	if stats := c.RendererUploadStats(); stats.LastMapBytes != 4096 {
+		t.Fatalf("guard-cell mutation uploaded %d map bytes, want 4096", stats.LastMapBytes)
+	}
+}
+
+func TestMode0MapCullsCellsOutsideViewportBeforeScreenWrapping(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	for _, tc := range []struct {
+		name    string
+		screenX int
+		screenY int
+	}{
+		{name: "horizontal-period", screenX: 512},
+		{name: "vertical-period", screenY: 256},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			hw.ResetForTest()
+			c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, make([]byte, 2))
+			c.BeginRenderFrame()
+			c.Cls(0)
+			c.Map(0, 0, tc.screenX, tc.screenY, 1, 1, 0)
+			if got := mode0VRAMEntry(0, 0); got != 0 {
+				t.Fatalf("screen entry before present = %d, want untouched hardware", got)
+			}
+			c.PresentRender()
+			if got := mode0VRAMEntry(0, 0); got != 0 {
+				t.Fatalf("wrapped offscreen map cell = %d, want transparent", got)
+			}
+		})
+	}
+
+	// A cell intersecting by one pixel must still be materialized; hardware
+	// scroll clips the remaining seven pixels at the viewport edge.
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, make([]byte, 2))
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, -7, 0, 1, 1, 0)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 1 {
+		t.Fatalf("partially visible map cell = %d, want tile 1", got)
+	}
+}
+
 func TestMode0SsetMsetAndFsetDirtyOnlyChangedHardware(t *testing.T) {
 	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
@@ -240,6 +370,71 @@ func TestMode0OffscreenMsetDoesNotInvalidateVisibleWindow(t *testing.T) {
 	}
 }
 
+func TestMode0OffscreenMapMutationDoesNotWrapIntoViewport(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, []byte{0, 0})
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 512, 0, 1, 1, 0)
+	c.PresentRender()
+	c.Mset(0, 0, 1)
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 512, 0, 1, 1, 0)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 0 {
+		t.Fatalf("offscreen mset wrapped into viewport entry: got %d, want 0", got)
+	}
+}
+
+func TestMode0DrawTimeMsetAffectsNextFrameLikeMode4(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, []byte{0, 0})
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 0, 0, 1, 1, 0)
+	c.Mset(0, 0, 1)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 0 {
+		t.Fatalf("draw-time mset changed the current rasterized frame: got %d, want 0", got)
+	}
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 0, 0, 1, 1, 0)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 1 {
+		t.Fatalf("draw-time mset missing from next frame: got %d, want 1", got)
+	}
+}
+
+func TestMode0DrawTimeFsetAffectsNextFrameLikeMode4(t *testing.T) {
+	requireMode0LayerCount(t, 1)
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{1}, []byte{0, 0})
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 0, 0, 1, 1, 1)
+	c.Fset(1, 0, true)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 0 {
+		t.Fatalf("draw-time fset changed the current rasterized frame: got %d, want 0", got)
+	}
+
+	c.BeginRenderFrame()
+	c.Cls(0)
+	c.Map(0, 0, 0, 0, 1, 1, 1)
+	c.PresentRender()
+	if got := mode0VRAMEntry(0, 0); got != 1 {
+		t.Fatalf("draw-time fset missing from next frame: got %d, want 1", got)
+	}
+}
+
 func TestMode0FinalizeInitCommitsSheetMutationsBeforeFirstFrame(t *testing.T) {
 	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
@@ -286,18 +481,18 @@ func TestMode0StreamsLargeLogicalMapWindow(t *testing.T) {
 	c.InitHardware()
 	c.BeginRenderFrame()
 	c.Cls(0)
-	c.Map(200, 70, 0, 0, 31, 21, 0)
+	c.Map(200, 70, -200*8, -70*8, 31, 21, 0)
 	c.PresentRender()
-	if got := mode0VRAMEntry(200, 70); got != 1 {
+	if got := mode0VRAMEntry(0, 0); got != 1 {
 		t.Fatalf("streamed entry = %d, want 1", got)
 	}
 
 	c.Mset(200, 70, 0)
 	c.BeginRenderFrame()
 	c.Cls(0)
-	c.Map(200, 70, 0, 0, 31, 21, 0)
+	c.Map(200, 70, -200*8, -70*8, 31, 21, 0)
 	c.PresentRender()
-	if got := mode0VRAMEntry(200, 70); got != 0 {
+	if got := mode0VRAMEntry(0, 0); got != 0 {
 		t.Fatalf("streamed edited entry = %d, want 0", got)
 	}
 }

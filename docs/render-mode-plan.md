@@ -195,12 +195,12 @@ widened only with new parity tests and paired measurements.
 | --- | --- | --- | --- |
 | `cls` | Exactly one unconditional, frame-initial clear in `_draw`. | Any accepted sequence must preserve persistent-image and call-order behavior. | `M0_CLS_NOT_FRAME_INITIAL` |
 | `map` | One to four direct maps after `cls`; static viewport up to 64x32; dynamic origins/masks/camera; streamed maps and mutations. | New layouts must preserve screen-block allocation, layer order, flags, streaming, and bounded uploads. | `M0_MAP_SHAPE`, `M0_RESOURCE_LIMIT` |
-| `spr` | Static source rectangle, dynamic position/flips, after maps, within the combined 32-object proof. | Larger/dynamic allocation needs a proof that no object or scanline overflow can occur. | `M0_SPR_SHAPE`, `M0_OBJ_BUDGET` |
-| `sspr` | Static aligned source rectangle, 1:1 destination size, dynamic position/flips. | Cropping/scaling needs a pixel-identical hardware transform and bounded resources. | `M0_SPR_SHAPE` |
+| `spr` | Literal source or scalar initialized unconditionally and assigned only explicit integer literals/immutable integer constants; static size, dynamic position/flips, after `cls` and at least one materialized BG when BGs exist, within the post-packing 128-OAM/1,226-cycle scanline proof. Interleaving with later explicit maps derives Attribute-2 depth; a fully default-transparent one-cell ID 0 is skipped at runtime but remains conservatively charged. Literal Y intervals compose exactly; dynamic Y overlaps conservatively. | Table/field IDs, arithmetic ranges, dynamic size, interprocedural value inference, or a behind-all-BG lane need separate/external handling. | `M0_SPR_SHAPE`, `M0_OBJ_BUDGET` |
+| `sspr` | Static aligned source rectangle, 1:1 destination size, dynamic position/flips, with the same order-derived object-depth lanes as `spr`. | Cropping/scaling needs a pixel-identical hardware transform and bounded resources. | `M0_SPR_SHAPE` |
 | `clip` | Full-screen/reset form only. | Each changing clip group maps to available hardware windows without changing order. | `M0_WINDOW_BUDGET_UNPROVEN` |
 | `pal` | Reset/layer reset and draw/display remaps outside `_draw`. | Mid-draw changes need conflict-free assets while preserving call order. | `M0_DRAW_SHAPE`, `M0_UNSUPPORTED_BUILTIN` |
 | `palt` | Reset and default-transparency no-op forms. | Nonzero transparent keys need conflict-free converted assets and opaque-use proof. | `M0_UNSUPPORTED_BUILTIN` |
-| `print` | Explicit static printable text/color, dynamic position, after maps, within the combined 32-object proof. | Dynamic/control-code text needs a bounded glyph/layout plan. | `M0_PRINT_SHAPE`, `M0_OBJ_BUDGET` |
+| `print` | Explicit static printable text/color, dynamic position, after maps, within 32 reserved glyph tiles and the shared 128-OAM/1,226-cycle proof. | Dynamic/control-code text needs a bounded glyph/layout plan. | `M0_PRINT_SHAPE`, `M0_OBJ_BUDGET` |
 
 The shared `sset` API has an additional scheduling proof: calls must be direct
 statements in `_init` or `_update`; initialization commits while force-blanked,
@@ -327,7 +327,7 @@ defers a large upload into VBlank has not won until the upload is included.
 | Map mutation | 1, 16, 64 `mset` cells/tick | Point where Mode 0 dirty uploads become slower than Mode 4. |
 | Tile mutation | 1, 4, 16 dirty tiles/tick via `sset` | Tile upload and invalidation crossover. |
 | Map layers | 1, 2, maximum accepted layers; flag masks | BG allocation and layer-composition cost. |
-| Sprites | 1, 32, 64, 100 distributed; separate scanline-pressure case | OAM construction cost and semantic resource rejection. |
+| Sprites | 1, 32, 64, 100 distributed; bounded ID-0 inactive slots; four interleaved BG depth lanes; separate scanline-pressure case | OAM construction cost, transparent-slot fast path, exact painter-order depth, and semantic resource rejection. |
 | Text | 10 and 40 characters; static and changing | Tile-font/OBJ update crossover. |
 | Palette/clip | static and per-frame accepted changes | Register/upload pressure and semantic parity. |
 | `examples/testio` | exact project assets and Lua | First real-project proof. |

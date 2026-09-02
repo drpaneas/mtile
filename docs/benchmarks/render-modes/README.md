@@ -6,15 +6,25 @@ profile; `zero-bg-text-v1.json` adds the fresh-project mapless workload;
 and `background-layers-stage2-v1.json` records the original explicit BG0-BG3
 slice. `background-layers-map-contract-v2.json` re-runs the four-plane workload
 after the first-argument-BG API migration and dense allocation work;
-`map-plane-packing-host-v1.json` isolates the two-of-four plane cost. The
-original matrix uses `examples/testio`; the focused records use
-their own authored projects. Every record uses TinyGo 0.41.1, a pinned headless mGBA
-helper, 20 warm-up frames, and 120 synchronized 30 Hz ticks. Deferred Mode 0
-VRAM/OAM work is included in total cycles.
+`map-plane-packing-host-v1.json` isolates the two-of-four plane cost;
+`packed-sprite16-v1.json` and `packed-sprite32-v1.json` record the immutable
+square hardware-OBJ lowerings; and `oam64-v1.json` plus `scanline38-v1.json`
+record the full OAM and near-limit scanline proofs.
+`dynamic-sprite-frames-v1.json` records non-contiguous runtime frame selection
+from the statically enumerated set `{1,32,35}`;
+`inactive-sprite-slots-v1.json` records the bounded `{0,1}` inactive-slot path;
+`object-depth-lanes-v1.json` records four interleaved BG-relative OBJ lanes;
+and `glyph-intern-v1.json` records 32 text occurrences sharing one static tile.
+The original matrix, packed-sprite, and OAM-budget records use
+`examples/testio`; the other focused records use their own authored projects.
+Every record uses TinyGo 0.41.1, a pinned headless mGBA helper, 20 warm-up
+frames, and 120 synchronized 30 Hz ticks. Deferred Mode 0 VRAM/OAM work is
+included in total cycles.
 
 | Workload | Pixel diff | Mode 0 median saving | EWRAM gain | AUTO |
 | --- | ---: | ---: | ---: | --- |
 | backdrop + OBJ text, no BG | 0 | 49.84% | 35,032 B | Mode 0 |
+| 32 text occurrences, one interned glyph/color tile | 0 | 57.91% | 37,016 B | Mode 0 |
 | testio static map | 0 | 92.94% | 34,040 B | Mode 0 |
 | sub-tile camera | 0 | 89.31% | 34,040 B | Mode 0 |
 | map + sspr + text + palette | 0 | 78.71% | 30,952 B | Mode 0 |
@@ -22,6 +32,13 @@ VRAM/OAM work is included in total cycles.
 | four authored BG planes + parallax | 0 | 90.46% | 18,564 B | Mode 0 |
 | four planes, new `map(bg,...)` contract | 0 | 97.22% | 21,652 B | Mode 0 |
 | animated coin block + one state transition | 0 | 66.36% | 30,952 B | Mode 0 |
+| eight packed 16x16 sprites | 0 | 72.13% | 37,064 B | Mode 0 |
+| two packed 32x32 sprites | 0 | 77.82% | 37,056 B | Mode 0 |
+| 64 distributed 8x8 sprites | 0 | 31.96% | 37,088 B | Mode 0 |
+| 38 packed 32x32 sprites at 1,216 line cycles | 0 | 92.01% | 37,056 B | Mode 0 |
+| 16 bounded runtime sprites, frames `{1,32,35}` | 0 | 60.20% | 37,088 B | Mode 0 |
+| 64 bounded runtime slots, frames `{0,1}` | 0 | 59.75% | 37,088 B | Mode 0 |
+| four BG-relative object-depth lanes | 0 | 95.82% | 20,616 B | Mode 0 |
 | 16 dirty tiles/tick | 0 | 84.91% | 34,040 B | Mode 0 |
 | 16 map cells/tick | 0 | 85.03% | 34,040 B | Mode 0 |
 | runtime flag reclassification | 0 | 15.67% | 34,040 B | Mode 4 |
@@ -60,9 +77,60 @@ zero allocations. For a 60x20 map the build omits 4,800 bytes of empty map
 payload from ROM and small-map EWRAM, and Mode 0 omits two 4 KiB screen
 shadows: 12,992 EWRAM bytes saved before small per-layer metadata arrays.
 
+The glyph-intern capture draws 32 copies of `A` in color 7. Mode 0 reports the
+same 32 OAM entries and 256 worst-line cycles as the former implementation,
+but stores and uploads one unique tile. Its median falls from the recorded
+162,434-cycle pre-interning baseline to 71,117 cycles (56.22%); draw work falls
+from 94,901 to 16,062 cycles (83.08%). Compared with Mode 4 it saves 57.91%,
+returns 37,016 EWRAM bytes, remains pixel-exact, and misses no frames.
+
 The final row is not a correctness failure: both renderers are pixel-identical
 and miss no frames. It is the measured cost crossover that makes runtime
 `fset` a forced-Mode-0-only feature in AUTO profile `tile-v1`.
+
+The packed-sprite captures additionally compare the Mode 0 implementation with
+commit `e2fc183` immediately before the cache. For eight draws of one immutable
+16x16 source, packing reduces median total work from 66,914 to 61,828 cycles
+(7.60%) and draw work from 18,148 to 11,292 cycles (37.78%). For two distinct
+32x32 sources, it reduces total work from 63,259 to 48,318 cycles (23.62%) and
+draw work from 14,302 to 3,214 cycles (77.53%). The 32x32 result costs 1,084 ROM
+bytes and 32 EWRAM bytes relative to its baseline. The renderer continues to
+charge the true 16/32-pixel scanline width, while cached rectangles consume one
+OAM entry.
+
+The OAM records cover the newly widened AUTO profile. `oam64.lua` uses 64
+separate OAM entries distributed over eight rows and remains exact with no
+missed frames in either renderer. `scanline38.lua` uses one cached 32x32 source
+38 times on the same scanlines: 38 OAM entries and 1,216 of the available 1,226
+normal-OBJ cycles. It is pixel-exact and misses no Mode 0 frames. Its Mode 4
+capture misses 140 cumulative ticks, so the parity gate passes while the full
+missed-frame gate remains false; the record characterizes the hardware boundary
+rather than claiming a fair Mode 4 throughput comparison.
+
+The bounded runtime-frame capture changes one scalar ID among the explicit,
+non-contiguous constants 1, 32, and 35 while drawing sixteen 8x8 objects. All
+120 synchronized frames are pixel-identical. Mode 0 measures 69,588 median
+cycles versus 174,842 for Mode 4 (60.20% saving), returns 37,088 EWRAM bytes,
+uses 16 OAM entries and 32 worst-line OBJ cycles, and misses no frames in
+either renderer. The 3,400,790-cycle Mode 0 cold upload is recorded separately
+from the steady-state median.
+
+The inactive-slot capture alternates 64 one-cell calls between the explicit
+IDs 0 and 1. All 120 synchronized frames are pixel-identical. The compiler
+continues to report the conservative 64-entry/64-cycle maximum, while runtime
+tests separately prove that the fully transparent ID-0 frames emit no OAM
+entries. Mode 0 measures 68,920 median cycles versus 171,235 for Mode 4
+(59.75% saving), returns 37,088 EWRAM bytes, and misses no frames in either
+renderer.
+
+The object-depth capture draws one sprite after each of four non-empty map
+passes over the checked-in background-layer art. Mode 0 writes OBJ priorities
+3/2/1/0 while Mode 4 paints the same statements immediately. All 120 frames
+are pixel-identical. Mode 0 measures 50,854 median cycles versus 1,215,615 for
+Mode 4 (95.82% saving), returns 20,616 EWRAM bytes, and uses four OAM entries
+with a 16-cycle worst line. The parity gate passes; the full gate remains false
+because four-layer cold initialization records one Mode 0 miss and the
+deliberately raster-heavy Mode 4 side records 140 cumulative missed ticks.
 
 Reproduce a workload from the repository root:
 

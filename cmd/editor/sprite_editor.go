@@ -13,6 +13,11 @@ import (
 
 func (g *Game) updateSpriteMode() {
 	mx, my := ebiten.CursorPosition()
+	if g.spritePaste != nil {
+		g.updateSpritesheetPanel(mx, my)
+		g.updateCopyPaste()
+		return
+	}
 	g.updateSpriteCanvasView(mx, my)
 	g.updateSpriteTools(mx, my)
 	g.updatePixelCanvas(mx, my)
@@ -793,6 +798,18 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 		if _, yoff := ebiten.Wheel(); yoff != 0 {
 			g.sheetCam.Pan(0, -yoff, canvas, cols, rows)
 		}
+		if g.spritePaste != nil {
+			col, row, ok := g.sheetCam.ScreenToTile(mx, my, canvas)
+			if ok && col >= 0 && row >= 0 && col < cols && row < rows {
+				g.moveSpritePastePlacement(col, row)
+				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+					_ = g.commitSpritePastePlacement()
+				}
+			}
+			g.sheetSelectionDragging = false
+			g.clampSheetCamera(canvas)
+			return
+		}
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			col, row, ok := g.sheetCam.ScreenToTile(mx, my, canvas)
 			if ok && col >= 0 && row >= 0 && col < cols && row < rows {
@@ -850,10 +867,55 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	// at this fitted scale overwhelms the checkerboard and makes the sheet look
 	// much brighter than the editing canvas.
 	drawSpritePixelGrid(screen, sheetLeft, sheetTop, tileW/8, tileH/8, cols*8, rows*8, canvas, false)
+	g.drawSpritePastePreview(screen, canvas)
 	if lockedVisible {
 		drawSpriteLockOverlay(screen, lockedRect)
 	}
 	g.drawSelectionBorder(screen, canvas)
+}
+
+// drawSpritePastePreview renders the clipboard image at its prospective sheet
+// position. A translucent veil keeps transparent source pixels visible as part
+// of the affected area; the source colors remain readable underneath a strong
+// valid/invalid outline.
+func (g *Game) drawSpritePastePreview(screen *ebiten.Image, canvas editor.Rect) {
+	placement := g.spritePaste
+	if screen == nil || placement == nil {
+		return
+	}
+	region := sheetCameraRect(g.sheetCam, canvas, placement.startCol, placement.startRow, placement.tileCols(), placement.tileRows())
+	visible, ok := intersectEditorRects(region, canvas)
+	if !ok {
+		return
+	}
+	accent := color.Color(colorSprite)
+	if g.spritePasteTargetError(placement, placement.startCol, placement.startRow) != nil {
+		accent = colorDanger
+	}
+	fillRect(screen, visible, rgba(accent, 48))
+
+	originX, originY := g.sheetCam.WorldToScreen(placement.startCol, placement.startRow, canvas)
+	scaleX, scaleY := g.sheetCam.TileSize()/8, g.sheetCam.TileSizeY()/8
+	for py := 0; py < placement.pixelHeight; py++ {
+		for px := 0; px < placement.pixelWidth; px++ {
+			pixel := placement.pixels[py*placement.pixelWidth+px]
+			if isEraserIndex(pixel) {
+				continue
+			}
+			x, w := scaledRun(originX, px, scaleX)
+			y, h := scaledRun(originY, py, scaleY)
+			target, targetVisible := intersectEditorRects(editor.Rect{X: x, Y: y, W: w, H: h}, canvas)
+			if targetVisible {
+				fillRect(screen, target, rgba(g.swatch(pixel), 185))
+			}
+		}
+	}
+	if outline, outlineVisible := spritesheetSelectionOutlineRect(region, canvas); outlineVisible {
+		strokeRect(screen, outline, rgba(accent, 245))
+		if outline.W > 4 && outline.H > 4 {
+			strokeRect(screen, editor.Rect{X: outline.X + 1, Y: outline.Y + 1, W: outline.W - 2, H: outline.H - 2}, rgba(accent, 115))
+		}
+	}
 }
 
 func (g *Game) drawSpriteThumb(screen *ebiten.Image, id int, sx, sy, tileW, tileH float64, clips ...editor.Rect) {
@@ -1048,11 +1110,17 @@ func (g *Game) updateSpriteKeyboard() {
 }
 
 func (g *Game) updateCopyPaste() {
+	if g.spritePaste != nil && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		g.cancelSpritePastePlacement()
+		return
+	}
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	if !mod {
 		return
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+		g.spritePaste = nil
+		g.statusMsg = ""
 		g.copyCurrentSprite()
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyV) {

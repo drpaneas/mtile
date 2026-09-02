@@ -42,10 +42,12 @@ calls. Fine movement becomes a BG scroll-register update. This capability is
 not represented in the Map Lab and the last `map()` argument remains a sprite
 flag mask, not a background-layer ID.
 
-The missing part is object depth. The current Mode 0 proof requires every
-`spr()` after every `map()`, and the runtime writes OBJ priority 0. Objects are
-therefore always in front of every background. A complete design must expose
-both the existing multi-BG allocation and the object slots between layers.
+The immediate-mode compatibility path now supports object depth: a direct
+`spr()`/`sspr()` placed between explicit `map()` calls derives the exact OBJ
+priority from painter order. What remains missing from this long-term proposal
+is a named, editor-visible lane model and runtime-variable depth that does not
+require restructuring draw statements. A complete semantic design must expose
+both the existing multi-BG allocation and those object slots in authoring UI.
 
 ## Authoring model
 
@@ -217,8 +219,10 @@ four useful, exactly representable object lanes:
 | `before_world` | 2 | behind World, in front of Mountains |
 | `before_mountains` | 3 | behind Mountains, in front of Sky |
 
-The editor presents these semantic names, not unexplained numbers. The build
-generates stable constants such as `depth_before_foreground` and reports the
+The current immediate API selects these lanes by placing an object after the
+corresponding explicit map pass; it exposes no raw priority number and rejects
+the unavailable behind-all lane. A future editor would present semantic names,
+generate stable constants such as `depth_before_foreground`, and report the
 derived P0-P3 mapping. A fifth “behind Sky” lane is not offered in Mode 0
 because the hardware cannot represent it exactly.
 

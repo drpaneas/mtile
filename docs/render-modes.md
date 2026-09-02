@@ -38,7 +38,12 @@ prove all of these conditions:
   `map()` is called (its authored planes may all be transparent);
 - the bundled source contains no Mode 4-only raster/readback builtin;
 - `_draw` has exactly one unconditional direct `cls([color])`, then zero to
-  four unconditional direct `map(...)` statements;
+  four unconditional direct `map(...)` statements. The `cls` color is omitted
+  or statically lowers through the runtime's signed 16:16 conversion to an
+  integer from 0 to 255; otherwise Mode 0 could not preserve the Mode 4
+  no-op semantics of an invalid color. No return may appear before `cls`,
+  including in a nested branch or loop, so the clear dominates every `_draw`
+  return path;
 - `map()` is the single automatic form and draws every non-empty authored
   plane. Every call with arguments starts with a unique static BG0..BG3 ID
   present in the asset; its remaining zero-to-seven arguments retain the
@@ -48,19 +53,45 @@ prove all of these conditions:
   height no greater than 32 cells; map origin, destination, layer mask, camera,
   and the logical map size may be dynamic/large;
 - all `spr`, supported `sspr`, and `print` calls are unconditional direct
-  statements after every map; their worst-case combined hardware-object count
-  is at most 32;
-- `spr` uses a static valid source ID and static 1..32-cell width/height; x/y
-  and flips may be dynamic;
+  statements after `cls`. `spr`/`sspr` may follow any materialized explicit
+  map and thereby occupy its exact object-depth lane; an object behind every
+  materialized BG is unrepresentable. `print` remains after every map. After
+  the deterministic packing plan they use at most 128 OAM entries and at most
+  1,226 normal-OBJ rendering cycles on every scanline. Literal Y positions are
+  first quantized exactly like the runtime's signed 16:16 numbers, then compose
+  as circular 8-bit hardware intervals; independently dynamic Y positions and
+  object groups separated by a `_draw` camera change are conservatively assumed
+  to coincide. This analysis follows user helper calls, so a helper-reachable
+  camera rebase cannot bypass the scanline proof. Static text X positions
+  include the runtime's six-pixel wrapping; dynamic text X/camera phases use a
+  conservative coincident-glyph bound;
+- `spr` uses either a valid integer-literal source ID or a scalar source-ID
+  variable whose complete value set is statically enumerated; width/height
+  remain static 1..32-cell integers, while x/y and flips may be dynamic;
 - `sspr` uses a static, in-bounds, 8x8-aligned source rectangle and performs no
   scaling; destination position and flips may be dynamic;
 - `print` uses the four-argument form, a static printable-ASCII string, and a
-  static 0..255 color; x/y may be dynamic. Text reserves OBJ tiles 480..511,
-  so other object source IDs must remain below 480 when text is present;
+  static 1..255 color for non-empty text (an empty string may use 0); OBJ
+  palette index 0 is always transparent, whereas Mode 4 draws color 0
+  opaquely, so non-empty color-0 text is not eligible. x/y may be dynamic or non-numeric, in which case the
+  shared cursor position and implicit-newline update exactly match Mode 4.
+  Text reserves OBJ tiles 480..511 and is limited to 32 unique `(glyph,color)`
+  pairs, not 32 character occurrences. The transpiler sorts and rasterizes
+  those unique pairs into a ROM atlas, which is uploaded once while the LCD is
+  force-blanked. Every visible occurrence still consumes one OAM entry and its
+  true eight-cycle scanline cost, so the shared 128-entry/1,226-cycle proof
+  remains unchanged. Repeated characters may therefore exceed 32 occurrences
+  when the occurrence budgets fit; 33 unique pairs fail forced Mode 0 or make
+  AUTO fall back with `M0_OBJ_BUDGET`. Other object source IDs must remain below
+  480 when non-empty text is present. Empty static strings require no OBJ/text backend;
 - `clip` is only `clip()` or `clip(0,0,240,160)`;
-- `pal`/`palt` run outside `_draw`; palette reset, layer reset, draw/display
-  remaps, and the default transparency no-op forms are supported, but arbitrary
-  transparent keys are not; and
+- `pal`/`palt` run outside `_draw`, including through every helper reachable
+  from `_draw`; palette reset, layer reset, draw/display remaps, and the default
+  transparency no-op forms are supported, but arbitrary transparent keys are
+  not;
+- user code does not call or retain `_init`, `_update`, or `_draw` as a value;
+  the generated lifecycle is the only invocation path, which preserves the
+  proven render-frame boundary and resource-call bounds; and
 - `sset` is a direct unconditional statement in `_init` or `_update`; `_init`
   mutations commit while force-blanked and `_update` permits at most 16 calls
   so the visible dirty-tile upload is bounded to VBlank; and
@@ -69,13 +100,111 @@ prove all of these conditions:
 
 `camera`, `sset`, `mset`, and `fset` are supported. Large logical maps use a
 deterministic 64x32 hardware window; mutations patch or invalidate only the
-affected visible tile/map state. Each map pass owns a regular 8bpp BG layer,
-objects/text use OAM and OBJ VRAM, source color 0 remains transparent, and
+affected visible tile/map state and off-screen cells never alias a wrapped
+screen-block entry. An `mset`/`fset` after a map pass leaves that already
+rasterized frame unchanged and rematerializes the affected layer on the next
+pass, matching Mode 4 call-order semantics. Each map pass owns a regular 8bpp
+BG layer, objects/text use OAM and OBJ VRAM, source color 0 remains transparent, and
 `cls` supplies the backdrop. With no `map()` calls, no regular BG is enabled;
 backdrop-only and OBJ/text scenes remain valid Mode 0 frames. The Mode 4
 framebuffer and page-copy code are excluded by build tag. Unsupported forced
 Mode 0 source fails before TinyGo
 with a source position and stable `M0_*` reason code; it is never approximated.
+
+A bounded runtime `spr(id, ...)` variable must be initialized by an
+unconditional top-level or direct `_init` assignment. Every assignment to that
+same scalar must be either an integer literal or an immutable top-level integer
+constant, so the compiler can enumerate the complete set before linking:
+
+```lua
+PLAYER_IDLE = 1
+PLAYER_RUN_A = 32
+PLAYER_RUN_B = 35
+player_sprite = PLAYER_IDLE
+
+function _update()
+  if btn(0) then
+    player_sprite = PLAYER_RUN_A
+  else
+    player_sprite = PLAYER_RUN_B
+  end
+end
+
+function _draw()
+  cls()
+  spr(player_sprite, 40, 60)
+end
+```
+
+The set above is exactly `{1,32,35}`; IDs need not be adjacent. Arithmetic
+such as `player_sprite = player_sprite + 1` or
+`player_sprite = BASE + animation_step`, function results, table/field IDs,
+random/map-derived IDs, conditional-only initialization, and ambiguous local
+shadowing are not proofs. Forced Mode 0 rejects them with source-positioned
+`M0_SPR_SHAPE`; AUTO uses the same diagnostic and falls back to Mode 4. Every
+enumerated source rectangle must fit the sheet, OBJ IDs 0..511, the optional
+text reservation, and the existing OAM/scanline budgets. This is renderer
+eligibility only: it adds no animation builtin and does not change `spr()`
+semantics in either renderer.
+
+The enumerated set may include `0`, so a one-cell dynamic draw can use
+`0` as its inactive value. Under Mode 0, `spr(0,x,y)` consumes no runtime OAM
+entry when logical sprite 0 contains only the default-transparent source color
+0. This is a semantic fast path, not a compiler-budget discount: every such
+call still counts as one OAM entry and eight scanline cycles in the static
+worst-case proof. If authored data or `sset()` makes any sprite-0 pixel
+nonzero, tile 0 is synchronized into OBJ VRAM and the same call draws a normal
+hardware object; changing the last nonzero pixel back to 0 restores the
+inactive path in that frame. Map cell ID 0 remains the empty-map sentinel and
+is never populated from the mutable sprite-0 OBJ tile.
+
+Explicit `map(bg,...)` calls also define exact object-depth lanes without a new
+Lua argument. Mode 4 already paints in statement order. Mode 0 counts only the
+non-empty planes that receive dense hardware BG slots; after the `k`th such map
+out of `N`, `spr()`/`sspr()` uses OBJ priority `N-k`. Because an OBJ wins a tie
+with a BG of the same priority, the object is in front of every map already
+drawn and behind every later map:
+
+| Four-BG statement position | OBJ priority | Result |
+| --- | ---: | --- |
+| after BG0 | 3 | in front of BG0, behind BG1-BG3 |
+| after BG1 | 2 | in front of BG0-BG1, behind BG2-BG3 |
+| after BG2 | 1 | in front of BG0-BG2, behind BG3 |
+| after BG3 | 0 | in front of every BG |
+
+Empty logical planes create no phantom lane. `map()` in its automatic form
+materializes every non-empty plane as one indivisible operation, so objects can
+only follow it in the front lane. GBA OBJ priority has no value below all four
+BG priorities; a `spr`/`sspr` before the first materialized map therefore fails
+forced Mode 0 with source-positioned `M0_SPR_SHAPE`, while AUTO falls back to
+Mode 4. Multiple objects in one lane retain their ordinary painter order.
+`print()` is deliberately still front-only in this slice.
+
+Within that existing proof, immutable `spr(...,2,2)`/`spr(...,4,4)` calls and
+exact, unscaled 16x16/32x32 `sspr` rectangles use one square hardware OBJ
+instead of four/sixteen 8x8 objects. The link-time optimization reserves OBJ
+tiles 448-479 as a 32-cell mixed cache: a unique 16x16 source consumes four
+contiguous cells and a unique 32x32 source consumes sixteen. First use uploads
+the rectangle in row-major hardware order and later frames reuse it. It is
+enabled only when there is no `sset` call and every statically referenced
+sprite cell is below 448. Any bounded runtime source variable currently
+disables this whole-cart packing optimization and retains the ordinary
+metasprite path, whose allocation is independent of the selected frame. If the
+cache cannot fit another rectangle, that draw
+retains its ordinary four/sixteen-object metasprite path. OBJ text keeps tiles
+480-511. The analyzer simulates the same first-use/cache-capacity order as the
+runtime: a packed rectangle costs one OAM entry, while a fallback costs all of
+its cells. Packing does not reduce scanline rendering time: normal OBJ cost is
+still its pixel width, so both a packed 32x32 and one visible row of its
+metasprite fallback cost 32 cycles.
+
+The 1,226-cycle ceiling follows the GBA's normal 308-dot line budget with the
+H-Blank Interval Free bit disabled: `308*4-6`. X position never discounts the
+proof because horizontally undisplayed OBJs can still consume evaluation work.
+The 8-bit Y model includes hardware wrapping and a shared dynamic camera shift.
+Any source that exceeds 128 OAM entries or the scanline-cycle ceiling fails
+forced Mode 0 with `M0_OBJ_BUDGET`; AUTO falls back to Mode 4 with the same
+source-positioned diagnostic.
 
 BG identity has two unambiguous forms. `map()` automatically draws all
 authored non-empty planes in logical BG0-to-BG3 order. `map(bg, ...)` selects
@@ -104,8 +233,8 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `rectfill` | Mode 4 only | Arbitrary coordinates, sizes, overlap, and clipping require bitmap rasterization. |
 | `circ` | Mode 4 only | Midpoint-circle pixels cannot generally be represented as a fixed tile or OBJ allocation. |
 | `circfill` | Mode 4 only | Arbitrary span-filled circles require bitmap rasterization. |
-| `spr` | Mode 0 conditional | Can become hardware OBJ/metasprites when tile data and palettes are resident and the frame remains within OAM, scanline, size/shape, flip, layering, and clipping limits. If those limits cannot be proven, use Mode 4. |
-| `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: normally tile-aligned source rectangles and hardware-supported destination transforms. Arbitrary source crops or resampling/scaling require Mode 4. |
+| `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic/table/function-derived or otherwise unproven IDs use Mode 4. |
+| `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: normally tile-aligned source rectangles and hardware-supported destination transforms. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops or resampling/scaling require Mode 4. |
 | `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. |
 | `camera` | Both | It is logical draw state. Mode 0 can apply it through BG scroll and OBJ coordinates; other reachable calls still decide whether that frame is compatible. |
 | `clip` | Mode 0 conditional | Full-screen clipping is trivial. Other rectangles require the limited hardware window resources, and changing clips between draw groups must preserve call order. Unrepresentable sequences require Mode 4. |
@@ -113,7 +242,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `palt` | Mode 0 conditional | Default source color 0 transparency maps naturally to transparent tile/OBJ index 0. Arbitrary transparent source colors require proven asset conversion/duplication with no conflicting opaque use; otherwise use Mode 4. |
 | `color` | Both | Changes logical default draw/text color and does not itself rasterize. |
 | `cursor` | Both | Changes logical text position/color and does not itself rasterize. |
-| `print` | Mode 0 conditional | Can use a tile-font BG or OBJ glyphs when position, clipping, palette, ordering, glyph count, and layer budgets fit. Arbitrary pixel placement mixed with incompatible draw calls requires Mode 4. |
+| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal glyph tiles are interned at build time and uploaded once; every visible occurrence still owns one OAM entry. Non-empty text requires color 1..255 because hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
 
 The classification is intentionally semantic, not merely based on whether a
 similar picture could be produced. A Mode 0 backend must not silently round
@@ -231,6 +360,14 @@ The mapless `cls()+print()` fresh-project shape has its own paired 120-frame
 evidence: zero differing pixels and missed frames, 35,032 more free EWRAM, and
 a 49.84% lower median work cost in Mode 0. It therefore belongs to AUTO's
 evidence-backed subset without requiring an artificial empty `map()` call.
+
+The duplicate-heavy `text_intern.lua` proof draws 32 `A` glyph occurrences
+from one unique `(glyph,color)` tile. Compared with the former per-occurrence
+staging path, Mode 0 median work falls from 162,434 to 71,117 cycles (56.22%),
+draw work falls from 94,901 to 16,062 cycles (83.08%), and EWRAM free rises by
+1,984 bytes. Its paired Mode 4/Mode 0 capture has zero differing pixels and no
+missed frames. The proof does not weaken object budgeting: it still reports 32
+OAM entries and 256 worst-line OBJ cycles.
 
 ## `examples/coin-block`
 

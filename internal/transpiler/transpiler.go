@@ -370,6 +370,8 @@ type generator struct {
 	sheetCompact       []byte
 	sheetIndex         []uint16
 	mapCompact         []uint16
+	mode0TextKeys      []uint16
+	mode0TextTiles     []uint32
 	audioEnabled       bool
 	legacyAudioEnabled bool
 	nativeAudioEnabled bool
@@ -529,6 +531,14 @@ func (g *generator) prepare() error {
 	g.sheetMutable = chunkCallsBuiltin(g.chunk, "sset")
 	if !g.sheetMutable {
 		g.compactSheet()
+	}
+	if g.opts.Renderer == RendererMode0 && g.opts.Mode0Text {
+		draw := g.funcs["_draw"]
+		if draw == nil || draw.decl == nil {
+			return errors.New("transpiler: Mode 0 text selected without a _draw callback")
+		}
+		atlas := buildMode0TextAtlas(draw.decl)
+		g.mode0TextKeys, g.mode0TextTiles = atlas.keys, atlas.tiles
 	}
 	for _, info := range g.funcList {
 		if (info.key == "_init" || info.key == "_update" || info.key == "_draw") && len(info.params) != 0 {
@@ -2246,6 +2256,12 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line(fmt.Sprintf("var mapROM = [ %d ]uint16{%s}", mapCells, u16Literal(g.mapCompact, mapCells)))
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var flagROM = [ %d ]byte{%s}", g.spriteN, byteLiteral(g.opts.Flags, g.spriteN)))
+	if len(g.mode0TextKeys) != 0 {
+		b.line("//go:section .rodata")
+		b.line(fmt.Sprintf("var mode0TextKeysROM = [%d]uint16{%s}", len(g.mode0TextKeys), u16Literal(g.mode0TextKeys, len(g.mode0TextKeys))))
+		b.line("//go:section .rodata")
+		b.line(fmt.Sprintf("var mode0TextTilesROM = [%d]uint32{%s}", len(g.mode0TextTiles), u32Literal(g.mode0TextTiles, len(g.mode0TextTiles))))
+	}
 	if len(g.opts.Palette) == 256 {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var paletteROM = [256]uint16{%s}", u16Literal(g.opts.Palette, 256)))
@@ -2387,6 +2403,9 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tctx.LoadPalette(&paletteROM)")
 	}
 	b.line("\tctx.InitHardware()")
+	if len(g.mode0TextKeys) != 0 {
+		b.line("\tif !ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:]) { for {} }")
+	}
 	b.line("\tctx.SetTickRate(30)")
 	if g.opts.Debug {
 		b.line("\tctx.SetProfiling(true)")
@@ -3231,6 +3250,23 @@ func firstArg(c *luaparser.CallExpr) luaparser.Expr {
 	return c.Args[0]
 }
 
+// fixedNumberLiteral mirrors runtime.Number's signed 16:16 conversion. The
+// explicit int32 step preserves the runtime's two's-complement wrapping while
+// keeping the emitted Go constant within the Number type's representable range.
+func fixedNumberLiteral(value float64) int32 {
+	return int32(int64(math.Round(value * 65536)))
+}
+
+// targetIntLiteral reports whether a source integer can be passed through a
+// generated int parameter on the 32-bit GBA target. Larger integers are still
+// valid 16:16 values, but must be emitted as their already-wrapped Number bits.
+func targetIntLiteral(value float64) (int64, bool) {
+	if value < -2147483648 || value > 2147483647 {
+		return 0, false
+	}
+	return int64(value), true
+}
+
 func (g *generator) emitExpr(e luaparser.Expr) string {
 	if g.exprNumber(e) {
 		return "rt.NumVal(" + g.emitNumberExpr(e) + ")"
@@ -3244,9 +3280,11 @@ func (g *generator) emitExpr(e luaparser.Expr) string {
 		return fmt.Sprintf("rt.BoolVal(%t)", x.Value)
 	case *luaparser.NumberExpr:
 		if x.Integer {
-			return fmt.Sprintf("rt.IntVal(%d)", int64(x.Value))
+			if value, ok := targetIntLiteral(x.Value); ok {
+				return fmt.Sprintf("rt.IntVal(%d)", value)
+			}
 		}
-		return fmt.Sprintf("rt.NumVal(rt.Number(%d))", int64(math.Round(x.Value*65536)))
+		return fmt.Sprintf("rt.NumVal(rt.Number(%d))", fixedNumberLiteral(x.Value))
 	case *luaparser.StringExpr:
 		return g.staticExpr(x.Value)
 	case *luaparser.VarExpr:
@@ -3353,9 +3391,11 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 	switch x := expr.(type) {
 	case *luaparser.NumberExpr:
 		if x.Integer {
-			return fmt.Sprintf("rt.FromInt(%d)", int64(x.Value))
+			if value, ok := targetIntLiteral(x.Value); ok {
+				return fmt.Sprintf("rt.FromInt(%d)", value)
+			}
 		}
-		return fmt.Sprintf("rt.Number(%d)", int64(math.Round(x.Value*65536)))
+		return fmt.Sprintf("rt.Number(%d)", fixedNumberLiteral(x.Value))
 	case *luaparser.VarExpr:
 		return g.lookup(x.Name)
 	case *luaparser.FieldExpr:
@@ -3377,6 +3417,12 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		}
 		value := g.emitNumberExpr(x.Expr)
 		if x.Op == luaparser.OpNegate {
+			// Negating the minimum Number as a Go constant overflows int32.
+			// Its two's-complement negation is the same bit pattern, so emit
+			// that wrapped value directly instead of asking Go to fold it.
+			if literal, ok := x.Expr.(*luaparser.NumberExpr); ok && fixedNumberLiteral(literal.Value) == -2147483648 {
+				return "rt.Number(-2147483648)"
+			}
 			return "-(" + value + ")"
 		}
 		return "(" + value + ").Bnot()"
@@ -4437,6 +4483,18 @@ func u16Literal(data []uint16, n int) string {
 			v = data[i]
 		}
 		parts[i] = fmt.Sprintf("0x%04x", v)
+	}
+	return strings.Join(parts, ",")
+}
+
+func u32Literal(data []uint32, n int) string {
+	parts := make([]string, n)
+	for i := 0; i < n; i++ {
+		v := uint32(0)
+		if i < len(data) {
+			v = data[i]
+		}
+		parts[i] = fmt.Sprintf("0x%08x", v)
 	}
 	return strings.Join(parts, ",")
 }

@@ -55,11 +55,15 @@ jobs:
         run: |
           go test -tags=mtile_mode0,mtile_mode0_layers0,mtile_mode0_obj,mtile_mode0_text .
           go test -tags=mtile_mode0 .
+          go test -tags=mtile_mode0,mtile_mode0_text .
           go test -tags=mtile_mode0,mtile_mode0_layers2 .
           go test -tags=mtile_mode0,mtile_mode0_layers3 .
           go test -tags=mtile_mode0,mtile_mode0_layers4 .
           go test -tags=mtile_mode0,mtile_mode0_obj .
           go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text .
+          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_objpack .
+          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text,mtile_mode0_objpack .
+          go test -tags=mtile_mode0,mtile_mode0_layers2,mtile_mode0_obj,mtile_mode0_objpack .
 
       # One-second fuzz smoke for the strict PSG-only asset/runtime boundaries.
       - name: Audio v2 fuzz smoke (Linux)
@@ -192,7 +196,7 @@ jobs:
       # sub-20%-win shape on Mode 4 and its selector behavior is unit-tested.
       - name: Paired Mode 0 workload matrix
         run: |
-          for workload in zero_bg_text camera composite layers2 sset16 mset16; do
+          for workload in zero_bg_text camera composite layers2 dynamic_sprite_frames inactive_sprite_slots pack16 pack32 oam64 sset16 mset16; do
             go run ./cmd/renderbench \
               -project examples/testio \
               -source "cmd/renderbench/testdata/workloads/${workload}.lua" \
@@ -202,12 +206,27 @@ jobs:
               -samples 30
           done
 
+      # Boundary characterization: Mode 4 cannot deliver this deliberately
+      # overloaded 38x32px-OBJ frame, while Mode 0 remains comfortably within
+      # its frame budget. Keep exact pixels as the live gate and lock the
+      # measured speedup/headroom with performance_evidence_test.go.
+      - name: Paired Mode 0 scanline boundary
+        run: >-
+          go run ./cmd/renderbench
+          -project examples/testio
+          -source cmd/renderbench/testdata/workloads/scanline38.lua
+          -player /tmp/mtile-player-build/mtile-player
+          -out /tmp/renderer-characterization-scanline38
+          -warmup 8
+          -samples 30
+          -gate parity
+
       # Migration baselines need exact pixels. Frame delivery and resource
       # measurements remain in each report but do not widen AUTO's separately
       # evidence-backed full performance profile.
       - name: Paired graphics-model characterization
         run: |
-          for workload in layers4 parallax_layers map_arities_short map_arities_long map_mutation_isolation object_order_current; do
+          for workload in layers4 parallax_layers map_arities_short map_arities_long map_mutation_isolation object_order_current object_depth_lanes; do
             go run ./cmd/renderbench \
               -project examples/background-layers \
               -source "cmd/renderbench/testdata/workloads/${workload}.lua" \

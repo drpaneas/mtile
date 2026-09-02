@@ -202,6 +202,15 @@ func CopyToVRAM32DMA(src []byte, dest uintptr, words int) {
 	CopyToVRAM32CPU(src, dest, words)
 }
 
+func CopyWordsToVRAM32DMA(src []uint32, dest uintptr, words int) {
+	if words <= 0 || words > len(src) || words > 0xFFFF {
+		return
+	}
+	for index := 0; index < words; index++ {
+		SetVRAM32(dest+uintptr(index*4), src[index])
+	}
+}
+
 func hostIOOffset(addr uintptr, width int) (int, bool) {
 	const ioBase uintptr = 0x04000000
 	if addr < ioBase || width <= 0 {

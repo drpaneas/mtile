@@ -59,19 +59,16 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	c.ensureDrawState()
 	if cellsW <= 0 {
 		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
-		// When the first cell starts before the clip left edge (camera not
-		// aligned to an 8-pixel boundary, or a non-zero cellX/screenX), the
-		// default cellsW may not cover the full clip width. Add one extra
-		// cell so the right edge is fully painted instead of leaving a
-		// stale column.
-		if screenX+cellX*8-c.camX < c.clipX0 {
-			cellsW++
+		// Account for every cell hidden before the clip, not just a single
+		// sub-tile offset, so the default extent still reaches the right edge.
+		if hidden := c.clipX0 - (screenX + cellX*8 - c.camX); hidden > 0 {
+			cellsW += (hidden + 7) / 8
 		}
 	}
 	if cellsH <= 0 {
 		cellsH = (c.clipY1 - c.clipY0 + 7) / 8
-		if screenY+cellY*8-c.camY < c.clipY0 {
-			cellsH++
+		if hidden := c.clipY0 - (screenY + cellY*8 - c.camY); hidden > 0 {
+			cellsH += (hidden + 7) / 8
 		}
 	}
 	if cellsW <= 0 || cellsH <= 0 {

@@ -98,6 +98,11 @@ func (g *Game) setMode(mode editorMode) {
 		}
 		return
 	}
+	if g.mode == modeSprites {
+		// Paste placement is transient Sprite Lab interaction state. Switching
+		// workspaces cancels it without touching project data.
+		g.spritePaste = nil
+	}
 	if g.mode == modeMusic {
 		g.finishNativeNoteDrag()
 		g.stopAudioPreview()

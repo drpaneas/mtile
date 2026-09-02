@@ -30,8 +30,8 @@ func TestMode0ThreeLayersPackSparseLogicalBackgrounds(t *testing.T) {
 	c.MapAll(0x0d)
 	c.PresentRender()
 
-	if got := hw.GetReg16(hw.DISPCNT); got != 0x0700 {
-		t.Fatalf("DISPCNT = %#04x, want three packed hardware BGs", got)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(0x07); got != want {
+		t.Fatalf("DISPCNT = %#04x, want three packed BGs/optional-OBJ display %#04x", got, want)
 	}
 	wantSources := [3]uint8{0, 2, 3}
 	for slot := 0; slot < 3; slot++ {

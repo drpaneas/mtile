@@ -75,7 +75,7 @@ func (c *Context) FinalizeInitHardware() {
 		return
 	}
 	start := hw.ReadFrameCycleCounter()
-	uploaded := c.uploadMode0DirtyTiles()
+	uploaded, _ := c.uploadMode0DirtyTiles()
 	c.mode0ColdCycles += hw.ReadFrameCycleCounter() - start
 	c.mode0UploadStats.ColdTileBytes += uploaded
 }
@@ -83,7 +83,7 @@ func (c *Context) FinalizeInitHardware() {
 // stageMode0Tile resolves either generated sheet representation into the
 // fixed 64-byte GBA tile layout. It returns false for an implicit empty tile.
 func (c *Context) stageMode0Tile(id int) bool {
-	if c == nil || c.cart == nil || id <= 0 || id >= c.cart.SpriteN {
+	if c == nil || c.cart == nil || id < 0 || id >= c.cart.SpriteN {
 		return false
 	}
 	if c.cart.SheetReadOnly {
@@ -194,14 +194,14 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 	c.ensureDrawState()
 	if cellsW <= 0 {
 		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
-		if screenX+cellX*8-c.camX < c.clipX0 {
-			cellsW++
+		if hidden := c.clipX0 - (screenX + cellX*8 - c.camX); hidden > 0 {
+			cellsW += (hidden + 7) / 8
 		}
 	}
 	if cellsH <= 0 {
 		cellsH = (c.clipY1 - c.clipY0 + 7) / 8
-		if screenY+cellY*8-c.camY < c.clipY0 {
-			cellsH++
+		if hidden := c.clipY0 - (screenY + cellY*8 - c.camY); hidden > 0 {
+			cellsH += (hidden + 7) / 8
 		}
 	}
 	if cellsW <= 0 || cellsH <= 0 || cellsW > 64 || cellsH > 32 {
@@ -237,11 +237,22 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 		c.mode0Screen[mapIndex][i] = 0
 	}
 	for my := 0; my < cellsH; my++ {
+		screenCellY := originY + my*8
+		// Keep the cell exactly on the right/bottom boundary as a guard.
+		// A one-pixel pan changes only hardware scroll (not the cached tile
+		// placement), so that cell can become visible without rematerializing.
+		if screenCellY+8 <= c.clipY0 || screenCellY > c.clipY1 {
+			continue
+		}
 		mapY := cellY + my
 		if mapY < 0 || mapY >= c.cart.MapH {
 			continue
 		}
 		for mx := 0; mx < cellsW; mx++ {
+			screenCellX := originX + mx*8
+			if screenCellX+8 <= c.clipX0 || screenCellX > c.clipX1 {
+				continue
+			}
 			mapX := cellX + mx
 			if mapX < 0 || mapX >= c.cart.MapW {
 				continue
@@ -269,6 +280,7 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 }
 
 func (c *Context) BeginRenderFrame() {
+	c.mode0DrawActive = true
 	c.mode0ClsCalled = false
 	c.mode0MapCalls = 0
 	c.mode0MapSeen = 0
@@ -279,37 +291,44 @@ func (c *Context) BeginRenderFrame() {
 // to copy during VDraw.
 func (c *Context) PrepareRender() {}
 
-func (c *Context) uploadMode0DirtyTiles() uint32 {
+func (c *Context) uploadMode0DirtyTiles() (uint32, uint32) {
 	if c == nil || c.cart == nil {
-		return 0
+		return 0, 0
 	}
-	var uploaded uint32
+	var bgUploaded, objUploaded uint32
 	limit := c.cart.SpriteN
 	if limit > mode0TileLimit {
 		limit = mode0TileLimit
 	}
-	for id := 1; id < limit; id++ {
+	for id := 0; id < limit; id++ {
 		mask := byte(1 << uint(id&7))
 		if c.mode0TileDirty[id>>3]&mask == 0 {
 			continue
 		}
 		c.mode0TileDirty[id>>3] &^= mask
-		if c.stageMode0Tile(id) {
-			hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
-		} else {
+		staged := c.stageMode0Tile(id)
+		if !staged {
 			for i := range c.mode0TileStage {
 				c.mode0TileStage[i] = 0
 			}
-			hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
 		}
-		c.uploadMode0ObjectTile(id, c.mode0TileStage[:])
-		uploaded += 64
+		if id == 0 {
+			objUploaded += c.uploadMode0ObjectTile(id, c.mode0TileStage[:])
+			continue
+		}
+		hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
+		objUploaded += c.uploadMode0ObjectTile(id, c.mode0TileStage[:])
+		bgUploaded += 64
 	}
-	return uploaded
+	return bgUploaded, objUploaded
 }
 
 func (c *Context) PresentRender() {
-	if c == nil || !c.mode0ClsCalled || c.mode0MapCalls > mode0LayerCount {
+	if c == nil {
+		return
+	}
+	c.mode0DrawActive = false
+	if !c.mode0ClsCalled || c.mode0MapCalls > mode0LayerCount {
 		hw.SetReg16(hw.DISPCNT, mode0ForceBlank)
 		return
 	}
@@ -339,7 +358,7 @@ func (c *Context) PresentRender() {
 	c.mode0UploadStats.LastOAMBytes = 0
 	c.mode0UploadStats.LastOBJTileBytes = 0
 
-	c.mode0UploadStats.LastTileBytes = c.uploadMode0DirtyTiles()
+	c.mode0UploadStats.LastTileBytes, c.mode0UploadStats.LastOBJTileBytes = c.uploadMode0DirtyTiles()
 	for layer := 0; layer < mode0LayerCount; layer++ {
 		if c.mode0MapSeen&(1<<uint(layer)) == 0 || !c.mode0MapDirty[layer] {
 			continue

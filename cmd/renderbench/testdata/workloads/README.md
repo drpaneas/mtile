@@ -71,6 +71,45 @@ Mode 4 while still permitting a forced Mode 0 build.
 hardware backdrop and `print()` uses OBJ glyphs, with no artificial `map()` or
 enabled regular BG.
 
+`text_intern.lua` draws 32 copies of one literal glyph/color pair. The planner
+must retain 32 OAM entries and 256 worst-line cycles while generated ROM and
+VRAM contain one 64-byte text tile. Its paired capture is the steady-state
+performance and pixel-parity proof for compile-time glyph interning.
+
+`pack16.lua` draws eight 16x16 sprites from one immutable source rectangle and
+covers all hardware flip combinations. It is the pixel-parity and steady-state
+cycle fixture for the Mode 0 packed-OBJ cache.
+
+`pack32.lua` draws two distinct 32x32 sprites, filling the cache's 32 cells,
+and animates all four hardware flip combinations over 120 frames. It proves
+that each draw lowers from sixteen 8x8 objects to one square OBJ while the
+renderer proof retains its true 32-cycle scanline width.
+
+`oam64.lua` draws 64 distinct 8x8 sprites in eight separated rows. It is the
+pixel-parity and throughput fixture for the expanded 128-entry OAM allocator.
+
+`scanline38.lua` overlaps 38 cached 32x32 OBJs on the same lines, consuming
+1,216 of the 1,226 available normal-OBJ rendering cycles. It is the accepted
+boundary fixture paired with the unit-level 39-object/1,248-cycle rejection.
+
+`dynamic_sprite_frames.lua` cycles sixteen draw slots through the explicit,
+non-contiguous frame set `{1, 32, 35}`. The sprite ID variable is initialized
+unconditionally and every later assignment names one immutable integer frame
+constant. It is the pixel-parity and throughput fixture for bounded runtime
+`spr(id, ...)` selection; no sprite ID is derived with arithmetic.
+
+`inactive_sprite_slots.lua` alternates 64 one-cell draws between the bounded
+set `{0, 1}`. ID 0 is the fully transparent inactive value and must consume no
+runtime Mode 0 OAM entries; ID 1 restores all 64 visible objects. The compiler
+still reports the conservative 64-entry/64-cycle worst case. Paired captures
+must remain pixel-identical to Mode 4 in both halves of the animation.
+
+`object_depth_lanes.lua` draws one object after each of four non-empty explicit
+map passes. These positions become Mode 0 OBJ priorities 3, 2, 1, and 0 while
+Mode 4 retains ordinary statement-order painting. The objects overlap real
+BG0-BG3 pixels, so the paired capture proves all four occlusion lanes rather
+than merely comparing non-overlapping draws.
+
 The graphics-model characterization workloads lock down the explicit-background
 contract and its renderer parity:
 
@@ -82,6 +121,7 @@ contract and its renderer parity:
 | `map_arities_long.lua` | `map(bg, ...)` argument counts 5–8 preserve the positional viewport/mask contract. |
 | `map_mutation_isolation.lua` | `mset()` targets one logical map coordinate and only matching source regions are dirtied. |
 | `object_order_current.lua` | Mode 0 objects follow every map and remain in front with OBJ priority 0. |
+| `object_depth_lanes.lua` | Interleaved objects occupy the four exact BG-relative OBJ priority lanes. |
 
 Their checked-in Lua source and eligibility unit test are permanent. The CI
 renderer matrix additionally executes each workload through paired Mode 4 and

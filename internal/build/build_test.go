@@ -287,6 +287,25 @@ func TestDiscoverTinyGoRootRejectsEmptyOutput(t *testing.T) {
 	}
 }
 
+func TestMode0BuildTagsKeepObjectBackendDependencies(t *testing.T) {
+	tests := []struct {
+		name   string
+		report transpiler.RendererReport
+		want   string
+	}{
+		{name: "empty", report: transpiler.RendererReport{Mode0Layers: 0}, want: "mtile_mode0,mtile_mode0_layers0"},
+		{name: "text", report: transpiler.RendererReport{Mode0Layers: 1, Mode0Text: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_text"},
+		{name: "packing", report: transpiler.RendererReport{Mode0Layers: 1, Mode0ObjectPacking: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_objpack"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := mode0BuildTags(test.report); got != test.want {
+				t.Fatalf("tags = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
 func TestParseLinkerMapMissingFile(t *testing.T) {
 	if _, err := ParseLinkerMap(filepath.Join(t.TempDir(), "missing.map")); err == nil {
 		t.Fatal("expected an error reading a nonexistent linker map")
@@ -814,6 +833,17 @@ func TestBuildEndToEndWithRealTinyGo(t *testing.T) {
 	}
 	dir := filepath.Join(t.TempDir(), "e2e")
 	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 16, MapWidth: 2, MapHeight: 2}); err != nil {
+		t.Fatal(err)
+	}
+	// Keep both numeric lowering edge cases in this real-link smoke test while
+	// preserving the generated starter game's coverage.
+	gamePath := filepath.Join(dir, GameFileName)
+	source, err := os.ReadFile(gamePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	source = append([]byte("large = 2147483648\nminimum = -32768.0\n"), source...)
+	if err := os.WriteFile(gamePath, source, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	service, err := NewService("", "")

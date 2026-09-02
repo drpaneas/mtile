@@ -1100,6 +1100,125 @@ func TestFracPrecision(t *testing.T) {
 	runGeneratedHarness(t, got, harness, "TestFracPrecision")
 }
 
+func TestFractionalLiteralCodegenWrapsToRuntimeNumber(t *testing.T) {
+	const source = `x = 32768.5`
+	const want = -2147450880
+	tests := []struct {
+		name  string
+		opts  Options
+		value string
+	}{
+		{name: "monomorphic", value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Transpile(test.name+".lua", source, test.opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			harness := fmt.Sprintf(`package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestWrappedFractionalLiteral(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := %s
+	if got != rt.Number(%d) {
+		t.Fatalf("wrapped literal = %%d, want %d", got)
+	}
+}
+`, test.value, want, want)
+			runGeneratedHarness(t, got, harness, "TestWrappedFractionalLiteral")
+		})
+	}
+}
+
+func TestUnaryMinimumFractionalLiteralCompilesAndWraps(t *testing.T) {
+	const source = `x = -32768.0`
+	const want = -2147483648
+	tests := []struct {
+		name  string
+		opts  Options
+		value string
+	}{
+		{name: "monomorphic", value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Transpile(test.name+".lua", source, test.opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			harness := fmt.Sprintf(`package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestUnaryMinimumLiteral(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := %s
+	if got != rt.Number(%d) {
+		t.Fatalf("unary minimum literal = %%d, want %d", got)
+	}
+}
+`, test.value, want, want)
+			runGeneratedHarness(t, got, harness, "TestUnaryMinimumLiteral")
+		})
+	}
+}
+
+func TestLargeIntegerLiteralLowersWithoutTargetIntOverflow(t *testing.T) {
+	const source = `x = 2147483648`
+	tests := []struct {
+		name  string
+		opts  Options
+		value string
+	}{
+		{name: "monomorphic", value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Transpile(test.name+".lua", source, test.opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(got, "FromInt(2147483648)") || strings.Contains(got, "IntVal(2147483648)") {
+				t.Fatalf("large integer literal still depends on a target-sized int:\n%s", got)
+			}
+			harness := fmt.Sprintf(`package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestLargeIntegerLiteral(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	got := %s
+	if got != 0 {
+		t.Fatalf("wrapped large integer literal = %%d, want 0", got)
+	}
+}
+`, test.value)
+			runGeneratedHarness(t, got, harness, "TestLargeIntegerLiteral")
+		})
+	}
+}
+
 // TestSiblingCallArgumentsSurviveCollectionDuringLaterSibling is a stress
 // regression test for a GC-rooting bug: when two sibling sub-expressions of
 // one call/operator both allocate on the heap (e.g. f(noisy(), make())), the

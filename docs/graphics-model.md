@@ -152,14 +152,20 @@ placement of one tile is less direct today: 64 `sset()` calls would replace an
 
 ## Current object order
 
-The accepted Mode 0 subset requires every `spr()`, supported `sspr()`, and
-`print()` after every map call. Hardware objects are emitted with OBJ priority
-0, so they appear in front of all accepted backgrounds. Objects cannot
-currently be placed between two map passes in Mode 0.
+An unconditional direct `spr()` or supported `sspr()` may appear after any
+materialized explicit map. Mode 4 preserves normal statement-order painting;
+Mode 0 derives Attribute-2 priority from the number of dense BGs still to be
+drawn. With four non-empty planes, calls after BG0/BG1/BG2/BG3 receive
+priorities 3/2/1/0 respectively. An OBJ wins a priority tie with the BG behind
+it, so the two renderers produce the same visible stack.
 
-Mode 4 can software-draw arbitrary painter sequences, but a sequence outside
-the proven subset makes AUTO fall back to Mode 4 and makes a forced Mode 0
-build fail with a source-positioned diagnostic.
+Empty authored planes consume neither a hardware BG nor an object-depth lane.
+An object before the first materialized BG would mean “behind every BG,” which
+the four GBA OBJ priority values cannot represent exactly; forced Mode 0 fails
+with `M0_SPR_SHAPE` and AUTO falls back to Mode 4. Automatic `map()` is one
+indivisible all-plane operation, so it exposes only the front lane. `print()`
+also remains front-only. Objects sharing a lane preserve their normal painter
+order through the OAM compaction pass.
 
 ## Editor representation
 
@@ -198,8 +204,8 @@ Status meanings:
 | 1 | Done | Current-API examples with four BG passes, parallax, and a stateful animated coin block. | Small | Stage 0; examples and docs only. |
 | 2 | Done | Unambiguous `map()`/`map(bg, ...)`, sparse build-time plane packing, versioned four-plane assets, and selectable/hideable BG0-BG3 Map Editor layers. | Large | Stage 0; schema expansion, editor/save/undo, public API migration, both runtimes, analyzer, parity, benchmarks. |
 | 3 | Pending | `tcopy(dst_tile, src_tile)` for bounded whole-cell background animation without 64 handwritten `sset()` calls. | Medium | Stage 0; sheet mutability analysis and the complete public API contract. |
-| 4 | Pending | Dynamic `spr(id, ...)` for a statically proven finite ID range that fits OBJ VRAM and the object/text budgets. | Small–medium | Stage 0; analyzer widening, diagnostics, parity, benchmarks. |
-| 5 | Pending | `spr()`/`sspr()` between logical backgrounds with automatically derived OAM priority and identical Mode 4 painter order. | Medium–large | Stage 2; analyzer, Mode 0 OBJ runtime, parity, benchmarks. |
+| 4 | Done | Runtime `spr(id, ...)` selection from a statically enumerated scalar ID set that fits the sheet, OBJ VRAM, text reservation, and object/scanline budgets. | Small–medium | Stage 0; analyzer widening, diagnostics, parity, benchmarks. |
+| 5 | Done | `spr()`/`sspr()` between logical backgrounds with automatically derived OAM priority and identical Mode 4 painter order. | Medium–large | Stage 2; analyzer, Mode 0 OBJ runtime, parity, benchmarks. |
 | 6 | Pending | Read-only editor preview of legacy and explicit map passes, captured cameras, derived BG slots, and object-depth lanes. | Medium | Stage 2 and static analysis exposed to the editor. |
 | 7 | Absorbed | The multi-plane schema/editor portion was pulled into Stage 2 by product decision; derived camera/pass preview remains Stage 6. | — | Stage 2. |
 | 8 | Pending | Separate logical BG/OBJ asset banks, 4bpp palette allocation, and native OBJ packing. | Very large | Stage 2 and a measured asset-allocation design. |
@@ -211,9 +217,9 @@ The dependency shape is intentionally not a single chain:
 Stage 0: characterize current semantics
 ├── Stage 1: current-API examples (done)
 ├── Stage 3: tcopy
-├── Stage 4: bounded dynamic spr
+├── Stage 4: bounded dynamic spr (done)
 └── Stage 2: explicit map(bg) + four-plane authoring (done)
-    ├── Stage 5: object depth between backgrounds
+    ├── Stage 5: object depth between backgrounds (done)
     └── Stage 6: read-only runtime pass/camera preview
         └── Stage 8: separate BG/OBJ banks
             └── Stage 9: semantic engine features (deferred)
@@ -300,15 +306,53 @@ registry, renderer classification, render-mode documentation, parser,
 transpiler, runtime, renderer-selection, pixel-parity, and benchmark coverage
 in the same change.
 
-### Stages 4–6 widening rules
+### Stage 4 compatibility boundary
 
-- Dynamic `spr()` begins with a one-cell source and a statically provable
-  finite ID set/range. Every possible ID must fit the sheet, OBJ tile range,
-  optional text reservation, and OAM/scanline budgets. An arbitrary runtime ID
-  remains a Mode 4 fallback.
-- Object depth is defined relative to Stage 2 logical BG slots. It is not
-  inferred from a physical register number exposed to Lua. Mode 0 uses OAM
-  Attribute 2 priority; Mode 4 must retain the same visible order.
+`spr(id, ...)` now accepts a scalar ID variable when it has an unconditional
+top-level or direct `_init` initializer and every write is an integer literal
+or immutable top-level integer constant. The compiler enumerates all
+non-contiguous candidates, validates every candidate rectangle and text/OBJ
+limit, and leaves runtime selection to the existing `SprV`/OAM path. It does
+not infer `id + 1`, `base + frame`, table/field values, function returns, or
+other arithmetic ranges. The `dynamic_sprite_frames` paired renderer workload
+cycles sixteen draw slots through `{1,32,35}` and is the permanent parity and
+throughput fixture. Dynamic source IDs currently disable the optional packed
+16x16/32x32 cache and use the deterministic ordinary metasprite budget.
+An enumerated `0` can be the inactive value for a one-cell dynamic slot: Mode 0
+emits no OAM entry while sprite 0 is fully source-color 0, but immediately
+restores ordinary tile-0 drawing if authored data or `sset()` makes it visible.
+The analyzer intentionally continues to charge every call at its worst-case
+object and scanline cost. The `inactive_sprite_slots` paired workload alternates
+64 calls between IDs 0 and 1 to lock down that runtime path without weakening
+the static resource proof.
+The checked-in
+[`dynamic-sprite-frames-v1.json`](benchmarks/render-modes/dynamic-sprite-frames-v1.json)
+record contains 120 synchronized
+frames with zero differing pixels: Mode 0 measures 69,588 median cycles versus
+174,842 for Mode 4, returns 37,088 EWRAM bytes, uses 16 OAM entries/32
+worst-line OBJ cycles, and misses no frames in either renderer.
+
+### Stage 5 compatibility boundary
+
+Object depth is expressed by immediate painter order, not a new public API:
+`spr()`/`sspr()` after the first, second, third, or fourth dense materialized
+map becomes the corresponding exact GBA lane. Logical BG IDs remain stable,
+but empty gaps are removed before depth is derived. The Mode 0 runtime writes
+the derived priority into OBJ Attribute 2 for ordinary and packed objects;
+Mode 4 needs no new path because it already draws calls in order. The compiler
+rejects only the unavailable behind-all lane, interprocedural/conditional draw
+sequences, and the pre-existing unsupported shapes. Text remains front-only.
+
+The `object_depth_lanes` workload places four copies of one sprite across all
+four lanes over real BG0-BG3 art. Its checked-in
+[`object-depth-lanes-v1.json`](benchmarks/render-modes/object-depth-lanes-v1.json)
+120-frame paired record has zero differing pixels. Mode 0 measures 50,854
+median cycles versus 1,215,615
+for Mode 4, returns 20,616 EWRAM bytes, uses four OAM entries/16 worst-line OBJ
+cycles, and records one cold-start missed frame.
+
+### Stage 6 widening rule
+
 - Stage 6 adds read-only runtime pass/camera inspection on top of the authored
   Stage 2 planes; it does not add scene metadata or a second authoring model.
 

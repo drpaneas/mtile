@@ -1,0 +1,82 @@
+FRAME_HIDDEN = 0
+FRAME_VISIBLE = 1
+
+slot_sprite = FRAME_HIDDEN
+animation_tick = 0
+
+function _update()
+  animation_tick = (animation_tick + 1) % 12
+  if animation_tick < 6 then
+    slot_sprite = FRAME_HIDDEN
+  else
+    slot_sprite = FRAME_VISIBLE
+  end
+end
+
+function _draw()
+  cls(0)
+  spr(slot_sprite, 16, 16)
+  spr(slot_sprite, 40, 16)
+  spr(slot_sprite, 64, 16)
+  spr(slot_sprite, 88, 16)
+  spr(slot_sprite, 112, 16)
+  spr(slot_sprite, 136, 16)
+  spr(slot_sprite, 160, 16)
+  spr(slot_sprite, 184, 16)
+  spr(slot_sprite, 16, 32)
+  spr(slot_sprite, 40, 32)
+  spr(slot_sprite, 64, 32)
+  spr(slot_sprite, 88, 32)
+  spr(slot_sprite, 112, 32)
+  spr(slot_sprite, 136, 32)
+  spr(slot_sprite, 160, 32)
+  spr(slot_sprite, 184, 32)
+  spr(slot_sprite, 16, 48)
+  spr(slot_sprite, 40, 48)
+  spr(slot_sprite, 64, 48)
+  spr(slot_sprite, 88, 48)
+  spr(slot_sprite, 112, 48)
+  spr(slot_sprite, 136, 48)
+  spr(slot_sprite, 160, 48)
+  spr(slot_sprite, 184, 48)
+  spr(slot_sprite, 16, 64)
+  spr(slot_sprite, 40, 64)
+  spr(slot_sprite, 64, 64)
+  spr(slot_sprite, 88, 64)
+  spr(slot_sprite, 112, 64)
+  spr(slot_sprite, 136, 64)
+  spr(slot_sprite, 160, 64)
+  spr(slot_sprite, 184, 64)
+  spr(slot_sprite, 16, 80)
+  spr(slot_sprite, 40, 80)
+  spr(slot_sprite, 64, 80)
+  spr(slot_sprite, 88, 80)
+  spr(slot_sprite, 112, 80)
+  spr(slot_sprite, 136, 80)
+  spr(slot_sprite, 160, 80)
+  spr(slot_sprite, 184, 80)
+  spr(slot_sprite, 16, 96)
+  spr(slot_sprite, 40, 96)
+  spr(slot_sprite, 64, 96)
+  spr(slot_sprite, 88, 96)
+  spr(slot_sprite, 112, 96)
+  spr(slot_sprite, 136, 96)
+  spr(slot_sprite, 160, 96)
+  spr(slot_sprite, 184, 96)
+  spr(slot_sprite, 16, 112)
+  spr(slot_sprite, 40, 112)
+  spr(slot_sprite, 64, 112)
+  spr(slot_sprite, 88, 112)
+  spr(slot_sprite, 112, 112)
+  spr(slot_sprite, 136, 112)
+  spr(slot_sprite, 160, 112)
+  spr(slot_sprite, 184, 112)
+  spr(slot_sprite, 16, 128)
+  spr(slot_sprite, 40, 128)
+  spr(slot_sprite, 64, 128)
+  spr(slot_sprite, 88, 128)
+  spr(slot_sprite, 112, 128)
+  spr(slot_sprite, 136, 128)
+  spr(slot_sprite, 160, 128)
+  spr(slot_sprite, 184, 128)
+end

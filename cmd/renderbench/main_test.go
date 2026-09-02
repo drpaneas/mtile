@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/transpiler"
@@ -97,6 +98,7 @@ func TestGraphicsCharacterizationWorkloadsRemainMode0Eligible(t *testing.T) {
 		{"map_arities_long", 4, false},
 		{"map_mutation_isolation", 2, false},
 		{"object_order_current", 2, true},
+		{"object_depth_lanes", 4, true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -148,6 +150,138 @@ func TestZeroBGTextWorkloadRemainsAutoEligible(t *testing.T) {
 	}
 	if report.Selected != transpiler.RendererMode0 || report.Mode0Layers != 0 || !report.Mode0Objects || !report.Mode0Text {
 		t.Fatalf("renderer report = %+v, want zero-BG Mode 0 text", report)
+	}
+}
+
+func TestTextInternWorkloadUses32OAMEntriesAndOneStaticTile(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "text_intern.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	generated, report, err := transpiler.TranspileWithReport("text_intern.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererAuto,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Text ||
+		report.Mode0OAMEntries != 32 || report.Mode0OBJLineCycles != 256 {
+		t.Fatalf("renderer report = %+v, want Mode 0 text with OAM=32 line=256", report)
+	}
+	if !strings.Contains(generated, "var mode0TextKeysROM = [1]uint16") ||
+		!strings.Contains(generated, "var mode0TextTilesROM = [16]uint32") {
+		t.Fatalf("generated workload did not intern 32 occurrences into one static glyph tile")
+	}
+}
+
+func TestPack16WorkloadEnablesMode0PackedObjectCache(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "pack16.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport("pack16.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || !report.Mode0ObjectPacking ||
+		report.Mode0OAMEntries != 8 || report.Mode0OBJLineCycles != 64 {
+		t.Fatalf("renderer report = %+v, want packed Mode 0 objects", report)
+	}
+}
+
+func TestPack32WorkloadEnablesMode0PackedObjectCache(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "pack32.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport("pack32.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || !report.Mode0ObjectPacking ||
+		report.Mode0OAMEntries != 2 || report.Mode0OBJLineCycles != 64 {
+		t.Fatalf("renderer report = %+v, want packed Mode 0 objects", report)
+	}
+}
+
+func TestFullOAMBudgetWorkloadsRemainAutoEligible(t *testing.T) {
+	tests := []struct {
+		name       string
+		oamEntries int
+		lineCycles int
+		packing    bool
+	}{
+		{name: "oam64", oamEntries: 64, lineCycles: 64},
+		{name: "scanline38", oamEntries: 38, lineCycles: 1216, packing: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			source, err := os.ReadFile(filepath.Join("testdata", "workloads", test.name+".lua"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, report, err := transpiler.TranspileWithReport(test.name+".lua", string(source), transpiler.Options{
+				Renderer: transpiler.RendererAuto,
+				SheetW:   240,
+				SheetH:   160,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if report.Selected != transpiler.RendererMode0 || report.Mode0OAMEntries != test.oamEntries ||
+				report.Mode0OBJLineCycles != test.lineCycles || report.Mode0ObjectPacking != test.packing {
+				t.Fatalf("renderer report = %+v, want Mode 0 OAM=%d line=%d packing=%t",
+					report, test.oamEntries, test.lineCycles, test.packing)
+			}
+		})
+	}
+}
+
+func TestDynamicSpriteFramesWorkloadRemainsAutoEligible(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "dynamic_sprite_frames.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport("dynamic_sprite_frames.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererAuto,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || report.Mode0ObjectPacking ||
+		report.Mode0OAMEntries != 16 || report.Mode0OBJLineCycles != 32 {
+		t.Fatalf("renderer report = %+v, want bounded dynamic Mode 0 sprites with OAM=16 line=32", report)
+	}
+}
+
+func TestInactiveSpriteSlotsWorkloadRemainsAutoEligible(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "inactive_sprite_slots.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport("inactive_sprite_slots.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererAuto,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || report.Mode0ObjectPacking ||
+		report.Mode0OAMEntries != 64 || report.Mode0OBJLineCycles != 64 {
+		t.Fatalf("renderer report = %+v, want conservative bounded dynamic OAM=64 line=64", report)
 	}
 }
 

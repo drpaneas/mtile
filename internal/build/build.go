@@ -102,6 +102,8 @@ type Result struct {
 	RendererLayers     int
 	RendererObjects    bool
 	RendererText       bool
+	RendererOAMEntries int
+	RendererLineCycles int
 }
 
 func (s Service) emit(phase Phase, message string) {
@@ -339,6 +341,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		Renderer:          rendererReport.Selected, RendererReason: rendererReport.Reason,
 		RendererProfile: rendererReport.Profile, RendererDiagnostic: rendererReport.Diagnostic,
 		RendererLayers: rendererReport.Mode0Layers, RendererObjects: rendererReport.Mode0Objects, RendererText: rendererReport.Mode0Text,
+		RendererOAMEntries: rendererReport.Mode0OAMEntries, RendererLineCycles: rendererReport.Mode0OBJLineCycles,
 	}
 	if s.KeepWork {
 		result.MapPath = mapPath
@@ -511,17 +514,7 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	// speed-optimized LLVM pipeline instead of the size one.
 	args := []string{"build", "-gc=none", "-opt=2", "-target=" + targetPath}
 	if report.Selected == transpiler.RendererMode0 {
-		tags := "mtile_mode0"
-		if report.Mode0Layers != 1 {
-			tags += fmt.Sprintf(",mtile_mode0_layers%d", report.Mode0Layers)
-		}
-		if report.Mode0Objects {
-			tags += ",mtile_mode0_obj"
-		}
-		if report.Mode0Text {
-			tags += ",mtile_mode0_text"
-		}
-		args = append(args, "-tags="+tags)
+		args = append(args, "-tags="+mode0BuildTags(report))
 	}
 	if mapPath != "" {
 		args = append(args, "-ldflags=-extldflags=-Map="+mapPath)
@@ -539,6 +532,25 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 		return err
 	}
 	return nil
+}
+
+func mode0BuildTags(report transpiler.RendererReport) string {
+	tags := "mtile_mode0"
+	if report.Mode0Layers != 1 {
+		tags += fmt.Sprintf(",mtile_mode0_layers%d", report.Mode0Layers)
+	}
+	// Text and packing implementations embed the ordinary OBJ state. Keep the
+	// dependency explicit here as a defense against an inconsistent report.
+	if report.Mode0Objects || report.Mode0ObjectPacking || report.Mode0Text {
+		tags += ",mtile_mode0_obj"
+	}
+	if report.Mode0ObjectPacking {
+		tags += ",mtile_mode0_objpack"
+	}
+	if report.Mode0Text {
+		tags += ",mtile_mode0_text"
+	}
+	return tags
 }
 
 func setEnv(env []string, key, value string) []string {

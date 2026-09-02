@@ -48,6 +48,127 @@ passed parity, memory, p95, missed-frame, and ≥20% median-speed gates. Runtime
 failed the conservative 20% AUTO gate; `tile-v1` therefore selects Mode 4 for
 that source shape.
 
+### Compile-time OBJ glyph interning
+
+Mode 0 `print()` admits only static printable-ASCII strings and literal colors,
+so the linker now stores one 64-byte OBJ tile per unique `(glyph,color)` pair.
+The sorted atlas is uploaded once during force blank; repeated occurrences and
+later frames reuse the resident tile. OAM and scanline accounting remain per
+visible character, while the tiles 480-511 capacity now limits unique pairs.
+
+The `text_intern.lua` fixture draws 32 copies of `A` in color 7. With the same
+20-warm-up/120-sample capture before and after interning:
+
+| Metric | Per-occurrence staging | Static interned atlas | Change |
+| --- | ---: | ---: | ---: |
+| Pixel differences vs Mode 4 | 0 | 0 | exact |
+| Median total cycles | 162,434 | 71,117 | -56.22% |
+| Median draw cycles | 94,901 | 16,062 | -83.08% |
+| Median commit cycles | 65,551 | 53,403 | -18.53% |
+| Mode 0 ROM | 53,808 B | 52,332 B | -1,476 B |
+| Mode 0 EWRAM free | 94,864 B | 96,848 B | +1,984 B |
+| Missed frames | 0 | 0 | unchanged |
+
+Against Mode 4, the resulting Mode 0 cartridge is 57.91% faster instead of
+3.86%, with zero differing pixels. It still budgets 32 OAM entries and 256
+worst-line OBJ cycles; interning removes duplicate tile construction and
+per-frame tile DMA, not the hardware cost of displaying each character.
+
+### Packed 16x16 OBJ proof
+
+The `pack16.lua` fixture draws eight 16x16 sprites from one immutable source
+rectangle and covers all four flip combinations. Compared with commit
+`e2fc183` immediately before packing, the same 20-warm-up/120-sample capture
+measured:
+
+| Metric | Four 8x8 OBJs | One packed 16x16 OBJ | Change |
+| --- | ---: | ---: | ---: |
+| Pixel differences vs Mode 4 | 0 | 0 | exact |
+| Median total cycles | 66,914 | 61,828 | -7.60% |
+| Median draw cycles | 18,148 | 11,292 | -37.78% |
+| Median commit cycles | 46,832 | 48,602 | +3.78% |
+| Mode 0 ROM | 51,752 B | 53,020 B | +1,268 B |
+| Mode 0 EWRAM free | 96,928 B | 96,904 B | -24 B |
+| Missed frames | 0 | 0 | unchanged |
+
+The steady path uploads no packed tile data after first use. The static proof
+now accounts for one OAM entry per cached rectangle and its true 16-cycle
+scanline width.
+
+### Packed 32x32 OBJ proof
+
+The `pack32.lua` fixture draws two distinct 32x32 sprites and animates all four
+flip combinations. Compared with the same pre-packing commit and capture
+settings:
+
+| Metric | Sixteen 8x8 OBJs | One packed 32x32 OBJ | Change |
+| --- | ---: | ---: | ---: |
+| Pixel differences vs Mode 4 | 0 | 0 | exact |
+| Median total cycles | 63,259 | 48,318 | -23.62% |
+| Median draw cycles | 14,302 | 3,214 | -77.53% |
+| Median commit cycles | 46,832 | 43,230 | -7.69% |
+| Mode 0 ROM | 52,400 B | 53,484 B | +1,084 B |
+| Mode 0 EWRAM free | 96,904 B | 96,872 B | -32 B |
+| Missed frames | 0 | 0 | unchanged |
+
+The two sources fill the entire 32-cell cache and both render as one OBJ per
+draw. Each still costs its true 32-pixel width in the scanline-cycle proof.
+
+### Full OAM and scanline proof
+
+The renderer now separates the GBA's two physical limits: 128 OAM entries per
+frame and 1,226 normal-OBJ rendering cycles per scanline. Literal Y positions
+are composed on the hardware's wrapping 0..255 coordinate; dynamic positions
+are assumed to overlap in the worst case. Horizontally offscreen objects are
+not discounted.
+
+| Workload | OAM | Worst line | Mode 4 median | Mode 0 median | Saving | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 64 distributed 8x8 sprites | 64 | 64 cycles | 219,164 | 149,119 | 31.96% | 0 |
+| 38 overlapping packed 32x32 sprites | 38 | 1,216 cycles | 1,458,945 | 116,580 | 92.01% | 0 |
+
+The second case is ten cycles below the official 1,226-cycle ceiling; a 39th
+32-pixel OBJ is rejected at build time because 1,248 cycles cannot be proven
+safe. Mode 0 missed no frames in either capture. The deliberately raster-heavy
+Mode 4 side of the 38-sprite characterization missed 140 cumulative ticks, so
+that record is a parity and hardware-boundary proof rather than a balanced
+performance comparison.
+
+For bounded dynamic one-cell sprites, ID 0 has an additional runtime-only fast
+path: when its logical 8x8 tile is entirely the default-transparent source
+color 0, the draw emits no OAM entry. Authored or `sset()`-mutated nonzero
+pixels disable the fast path immediately and preserve ordinary `spr(0)` output.
+The compiler deliberately continues to budget each call as active, so AUTO
+eligibility never depends on a particular animation frame. The paired
+`inactive_sprite_slots.lua` workload alternates 64 calls between IDs 0 and 1
+and is the parity/performance fixture for this path. Across 120 synchronized
+frames it records zero differing pixels and no missed frames: Mode 0 measures
+68,920 median cycles versus 171,235 for Mode 4 (59.75% lower) and returns
+37,088 EWRAM bytes.
+
+### Object depth between four backgrounds
+
+`object_depth_lanes.lua` draws the same 8x8 object after each of four real,
+overlapping BG passes. Mode 0 derives priorities 3, 2, 1, and 0 from painter
+order; ordinary and packed objects use the same Attribute-2 rule. The analyzer
+still applies the shared OAM/scanline proof and rejects the unavailable lane
+behind every materialized BG.
+
+| Metric | Mode 4 | Mode 0 |
+| --- | ---: | ---: |
+| Pixel differences across 120 synchronized frames | 0 | 0 |
+| Median total cycles | 1,215,615 | 50,854 |
+| Median draw cycles | 1,136,997 | 6,750 |
+| Median commit cycles | 76,924 | 42,528 |
+| EWRAM free | 62,340 B | 82,956 B |
+| Static object proof | software painter | 4 OAM / 16 line cycles |
+
+This is a 95.82% median-cycle saving and returns 20,616 EWRAM bytes. Mode 0
+records one cold-start missed frame from the four-layer upload; Mode 4 records
+140 cumulative missed ticks on the deliberately full-screen four-pass raster
+workload. The parity gate therefore establishes exact ordering independently
+of the separate frame-delivery characterization.
+
 ```sh
 cd runtime
 make benchspike-gba

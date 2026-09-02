@@ -35,8 +35,8 @@ func TestMode0FourLayersUseIndependentBackgroundsAndScroll(t *testing.T) {
 	}
 
 	draw([4]int{1, 2, 3, 4})
-	if got := hw.GetReg16(hw.DISPCNT); got != 0x0f00 {
-		t.Fatalf("DISPCNT = %#04x, want BG0+BG1+BG2+BG3", got)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(0x0f); got != want {
+		t.Fatalf("DISPCNT = %#04x, want BG0+BG1+BG2+BG3/optional-OBJ display %#04x", got, want)
 	}
 	for layer := 0; layer < 4; layer++ {
 		control := hw.GetReg16(hw.BG0CNT + uintptr(layer*2))
@@ -85,8 +85,8 @@ func TestMode0MapBGAtReadsSparseLogicalPlanesIntoDenseSlots(t *testing.T) {
 	c.MapBGAt(0, 0, 0, 0, 0, 0, 1, 1, 0)
 	c.MapBGAt(1, 3, 0, 0, 0, 0, 1, 1, 0)
 	c.PresentRender()
-	if got := hw.GetReg16(hw.DISPCNT); got != 0x0300 {
-		t.Fatalf("DISPCNT = %#04x, want two dense hardware BGs", got)
+	if got, want := hw.GetReg16(hw.DISPCNT), mode0LayerDisplay(0x03); got != want {
+		t.Fatalf("DISPCNT = %#04x, want two dense BGs/optional-OBJ display %#04x", got, want)
 	}
 	if got := hw.GetReg16(mode0LayerScreenBase(0)); got != 1 {
 		t.Fatalf("BG0 entry = %d, want authored BG0 tile 1", got)

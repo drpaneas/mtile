@@ -35,6 +35,46 @@ func TestMapDefaultSizeCoversClip(t *testing.T) {
 	}
 }
 
+func TestMapDefaultSizeCoversClipAfterWholeTileCameraOffset(t *testing.T) {
+	sheet := make([]byte, 16*8)
+	for y := 0; y < 8; y++ {
+		for x := 8; x < 16; x++ {
+			sheet[y*16+x] = 7
+		}
+	}
+	mapData := make([]uint16, 40*30)
+	for i := range mapData {
+		mapData[i] = 1
+	}
+	img := &AssetImage{
+		SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1,
+		MapW: 40, MapH: 30, SpriteN: 2,
+		Sheet: sheet, Map: mapData, Flags: make([]byte, 2),
+	}
+	ram := &AssetMemory{
+		SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1,
+		MapW: 40, MapH: 30, SpriteN: 2,
+		Sheet: append([]byte(nil), sheet...), Map: append([]uint16(nil), mapData...), Flags: make([]byte, 2),
+	}
+	var c Context
+	if !c.Init(img, ram) {
+		t.Fatal("Init returned false")
+	}
+	c.PaltColor(0, false)
+	c.Cls(3)
+	c.Camera(16, 16)
+	c.Map(0, 0, 0, 0, 0, 0, 0)
+	// Pget is camera-relative; reset it so these assertions inspect the
+	// framebuffer's physical right and bottom edges.
+	c.CameraReset()
+	if got := c.Pget(239, 0); got != 7 {
+		t.Fatalf("right edge after camera offset = %d, want 7", got)
+	}
+	if got := c.Pget(0, 159); got != 7 {
+		t.Fatalf("bottom edge after camera offset = %d, want 7", got)
+	}
+}
+
 func TestMapSkipsSpriteZeroByDefault(t *testing.T) {
 	img, ram := spriteFixture()
 	var c Context

@@ -11,6 +11,7 @@ import (
 func TestMode0ZeroLayersPresentsBackdropAndText(t *testing.T) {
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 0, 0, make([]byte, 16*8), nil, make([]byte, 2))
+	loadMode0TextTestAtlas(t, c, mode0TextTestGlyph{'A', 12})
 	var palette [256]uint16
 	palette[5] = 0x1234
 	c.LoadPalette(&palette)

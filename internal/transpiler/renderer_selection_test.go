@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -349,8 +350,52 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !report.Mode0Objects || report.Mode0Layers != 1 {
+	if !report.Mode0Objects || !report.Mode0ObjectPacking || report.Mode0Layers != 1 {
 		t.Fatalf("report = %+v", report)
+	}
+}
+
+func TestMode0ObjectPackingRequiresImmutableLowSpriteSources(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   bool
+	}{
+		{"spr16", `function _draw() cls() spr(32,0,0,2,2) end`, true},
+		{"sspr16", `function _draw() cls() sspr(16,8,16,16,0,0,16,16) end`, true},
+		{"spr32", `function _draw() cls() spr(32,0,0,4,4) end`, true},
+		{"sspr32", `function _draw() cls() sspr(16,8,32,32,0,0,32,32) end`, true},
+		{"only-8x8", `function _draw() cls() spr(32,0,0) end`, false},
+		{"mutable-sheet", `function _update() sset(0,0,1) end function _draw() cls() spr(32,0,0,2,2) end`, false},
+		{"reserved-source-range", `function _draw() cls() spr(446,0,0,2,2) end`, false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, report, err := TranspileWithReport(test.name+".lua", test.source,
+				Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if report.Mode0ObjectPacking != test.want {
+				t.Fatalf("Mode0ObjectPacking = %t, want %t; report=%+v", report.Mode0ObjectPacking, test.want, report)
+			}
+		})
+	}
+
+	for _, test := range []struct {
+		name, source string
+	}{
+		{"pack16", `function _draw() cls() spr(32,0,0,2,2) end`},
+		{"pack32", `function _draw() cls() spr(32,0,0,4,4) end`},
+	} {
+		_, auto, err := TranspileWithReport("auto-"+test.name+".lua", test.source,
+			Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if auto.Selected != RendererMode0 || !auto.Mode0ObjectPacking {
+			t.Fatalf("AUTO %s report = %+v, want packed Mode 0", test.name, auto)
+		}
 	}
 }
 
@@ -364,18 +409,273 @@ func TestMode0RejectsUnsafeHardwareSpriteShapes(t *testing.T) {
 		{"conditional", `function _draw() cls() map() if btn(0) then spr(1,0,0) end end`, "M0_DRAW_SHAPE"},
 		{"dynamic-id", `function _draw() cls() map() spr(player,0,0) end`, "M0_SPR_SHAPE"},
 		{"obj-vram", `function _draw() cls() map() spr(512,0,0) end`, "M0_SPR_SHAPE"},
-		{"scanline-budget", `function _draw() cls() map()
-spr(1,0,0,4,1) spr(1,0,0,4,1) spr(1,0,0,4,1) spr(1,0,0,4,1) spr(1,0,0,4,1)
-spr(1,0,0,4,1) spr(1,0,0,4,1) spr(1,0,0,4,1) spr(1,0,0,4,1) end`, "M0_OBJ_BUDGET"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, _, err := TranspileWithReport(test.name+".lua", test.source,
-				Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160, MapW: 30, MapH: 20})
+				Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160, MapW: 30, MapH: 20, Map: nonEmptyMap(30, 20, 1, 0)})
 			if err == nil || !strings.Contains(err.Error(), "["+test.code+"]") {
 				t.Fatalf("error = %v", err)
 			}
 		})
+	}
+}
+
+func TestMode0AcceptsSpritesBetweenMaterializedBackgrounds(t *testing.T) {
+	mapData := []uint16{1, 1, 1, 1}
+	source := `
+function _draw()
+  cls()
+  map(0)
+  spr(1,8,8)
+  map(1)
+  sspr(8,0,8,8,16,16)
+  map(2)
+  spr(2,24,24)
+  map(3)
+  spr(3,32,32)
+  print("D",40,40,7)
+end
+`
+	_, report, err := TranspileWithReport("object-depth-lanes.lua", source, Options{
+		Renderer:  RendererMode0,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 4,
+		Map:       mapData,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || report.Mode0Layers != 4 || !report.Mode0Objects || !report.Mode0Text || report.Mode0OAMEntries != 5 {
+		t.Fatalf("report = %+v, want four BGs and five interleaved/front objects", report)
+	}
+}
+
+func TestMode0ObjectDepthUsesDenseNonEmptyBackgroundOrder(t *testing.T) {
+	mapData := []uint16{0, 1, 0, 1}
+	source := `
+function _draw()
+  cls()
+  map(1)
+  spr(1,8,8)
+  map(3)
+  spr(2,16,16)
+end
+`
+	_, report, err := TranspileWithReport("sparse-object-depth.lua", source, Options{
+		Renderer:  RendererAuto,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 4,
+		Map:       mapData,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || report.Mode0Layers != 2 || report.MapDrawMask != 0x0a {
+		t.Fatalf("report = %+v, want dense two-BG object-depth proof", report)
+	}
+}
+
+func TestMode0RejectsObjectBehindEveryMaterializedBackground(t *testing.T) {
+	mapData := []uint16{0, 1, 0, 0}
+	source := `
+function _draw()
+  cls()
+  map(0)
+  spr(1,8,8)
+  map(1)
+end
+`
+	_, _, err := TranspileWithReport("object-behind-all.lua", source, Options{
+		Renderer:  RendererMode0,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 4,
+		Map:       mapData,
+	})
+	if err == nil || !strings.Contains(err.Error(), "[M0_SPR_SHAPE]") || !strings.Contains(err.Error(), "behind every materialized background") {
+		t.Fatalf("error = %v, want stable behind-all depth rejection", err)
+	}
+	_, auto, err := TranspileWithReport("object-behind-all.lua", source, Options{
+		Renderer:  RendererAuto,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 4,
+		Map:       mapData,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if auto.Selected != RendererMode4 || auto.Reason != reasonAutoMode0Ineligible ||
+		!strings.Contains(auto.Diagnostic, "object-behind-all.lua:") ||
+		!strings.Contains(auto.Diagnostic, "[M0_SPR_SHAPE]") {
+		t.Fatalf("AUTO report = %+v, want source-positioned Mode 4 fallback", auto)
+	}
+	if _, _, err := TranspileWithReport("object-behind-all.lua", source, Options{
+		Renderer:  RendererMode4,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 4,
+		Map:       mapData,
+	}); err != nil {
+		t.Fatalf("Mode 4 must preserve the arbitrary painter sequence: %v", err)
+	}
+}
+
+func TestMode0KeepsPrintAfterEveryBackground(t *testing.T) {
+	_, _, err := TranspileWithReport("text-between-backgrounds.lua", `
+function _draw()
+  cls()
+  map(0)
+  print("D",8,8,7)
+  map(1)
+end
+`, Options{
+		Renderer:  RendererMode0,
+		SheetW:    240,
+		SheetH:    160,
+		MapW:      1,
+		MapH:      1,
+		MapLayers: 2,
+		Map:       []uint16{1, 1},
+	})
+	if err == nil || !strings.Contains(err.Error(), "[M0_PRINT_SHAPE]") {
+		t.Fatalf("error = %v, want interleaved print rejection", err)
+	}
+}
+
+func TestMode0BudgetsPhysicalOAMEntriesInsteadOfConflatingScanlines(t *testing.T) {
+	build := func(count int, call string) string {
+		return "function _draw()\n  cls()\n" + strings.Repeat("  "+call+"\n", count) + "end\n"
+	}
+	_, report, err := TranspileWithReport("oam-100.lua", build(100, "spr(1,0,0)"),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0OAMEntries != 100 || report.Mode0OBJLineCycles != 800 {
+		t.Fatalf("100-sprite budget = %+v, want 100 OAM entries and 800 line cycles", report)
+	}
+
+	_, report, err = TranspileWithReport("two-64.lua", build(2, "spr(32,0,0,8,8)"),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0OAMEntries != 128 || report.Mode0OBJLineCycles != 128 {
+		t.Fatalf("two 64x64 metasprites budget = %+v, want 128 OAM entries and 128 line cycles", report)
+	}
+
+	_, _, err = TranspileWithReport("oam-129.lua", build(129, "spr(1,0,0)"),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), "129 OAM entries") {
+		t.Fatalf("129-entry error = %v", err)
+	}
+	_, auto, err := TranspileWithReport("oam-129-auto.lua", build(129, "spr(1,0,0)"),
+		Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if auto.Selected != RendererMode4 || auto.Reason != reasonAutoMode0Ineligible ||
+		!strings.Contains(auto.Diagnostic, "[M0_OBJ_BUDGET]") || !strings.Contains(auto.Diagnostic, "129 OAM entries") {
+		t.Fatalf("129-entry AUTO report = %+v", auto)
+	}
+}
+
+func TestMode0BudgetsNormalOBJRenderingCyclesPerScanline(t *testing.T) {
+	buildPacked := func(count int, y func(int) string) string {
+		var source strings.Builder
+		source.WriteString("function _draw()\n  cls()\n")
+		for index := 0; index < count; index++ {
+			fmt.Fprintf(&source, "  spr(32,%d,%s,4,4)\n", index%8*30, y(index))
+		}
+		source.WriteString("end\n")
+		return source.String()
+	}
+
+	_, report, err := TranspileWithReport("packed-38.lua", buildPacked(38, func(int) string { return "64" }),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0ObjectPacking || report.Mode0OAMEntries != 38 || report.Mode0OBJLineCycles != 1216 {
+		t.Fatalf("38 packed sprites budget = %+v, want 38 OAM entries and 1216 line cycles", report)
+	}
+
+	_, _, err = TranspileWithReport("packed-39.lua", buildPacked(39, func(int) string { return "64" }),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), "1248 rendering cycles") {
+		t.Fatalf("1248-cycle error = %v", err)
+	}
+
+	_, report, err = TranspileWithReport("packed-distributed.lua", buildPacked(39, func(index int) string {
+		return fmt.Sprintf("%d", index%8*32)
+	}), Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0OAMEntries != 39 || report.Mode0OBJLineCycles != 160 {
+		t.Fatalf("distributed packed budget = %+v, want 39 OAM entries and 160 line cycles", report)
+	}
+
+	_, report, err = TranspileWithReport("packed-wrap.lua", buildPacked(2, func(index int) string {
+		if index == 0 {
+			return "240"
+		}
+		return "0"
+	}), Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0OAMEntries != 2 || report.Mode0OBJLineCycles != 64 {
+		t.Fatalf("wrapped-Y packed budget = %+v, want 2 OAM entries and 64 line cycles", report)
+	}
+
+	_, _, err = TranspileWithReport("packed-dynamic.lua", buildPacked(39, func(int) string { return "py" }),
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "1248 rendering cycles") {
+		t.Fatalf("dynamic-y worst-case error = %v", err)
+	}
+}
+
+func TestMode0BudgetMatchesPackedCacheFallbackOrder(t *testing.T) {
+	_, report, err := TranspileWithReport("pack-fallback.lua", `
+function _draw()
+  cls()
+  spr(32,0,0,4,4)
+  spr(36,40,0,4,4)
+  spr(40,80,0,4,4)
+end
+`, Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0ObjectPacking || report.Mode0OAMEntries != 18 || report.Mode0OBJLineCycles != 96 {
+		t.Fatalf("packed fallback report = %+v, want 1+1+16 OAM entries and 96 line cycles", report)
+	}
+}
+
+func TestMode0InternsRepeatedTextWithinReservedGlyphTiles(t *testing.T) {
+	source := fmt.Sprintf("function _draw() cls() print(%q,0,0,7) end", strings.Repeat("A", 33))
+	_, report, err := TranspileWithReport("text-33.lua", source,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0Text || report.Mode0OAMEntries != 33 || report.Mode0OBJLineCycles != 264 {
+		t.Fatalf("33 repeated glyph report = %+v, want one interned tile with 33 OAM entries", report)
 	}
 }
 
@@ -396,6 +696,115 @@ end
 	}
 }
 
+func TestMode0EmptyPrintDoesNotLinkObjectTextBackend(t *testing.T) {
+	_, report, err := TranspileWithReport("empty-text.lua", `function _draw() cls() print("",0,0,7) end`,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0Objects || report.Mode0Text || report.Mode0OAMEntries != 0 {
+		t.Fatalf("empty-print report = %+v, want no OBJ/text backend", report)
+	}
+}
+
+func TestMode0RejectsDrawPaletteMutationThroughHelper(t *testing.T) {
+	source := `
+function recolor()
+  pal(1,2,0)
+end
+function _draw()
+  cls()
+  spr(1,0,0)
+  recolor()
+  spr(1,8,0)
+end
+`
+	_, _, err := TranspileWithReport("helper-pal.lua", source,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "[M0_DRAW_SHAPE]") || !strings.Contains(err.Error(), "helper-pal.lua:3") {
+		t.Fatalf("error = %v, want source-positioned helper palette diagnostic", err)
+	}
+}
+
+func TestMode0RejectsInvalidOrDynamicClsColor(t *testing.T) {
+	for _, source := range []string{
+		`function _draw() cls(300) end`,
+		`function _draw() cls(clear_color) end`,
+	} {
+		_, _, err := TranspileWithReport("bad-cls.lua", source,
+			Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+		if err == nil || !strings.Contains(err.Error(), "[M0_CLS_SHAPE]") {
+			t.Fatalf("forced Mode 0 error = %v", err)
+		}
+		_, report, err := TranspileWithReport("bad-cls-auto.lua", source,
+			Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_CLS_SHAPE]") {
+			t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+		}
+	}
+}
+
+func TestMode0RejectsReturnBeforeClsAndAutoFallsBack(t *testing.T) {
+	source := `function _draw()
+  if btn(0) then
+    return
+  end
+  cls(3)
+end`
+	_, _, err := TranspileWithReport("return-before-cls.lua", source,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "[M0_CLS_SHAPE]") || !strings.Contains(err.Error(), "return-before-cls.lua:3") {
+		t.Fatalf("forced Mode 0 error = %v, want source-positioned cls dominance diagnostic", err)
+	}
+
+	_, report, err := TranspileWithReport("return-before-cls-auto.lua", source,
+		Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_CLS_SHAPE]") {
+		t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+	}
+}
+
+func TestMode0AcceptsReturnAfterCls(t *testing.T) {
+	_, report, err := TranspileWithReport("return-after-cls.lua", `function _draw()
+  cls(3)
+  if btn(0) then return end
+end`, Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 {
+		t.Fatalf("report = %+v, want Mode 0", report)
+	}
+}
+
+func TestMode0RejectsUserLifecycleCallbackInvocationOrReference(t *testing.T) {
+	tests := []string{
+		`function _update() _draw() end function _draw() cls() spr(1,0,0) end`,
+		`function _update() foreach({1},_draw) end function _draw() cls() spr(1,0,0) end`,
+	}
+	for _, source := range tests {
+		_, _, err := TranspileWithReport("lifecycle.lua", source,
+			Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+		if err == nil || !strings.Contains(err.Error(), "[M0_DRAW_SHAPE]") || !strings.Contains(err.Error(), "lifecycle callbacks") {
+			t.Fatalf("error = %v, want lifecycle rejection", err)
+		}
+		_, report, err := TranspileWithReport("lifecycle-auto.lua", source,
+			Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_DRAW_SHAPE]") {
+			t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+		}
+	}
+}
+
 func TestMode0RejectsDynamicOrControlCodeText(t *testing.T) {
 	tests := []string{
 		`function _draw() cls() map() print(label,0,0,7) end`,
@@ -409,6 +818,35 @@ func TestMode0RejectsDynamicOrControlCodeText(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "M0_PRINT_SHAPE") {
 			t.Fatalf("case %d error = %v", index, err)
 		}
+	}
+}
+
+func TestMode0RejectsOpaqueColorZeroTextAndAutoFallsBack(t *testing.T) {
+	source := `function _draw() cls(3) print("A",0,0,0) end`
+	_, _, err := TranspileWithReport("opaque-zero-text.lua", source,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err == nil || !strings.Contains(err.Error(), "[M0_PRINT_SHAPE]") || !strings.Contains(err.Error(), "opaque-zero-text.lua:1") {
+		t.Fatalf("forced Mode 0 error = %v, want source-positioned opaque-zero diagnostic", err)
+	}
+
+	_, report, err := TranspileWithReport("opaque-zero-text-auto.lua", source,
+		Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_PRINT_SHAPE]") {
+		t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+	}
+}
+
+func TestMode0AcceptsEmptyColorZeroText(t *testing.T) {
+	_, report, err := TranspileWithReport("empty-zero-text.lua", `function _draw() cls(3) print("",0,0,0) end`,
+		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || report.Mode0Objects || report.Mode0Text {
+		t.Fatalf("report = %+v, want backend-free Mode 0 empty print", report)
 	}
 }
 

@@ -16,6 +16,7 @@ type renderState struct {
 
 	mode0Clear       byte
 	mode0ClsCalled   bool
+	mode0DrawActive  bool
 	mode0MapCalls    int
 	mode0MapSeen     uint8
 	mode0MapReady    [mode0LayerStorageCount]bool
@@ -44,7 +45,9 @@ func (c *Context) sheetMutated(x, y int) {
 		return
 	}
 	id := (y/8)*c.cart.SpriteCols + x/8
-	if id <= 0 || id >= mode0TileLimit {
+	c.dirtyMode0PackedObject(id)
+	c.mode0ObjectTileMutated(id)
+	if id < 0 || id >= mode0TileLimit {
 		return
 	}
 	c.mode0TileDirty[id>>3] |= byte(1 << uint(id&7))
@@ -59,6 +62,12 @@ func (c *Context) mapMutated(x, y int) {
 		if c.mode0MapSource[layer] != 0 {
 			continue
 		}
+		if c.mode0DrawActive && c.mode0MapSeen&(1<<uint(layer)) != 0 {
+			// Mode 4 has already rasterized this layer for the pending frame.
+			// Keep that snapshot and force the next map() to rematerialize.
+			c.mode0MapSigSet[layer] = false
+			continue
+		}
 		c.patchMode0MapCell(layer, x, y, id)
 	}
 }
@@ -69,6 +78,12 @@ func (c *Context) flagsMutated(id int) {
 	}
 	for layer := 0; layer < mode0LayerCount; layer++ {
 		if !c.mode0MapSigSet[layer] || c.mode0MapLayer[layer] == 0 {
+			continue
+		}
+		if c.mode0DrawActive && c.mode0MapSeen&(1<<uint(layer)) != 0 {
+			// As with mset(), a draw-time flag change belongs to the next
+			// frame once this layer has already been materialized.
+			c.mode0MapSigSet[layer] = false
 			continue
 		}
 		for my := 0; my < c.mode0MapCellsH[layer]; my++ {
@@ -98,6 +113,13 @@ func (c *Context) patchMode0MapCell(layer, mapX, mapY int, id uint16) {
 	mx := mapX - c.mode0MapCellX[layer]
 	my := mapY - c.mode0MapCellY[layer]
 	if mx < 0 || my < 0 || mx >= c.mode0MapCellsW[layer] || my >= c.mode0MapCellsH[layer] {
+		return
+	}
+	screenX := (c.mode0MapTileX[layer]+mx)*8 - int(c.mode0ScrollX[layer])
+	screenY := (c.mode0MapTileY[layer]+my)*8 - int(c.mode0ScrollY[layer])
+	// Boundary guard cells can become visible after a sub-tile scroll without
+	// rebuilding the cached map, so update-phase mutations must patch them too.
+	if screenX+8 <= c.clipX0 || screenX > c.clipX1 || screenY+8 <= c.clipY0 || screenY > c.clipY1 {
 		return
 	}
 	value := id

@@ -80,6 +80,7 @@ type Game struct {
 
 	copiedSprite [8][8]int
 	hasCopied    bool
+	spritePaste  *spritePastePlacement
 
 	undo undoStack
 

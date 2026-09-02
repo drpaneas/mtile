@@ -69,3 +69,17 @@ func CopyToVRAM32DMA(src []byte, dest uintptr, words int) {
 	for GetReg16(DMA3CNT+2)&0x8000 != 0 {
 	}
 }
+
+// CopyWordsToVRAM32DMA is the aligned-ROM counterpart used by generated
+// uint32 asset tables. The element type guarantees DMA3's source alignment.
+func CopyWordsToVRAM32DMA(src []uint32, dest uintptr, words int) {
+	if len(src) < words || words <= 0 || words > 0xFFFF {
+		return
+	}
+	SetReg32(DMA3SAD, uint32(uintptr(unsafe.Pointer(&src[0]))))
+	SetReg32(DMA3DAD, uint32(dest))
+	SetReg16(DMA3CNT, uint16(words))
+	SetReg16(DMA3CNT+2, 0x8400)
+	for GetReg16(DMA3CNT+2)&0x8000 != 0 {
+	}
+}
