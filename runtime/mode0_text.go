@@ -128,3 +128,57 @@ func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool) {
 	}
 	return rightMost + c.camX, true
 }
+
+// hardwarePrintStatic is kept separate from hardwarePrint so the generated
+// literal-only call graph cannot reach stringBytes' heap-backed KindString
+// branch. This distinction is observable in the final GBA link: a genuinely
+// heapless text cart must not retain either 56 KiB Lua semispace.
+func (c *Context) hardwarePrintStatic(s, x, y, color Value) (int, bool) {
+	if c == nil || s.Kind != KindStaticString || int(s.SRef) >= int(c.staticN) || color.Kind != KindNumber {
+		return 0, true
+	}
+	return c.hardwarePrintStaticBytes(c.staticStringBytes(s), x, y, color)
+}
+
+// Keep the literal-only front end small enough for TinyGo to fold the
+// always-handled branch in PrintStaticV. The measured ARM target is faster
+// with this leaf split than with one large hardwarePrintStatic body.
+func (c *Context) hardwarePrintStaticBytes(bytes []byte, x, y, color Value) (int, bool) {
+	c.ensureDrawState()
+	implicitPosition := x.Kind != KindNumber || y.Kind != KindNumber
+	worldX, worldY := x.Int(), y.Int()
+	if implicitPosition {
+		worldX, worldY = c.cursor.x, c.cursor.y
+	}
+	colorIndex := color.Int()
+	if colorIndex < 0 || colorIndex > 255 {
+		return worldX, true
+	}
+	c.cursor.color = byte(colorIndex)
+	sx, sy := worldX-c.camX, worldY-c.camY
+	left := sx
+	if left < c.clipX0 {
+		left = c.clipX0
+	}
+	rightMost := sx
+	for index := 0; index < len(bytes); index++ {
+		if sx+glyphW > c.clipX1 && sx > left {
+			sx = left
+			sy += glyphH
+		}
+		if !c.renderMode0Glyph(bytes[index], sx, sy, c.cursor.color) {
+			break
+		}
+		sx += glyphW
+		if sx > rightMost {
+			rightMost = sx
+		}
+	}
+	if implicitPosition {
+		c.cursor.x = worldX
+		c.cursor.y = sy + c.camY + glyphH
+	} else {
+		c.cursor.x, c.cursor.y = worldX, worldY
+	}
+	return rightMost + c.camX, true
+}

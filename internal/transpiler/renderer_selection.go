@@ -77,6 +77,24 @@ type RendererReport struct {
 	// calls. Both preserve logical BG numbers while allowing dense allocation.
 	MapPlaneMask uint8
 	MapDrawMask  uint8
+	// MapStreaming is the compile-time storage strategy after unused logical
+	// planes have been removed. Build uses it to select one specialized runtime
+	// path instead of retaining a per-access compact/streaming branch.
+	MapStreaming bool
+	// NativeAudioLinked reports whether reachable source uses a native audio
+	// builtin and the generated cartridge therefore contains the PSG runtime
+	// and authored audio records. Merely authoring assets does not link them.
+	NativeAudioLinked bool
+	// HeapLinked reports whether generated code can allocate a Lua table/string
+	// and therefore retains collection plus the two target semispaces.
+	HeapLinked bool
+	// SheetReadOnly reports that no source path calls sset. Build uses that proof
+	// for the compact Mode 4 sheet representation or the narrower Mode 0
+	// dirty-upload-scan elision.
+	SheetReadOnly bool
+	// StaticStrings is the exact number of entries initialized in Context's
+	// static string table and selects the smallest safe target capacity tier.
+	StaticStrings int
 }
 
 const (

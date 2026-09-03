@@ -28,6 +28,10 @@ func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool) {
 	return 0, false
 }
 
+func (c *Context) hardwarePrintStatic(s, x, y, color Value) (int, bool) {
+	return 0, false
+}
+
 func (c *Context) renderSSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) bool {
 	return false
 }

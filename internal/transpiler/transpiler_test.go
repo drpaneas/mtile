@@ -55,7 +55,6 @@ end
 		"ctx.EndProfilePhase(rt.ProfileUpdate)",
 		"ctx.BeginProfilePhase(rt.ProfileDraw)",
 		"ctx.EndProfilePhase(rt.ProfileDraw)",
-		"ctx.SetTickRate(30)",
 		"ctx.PaceFrame30()",
 		"ctx.EndFramePace30()",
 		"ctx.WaitVDraw()",
@@ -93,6 +92,83 @@ end
 	}
 	if strings.Contains(got, "func()") {
 		t.Error("generated source contains an immediately-invoked function literal; TinyGo -gc=none cannot link runtime.alloc")
+	}
+	compileGenerated(t, got)
+}
+
+func TestGeneratedLoopElidesUnobservableInputAndTimeState(t *testing.T) {
+	got, err := Transpile("idle.lua", `
+function _update() end
+function _draw() cls(0) end
+`, Options{SheetW: 8, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, unwanted := range []string{"ctx.PollInput()", "ctx.AdvanceTick()", "ctx.SetTickRate(30)"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("idle generated loop unexpectedly contains %q", unwanted)
+		}
+	}
+}
+
+func TestGeneratedLoopRetainsObservableInputAndTimeState(t *testing.T) {
+	tests := []struct {
+		name       string
+		source     string
+		wantPoll   bool
+		wantTick   bool
+		wantRate30 bool
+	}{
+		{name: "input", source: `function _update() pressed = btnp(0) end`, wantPoll: true, wantTick: true},
+		{name: "time", source: `function _update() elapsed = time() end`, wantTick: true, wantRate30: true},
+		{name: "both", source: `function _update() pressed = btn(0) elapsed = t() end`, wantPoll: true, wantTick: true, wantRate30: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := Transpile(test.name+".lua", test.source, Options{SheetW: 8, SheetH: 8})
+			if err != nil {
+				t.Fatal(err)
+			}
+			checks := []struct {
+				text string
+				want bool
+			}{
+				{text: "ctx.PollInput()", want: test.wantPoll},
+				{text: "ctx.AdvanceTick()", want: test.wantTick},
+				{text: "ctx.SetTickRate(30)", want: test.wantRate30},
+			}
+			for _, check := range checks {
+				if got := strings.Contains(got, check.text); got != check.want {
+					t.Errorf("generated source contains %q = %t, want %t", check.text, got, check.want)
+				}
+			}
+		})
+	}
+}
+
+func TestGeneratedCartridgeSharesExactRuntimeDefaultPalette(t *testing.T) {
+	canonical := assetsync.CanonicalPaletteROM()
+	got, err := Transpile("default_palette.lua", `function _draw() cls(0) end`, Options{
+		SheetW: 8, SheetH: 8, Palette: canonical[:],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(got, "paletteROM") || strings.Contains(got, "ctx.LoadPalette(") {
+		t.Fatal("exact runtime default palette was duplicated in generated cartridge")
+	}
+	compileGenerated(t, got)
+
+	custom := canonical
+	custom[1] ^= 1
+	got, err = Transpile("custom_palette.lua", `function _draw() cls(1) end`, Options{
+		SheetW: 8, SheetH: 8, Palette: custom[:],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "var paletteROM = [256]uint16") || !strings.Contains(got, "ctx.LoadPalette(&paletteROM)") {
+		t.Fatal("custom palette was not embedded and loaded")
 	}
 	compileGenerated(t, got)
 }
@@ -1122,8 +1198,8 @@ func TestFractionalLiteralCodegenWrapsToRuntimeNumber(t *testing.T) {
 		opts  Options
 		value string
 	}{
-		{name: "monomorphic", value: "g.x"},
-		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+		{name: "monomorphic", opts: Options{DisableNumericConstants: true}, value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true, DisableNumericConstants: true}, value: "g.x.NumberOr(0)"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1161,8 +1237,8 @@ func TestUnaryMinimumFractionalLiteralCompilesAndWraps(t *testing.T) {
 		opts  Options
 		value string
 	}{
-		{name: "monomorphic", value: "g.x"},
-		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+		{name: "monomorphic", opts: Options{DisableNumericConstants: true}, value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true, DisableNumericConstants: true}, value: "g.x.NumberOr(0)"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1199,8 +1275,8 @@ func TestLargeIntegerLiteralLowersWithoutTargetIntOverflow(t *testing.T) {
 		opts  Options
 		value string
 	}{
-		{name: "monomorphic", value: "g.x"},
-		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true}, value: "g.x.NumberOr(0)"},
+		{name: "monomorphic", opts: Options{DisableNumericConstants: true}, value: "g.x"},
+		{name: "generic-value", opts: Options{DisableMonomorphicNumbers: true, DisableNumericConstants: true}, value: "g.x.NumberOr(0)"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1923,7 +1999,7 @@ end
 	compileGenerated(t, got)
 }
 
-func TestLayeredMapAccessLowersWithoutChangingLegacyCalls(t *testing.T) {
+func TestLayeredMapAccessUsesCompactFixedSlots(t *testing.T) {
 	got, err := Transpile("layered-map-access.lua", `
 function _update()
   local legacy = mget(4, 5)
@@ -1937,18 +2013,25 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	if count := strings.Count(got, "c.Mget("); count != 2 {
-		t.Fatalf("legacy/explicit-BG0 mget lowering count = %d, want 2:\n%s", count, got)
+	if count := strings.Count(got, "c.MgetCompact(0,0,"); count != 2 {
+		t.Fatalf("implicit/explicit BG0 compact mget count = %d, want 2:\n%s", count, got)
 	}
-	if count := strings.Count(got, "c.MgetLayer("); count != 1 {
-		t.Fatalf("layered mget lowering count = %d, want 1:\n%s", count, got)
+	if count := strings.Count(got, "c.MgetCompact(2,1,"); count != 1 {
+		t.Fatalf("BG2 fixed-slot mget count = %d, want 1:\n%s", count, got)
 	}
-	if count := strings.Count(got, "c.Mset("); count != 2 {
-		t.Fatalf("legacy/explicit-BG0 mset lowering count = %d, want 2:\n%s", count, got)
+	if count := strings.Count(got, "c.MsetCompact(0,0,"); count != 2 {
+		t.Fatalf("implicit/explicit BG0 compact mset count = %d, want 2:\n%s", count, got)
 	}
-	if count := strings.Count(got, "c.MsetLayer("); count != 1 {
-		t.Fatalf("layered mset lowering count = %d, want 1:\n%s", count, got)
+	if count := strings.Count(got, "c.MsetCompact(2,1,"); count != 1 {
+		t.Fatalf("BG2 fixed-slot mset count = %d, want 1:\n%s", count, got)
 	}
+	if strings.Contains(got, "c.MgetLayer(") || strings.Contains(got, "c.MsetLayer(") {
+		t.Fatalf("compile-time map layers retained runtime slot lookup:\n%s", got)
+	}
+	if update := generatedSection(got, "func (g *Game) gluUpdate("); strings.Contains(update, "rt.FromInt(0)") {
+		t.Fatalf("literal BG0 operands were materialized as dead temporaries:\n%s", update)
+	}
+	compileGenerated(t, got)
 }
 
 func TestLayeredMapLiteralBG0FastPathUsesRuntimeFixedPointConversion(t *testing.T) {
@@ -1964,9 +2047,10 @@ end
 	if strings.Contains(got, "c.MgetLayer(") || strings.Contains(got, "c.MsetLayer(") {
 		t.Fatalf("runtime-floored BG0 literal missed compatibility fast path:\n%s", got)
 	}
-	if !strings.Contains(got, "c.Mget(") || !strings.Contains(got, "c.Mset(") {
-		t.Fatalf("runtime-floored BG0 literal did not use legacy methods:\n%s", got)
+	if !strings.Contains(got, "c.MgetCompact(0,0,") || !strings.Contains(got, "c.MsetCompact(0,0,") {
+		t.Fatalf("runtime-floored BG0 literal did not use fixed-slot methods:\n%s", got)
 	}
+	compileGenerated(t, got)
 }
 
 func TestLayeredMapAccessArityValidation(t *testing.T) {
@@ -2225,7 +2309,7 @@ end
 func TestTranspileSelectsROMOrRAMSheetFromSsetUsage(t *testing.T) {
 	sheet := make([]byte, 240*160)
 	sheet[8] = 7 // one authored non-empty 8x8 cell (ID 1)
-	immutable, err := Transpile("immutable.lua", `
+	immutable, immutableReport, err := TranspileWithReport("immutable.lua", `
 function _draw()
   spr(1, 0, 0)
 end
@@ -2239,8 +2323,11 @@ end
 		strings.Contains(immutable, "var sheetRAM [38400]byte") {
 		t.Fatalf("immutable source reserved a writable sheet:\n%s", immutable[:min(len(immutable), 4000)])
 	}
+	if !immutableReport.SheetReadOnly {
+		t.Fatal("immutable source report did not select read-only sheet specialization")
+	}
 
-	mutable, err := Transpile("mutable.lua", `
+	mutable, mutableReport, err := TranspileWithReport("mutable.lua", `
 function paint()
   sset(239, 159, 7)
 end
@@ -2255,6 +2342,9 @@ end
 		!strings.Contains(mutable, "var sheetRAM [38400]byte") {
 		t.Fatalf("sset source did not reserve a writable sheet:\n%s", mutable[:min(len(mutable), 4000)])
 	}
+	if mutableReport.SheetReadOnly {
+		t.Fatal("sset source incorrectly selected read-only sheet specialization")
+	}
 }
 
 func TestTranspileLargeMapUsesStreamingCache(t *testing.T) {
@@ -2264,7 +2354,7 @@ func TestTranspileLargeMapUsesStreamingCache(t *testing.T) {
 			mapData[y*192+x] = uint16((x + y) & 1)
 		}
 	}
-	got, err := Transpile("large-map.lua", `
+	got, report, err := TranspileWithReport("large-map.lua", `
 function _draw()
   map(0, 31, 0, 0, 0, 2, 1, 0)
 end
@@ -2274,6 +2364,9 @@ end
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !report.MapStreaming {
+		t.Fatalf("large retained map was not reported as streaming: %+v", report)
 	}
 	src, err := format.Source([]byte(got))
 	if err != nil {
@@ -2320,6 +2413,20 @@ func TestGeneratedLargeMapInitAndEdits(t *testing.T) {
 }
 `
 	runGeneratedHarness(t, string(src), harness, "TestGeneratedLargeMapInitAndEdits")
+}
+
+func TestTranspileSmallMapReportsCompactStorage(t *testing.T) {
+	_, report, err := TranspileWithReport("compact-map.lua", `
+function _draw()
+  map(0,0,0,0,0,30,20,0)
+end
+`, Options{MapW: 30, MapH: 20, Map: make([]uint16, 30*20)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.MapStreaming {
+		t.Fatalf("small retained map was reported as streaming: %+v", report)
+	}
 }
 
 func TestStaticTableFieldsUseStableCachesByDefault(t *testing.T) {
@@ -2376,18 +2483,26 @@ end
 		t.Fatal(err)
 	}
 	optimizedUpdate := generatedSection(optimized, "func (g *Game) gluUpdate(")
+	if strings.Contains(optimized, "gravity rt.Number") {
+		t.Fatalf("immutable gravity constant retained runtime storage:\n%s", optimized)
+	}
 	for _, want := range []string{
-		"gravity rt.Number",
 		"steps rt.Number",
 	} {
 		if !strings.Contains(optimized, want) {
 			t.Fatalf("monomorphic lowering is missing %q:\n%s", want, optimized)
 		}
 	}
-	for _, want := range []string{"c.TableGetStableNumber(", "gluTableSetStableNumber(", "var l_delta_1 rt.Number", "var l_i_2 rt.Number"} {
+	for _, want := range []string{"_gluRecord0Field0 rt.Number", "_gluRecord0Field1 rt.Number", "var l_delta_1 rt.Number", "var l_i_2 rt.Number"} {
 		if !strings.Contains(optimizedUpdate, want) {
+			if strings.Contains(want, " rt.Number") && strings.Contains(optimized, want) {
+				continue
+			}
 			t.Fatalf("monomorphic update lowering is missing %q:\n%s", want, optimizedUpdate)
 		}
+	}
+	if strings.Contains(optimizedUpdate, "TableGet") || strings.Contains(optimizedUpdate, "TableSet") {
+		t.Fatalf("non-escaping numeric record retained table access:\n%s", optimizedUpdate)
 	}
 
 	legacy, err := Transpile("tagged-numbers.lua", source, Options{DisableMonomorphicNumbers: true})
@@ -2398,6 +2513,273 @@ end
 	if strings.Contains(legacyUpdate, "TableGetStableNumber") || strings.Contains(legacyUpdate, "TableSetStableNumber") ||
 		strings.Contains(legacy, "gravity rt.Number") || strings.Contains(legacy, "steps rt.Number") {
 		t.Fatalf("numeric rollback path emitted monomorphic storage:\n%s", legacy)
+	}
+}
+
+func TestMonomorphicTableFieldsPreserveNumericGlobalInitializers(t *testing.T) {
+	generated, err := Transpile("numeric-record-constants.lua", `
+local spawn_x = 16
+local spawn_y = 24
+player = {x = spawn_x, y = (spawn_y)}
+function _update()
+  player.x = player.x + 1
+  player.y = player.y - 1
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := generatedSection(generated, "func (g *Game) gluUpdate(")
+	for _, want := range []string{"_gluRecord0Field0 rt.Number", "_gluRecord0Field1 rt.Number"} {
+		if !strings.Contains(generated, want) {
+			t.Fatalf("numeric record storage is missing %q:\n%s", want, generated)
+		}
+	}
+	if got := strings.Count(update, "g._gluRecord0Field"); got != 4 {
+		t.Fatalf("direct numeric record accesses = %d, want 4:\n%s", got, update)
+	}
+	if strings.Contains(update, "TableGet") || strings.Contains(update, "TableSet") {
+		t.Fatalf("numeric record constants retained table access:\n%s", update)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestMonomorphicGlobalsPreservePriorNumericAliases(t *testing.T) {
+	generated, err := Transpile("numeric-global-alias.lua", `
+local PLAYER_IDLE = 1
+local PLAYER_RUN = 2
+player_sprite = PLAYER_IDLE
+function _update()
+  if btn(0) then player_sprite = PLAYER_RUN end
+end
+function _draw()
+  cls(0)
+  spr(player_sprite,16,24)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	game := generatedSection(generated, "type Game struct {")
+	if !strings.Contains(game, "player_sprite rt.Number") || strings.Contains(game, "player_sprite rt.Value") {
+		t.Fatalf("prior numeric alias did not preserve Number storage:\n%s", game)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestHeapElisionRequiresAClosedAllocationFreeProof(t *testing.T) {
+	heapless := `
+local frame = 1
+player = {x=16,y=24}
+function move(dx)
+  player.x = player.x + dx
+end
+function _update()
+  if btn(0) then move(-1) end
+end
+function _draw()
+  cls(0)
+  spr(frame,player.x,player.y)
+end
+`
+	generated, report, err := TranspileWithReport("heapless.lua", heapless, Options{Debug: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.HeapLinked || strings.Contains(generated, "ctx.CollectIfNeeded()") {
+		t.Fatalf("allocation-free cartridge retained periodic collection:\n%s", generated)
+	}
+	if !strings.Contains(generated, "heaplessStats.HeapCapacity, heaplessStats.HeapHandleLimit = 0, 0") {
+		t.Fatalf("heapless debug telemetry reports nonexistent heap capacity:\n%s", generated)
+	}
+	compileGenerated(t, generated)
+
+	for _, test := range []struct {
+		name    string
+		source  string
+		options Options
+	}{
+		{name: "ordinary-table", source: `items={1}\nfunction _update() add(items,2) end`},
+		{name: "dynamic-string", source: `message=0\nfunction _update() message=tostr(7) end`},
+		{name: "boxed-global", source: `message="static"\nfunction _draw() cls(0) end`},
+		{name: "rollback", source: heapless, options: Options{DisableHeapElision: true}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			generated, report, err := TranspileWithReport(test.name+".lua", strings.ReplaceAll(test.source, `\n`, "\n"), test.options)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !report.HeapLinked || !strings.Contains(generated, "ctx.CollectIfNeeded()") {
+				t.Fatalf("unproven heap program elided collection:\n%s", generated)
+			}
+			compileGenerated(t, generated)
+		})
+	}
+}
+
+func TestAudioControlBuiltinsDoNotForceLuaHeap(t *testing.T) {
+	for _, name := range []string{"sfx", "music", "sample", "gba_note", "gba_stop"} {
+		if !builtinNoAlloc(name) {
+			t.Fatalf("%s should be classified as Lua-heap-free", name)
+		}
+	}
+	for _, name := range []string{"print", "sub", "tostr", "chr", "add"} {
+		if builtinNoAlloc(name) {
+			t.Fatalf("%s may allocate from the Lua heap and must remain conservative", name)
+		}
+	}
+
+	generated, report, err := TranspileWithReport("heapless-audio-control.lua", `
+frame=0
+function _init()
+  sfx(-1)
+  music(-1)
+  sample(-1)
+end
+function _update()
+  frame=frame+1
+end
+function _draw()
+  cls(0)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.HeapLinked || strings.Contains(generated, "ctx.CollectIfNeeded()") {
+		t.Fatalf("allocation-free audio controls retained Lua heap maintenance:\n%s", generated)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestLiteralPrintDoesNotForceLuaHeap(t *testing.T) {
+	heapless, report, err := TranspileWithReport("heapless-print.lua", `
+function _draw()
+  cls(0)
+  print(("A"),8,8,7)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.HeapLinked || strings.Contains(heapless, "ctx.CollectIfNeeded()") {
+		t.Fatalf("literal print retained Lua heap maintenance:\n%s", heapless)
+	}
+	if !strings.Contains(heapless, "c.PrintStaticV(") || strings.Contains(generatedSection(heapless, "func (g *Game) gluDraw("), "gluPrintV(") {
+		t.Fatalf("literal print retained a root-protected call:\n%s", heapless)
+	}
+	runGeneratedHarness(t, heapless, `package main
+
+import (
+	rt "github.com/drpaneas/mtile/runtime"
+	"testing"
+)
+
+func TestLiteralPrintDrawsWithoutHeap(t *testing.T) {
+	var g Game
+	var c rt.Context
+	g.Init(&c)
+	g.Draw(&c)
+	if got := c.Pget(10, 8); got != 7 {
+		t.Fatalf("literal print pixel = %d, want 7", got)
+	}
+}
+`, "TestLiteralPrintDrawsWithoutHeap")
+
+	rollback, rollbackReport, err := TranspileWithReport("generic-print.lua", `
+function _draw()
+  cls(0)
+  print("A",8,8,7)
+end
+`, Options{DisableLiteralPrintSpecialization: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !rollbackReport.HeapLinked || !strings.Contains(generatedSection(rollback, "func (g *Game) gluDraw("), "gluPrintV(") {
+		t.Fatalf("literal print rollback did not retain generic rooted path:\n%s", rollback)
+	}
+	compileGenerated(t, rollback)
+
+	for _, source := range []string{
+		`function _draw() print(42,8,8,7) end`,
+		`value="STATIC" function _draw() print(value,8,8,7) end`,
+	} {
+		generated, report, err := TranspileWithReport("dynamic-print.lua", source, Options{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !report.HeapLinked || !strings.Contains(generated, "ctx.CollectIfNeeded()") {
+			t.Fatalf("unproven print incorrectly elided Lua heap:\n%s", generated)
+		}
+		compileGenerated(t, generated)
+	}
+}
+
+func TestNonGrowingTableBuiltinsAreNoAlloc(t *testing.T) {
+	for _, name := range []string{"del", "deli", "count", "all", "pairs"} {
+		if !builtinNoAlloc(name) {
+			t.Fatalf("%s should be classified as Lua-heap-free", name)
+		}
+	}
+	for _, name := range []string{"add", "foreach"} {
+		if builtinNoAlloc(name) {
+			t.Fatalf("%s may allocate or invoke an allocating callback", name)
+		}
+	}
+
+	generated, err := Transpile("table-effects.lua", `
+items={1,2,3}
+function take_last()
+  return deli(items)
+end
+function measure()
+  return count(items)
+end
+function _update()
+  local value=take_last()
+  local remaining=measure()
+  add(items,value)
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := generatedSection(generated, "func (g *Game) gluUpdate(")
+	if !strings.Contains(update, "g.take_last(") || strings.Contains(update, "g.__glu_call_take_last(") ||
+		!strings.Contains(update, "g.measure(") || strings.Contains(update, "g.__glu_call_measure(") {
+		t.Fatalf("non-growing table helpers retained root-protected wrappers:\n%s", update)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestNumericRecordScalarReplacementFallsBackForObservableTables(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+	}{
+		{"alias", `local player={x=1}\nlocal alias=player\nfunction _update() alias.x=2 end`},
+		{"dynamic-key", `local player={x=1}\nlocal key="x"\nfunction _update() player[key]=2 end`},
+		{"rebind", `local player={x=1}\nfunction _update() player={x=2} end`},
+		{"new-field", `local player={x=1}\nfunction _update() player.y=2 end`},
+		{"nonnumeric-write", `local player={x=1}\nfunction _update() player.x="bad" end`},
+		{"shadow", `local player={x=1}\nfunction move(player) return player.x end`},
+		{"mixed-record", `local player={x=1,name="madeline"}\nfunction _update() player.x=2 end`},
+		{"read-before-init", `local seen=player.x\nplayer={x=1}\nfunction _update() player.x=2 end`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			generated, err := Transpile(test.name+".lua", strings.ReplaceAll(test.source, `\n`, "\n"), Options{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(generated, "_gluRecord0Field0 rt.Number") {
+				t.Fatalf("observable table was scalar-replaced:\n%s", generated)
+			}
+			if !strings.Contains(generated, "player rt.Value") {
+				t.Fatalf("observable table did not retain ordinary storage:\n%s", generated)
+			}
+			compileGenerated(t, generated)
+		})
 	}
 }
 
@@ -2428,7 +2810,6 @@ func TestMonomorphicResults(t *testing.T) {
   var g Game
   var c rt.Context
   g.Init(&c)
-  xKey, vxKey := c.InternStatic("x"), c.InternStatic("vx")
   x, vx, total := rt.Number(81920), rt.Number(32768), rt.Number(0)
   acceleration := rt.Number(8192)
   for tick := 0; tick < 12; tick++ {
@@ -2438,11 +2819,11 @@ func TestMonomorphicResults(t *testing.T) {
       x += vx.Mul(rt.FromInt(i))
     }
     total += x
-    if got := c.TableGet(g.body, xKey); got.Kind != rt.KindNumber || got.Num != x {
-      t.Fatalf("tick %d x=%d want=%d kind=%d", tick, got.Num, x, got.Kind)
+    if got := g._gluRecord0Field0; got != x {
+      t.Fatalf("tick %d x=%d want=%d", tick, got, x)
     }
-    if got := c.TableGet(g.body, vxKey); got.Kind != rt.KindNumber || got.Num != vx {
-      t.Fatalf("tick %d vx=%d want=%d kind=%d", tick, got.Num, vx, got.Kind)
+    if got := g._gluRecord0Field1; got != vx {
+      t.Fatalf("tick %d vx=%d want=%d", tick, got, vx)
     }
     if g.total != total {
       t.Fatalf("tick %d total=%d want=%d", tick, g.total, total)

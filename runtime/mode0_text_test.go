@@ -73,6 +73,38 @@ func TestMode0StaticTextStagesGlyphTileAndObject(t *testing.T) {
 	}
 }
 
+func TestMode0PrintStaticVMatchesLiteralPrintV(t *testing.T) {
+	hw.ResetForTest()
+	generic := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))
+	specialized := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))
+	loadMode0TextTestAtlas(t, generic, mode0TextTestGlyph{'A', 11})
+	loadMode0TextTestAtlas(t, specialized, mode0TextTestGlyph{'A', 11})
+	generic.BeginRenderFrame()
+	specialized.BeginRenderFrame()
+	generic.Cls(0)
+	specialized.Cls(0)
+
+	wantX := generic.PrintV(generic.InternStatic("A"), IntVal(30), IntVal(20), IntVal(11))
+	gotX := specialized.PrintStaticV(specialized.InternStatic("A"), IntVal(30), IntVal(20), IntVal(11))
+	if gotX != wantX || specialized.cursor != generic.cursor ||
+		specialized.mode0ObjectCount != generic.mode0ObjectCount || specialized.mode0OAM != generic.mode0OAM {
+		t.Fatalf("Mode 0 static print differs: x=%d/%d cursor=%+v/%+v objects=%d/%d",
+			gotX, wantX, specialized.cursor, generic.cursor, specialized.mode0ObjectCount, generic.mode0ObjectCount)
+	}
+
+	generic.BeginRenderFrame()
+	specialized.BeginRenderFrame()
+	generic.Cursor(4, 5, 11)
+	specialized.Cursor(4, 5, 11)
+	generic.PrintV(generic.InternStatic("A"), NilVal(), NilVal(), IntVal(11))
+	specialized.PrintStaticV(specialized.InternStatic("A"), NilVal(), NilVal(), IntVal(11))
+	if specialized.cursor != generic.cursor || specialized.mode0ObjectCount != generic.mode0ObjectCount ||
+		specialized.mode0OAM != generic.mode0OAM {
+		t.Fatalf("Mode 0 implicit static print differs: cursor=%+v/%+v objects=%d/%d",
+			specialized.cursor, generic.cursor, specialized.mode0ObjectCount, generic.mode0ObjectCount)
+	}
+}
+
 func TestMode0TextCullsWrappedOffscreenGlyphs(t *testing.T) {
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))

@@ -299,7 +299,7 @@ func advanceNearest(pos, remainder, delta, den int) (int, int) {
 func (c *Context) drawSprite(id, x, y, w, h int, flipX, flipY bool) {
 	cols := c.cart.SpriteCols
 	srcX0, srcY0 := 0, 0
-	if !c.cart.SheetReadOnly {
+	if !sheetStorageReadOnly && !c.cart.SheetReadOnly {
 		cellX, cellY := spriteCellSplit(id, cols, spriteCellRecip(cols))
 		srcX0 = cellX * 8
 		srcY0 = cellY * 8
@@ -341,7 +341,7 @@ func (c *Context) drawSprite(id, x, y, w, h int, flipX, flipY bool) {
 	sheet := c.cart.Sheet
 	sheetW := c.cart.SheetW
 	sheetH := c.cart.SheetH
-	if c.cart.SheetReadOnly {
+	if sheetStorageReadOnly || c.cart.SheetReadOnly {
 		// Compact immutable sheets store one contiguous 8x8 cell per authored
 		// ID. Multi-cell spr() rectangles are not contiguous there, so walk
 		// logical cells and reuse the single-cell path. Empty slots are free.
@@ -483,7 +483,7 @@ func (c *Context) SSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) {
 	// Preserve the original dense-sheet sampler as a separate hot path. A
 	// shared callback here made TinyGo generate substantially slower code even
 	// when SheetReadOnly was false.
-	if !c.cart.SheetReadOnly {
+	if !sheetStorageReadOnly && !c.cart.SheetReadOnly {
 		sourceY := drawY0 * sh / dh
 		yRemainder := (drawY0 * sh) % dh
 		for oy := drawY0; oy < drawY1; oy++ {

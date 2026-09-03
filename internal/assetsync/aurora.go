@@ -21,6 +21,17 @@ func canonicalPalette() Palette {
 	return Palette{Name: CanonicalPaletteName, Colors: colors}
 }
 
+// CanonicalPaletteROM returns the exact BGR555 table built into the runtime.
+// Callers use value equality, not the active palette's name, so an authored
+// palette that happens to match Aurora can safely share the runtime copy too.
+func CanonicalPaletteROM() [256]uint16 {
+	colors, err := expandPalette(canonicalPalette())
+	if err != nil {
+		panic(err)
+	}
+	return colors
+}
+
 func parseAuroraHex(src string) ([]RGB15, error) {
 	var colors []RGB15
 	for i, line := range strings.Split(src, "\n") {

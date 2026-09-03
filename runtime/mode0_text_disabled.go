@@ -10,3 +10,6 @@ func (c *Context) presentMode0Text() uint32   { return 0 }
 func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool) {
 	return 0, false
 }
+func (c *Context) hardwarePrintStatic(s, x, y, color Value) (int, bool) {
+	return 0, false
+}

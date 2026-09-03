@@ -180,6 +180,13 @@ func TestWaveControlLoadsSelectedBankIn32SampleMode(t *testing.T) {
 	}
 }
 
+func TestTriggerWaveRefRejectsNilConfiguration(t *testing.T) {
+	ResetForTest()
+	if TriggerWaveRef(1750, nil) {
+		t.Fatal("TriggerWaveRef accepted a nil configuration")
+	}
+}
+
 func TestPSGStopPreservesDirectSoundAndOtherChannels(t *testing.T) {
 	ResetForTest()
 	ConfigurePSGOutput(7, 7, PSGMix100)

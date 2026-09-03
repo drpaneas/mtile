@@ -201,7 +201,7 @@ func validateNativeLibrary(l Library) bool {
 				return false
 			}
 			sound := findSoundIn(l.Sounds, event.SoundID)
-			if sound == nil || sound.Kind != clip.Kind || !nativeNoteValid(*sound, event.Note) {
+			if sound == nil || sound.Kind != clip.Kind || !nativeNoteValid(sound, event.Note) {
 				return false
 			}
 			if clip.Kind == SoundCH4 && event.Legato {
@@ -310,8 +310,8 @@ func findSongIndex(songs []Song, id uint8) int16 {
 	return -1
 }
 
-func nativeNoteValid(sound Sound, note uint8) bool {
-	return NativeSoundNoteValid(sound, note)
+func nativeNoteValid(sound *Sound, note uint8) bool {
+	return nativeSoundNoteValid(sound, note)
 }
 
 func (c *Controller) enqueue(command nativeCommand) bool {
@@ -447,24 +447,24 @@ func (c *Controller) advanceSoundMacros() {
 		}
 		playback.cycleRemainder -= NativeMacroClockCycles
 		sound := findSoundIn(c.library.Sounds, c.channels[channel].SoundID)
-		if sound == nil || !c.applySoundMacroStep(channel, *sound, playback) {
+		if sound == nil || !c.applySoundMacroStep(channel, sound, playback) {
 			playback.active = false
 		}
 	}
 }
 
-func (c *Controller) startSoundMacro(channel int, sound Sound, period uint16, note uint8) {
+func (c *Controller) startSoundMacro(channel int, sound *Sound, period uint16, note uint8) {
 	playback := &c.macros[channel]
 	*playback = nativeMacroPlayback{period: period, note: note}
-	if len(sound.Macro.Steps) == 0 {
+	if sound == nil || len(sound.Macro.Steps) == 0 {
 		return
 	}
 	playback.active = true
 	c.applySoundMacroStep(channel, sound, playback)
 }
 
-func (c *Controller) applySoundMacroStep(channel int, sound Sound, playback *nativeMacroPlayback) bool {
-	if playback == nil || int(playback.nextStep) >= len(sound.Macro.Steps) {
+func (c *Controller) applySoundMacroStep(channel int, sound *Sound, playback *nativeMacroPlayback) bool {
+	if sound == nil || playback == nil || int(playback.nextStep) >= len(sound.Macro.Steps) {
 		return false
 	}
 	step := sound.Macro.Steps[playback.nextStep]
@@ -510,7 +510,10 @@ func (c *Controller) applySoundMacroStep(channel int, sound Sound, playback *nat
 // trigger edge. hUGEDriver triggers table-driven noise instruments from the
 // played note, then applies subpattern row zero without retriggering. Keeping
 // those two writes distinct preserves the LFSR/timer attack on real hardware.
-func nativeNoiseTriggerConfig(sound Sound, note uint8) (hw.NoiseConfig, bool) {
+func nativeNoiseTriggerConfig(sound *Sound, note uint8) (hw.NoiseConfig, bool) {
+	if sound == nil {
+		return hw.NoiseConfig{}, false
+	}
 	config := sound.Noise
 	for _, step := range sound.Macro.Steps {
 		if !step.HasNoiseNote {
@@ -790,7 +793,7 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 	}
 	sound := findSoundIn(c.library.Sounds, soundID)
 	kind := SoundKind(channel - 1)
-	if sound == nil || sound.Kind != kind || !nativeNoteValid(*sound, note) {
+	if sound == nil || sound.Kind != kind || !nativeNoteValid(sound, note) {
 		c.commandsRejected++
 		return false
 	}
@@ -817,7 +820,7 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 	triggered := false
 	period := uint16(0)
 	if kind != SoundCH4 {
-		period, _ = NativeSoundPeriod(*sound, note)
+		period, _ = nativeSoundPeriod(sound, note)
 	}
 	if legato && state.Active && state.SoundID == soundID {
 		switch kind {
@@ -836,9 +839,9 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 		case SoundCH2:
 			triggered = hw.TriggerPulse2(period, sound.Pulse2)
 		case SoundCH3:
-			triggered = hw.TriggerWave(period, sound.Wave)
+			triggered = hw.TriggerWaveRef(period, &sound.Wave)
 		case SoundCH4:
-			noise, ok := nativeNoiseTriggerConfig(*sound, note)
+			noise, ok := nativeNoiseTriggerConfig(sound, note)
 			triggered = ok && hw.TriggerNoise(noise)
 		}
 	}
@@ -846,7 +849,7 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 		c.commandsRejected++
 		return false
 	}
-	c.startSoundMacro(int(channel-1), *sound, period, note)
+	c.startSoundMacro(int(channel-1), sound, period, note)
 	*state = ChannelState{
 		Active: true, Owner: owner, Priority: priority, Note: note, SoundID: soundID,
 		StartedTick: c.absoluteTick, Replacements: state.Replacements,

@@ -46,19 +46,29 @@ func (c *Context) InitHardware() {
 		hw.SetReg16(hw.BG0HOFS+uintptr(layer*4), 0)
 		hw.SetReg16(hw.BG0VOFS+uintptr(layer*4), 0)
 	}
-	for offset := 0; offset < mode0BGVRAMBytes; offset += 4 {
-		hw.SetVRAM32(hw.VRAM+uintptr(offset), 0)
-	}
-	if c.cart == nil || c.cart.SpriteN > mode0TileLimit {
+	if c.cart == nil {
 		return
 	}
 	var uploaded uint32
-	for id := 1; id < c.cart.SpriteN; id++ {
-		if !c.stageMode0Tile(id) {
-			continue
+	// A zero-layer cartridge can still use the authored map, flags, and sheet
+	// as gameplay data, or render with OBJs. It cannot observe BG character or
+	// screen VRAM, though, so do not clear 64 KiB or stage the sheet into the
+	// unused BG tile store. mode0LayerCount is selected by a build tag, making
+	// this branch and its whole loop disappear from the linked zero-layer ROM.
+	if mode0LayerCount != 0 {
+		for offset := 0; offset < mode0BGVRAMBytes; offset += 4 {
+			hw.SetVRAM32(hw.VRAM+uintptr(offset), 0)
 		}
-		hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
-		uploaded += 64
+		if c.cart.SpriteN > mode0TileLimit {
+			return
+		}
+		for id := 1; id < c.cart.SpriteN; id++ {
+			if !c.stageMode0Tile(id) {
+				continue
+			}
+			hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
+			uploaded += 64
+		}
 	}
 	c.paletteDirty = true
 	c.ApplyDisplayPalette()
@@ -86,7 +96,7 @@ func (c *Context) stageMode0Tile(id int) bool {
 	if c == nil || c.cart == nil || id < 0 || id >= c.cart.SpriteN {
 		return false
 	}
-	if c.cart.SheetReadOnly {
+	if sheetStorageReadOnly || c.cart.SheetReadOnly {
 		if id >= len(c.cart.SheetIndex) {
 			return false
 		}
@@ -292,6 +302,9 @@ func (c *Context) BeginRenderFrame() {
 func (c *Context) PrepareRender() {}
 
 func (c *Context) uploadMode0DirtyTiles() (uint32, uint32) {
+	if mode0SheetImmutable {
+		return 0, 0
+	}
 	if c == nil || c.cart == nil {
 		return 0, 0
 	}

@@ -77,7 +77,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	mapW, mapH := c.cart.MapW, c.cart.MapH
 	mapPlaneN := mapW * mapH
 	mapData := c.cart.Map
-	mapStreaming := c.cart.MapStreaming
+	mapStreaming := mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming
 	spriteN := c.cart.SpriteN
 	flags := c.cart.Flags
 	var mask byte
@@ -172,7 +172,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 			srcX0, srcY0 := 0, 0
 			blitSheet := sheet
 			blitSheetW := sheetW
-			if c.cart.SheetReadOnly {
+			if sheetStorageReadOnly || c.cart.SheetReadOnly {
 				if int(id) >= len(c.cart.SheetIndex) {
 					continue
 				}

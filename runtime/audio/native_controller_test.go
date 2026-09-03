@@ -410,7 +410,7 @@ func TestNativeNoiseTriggerUsesPlayedNoteBeforeRelativeMacroRowZero(t *testing.T
 		LoopStart: 0,
 	}
 	for _, note := range []uint8{60, 72} {
-		config, ok := nativeNoiseTriggerConfig(sound, note)
+		config, ok := nativeNoiseTriggerConfig(&sound, note)
 		wantDivisor, wantShift, wantOK := NativeGBStudioNoisePolynomial(note, 0)
 		if !ok || !wantOK || config.Divisor != wantDivisor || config.Shift != wantShift {
 			t.Fatalf("note %d trigger polynomial = shift %d divisor %d valid=%t, want %d/%d/true", note, config.Shift, config.Divisor, ok, wantShift, wantDivisor)
@@ -422,7 +422,7 @@ func TestNativeNoiseTriggerUsesPlayedNoteBeforeRelativeMacroRowZero(t *testing.T
 	}
 
 	static := nativeTestLibrary().Sounds[3]
-	config, ok := nativeNoiseTriggerConfig(static, 60)
+	config, ok := nativeNoiseTriggerConfig(&static, 60)
 	if !ok || config.Divisor != static.Noise.Divisor || config.Shift != static.Noise.Shift {
 		t.Fatalf("static noise trigger changed saved polynomial: %#v valid=%t", config, ok)
 	}

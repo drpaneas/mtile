@@ -82,7 +82,10 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	if image.MapStreaming != ram.MapStreaming {
 		return false
 	}
-	readOnlySheet := image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0
+	if mapStorageFixed && image.MapStreaming != mapStorageStreaming {
+		return false
+	}
+	readOnlySheet := sheetStorageReadOnly || image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0
 	sheetN, ok := mulFitInt(image.SheetW, image.SheetH)
 	if !ok {
 		return false
@@ -123,7 +126,7 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 		len(image.SheetIndex) != 0 || len(ram.SheetIndex) != 0 {
 		return false
 	}
-	if !image.MapStreaming {
+	if !(mapStorageStreaming || !mapStorageFixed && image.MapStreaming) {
 		return len(ram.Map) == mapN && len(ram.MapChunks) == 0 && len(ram.MapEdits) == 0
 	}
 	return len(ram.Map) == MapCacheCells &&
@@ -223,7 +226,7 @@ func (c *Context) Sget(x, y int) byte {
 	if c == nil || c.cart == nil || x < 0 || y < 0 || x >= c.cart.SheetW || y >= c.cart.SheetH {
 		return 0
 	}
-	if c.cart.SheetReadOnly {
+	if sheetStorageReadOnly || c.cart.SheetReadOnly {
 		cell := (y/8)*c.cart.SpriteCols + x/8
 		if cell < 0 || cell >= len(c.cart.SheetIndex) {
 			return 0
@@ -238,7 +241,7 @@ func (c *Context) Sget(x, y int) byte {
 }
 
 func (c *Context) Sset(x, y, color int) {
-	if c == nil || c.cart == nil || c.cart.SheetReadOnly || color < 0 || color > 255 ||
+	if c == nil || c.cart == nil || sheetStorageReadOnly || c.cart.SheetReadOnly || color < 0 || color > 255 ||
 		x < 0 || y < 0 || x >= c.cart.SheetW || y >= c.cart.SheetH {
 		return
 	}
@@ -262,6 +265,22 @@ func (c *Context) MgetLayer(layer, x, y int) uint16 {
 	return c.mapGetLayer(layer, x, y)
 }
 
+// MgetCompact is the generated-code fast path for a compile-time logical
+// layer and its compile-time dense storage slot. Hand-written/runtime callers
+// fall back to the general path unless the selected map storage is fixed and
+// compact. Invalid coordinates, layers, or absent slots still return zero.
+func (c *Context) MgetCompact(layer, storageLayer, x, y int) uint16 {
+	if !mapStorageFixed || mapStorageStreaming {
+		return c.mapGetLayer(layer, x, y)
+	}
+	if c == nil || c.cart == nil || layer < 0 || layer >= c.cart.MapLayers ||
+		storageLayer < 0 || storageLayer >= mapMaskPopulation(c.cart.MapPlaneMask) ||
+		x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
+		return 0
+	}
+	return c.cart.Map[storageLayer*c.cart.MapW*c.cart.MapH+y*c.cart.MapW+x]
+}
+
 func (c *Context) mapGetLayer(layer, x, y int) uint16 {
 	if c == nil || c.cart == nil || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return 0
@@ -273,7 +292,7 @@ func (c *Context) mapGetLayer(layer, x, y int) uint16 {
 	if !ok {
 		return 0
 	}
-	if c.cart.MapStreaming {
+	if mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming {
 		return c.mapStreamingGetLayer(layer, x, y)
 	}
 	return c.cart.Map[storageLayer*c.cart.MapW*c.cart.MapH+y*c.cart.MapW+x]
@@ -286,7 +305,7 @@ func (c *Context) Mset(x, y, id int) {
 		x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return
 	}
-	if c.cart.MapStreaming {
+	if mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming {
 		if c.mapStreamingSet(x, y, uint16(id)) {
 			c.mapMutated(x, y)
 		}
@@ -318,7 +337,7 @@ func (c *Context) MsetLayer(layer, x, y, id int) {
 		x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return
 	}
-	if c.cart.MapStreaming {
+	if mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming {
 		if c.mapStreamingSetLayer(layer, x, y, uint16(id)) {
 			c.mapLayerMutated(layer, x, y)
 		}
@@ -326,6 +345,28 @@ func (c *Context) MsetLayer(layer, x, y, id int) {
 	}
 	storageLayer, ok := mapPlaneSlot(c.cart.MapPlaneMask, layer, c.cart.MapLayers)
 	if !ok {
+		return
+	}
+	index := storageLayer*c.cart.MapW*c.cart.MapH + y*c.cart.MapW + x
+	value := uint16(id)
+	if c.cart.Map[index] == value {
+		return
+	}
+	c.cart.Map[index] = value
+	c.mapLayerMutated(layer, x, y)
+}
+
+// MsetCompact is MgetCompact's mutation counterpart. The logical layer is
+// retained so Mode 0 invalidates/patches the correct visible BG even though
+// dense storage lookup itself has been removed.
+func (c *Context) MsetCompact(layer, storageLayer, x, y, id int) {
+	if !mapStorageFixed || mapStorageStreaming {
+		c.MsetLayer(layer, x, y, id)
+		return
+	}
+	if c == nil || c.cart == nil || layer < 0 || layer >= c.cart.MapLayers ||
+		storageLayer < 0 || storageLayer >= mapMaskPopulation(c.cart.MapPlaneMask) ||
+		id < 0 || id >= c.cart.SpriteN || x < 0 || y < 0 || x >= c.cart.MapW || y >= c.cart.MapH {
 		return
 	}
 	index := storageLayer*c.cart.MapW*c.cart.MapH + y*c.cart.MapW + x

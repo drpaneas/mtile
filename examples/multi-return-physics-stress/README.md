@@ -13,17 +13,21 @@ rendering and accumulated simulation state.
 
 ## Paired Mode 4 results
 
-With the normal no-allocation direct-call path, TinyGo inlined the helpers and
-erased the tuple representation difference completely.
+With the normal no-allocation direct-call path, numeric tuple results remain a
+material optimization in the current generated call graph.
 
 | Metric | Tagged results | Numeric results | Change |
 | --- | ---: | ---: | ---: |
-| Median total cycles | 642,296 | 642,296 | unchanged |
-| p95 total cycles | 643,458 | 643,458 | unchanged |
-| p99 total cycles | 644,033 | 644,033 | unchanged |
-| Maximum total cycles | 977,318 | 977,318 | unchanged |
-| Median update/overhead residual | 371,498 | 371,498 | unchanged |
-| Debug ROM size | 43,996 B | 43,996 B | unchanged |
+| Median total cycles | 2,206,075 | 1,169,327 | -47.00% |
+| p95 total cycles | 2,207,237 | 1,170,496 | -46.97% |
+| p99 total cycles | 2,207,812 | 1,171,071 | -46.96% |
+| Maximum total cycles | 2,541,097 | 1,504,356 | -40.80% |
+| Median draw cycles | 201,502 | 195,584 | -2.94% |
+| Median Mode 4 blit cycles | 76,924 | 76,924 | unchanged |
+| Median update/overhead residual | 1,927,649 | 896,819 | -53.48% |
+| Missed ticks (warm-up + capture) | 620 | 620 | intentionally over budget |
+| EWRAM used | 183,456 B | 183,456 B | unchanged |
+| Debug ROM size | 50,688 B | 50,532 B | -0.31% |
 | Pixel differences across 600 frames | 0 | 0 | exact |
 
 The second pair disables the no-allocation direct-call optimization in both
@@ -32,21 +36,21 @@ exposes only the result ABI cost.
 
 | Metric | Tagged results | Numeric results | Change |
 | --- | ---: | ---: | ---: |
-| Median total cycles | 813,269 | 792,039 | -2.61% |
-| p95 total cycles | 814,422 | 793,192 | -2.61% |
-| p99 total cycles | 814,995 | 793,765 | -2.60% |
-| Maximum total cycles | 1,148,280 | 1,127,050 | -1.85% |
-| Median draw cycles | 196,712 | 194,690 | -1.03% |
-| Median Mode 4 blit cycles | 76,932 | 76,924 | effectively unchanged |
-| Median update/overhead residual | 539,625 | 520,425 | -3.56% |
+| Median total cycles | 2,438,893 | 1,363,142 | -44.11% |
+| p95 total cycles | 2,440,046 | 1,364,295 | -44.09% |
+| p99 total cycles | 2,440,619 | 1,364,868 | -44.08% |
+| Maximum total cycles | 2,773,904 | 1,698,162 | -38.78% |
+| Median draw cycles | 198,311 | 203,559 | +2.65% |
+| Median Mode 4 blit cycles | 76,948 | 76,961 | effectively unchanged |
+| Median update/overhead residual | 2,163,634 | 1,082,622 | -49.96% |
 | Missed ticks (warm-up + capture) | 620 | 620 | intentionally over budget |
-| EWRAM used | 187,436 B | 187,436 B | unchanged |
-| Debug ROM size | 50,012 B | 49,456 B | -1.11% |
+| EWRAM used | 183,456 B | 183,456 B | unchanged |
+| Debug ROM size | 57,148 B | 56,716 B | -0.76% |
 | Pixel differences across 600 frames | 0 | 0 | exact |
 
-The out-of-line result is relevant to functions that allocate, cannot be
-proven allocation-free, or are too large to inline. It is not an additional
-2.61% gain when TinyGo already folds the complete call into its caller.
+The root-protected result is relevant to functions that allocate or cannot be
+proven allocation-free. Both pairs demonstrate that specializing each tuple
+slot matters independently of root-wrapper removal.
 
 Re-run the paired proof after building the headless player:
 

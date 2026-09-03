@@ -306,6 +306,34 @@ func TestMode0BuildTagsKeepObjectBackendDependencies(t *testing.T) {
 	}
 }
 
+func TestRuntimeBuildTagsSpecializeMapStorageForBothRenderers(t *testing.T) {
+	tests := []struct {
+		name   string
+		report transpiler.RendererReport
+		want   string
+	}{
+		{name: "mode4-compact", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true}, want: "mtile_map_compact,mtile_static_strings_1"},
+		{name: "mode4-streaming", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, MapStreaming: true, HeapLinked: true}, want: "mtile_static_strings_1"},
+		{name: "mode0-compact", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, HeapLinked: true}, want: "mtile_mode0,mtile_map_compact,mtile_static_strings_1"},
+		{name: "mode0-streaming", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, MapStreaming: true, HeapLinked: true}, want: "mtile_mode0,mtile_map_streaming,mtile_static_strings_1"},
+		{name: "mode4-heapless", report: transpiler.RendererReport{Selected: transpiler.RendererMode4}, want: "mtile_map_compact,mtile_heapless,mtile_static_strings_1"},
+		{name: "mode0-heapless", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1}, want: "mtile_mode0,mtile_map_compact,mtile_heapless,mtile_static_strings_1"},
+		{name: "mode0-readonly-sheet-upload", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, HeapLinked: true, SheetReadOnly: true}, want: "mtile_mode0,mtile_map_compact,mtile_mode0_sheet_immutable,mtile_static_strings_1"},
+		{name: "mode4-readonly-sheet", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true, SheetReadOnly: true}, want: "mtile_map_compact,mtile_sheet_readonly,mtile_static_strings_1"},
+		{name: "static-tier-8", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true, StaticStrings: 8}, want: "mtile_map_compact,mtile_static_strings_8"},
+		{name: "static-tier-32", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true, StaticStrings: 9}, want: "mtile_map_compact,mtile_static_strings_32"},
+		{name: "static-tier-128", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true, StaticStrings: 33}, want: "mtile_map_compact,mtile_static_strings_128"},
+		{name: "static-tier-default", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true, StaticStrings: 129}, want: "mtile_map_compact"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := runtimeBuildTags(test.report); got != test.want {
+				t.Fatalf("tags = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
 func TestParseLinkerMapMissingFile(t *testing.T) {
 	if _, err := ParseLinkerMap(filepath.Join(t.TempDir(), "missing.map")); err == nil {
 		t.Fatal("expected an error reading a nonexistent linker map")
@@ -922,6 +950,49 @@ end
 	}
 }
 
+func TestBuildEndToEndElidesAuthoredButUnusedNativeAudio(t *testing.T) {
+	if _, err := exec.LookPath("tinygo"); err != nil {
+		t.Skip("tinygo not found on PATH")
+	}
+	if testing.Short() {
+		t.Skip("skipping a real TinyGo link in -short mode")
+	}
+	dir := filepath.Join(t.TempDir(), "unused-native-audio")
+	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 16, MapWidth: 2, MapHeight: 2}); err != nil {
+		t.Fatal(err)
+	}
+	writeNativeCH1Fixture(t, dir)
+	game := "function _draw()\n  cls(0)\nend\n"
+	if err := os.WriteFile(filepath.Join(dir, GameFileName), []byte(game), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	service, err := NewService("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	service.KeepWork = true
+	result, err := service.Build(dir, filepath.Join(t.TempDir(), "silent.gba"))
+	if err != nil {
+		t.Fatalf("silent native-audio Build: %v", err)
+	}
+	defer os.RemoveAll(result.WorkDir)
+	if result.AudioROMBytes != 0 || result.AudioVoices != 0 || result.AudioProfile != "" || result.AudioPSGRatio != 0 {
+		t.Fatalf("unused audio was reported as linked: %+v", result)
+	}
+	for _, forbidden := range []string{"nativeAudioController", "nativeSoundROM", "handleNativeTimer0"} {
+		if strings.Contains(result.GeneratedGo, forbidden) {
+			t.Fatalf("generated silent cartridge contains %q", forbidden)
+		}
+	}
+	linkMap, err := os.ReadFile(result.MapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(linkMap), "handleNativeTimer0") {
+		t.Fatal("unused native Timer0 IRQ survived the target link")
+	}
+}
+
 func TestBuildRejectsMissingLiteralSFXIDBeforeTinyGo(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "invalid-static-sfx")
 	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 16, MapWidth: 2, MapHeight: 2}); err != nil {
@@ -950,15 +1021,32 @@ func TestBuildEndToEndWithRealTinyGoStreamingMap(t *testing.T) {
 	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 8, MapWidth: 192, MapHeight: 96}); err != nil {
 		t.Fatal(err)
 	}
+	game := `cell=0
+function _init()
+  mset(0,191,95,1)
+end
+function _update()
+  cell=mget(0,191,95)
+end
+function _draw()
+  cls(0)
+  map(0,0,0,0,0,30,20,0)
+end
+`
+	if err := os.WriteFile(filepath.Join(dir, GameFileName), []byte(game), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	service, err := NewService("", "")
 	if err != nil {
 		t.Fatalf("NewService: %v", err)
 	}
+	service.KeepWork = true
 	romPath := filepath.Join(t.TempDir(), "large-map.gba")
 	result, err := service.Build(dir, romPath)
 	if err != nil {
 		t.Fatalf("Build large streaming map: %v", err)
 	}
+	defer os.RemoveAll(result.WorkDir)
 	rom, err := os.ReadFile(romPath)
 	if err != nil {
 		t.Fatal(err)
@@ -968,6 +1056,162 @@ func TestBuildEndToEndWithRealTinyGoStreamingMap(t *testing.T) {
 	}
 	if result.EWRAMFree < EWRAMReserve {
 		t.Fatalf("streaming-map EWRAMFree = %d, want at least %d", result.EWRAMFree, EWRAMReserve)
+	}
+	linkMap, err := os.ReadFile(result.MapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{"loadMapLayerChunk", "main.mapChunksRAM", "main.mapEditsRAM"} {
+		if !strings.Contains(string(linkMap), required) {
+			t.Fatalf("streaming build did not retain required chunk-cache symbol %q", required)
+		}
+	}
+}
+
+func TestBuildEndToEndCompactMapElidesStreamingRuntime(t *testing.T) {
+	if _, err := exec.LookPath("tinygo"); err != nil {
+		t.Skip("tinygo not found on PATH")
+	}
+	if testing.Short() {
+		t.Skip("skipping a real TinyGo link in -short mode")
+	}
+	dir := filepath.Join(t.TempDir(), "compact-map")
+	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 8, MapWidth: 30, MapHeight: 20}); err != nil {
+		t.Fatal(err)
+	}
+	game := `cell=0
+function _init()
+  mset(0,29,19,1)
+end
+function _update()
+  cell=mget(0,29,19)
+end
+function _draw()
+  cls(0)
+  map(0,0,0,0,0,30,20,0)
+end
+`
+	if err := os.WriteFile(filepath.Join(dir, GameFileName), []byte(game), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	service, err := NewService("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	service.KeepWork = true
+	result, err := service.Build(dir, filepath.Join(t.TempDir(), "compact-map.gba"))
+	if err != nil {
+		t.Fatalf("Build compact map: %v", err)
+	}
+	defer os.RemoveAll(result.WorkDir)
+	linkMap, err := os.ReadFile(result.MapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"mapStreamingGetLayer", "mapStreamingSetLayer", "loadMapLayerChunk", "mapEditLookup"} {
+		if strings.Contains(string(linkMap), forbidden) {
+			t.Fatalf("compact build retained streaming symbol %q", forbidden)
+		}
+	}
+}
+
+func TestBuildEndToEndHeaplessElidesLuaHeapRuntime(t *testing.T) {
+	if _, err := exec.LookPath("tinygo"); err != nil {
+		t.Skip("tinygo not found on PATH")
+	}
+	if testing.Short() {
+		t.Skip("skipping a real TinyGo link in -short mode")
+	}
+	dir := filepath.Join(t.TempDir(), "heapless")
+	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 16, SheetHeight: 8, MapWidth: 2, MapHeight: 2}); err != nil {
+		t.Fatal(err)
+	}
+	game := `frame=1
+player={x=8,y=8}
+function _update()
+  if btn(0) then player.x=player.x-1 end
+end
+function _draw()
+  cls(0)
+  spr(frame,player.x,player.y)
+  print("A",0,0,7)
+end
+`
+	if err := os.WriteFile(filepath.Join(dir, GameFileName), []byte(game), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	service, err := NewService("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	service.KeepWork = true
+	service.Renderer = transpiler.RendererMode0
+	result, err := service.Build(dir, filepath.Join(t.TempDir(), "heapless.gba"))
+	if err != nil {
+		t.Fatalf("Build heapless cartridge: %v", err)
+	}
+	defer os.RemoveAll(result.WorkDir)
+	if result.HeapLinked {
+		t.Fatal("heapless build reported the Lua heap as linked")
+	}
+	if result.EWRAMUsed >= 16*1024 {
+		t.Fatalf("heapless Mode 0 build uses %d EWRAM bytes, want compact Context below 16 KiB", result.EWRAMUsed)
+	}
+	linkMap, err := os.ReadFile(result.MapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"heapSpaceA", "heapSpaceB", "collectCore", "ensureHeap", "RegisterGlobal", "PushLocal", "PushTemp", "uploadMode0DirtyTiles"} {
+		if strings.Contains(string(linkMap), forbidden) {
+			t.Fatalf("specialized build retained unreachable runtime symbol %q", forbidden)
+		}
+	}
+}
+
+func TestBuildEndToEndAllocatingProgramRetainsLuaHeapRuntime(t *testing.T) {
+	if _, err := exec.LookPath("tinygo"); err != nil {
+		t.Skip("tinygo not found on PATH")
+	}
+	if testing.Short() {
+		t.Skip("skipping a real TinyGo link in -short mode")
+	}
+	dir := filepath.Join(t.TempDir(), "heap-program")
+	if err := CreateProject(dir, NewProjectOptions{SheetWidth: 8, SheetHeight: 8, MapWidth: 1, MapHeight: 1}); err != nil {
+		t.Fatal(err)
+	}
+	game := `items={1}
+function _update()
+  add(items,2)
+  deli(items,1)
+end
+function _draw()
+  cls(0)
+end
+`
+	if err := os.WriteFile(filepath.Join(dir, GameFileName), []byte(game), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	service, err := NewService("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	service.KeepWork = true
+	result, err := service.Build(dir, filepath.Join(t.TempDir(), "heap-program.gba"))
+	if err != nil {
+		t.Fatalf("Build allocating cartridge: %v", err)
+	}
+	defer os.RemoveAll(result.WorkDir)
+	if !result.HeapLinked {
+		t.Fatal("allocating build reported the Lua heap as elided")
+	}
+	linkMap, err := os.ReadFile(result.MapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{"heapSpaceA", "heapSpaceB", "collectCore"} {
+		if !strings.Contains(string(linkMap), required) {
+			t.Fatalf("allocating build omitted required Lua heap symbol %q", required)
+		}
 	}
 }
 

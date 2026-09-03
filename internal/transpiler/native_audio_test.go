@@ -42,7 +42,7 @@ func nativeTranspilerOptions(t *testing.T) Options {
 }
 
 func TestNativeAudioTranspilesToPSGControllerWithoutSoftwareStream(t *testing.T) {
-	got, err := Transpile("native.lua", `
+	got, report, err := TranspileWithReport("native.lua", `
 function _init()
   music(0)
   sfx(0, 100)
@@ -52,6 +52,9 @@ end
 `, nativeTranspilerOptions(t))
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !report.NativeAudioLinked {
+		t.Fatal("native audio calls were not reported as linked")
 	}
 	for _, wanted := range []string{
 		"var nativeAudioController audio.Controller", "nativeSoundROM", "nativeClipROM",
@@ -65,6 +68,30 @@ end
 	for _, forbidden := range []string{"audio.MonoStream", "audio.Mixer", "audio.SFXPlayer", "DirectSoundRate", "samplePCMROM", ".Service(audio.StreamPageCount)"} {
 		if strings.Contains(got, forbidden) {
 			t.Errorf("generated native cartridge contains legacy token %q", forbidden)
+		}
+	}
+	compileGenerated(t, got)
+}
+
+func TestNativeAudioAssetsWithoutCallsAreNotLinked(t *testing.T) {
+	got, report, err := TranspileWithReport("silent.lua", `
+function _draw()
+  cls(0)
+end
+`, nativeTranspilerOptions(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.NativeAudioLinked {
+		t.Fatal("authored but unused native audio was reported as linked")
+	}
+	for _, forbidden := range []string{
+		`"github.com/drpaneas/mtile/runtime/audio"`,
+		`"github.com/drpaneas/mtile/runtime/hw"`,
+		"nativeAudioController", "nativeSoundROM", "nativeClipROM", "nativePartROM", "nativeSongROM",
+	} {
+		if strings.Contains(got, forbidden) {
+			t.Errorf("silent generated cartridge contains unused audio token %q", forbidden)
 		}
 	}
 	compileGenerated(t, got)

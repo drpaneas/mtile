@@ -15,16 +15,16 @@ player for 20 warm-up ticks followed by 600 captured ticks.
 
 | Metric | Tagged function ABI | Numeric signatures | Change |
 | --- | ---: | ---: | ---: |
-| Median total cycles | 875,310 | 649,440 | -25.80% |
-| p95 total cycles | 917,070 | 667,623 | -27.20% |
-| p99 total cycles | 936,885 | 679,583 | -27.46% |
-| Maximum total cycles | 1,244,493 | 1,019,964 | -18.04% |
-| Median draw cycles | 221,678 | 223,587 | +0.86% |
-| Median Mode 4 blit cycles | 76,924 | 76,932 | unchanged |
-| Median update/overhead residual | 576,708 | 348,921 | -39.50% |
+| Median total cycles | 985,948 | 740,131 | -24.93% |
+| p95 total cycles | 1,099,691 | 764,342 | -30.49% |
+| p99 total cycles | 1,196,595 | 784,075 | -34.47% |
+| Maximum total cycles | 1,415,553 | 1,119,955 | -20.88% |
+| Median draw cycles | 229,881 | 230,350 | +0.20% |
+| Median Mode 4 blit cycles | 76,961 | 76,961 | unchanged |
+| Median update/overhead residual | 679,106 | 432,820 | -36.27% |
 | Missed ticks (warm-up + capture) | 620 | 620 | intentionally over budget |
-| EWRAM used | 187,544 B | 187,544 B | unchanged |
-| Debug ROM size | 56,864 B | 52,908 B | -6.96% |
+| EWRAM used | 183,960 B | 183,960 B | unchanged |
+| Debug ROM size | 63,976 B | 60,828 B | -4.92% |
 | Pixel differences across 600 frames | 0 | 0 | exact |
 
 The visible HUD contains the collision counter and fixed-point state checksum,

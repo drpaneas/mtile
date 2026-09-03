@@ -50,6 +50,21 @@ type Service struct {
 	// DisableNumericArrays retains generic table storage for fixed numeric
 	// arrays and provides the benchmark/rollback path for compact storage.
 	DisableNumericArrays bool
+	// DisableHeapElision retains collection and target semispaces for A/B tests.
+	DisableHeapElision bool
+	// DisableNumericConstants retains storage for immutable numeric bindings.
+	DisableNumericConstants bool
+	// DisableLiteralPrintSpecialization retains the generic allocating-capable
+	// print path for literal-string A/B tests.
+	DisableLiteralPrintSpecialization bool
+	// DisableReadOnlySheetSpecialization retains the generic Mode 4 sheet
+	// representation or the Mode 0 dirty-upload scan for paired benchmarks.
+	DisableReadOnlySheetSpecialization bool
+	// DisableFixedMapLayerSpecialization retains logical-to-storage layer lookup
+	// for compile-time layers in compact-map A/B benchmarks.
+	DisableFixedMapLayerSpecialization bool
+	// DisableStaticStringSpecialization retains all 256 Context static slots.
+	DisableStaticStringSpecialization bool
 	// UseProjectRenderer reads project.json's renderer policy. Renderer remains
 	// an explicit programmatic override for renderbench and build tests.
 	UseProjectRenderer bool
@@ -84,6 +99,7 @@ type Result struct {
 	EWRAMUsed          uint64
 	EWRAMFree          uint64
 	IWRAMUsed          uint64
+	HeapLinked         bool
 	WorkDir            string
 	AudioROMBytes      int
 	AudioVoices        int
@@ -209,15 +225,19 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	}
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
 	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
-		PackageName:                    "main",
-		Renderer:                       renderer,
-		DisableStableTableFields:       s.DisableStableTableFields,
-		DisableMonomorphicNumbers:      s.DisableMonomorphicNumbers,
-		DisableMonomorphicFunctions:    s.DisableMonomorphicFunctions,
-		DisableMonomorphicMultiReturns: s.DisableMonomorphicMultiReturns,
-		DisableNoAllocFunctionCalls:    s.DisableNoAllocFunctionCalls,
-		DisableNumericArrays:           s.DisableNumericArrays,
-		SheetW:                         assets.SheetW, SheetH: assets.SheetH,
+		PackageName:                        "main",
+		Renderer:                           renderer,
+		DisableStableTableFields:           s.DisableStableTableFields,
+		DisableMonomorphicNumbers:          s.DisableMonomorphicNumbers,
+		DisableMonomorphicFunctions:        s.DisableMonomorphicFunctions,
+		DisableMonomorphicMultiReturns:     s.DisableMonomorphicMultiReturns,
+		DisableNoAllocFunctionCalls:        s.DisableNoAllocFunctionCalls,
+		DisableNumericArrays:               s.DisableNumericArrays,
+		DisableHeapElision:                 s.DisableHeapElision,
+		DisableNumericConstants:            s.DisableNumericConstants,
+		DisableLiteralPrintSpecialization:  s.DisableLiteralPrintSpecialization,
+		DisableFixedMapLayerSpecialization: s.DisableFixedMapLayerSpecialization,
+		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
 		Palette:              assets.PaletteROM[:],
@@ -234,7 +254,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	if err != nil {
 		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
 	}
-	audioROMBytes, err := validateCompiledAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask)
+	audioROMBytes, err := validateLinkedAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask, rendererReport.NativeAudioLinked)
 	if err != nil {
 		return result, err
 	}
@@ -275,8 +295,15 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 
 	mapPath := filepath.Join(workDir, "game.map")
 	elfPath := filepath.Join(workDir, "game.elf")
+	linkReport := rendererReport
+	if s.DisableReadOnlySheetSpecialization {
+		linkReport.SheetReadOnly = false
+	}
+	if s.DisableStaticStringSpecialization {
+		linkReport.StaticStrings = runtimebundle.MaxStaticStrings
+	}
 	s.emit(PhaseLinkELF, "Linking analysis ELF and memory map")
-	if err := s.runTinyGo(workDir, targetPath, elfPath, mapPath, rendererReport); err != nil {
+	if err := s.runTinyGo(workDir, targetPath, elfPath, mapPath, linkReport); err != nil {
 		return result, fmt.Errorf("link ELF: %w", err)
 	}
 	symbols, err := ParseLinkerMap(mapPath)
@@ -295,7 +322,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	s.emit(PhaseMemory, fmt.Sprintf("Memory: EWRAM %d/%d bytes, %d free; IWRAM %d/%d bytes", ewramUsed, EWRAMCapacity, ewramFree, iwramUsed, IWRAMCapacity))
 	romPath := filepath.Join(workDir, "game.gba")
 	s.emit(PhaseLinkROM, "Linking GBA ROM")
-	if err := s.runTinyGo(workDir, targetPath, romPath, "", rendererReport); err != nil {
+	if err := s.runTinyGo(workDir, targetPath, romPath, "", linkReport); err != nil {
 		return result, fmt.Errorf("link ROM: %w", err)
 	}
 	rom, err := os.ReadFile(romPath)
@@ -325,7 +352,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 			audioVoices = audio.SFXSampleMixerVoices
 		}
 	}
-	if assets.NativeAudio != nil && (len(assets.NativeAudio.Library.Sounds) != 0 || len(assets.NativeAudio.Library.Clips) != 0 || len(assets.NativeAudio.Library.Songs) != 0) {
+	if rendererReport.NativeAudioLinked {
 		audioVoices = 4
 		audioProfile = assets.NativeAudio.Settings.Profile
 		audioPSGRatio = assets.NativeAudio.Settings.PSGRatio
@@ -334,6 +361,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	result = Result{
 		ROMPath: outputPath, ROMSize: len(rom),
 		EWRAMUsed: ewramUsed, EWRAMFree: ewramFree, IWRAMUsed: iwramUsed,
+		HeapLinked:    rendererReport.HeapLinked,
 		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices, AudioMasterVolume: audioMasterVolume,
 		AudioProfile: audioProfile, AudioPSGRatio: audioPSGRatio,
 		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals, GeneratedGo: generated,
@@ -436,6 +464,10 @@ func validateCompiledAssetFootprint(assets *assetsync.Assets) (int, error) {
 }
 
 func validateCompiledAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMask uint8) (int, error) {
+	return validateLinkedAssetFootprintForPlanes(assets, mapPlaneMask, true)
+}
+
+func validateLinkedAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMask uint8, includeNativeAudio bool) (int, error) {
 	if assets == nil {
 		return 0, errors.New("compiled assets are required")
 	}
@@ -450,7 +482,7 @@ func validateCompiledAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneM
 	audioBytes := uint64(assetsync.CompiledAudioROMBytes(
 		assets.SFXROM, assets.SFXStepROM, assets.MusicROM, assets.SampleROM, assets.SamplePCMROM,
 	))
-	if assets.NativeAudio != nil {
+	if includeNativeAudio && assets.NativeAudio != nil {
 		audioBytes += uint64(assetsync.CompiledNativeAudioROMBytes(assets.NativeAudio.Library))
 	}
 	mapCells := uint64(assets.MapW * assets.MapH * mapPlanePopulation(mapPlaneMask))
@@ -513,8 +545,8 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	// ROM cap; -opt=2 keeps the per-VBlank _update/_draw/cls path in the
 	// speed-optimized LLVM pipeline instead of the size one.
 	args := []string{"build", "-gc=none", "-opt=2", "-target=" + targetPath}
-	if report.Selected == transpiler.RendererMode0 {
-		args = append(args, "-tags="+mode0BuildTags(report))
+	if tags := runtimeBuildTags(report); tags != "" {
+		args = append(args, "-tags="+tags)
 	}
 	if mapPath != "" {
 		args = append(args, "-ldflags=-extldflags=-Map="+mapPath)
@@ -532,6 +564,59 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 		return err
 	}
 	return nil
+}
+
+func runtimeBuildTags(report transpiler.RendererReport) string {
+	tags := ""
+	if report.Selected == transpiler.RendererMode0 {
+		mapTag := "mtile_map_compact"
+		if report.MapStreaming {
+			// Target measurements show that constant streaming removes material
+			// Mode 0 commit work. The same tag regresses the Mode 4 draw loop,
+			// so Mode 4 deliberately retains its generic streaming path below.
+			mapTag = "mtile_map_streaming"
+		}
+		tags = mode0BuildTags(report) + "," + mapTag
+	} else if !report.MapStreaming {
+		tags = "mtile_map_compact"
+	}
+	if !report.HeapLinked {
+		if tags != "" {
+			tags += ","
+		}
+		tags += "mtile_heapless"
+	}
+	if report.SheetReadOnly {
+		if tags != "" {
+			tags += ","
+		}
+		if report.Selected == transpiler.RendererMode0 {
+			// The full immutable-sheet representation regressed Mode 0's measured
+			// draw path. This narrower tag preserves the generic representation while
+			// deleting the impossible dirty-tile scan from every frame.
+			tags += "mtile_mode0_sheet_immutable"
+		} else {
+			tags += "mtile_sheet_readonly"
+		}
+	}
+	staticTag := ""
+	switch {
+	case report.StaticStrings <= 1:
+		staticTag = "mtile_static_strings_1"
+	case report.StaticStrings <= 8:
+		staticTag = "mtile_static_strings_8"
+	case report.StaticStrings <= 32:
+		staticTag = "mtile_static_strings_32"
+	case report.StaticStrings <= 128:
+		staticTag = "mtile_static_strings_128"
+	}
+	if staticTag != "" {
+		if tags != "" {
+			tags += ","
+		}
+		tags += staticTag
+	}
+	return tags
 }
 
 func mode0BuildTags(report transpiler.RendererReport) string {

@@ -43,6 +43,16 @@ func NativeTonePeriod(kind SoundKind, note uint8) (uint16, bool) {
 // waveform needs twice the sample clock of a 32-sample waveform to preserve
 // the same musical pitch.
 func NativeSoundPeriod(sound Sound, note uint8) (uint16, bool) {
+	return nativeSoundPeriod(&sound, note)
+}
+
+// nativeSoundPeriod is the target hot-path form. Sound contains a complete
+// 64-sample CH3 waveform, so passing it by pointer avoids copying the tagged
+// union on every scheduler note event.
+func nativeSoundPeriod(sound *Sound, note uint8) (uint16, bool) {
+	if sound == nil {
+		return 0, false
+	}
 	if sound.Kind != SoundCH3 || sound.Wave.Wave.Length != 64 {
 		return NativeTonePeriod(sound.Kind, note)
 	}
@@ -59,8 +69,15 @@ func NativeSoundPeriod(sound Sound, note uint8) (uint16, bool) {
 // Ordinary CH4 sounds use a fixed NR43 value and accept any percussion-row
 // label. A GB Studio-relative noise table needs GB Studio's C3..B8 base range.
 func NativeSoundNoteValid(sound Sound, note uint8) bool {
+	return nativeSoundNoteValid(&sound, note)
+}
+
+func nativeSoundNoteValid(sound *Sound, note uint8) bool {
+	if sound == nil {
+		return false
+	}
 	if sound.Kind != SoundCH4 {
-		_, ok := NativeSoundPeriod(sound, note)
+		_, ok := nativeSoundPeriod(sound, note)
 		return ok
 	}
 	for _, step := range sound.Macro.Steps {
@@ -99,7 +116,7 @@ func NativeSoundNoteRange(sound Sound) (uint8, uint8, bool) {
 	}
 	minimum, maximum := -1, -1
 	for note := 0; note <= 127; note++ {
-		if _, ok := NativeSoundPeriod(sound, uint8(note)); !ok {
+		if _, ok := nativeSoundPeriod(&sound, uint8(note)); !ok {
 			continue
 		}
 		if minimum < 0 {

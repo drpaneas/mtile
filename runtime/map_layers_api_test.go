@@ -51,10 +51,13 @@ func TestLayeredMgetMsetCompactSparsePlanes(t *testing.T) {
 		t.Fatalf("legacy BG0 mget = %d, want 1", got)
 	}
 	for _, test := range []struct {
-		bg, want int
-	}{{-1, 0}, {0, 1}, {1, 2}, {2, 0}, {3, 3}, {4, 0}} {
+		bg, slot, want int
+	}{{-1, -1, 0}, {0, 0, 1}, {1, 1, 2}, {2, -1, 0}, {3, 2, 3}, {4, -1, 0}} {
 		if got := int(c.MgetLayer(test.bg, 1, 1)); got != test.want {
 			t.Fatalf("mget BG%d = %d, want %d", test.bg, got, test.want)
+		}
+		if got := int(c.MgetCompact(test.bg, test.slot, 1, 1)); got != test.want {
+			t.Fatalf("compact mget BG%d slot %d = %d, want %d", test.bg, test.slot, got, test.want)
 		}
 	}
 
@@ -73,7 +76,12 @@ func TestLayeredMgetMsetCompactSparsePlanes(t *testing.T) {
 	if got := c.MgetLayer(3, 0, 0); got != 8 {
 		t.Fatalf("BG3 after mset = %d, want 8", got)
 	}
-	c.MsetLayer(2, 0, 0, 9) // Absent plane fails closed.
+	c.MsetCompact(3, 2, 0, 0, 9)
+	if got := c.MgetLayer(3, 0, 0); got != 9 {
+		t.Fatalf("BG3 after compact mset = %d, want 9", got)
+	}
+	c.MsetCompact(2, -1, 0, 0, 9) // Absent fixed plane fails closed.
+	c.MsetLayer(2, 0, 0, 9)       // Absent plane fails closed.
 	if got := c.MgetLayer(2, 0, 0); got != 0 {
 		t.Fatalf("absent BG2 after mset = %d, want 0", got)
 	}

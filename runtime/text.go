@@ -157,6 +157,41 @@ func (c *Context) PrintCursor(s string) int {
 	return c.printSeq(s, nil, c.cursor.x, c.cursor.y, c.drawPal[c.cursor.color], true, false)
 }
 
+// PrintStaticV is the generated-code path for a proven literal string. It is
+// intentionally separate from PrintV so a heapless target has no reachable
+// Tostr/NewString branch and TinyGo can omit the Lua semispaces completely.
+// Invalid/non-static input fails closed; the transpiler emits this call only
+// for values initialized through InternStatic.
+func (c *Context) PrintStaticV(s, x, y, color Value) int {
+	if result, handled := c.hardwarePrintStatic(s, x, y, color); handled {
+		return result
+	}
+	c.ensureDrawState()
+	implicitPosition := x.Kind != KindNumber || y.Kind != KindNumber
+	if x.Kind == KindNumber && y.Kind != KindNumber && color.Kind != KindNumber {
+		color = x
+		implicitPosition = true
+		x = NilVal()
+		y = NilVal()
+	}
+	col := int(c.cursor.color)
+	if color.Kind == KindNumber {
+		col = color.Int()
+	}
+	if col < 0 || col > 255 {
+		return x.Int()
+	}
+	c.cursor.color = byte(col)
+	if s.Kind != KindStaticString || int(s.SRef) >= int(c.staticN) {
+		return x.Int()
+	}
+	bytes := c.staticStringBytes(s)
+	if implicitPosition {
+		return c.printSeq("", bytes, c.cursor.x, c.cursor.y, c.drawPal[c.cursor.color], true, false)
+	}
+	return c.printSeq("", bytes, x.Int(), y.Int(), c.drawPal[c.cursor.color], false, true)
+}
+
 func (c *Context) PrintV(s, x, y, color Value) int {
 	if result, handled := c.hardwarePrint(s, x, y, color); handled {
 		return result

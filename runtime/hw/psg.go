@@ -268,7 +268,14 @@ func waveLevelBits(level WaveLevel) uint16 {
 
 // TriggerWave safely loads CH3 Wave RAM and explicitly retriggers the channel.
 func TriggerWave(period uint16, config WaveConfig) bool {
-	if !validTonePeriod(period) || !config.Valid() {
+	return TriggerWaveRef(period, &config)
+}
+
+// TriggerWaveRef is the no-copy form for timing-sensitive scheduler paths.
+// TriggerWave remains the source-compatible value form for callers that do
+// not already own a stable WaveConfig pointer.
+func TriggerWaveRef(period uint16, config *WaveConfig) bool {
+	if config == nil || !validTonePeriod(period) || !config.Valid() {
 		return false
 	}
 	initializeSoundRegisters()

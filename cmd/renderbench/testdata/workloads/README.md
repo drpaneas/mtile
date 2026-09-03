@@ -15,10 +15,10 @@ The 600-frame Mode 4 diagnostic measured:
 
 | Call path | Mixed median | Split median | Residual change | ROM change | EWRAM | Pixels |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shipping direct/no-alloc | 741,774 | 741,774 | 0.00% | 0.00% | unchanged | 0 |
-| Forced root-protected | 968,454 | 875,721 | -13.60% | +0.43% | unchanged | 0 |
+| Shipping direct/no-alloc | 1,123,260 | 1,123,260 | 0.00% | 0.00% | unchanged | 0 |
+| Forced root-protected | 1,346,457 | 1,312,963 | -3.78% | +1.31% | unchanged | 0 |
 
-The forced path's total median improves by 9.58%, but the shipping path is
+The forced path's total median improves by 2.49%, but the shipping path is
 byte-for-byte and cycle-for-cycle unchanged because TinyGo already erases the
 generic ABI after inlining. That makes automatic cloning unjustified for the
 current workload; the diagnostic remains as a repeatable gate if real
@@ -37,11 +37,11 @@ per tick. The 600-frame Mode 4 result was:
 
 | Metric | Generic tables | Numeric arrays | Change |
 | --- | ---: | ---: | ---: |
-| Median cycles | 750,595 | 553,263 | -26.29% |
-| Update/overhead residual | 424,398 | 259,724 | -38.80% |
+| Median cycles | 3,253,949 | 542,498 | -83.33% |
+| Update/overhead residual | 2,937,019 | 254,996 | -91.32% |
 | Lua heap allocated | 3,200 B | 1,040 B | -67.50% |
-| ROM | 83,348 B | 72,484 B | -13.03% |
-| Linker EWRAM | 201,864 B | 201,864 B | unchanged |
+| ROM | 63,940 B | 39,364 B | -38.44% |
+| Linker EWRAM | 197,036 B | 197,036 B | unchanged |
 | Missed ticks | 620 | 0 | -620 |
 | Differing pixels | 0 | 0 | exact |
 
@@ -50,6 +50,128 @@ Re-run the default-versus-rollback proof with:
 ```sh
 go test -tags numericarraydiagnostic ./cmd/renderbench \
   -run TestNumericArrayDiagnostic -count=1 -v
+```
+
+`celeste_constant_collision.lua` uses the first Celeste room and performs four
+collision rectangles per tick. The opt-in diagnostic builds the same source
+with compile-time numeric constants enabled and disabled, in both renderers:
+
+| Renderer | Rollback median | Constant median | Rollback ROM | Constant ROM | EWRAM | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Mode 0 | 22,792 | 21,720 | 22,824 B | 22,544 B | +16 B free | 0 |
+| Mode 4 | 662,765 | 662,021 | 22,540 B | 22,596 B | +16 B free | 0 |
+
+Mode 4's debug ROM grows by 56 bytes while its total frame cost still falls by
+744 cycles. Mode 0 falls by 1,072 cycles and 280 ROM bytes. Both paths preserve
+their original missed-frame counts. Re-run the exact A/B with:
+
+```sh
+go test -tags numericconstantdiagnostic ./cmd/renderbench \
+  -run TestNumericConstantDiagnostic -count=1 -v
+```
+
+The same Celeste collision fixture is the paired proof for immutable-sheet
+runtime specialization. The source and generated Go are identical; only the
+target runtime build tag differs. Mode 4 selects the compact read-only sheet
+representation. Mode 0 retains its faster generic representation and removes
+only the unreachable dirty-tile scan:
+
+| Renderer | Generic median | Specialized median | Generic ROM | Specialized ROM | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Mode 4 | 711,140 | 662,021 | 24,408 B | 22,596 B | 0 |
+| Mode 0 | 47,668 | 21,720 | 23,040 B | 22,544 B | 0 |
+
+Mode 4 wins by 6.91% total cycles and 49,123 draw cycles. Mode 0 wins by 54.43%
+overall: commit falls from 41,425 to 15,451 cycles and cold initialization from
+3,399,010 to 3,348,082 cycles, without changing EWRAM. The earlier, broader
+Mode 0 read-only representation remains rejected because it regressed the draw
+path; the accepted tag performs only the independently measured upload-scan
+elision. Re-run it with:
+
+```sh
+go test -tags readonlysheetdiagnostic ./cmd/renderbench \
+  -run TestReadOnlySheetDiagnostic -count=1 -v
+```
+
+The fixed-map-layer diagnostic then keeps the same compact Celeste map and
+compares logical-layer lookup with compile-time dense storage slots:
+
+| Renderer | Logical median | Fixed-slot median | Logical ROM | Fixed-slot ROM | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Mode 0 | 22,248 | 21,720 | 22,584 B | 22,544 B | 0 |
+| Mode 4 | 662,505 | 662,021 | 22,764 B | 22,596 B | 0 |
+
+Draw, commit, EWRAM, and missed-frame counts are unchanged. Dynamic layers and
+streaming maps do not enter this path. Re-run with:
+
+```sh
+go test -tags fixedmaplayerdiagnostic ./cmd/renderbench \
+  -run TestFixedMapLayerDiagnostic -count=1 -v
+```
+
+Finally, the static-string-capacity diagnostic compares the default 256-entry
+`Context` table with the exact compiler-selected tier. This workload has no
+interned Lua strings, so both renderers select the one-entry sentinel and
+return 4,080 EWRAM bytes. ROM size and total/draw/commit cycles are exactly
+unchanged, and all frames are pixel-identical:
+
+```sh
+go test -tags staticstringdiagnostic ./cmd/renderbench \
+  -run TestStaticStringCapacityDiagnostic -count=1 -v
+```
+
+`audio_control_heapless.lua` calls the Audio v2-compatible `sfx` and `music`
+controls every tick without creating Lua tables or strings. The paired
+diagnostic proves that these control calls no longer keep an otherwise
+unreachable Lua heap alive:
+
+| Renderer | Heap-linked median | Heapless median | Heap-linked ROM | Heapless ROM | EWRAM returned | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Mode 0 | 2,912 | 2,883 | 34,476 B | 32,576 B | 143,064 B | 0 |
+| Mode 4 | 149,032 | 148,952 | 33,988 B | 32,100 B | 143,072 B | 0 |
+
+Both runs retained zero missed frames. Re-run with:
+
+```sh
+go test -tags audioheapdiagnostic ./cmd/renderbench \
+  -run TestAudioControlHeapDiagnostic -count=1 -v
+```
+
+`static_print_heapless.lua` isolates two literal-string `print` calls. The
+optimized path calls the literal-only `PrintStaticV`: the generic wrapper and
+dynamic string decoder are required only when `print` may convert a non-string
+through allocating `tostr`. The exact rollback-versus-specialized capture
+measured:
+
+| Renderer | Generic median | Literal median | Generic ROM | Literal ROM | EWRAM returned | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Mode 0 | 41,084 | 36,568 | 19,596 B | 16,676 B | 143,068 B | 0 |
+| Mode 4 | 164,215 | 159,746 | 26,136 B | 17,840 B | 143,068 B | 0 |
+
+Both paths recorded zero missed frames. Re-run with:
+
+```sh
+go test -tags staticprintheapdiagnostic ./cmd/renderbench \
+  -run TestStaticPrintHeapDiagnostic -count=1 -v
+```
+
+`table_noalloc_calls.lua` executes 128 `deli`/`count` helper-call pairs per
+tick while an `add` in the caller deliberately keeps the ordinary Lua heap
+reachable. This isolates effect analysis rather than heap removal: deletion,
+counting, and iterator inspection cannot grow the table or invoke collection,
+so their user functions may bypass GC-root wrappers.
+
+| Renderer | Root-wrapped median | Direct median | Root-wrapped ROM | Direct ROM | Pixels |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Mode 0 | 530,084 | 472,461 | 27,948 B | 26,796 B | 0 |
+| Mode 4 | 688,174 | 632,906 | 27,976 B | 26,688 B | 0 |
+
+Mode 0 retained zero missed frames in both runs; the deliberately over-budget
+Mode 4 fixture retained its characterization count. Re-run with:
+
+```sh
+go test -tags tableeffectdiagnostic ./cmd/renderbench \
+  -run TestTableEffectDiagnostic -count=1 -v
 ```
 
 Example:

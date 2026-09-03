@@ -312,7 +312,7 @@ function _draw() cls() map() end
 	if report.Mode0Layers != 1 || report.MapPlaneMask != 0x04 || report.MapDrawMask != 0x04 {
 		t.Fatalf("mutable BG2 report = %+v", report)
 	}
-	for _, want := range []string{"var mapROM = [ 2 ]uint16", "c.MsetLayer(", "c.MapAll(4)"} {
+	for _, want := range []string{"var mapROM = [ 2 ]uint16", "c.MsetCompact(2,0,", "c.MapAll(4)"} {
 		if !strings.Contains(generated, want) {
 			t.Fatalf("mutable BG2 generation missing %q:\n%s", want, generated)
 		}
@@ -330,8 +330,8 @@ function _draw() cls() map() end
 	if report.MapPlaneMask != 0x02 || report.MapDrawMask != 0x02 {
 		t.Fatalf("fractional literal report = %+v, want runtime-floored BG1", report)
 	}
-	if !strings.Contains(generated, "c.MsetLayer(") {
-		t.Fatalf("fractional BG1 generation missing layered write:\n%s", generated)
+	if !strings.Contains(generated, "c.MsetCompact(1,0,") {
+		t.Fatalf("fractional BG1 generation missing fixed-slot write:\n%s", generated)
 	}
 }
 

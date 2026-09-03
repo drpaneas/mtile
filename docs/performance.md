@@ -387,21 +387,116 @@ must stay well under 32 KB.
   the value with another type, adding/removing fields in a way that changes its
   layout, or using different record shapes at the same function access site is
   unsupported; use indexed access (`object["x"]`) when the shape is dynamic.
+- A chunk-scope, fixed-shape numeric record is scalar-replaced when the whole
+  program proves that its identity and table layout are unobservable. Every
+  field then becomes one direct `rt.Number` member: no table allocation,
+  static field key, hash slot, or field cache is linked. Aliasing the record,
+  using bracket indexing, rebinding it, adding a field, storing an explicit
+  non-number, or shadowing its name automatically retains the ordinary table
+  path. Debug builds expose scalarized fields as `record.field` watch entries.
+  In a 64-iteration target workload, the conservative scalar path measured
+  259,324 -> 43,915 median Mode 0 cycles (-83.07%) and 41,352 -> 26,212 ROM
+  bytes (-36.61%), with zero differing pixels; the real first-room Celeste
+  frame measured 45,224 -> 44,705 cycles and 44,780 -> 30,076 debug-ROM bytes.
+- Retained maps at or below the 16,384-cell threshold select a compile-time
+  compact runtime in both renderers, so their ROM cannot retain the chunk
+  loader, streaming lookup, or sparse-edit table. On the first-room Celeste
+  cartridge this changed the release ROM from 27,708 to 24,616 bytes (-11.2%)
+  and the Mode 0 debug benchmark from 44,705 to 44,521 median cycles, with zero
+  differing pixels or missed frames. Streaming maps use the fixed streaming
+  path in Mode 0 (36,333 -> 28,390 cycles in the paired map-only target
+  workload). Mode 4 deliberately retains its generic streaming path: forcing
+  the same specialization measured 397,312 -> 411,340 cycles, so that losing
+  variant is not selected.
+- On a compact map, `mget`/`mset` with either their implicit BG0 form or a
+  literal/proven-constant layer compile directly to that layer's dense storage
+  slot. Dynamic layers and every streaming map retain the full logical-layer
+  lookup. Four collision rectangles per tick measured 22,248 -> 21,720 Mode 0
+  cycles and 662,505 -> 662,021 Mode 4 cycles; ROM changed by -40 and -168
+  bytes respectively, with identical draw/commit costs, EWRAM, missed frames,
+  and pixels.
+- A cartridge with no `sset()` specializes its renderer at link time. Mode 4
+  uses the compact immutable-sheet representation and removes its storage
+  branch from every `spr`, `sspr`, and `map` sample; the collision fixture
+  measured 711,140 -> 662,021 cycles (-6.91%), draw 629,936 -> 580,813, and
+  debug ROM 24,408 -> 22,596 bytes. Mode 0 deliberately does not use that
+  representation because its earlier steady-state candidate regressed by 66
+  cycles. Instead, a narrower Mode 0 tag preserves the faster sheet layout and
+  deletes only the impossible per-frame dirty-tile scan. That changed the same
+  fixture from 47,668 -> 21,720 cycles (-54.43%), commit 41,425 -> 15,451, cold
+  initialization 3,399,010 -> 3,348,082 cycles, and ROM 23,040 -> 22,544 bytes.
+  Every pair had zero differing pixels, zero new missed frames, and unchanged
+  EWRAM.
+- The periodic Lua collector and its two 56 KiB target semispaces are omitted
+  when the whole program is proven allocation-free after numeric-record scalar
+  replacement. Any ordinary/aliased table, dynamic string operation, boxed
+  global, uncertain call, or disabled proof keeps the original collector and
+  memory unchanged. On the first-room Celeste cartridge this changed the
+  release ROM from 23,036 to 21,280 bytes, debug ROM from 25,212 to 23,516,
+  and free EWRAM from 96,240 to 210,928 bytes; median/p95 stayed non-regressive
+  at 43,751 -> 43,747 cycles with zero differing pixels or missed frames. A
+  heap-free target also replaces the otherwise unreachable handle table, scan
+  queue, and root stacks with compile-only sentinel slots. On the constant
+  collision workload this returned another 28,380 EWRAM bytes in both
+  renderers with bit-identical frames and exactly unchanged total/draw/commit
+  cycles. At that stage the release Celeste cart had 239,324 bytes free EWRAM
+  and remained 21,188 ROM bytes. Allocating carts retain the full metadata and
+  both semispaces.
+- Audio control builtins (`sfx`, `music`, `sample`, `gba_note`, and
+  `gba_stop`) participate in that same no-allocation proof: they may change
+  audio state, but cannot allocate a Lua table or string. In an otherwise
+  heapless cart calling `sfx` and `music` every tick, the Mode 0 median changed
+  from 2,912 to 2,883 cycles, ROM from 34,476 to 32,576 bytes, and free EWRAM
+  from 108,976 to 252,040 bytes. Mode 4 changed from 149,032 to 148,952 cycles,
+  ROM from 33,988 to 32,100 bytes, and free EWRAM from 70,848 to 213,920 bytes.
+  Both renderer pairs had zero differing pixels and zero missed frames.
+- `print` stays conservatively allocating for a dynamic/non-string first
+  argument because `PrintV` may call `tostr`. When that argument is a literal
+  string, however, it is already interned and generated code uses the
+  literal-only `PrintStaticV` call graph. That graph cannot reach `tostr`, the
+  dynamic-string decoder, either 56 KiB semispace, or the root-stack metadata.
+  The literal-text fixture measured 41,084 -> 36,568 Mode 0 cycles (-10.99%),
+  19,596 -> 16,676 ROM bytes, and 143,068 more free EWRAM. Mode 4 measured
+  164,215 -> 159,746 cycles (-2.72%), 26,136 -> 17,840 ROM bytes, and the same
+  EWRAM gain. Both pairs had zero differing pixels and zero missed frames. A
+  real TinyGo link test rejects any heap symbols or a Mode 0 `Context` at or
+  above 16 KiB; this caught an intermediate implementation whose generic
+  string decoder retained the heap even though source-level effect analysis
+  correctly reported the cart as heapless.
 - First-observed numeric globals, locals, numeric-for counters, arithmetic
   expressions, and numeric record fields use native 16:16 `rt.Number` storage
   and operations. Reassigning one of those bindings or fields to a different
   Lua type is unsupported. Keep genuinely polymorphic values behind bracket
   indexing or separate bindings. The paired 16-body physics fixture in
-  [`examples/physics-stress`](../examples/physics-stress) measured a 20.14%
+  [`examples/physics-stress`](../examples/physics-stress) measured a 32.10%
   reduction in update/overhead cycles with zero differing pixels across 600
   Mode 4 frames.
+- A chunk-scope numeric binding initialized once from a literal or an earlier
+  proven constant is emitted as an exact 16:16 compile-time constant. Any
+  second write, pre-declaration read, shadowing, multi-assignment, computed
+  initializer, or declaration after the first function retains ordinary
+  storage. The paired first-room Celeste collision workload performs four
+  `solid_rect` queries per tick. Constant propagation changed Mode 0 from
+  22,792 to 21,720 median cycles and 22,824 to 22,544 debug-ROM bytes; Mode 4
+  changed from 662,765 to 662,021 cycles. Both returned 16 more EWRAM bytes,
+  produced zero differing pixels, and retained the same missed-frame counts.
+  The real Mode 0 release cartridge changed from 21,280 to 21,188 ROM bytes.
+- The transpiler counts unique interned static strings exactly and selects the
+  smallest safe 1/8/32/128/256-entry `Context` tier. The public 256-string
+  source limit and overflow behavior are unchanged. The string-free Celeste
+  collision workload returned 4,080 EWRAM bytes in both renderers while ROM,
+  total/draw/commit cycles, missed frames, and pixels remained exactly
+  unchanged. The one-entry tier is a sentinel for the zero-string case. After
+  this tier, fixed map-slot lowering, and immutable-sheet upload elision, the
+  current release Celeste cart is 20,612 ROM bytes with 243,404 bytes of EWRAM
+  free.
 - Fixed, non-escaping global numeric array literals use compact 4-byte Number
   elements instead of 12-byte Value slots. Direct indexed reads/writes and
   `#array` stay native; an escape, shadow, hash field, or explicit non-number
   assignment keeps the generic table. The 64-particle, 512-access/tick
-  diagnostic measured 750,595 -> 553,263 median cycles (-26.29%), 3,200 ->
-  1,040 bytes of Lua heap allocation (-67.50%), and 83,348 -> 72,484 ROM bytes
-  (-13.03%), with unchanged linker EWRAM and zero differing pixels across 600
+  diagnostic measured 3,253,949 -> 542,498 median cycles (-83.33%), 3,200 ->
+  1,040 bytes of Lua heap allocation (-67.50%), and 63,940 -> 39,364 ROM bytes
+  (-38.44%), with unchanged linker EWRAM and zero differing pixels across 600
   Mode 4 frames. Element types are permanent under the same monomorphic
   contract as numeric bindings.
 - Direct user functions receive native `rt.Number` parameters only when every
@@ -411,7 +506,7 @@ must stay well under 32 KB.
   The paired 12-body,
   ~280-call/tick fixture in
   [`examples/function-physics-stress`](../examples/function-physics-stress)
-  measured 875,310 -> 649,440 median cycles (-25.80%) and a 39.50% reduction
+  measured 985,948 -> 740,131 median cycles (-24.93%) and a 36.27% reduction
   in update/overhead residual, with zero differing pixels across 600 Mode 4
   frames. This deliberately over-budget workload amplifies call overhead; the
   percentage is not a promise for ordinary games.
@@ -419,25 +514,31 @@ must stay well under 32 KB.
   tuples such as `(rt.Number, rt.Value, rt.Number)`. In the dedicated 240-call
   fixture at
   [`examples/multi-return-physics-stress`](../examples/multi-return-physics-stress),
-  TinyGo's normal inliner erased the tagged/native distinction completely:
-  both shipping-path ROMs measured 642,296 median cycles and 43,996 bytes. With
-  the same root-protected out-of-line path in both builds, native tuple results
-  measured 813,269 -> 792,039 median cycles (-2.61%), 539,625 -> 520,425
-  update/overhead cycles (-3.56%), and 50,012 -> 49,456 ROM bytes (-1.11%).
-  Both comparisons had zero differing pixels across 600 Mode 4 frames and
-  unchanged EWRAM. The out-of-line result applies to calls that cannot be
-  inlined or must retain root protection; it is not an extra gain on helpers
-  the compiler already collapses completely.
+  native tuple results measured 2,206,075 -> 1,169,327 shipping-path cycles
+  (-47.00%), 1,927,649 -> 896,819 update/overhead cycles (-53.48%), and 50,688
+  -> 50,532 ROM bytes (-0.31%). With the same root-protected path in both
+  builds, they measured 2,438,893 -> 1,363,142 cycles (-44.11%), 2,163,634 ->
+  1,082,622 update/overhead cycles (-49.96%), and 57,148 -> 56,716 ROM bytes
+  (-0.76%). Both comparisons had zero differing pixels across 600 Mode 4
+  frames and unchanged EWRAM.
 - Calls to transitively proven non-allocating functions bypass the generated
   temporary-root push/pop wrapper. Allocation through table creation/growth,
   string creation/concatenation, an unknown builtin, or an unproven recursive
   cycle keeps the protected path. A dedicated workload with one live table
   root and 384 pure numeric calls per tick in
   [`examples/noalloc-call-stress`](../examples/noalloc-call-stress) measured
-  334,028 -> 234,519 median cycles (-29.79%) and 112,219 -> 13,873
-  update/overhead cycles (-87.64%), with zero differing pixels across 600 Mode
+  330,184 -> 239,432 median cycles (-27.49%) and 106,632 -> 15,774
+  update/overhead cycles (-85.21%), with zero differing pixels across 600 Mode
   4 frames. Its one cold-start missed tick fell to zero. This fixture isolates
   wrapper overhead and deliberately overrepresents tiny helper calls.
+- Table deletion and inspection operations (`del`, `deli`, `count`, and the
+  `all`/`pairs` iterator tokens) are included in the same effect proof. Unlike
+  `add`, a field/index store, or `foreach`, these operations cannot grow a
+  table or invoke an allocating callback. A 128-pair-per-tick `deli`/`count`
+  fixture measured 530,084 -> 472,461 Mode 0 cycles (-10.87%) and 27,948 ->
+  26,796 ROM bytes; Mode 4 measured 688,174 -> 632,906 cycles (-8.03%) and
+  27,976 -> 26,688 ROM bytes. EWRAM was unchanged and both pairs produced zero
+  differing pixels. Mode 0 retained zero missed frames in both runs.
 - Reuse tables. `local pool = {}` at `_init`, indices recycled, beats
   `add`/`del` churn: `#t` and `add` both walk the array border, and the
   collector's pause grows with live data.
@@ -465,13 +566,13 @@ must stay well under 32 KB.
 | Update rate | 30 Hz (two 59.73 Hz scans per tick) | generated loop |
 | Sprites on screen per tick (cls + draw) | ~180 8x8 | budget math above |
 | Full-screen map redraws per tick | room transitions only | budget math above |
-| Lua heap | 56 KB live data | `runtime/heap.go` |
+| Lua heap | 56 KB live data when allocation is reachable; collector and both 56 KiB semispaces are link-elided after a whole-program no-allocation proof | `runtime/heap.go`, transpiler effect analysis |
 | Table array part | 256 entries | `maxArrayCap` |
 | Table hash part | 128 entries | `maxHashCap` |
 | String length | 4,096 bytes | `maxStringBytes` |
 | Interned static strings | 256 | `maxStaticStrings` |
 | Locals rooted across calls | 512 | `maxLocals` |
-| Map streaming threshold | >16,384 cells streams from ROM | `mapcache.go` |
+| Map streaming threshold | >16,384 retained plane-cells streams from ROM; compact storage is link-time specialized in both renderers, streaming storage in Mode 0 only | `mapcache.go`, build tags |
 | Streaming map edits (`mset`) | 3,072 distinct cells | `MapEditFillLimit` |
 | EWRAM for assets + heap + Context | 256 KB total | linker + `ValidateHeapBudget` |
 | Continuous positive world coordinate | 32,767 px (4,095 whole 8px tiles) | signed 16:16 `Number` |

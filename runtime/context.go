@@ -71,8 +71,8 @@ type Context struct {
 	heap        Heap
 	heapReady   bool
 	lastHeapErr HeapError
-	staticTab   [MaxStaticStrings]StaticString
-	staticHold  [MaxStaticStrings]string
+	staticTab   [staticStringSlots]StaticString
+	staticHold  [staticStringSlots]string
 	staticN     uint16
 
 	sfxPlayer   *audio.SFXPlayer
@@ -107,8 +107,8 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	ram.MapPlaneMask = uint8(normalizedMapPlaneMask(image.MapPlaneMask, ram.MapLayers, len(image.Map), image.MapW*image.MapH))
 	ram.SpriteN = image.SpriteN
 	ram.MapStreaming = image.MapStreaming
-	ram.SheetReadOnly = image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0
-	if ram.SheetReadOnly {
+	ram.SheetReadOnly = sheetStorageReadOnly || image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0
+	if sheetStorageReadOnly || ram.SheetReadOnly {
 		// Copy only authored non-empty 8x8 cells and their logical-ID index.
 		// The draw hot path stays in EWRAM; empty declared capacity consumes
 		// two index bytes rather than 64 pixel bytes per cell.
@@ -118,7 +118,7 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 		copy(ram.Sheet, image.Sheet)
 	}
 	copy(ram.Flags, image.Flags)
-	if image.MapStreaming {
+	if mapStorageStreaming || !mapStorageFixed && image.MapStreaming {
 		for i := range ram.Map {
 			ram.Map[i] = 0
 		}

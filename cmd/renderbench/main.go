@@ -454,14 +454,16 @@ func buildAndCaptureAtFrames(service build.Service, renderer transpiler.Renderer
 	// when both renderers are exact. Capture unique debug publications keyed by
 	// the runtime's 30 Hz frame counter instead: frame 21 is then frame 21 in
 	// both ROMs, independent of boot and presentation latency.
-	// Moving multi-BG Mode 4 scenes can publish slightly fewer unique debug
-	// frames per host step during startup. Keep a generous bounded ceiling so
-	// the requested sample count, rather than startup phase, decides the run.
+	// Moving or severely over-budget Mode 4 scenes can require many host video
+	// steps per unique 30 Hz debug publication. Keep a bounded 16:1 ceiling so
+	// the requested sample count, rather than startup phase or intentional
+	// stress-load missed frames, decides the run. The tuple-ABI workload needs
+	// about 8.5 host steps per captured profile frame on the reference player.
 	maxProfileFrame := warmup + samples
 	if len(targets) != 0 && int(targets[len(targets)-1]) > maxProfileFrame {
 		maxProfileFrame = int(targets[len(targets)-1])
 	}
-	maxSteps := maxProfileFrame*5 + 240
+	maxSteps := maxProfileFrame*16 + 240
 	for step := 0; step < maxSteps && len(resultCapture.frames) < samples; step++ {
 		frame, err := session.Step(0, false)
 		if err != nil {

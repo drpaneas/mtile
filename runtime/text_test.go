@@ -183,6 +183,33 @@ func TestPrintVCursorColorAndExplicitPosition(t *testing.T) {
 	}
 }
 
+func TestPrintStaticVMatchesLiteralPrintV(t *testing.T) {
+	t.Parallel()
+	var generic, specialized Context
+	generic.Cls(0)
+	specialized.Cls(0)
+	genericText := generic.InternStatic("A")
+	specializedText := specialized.InternStatic("A")
+
+	wantX := generic.PrintV(genericText, IntVal(30), IntVal(20), IntVal(11))
+	gotX := specialized.PrintStaticV(specializedText, IntVal(30), IntVal(20), IntVal(11))
+	if gotX != wantX || specialized.cursor != generic.cursor || specialized.framebuffer != generic.framebuffer {
+		t.Fatalf("static print differs: x=%d/%d cursor=%+v/%+v", gotX, wantX, specialized.cursor, generic.cursor)
+	}
+
+	var genericCursor, specializedCursor Context
+	genericCursor.Cls(0)
+	specializedCursor.Cls(0)
+	genericCursor.PrintV(genericCursor.InternStatic("A"), NilVal(), NilVal(), NilVal())
+	specializedCursor.PrintStaticV(specializedCursor.InternStatic("A"), NilVal(), NilVal(), NilVal())
+	if specializedCursor.cursor != genericCursor.cursor || specializedCursor.framebuffer != genericCursor.framebuffer {
+		t.Fatalf("implicit static print differs: cursor=%+v/%+v", specializedCursor.cursor, genericCursor.cursor)
+	}
+	if got := specialized.PrintStaticV(NumVal(One), IntVal(30), IntVal(20), IntVal(11)); got != 30 {
+		t.Fatalf("non-static input returned %d, want x=30", got)
+	}
+}
+
 func TestPrintVTwoArgumentFormUsesColor(t *testing.T) {
 	t.Parallel()
 	var c Context

@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -83,6 +84,19 @@ type Options struct {
 	// non-escaping global numeric arrays. The default stores their elements as
 	// compact native Numbers; this flag is the rollback/A-B path.
 	DisableNumericArrays bool
+	// DisableHeapElision retains the periodic collector even when the complete
+	// program is proven unable to allocate. It is the rollback/A-B path.
+	DisableHeapElision bool
+	// DisableNumericConstants retains storage and initialization for otherwise
+	// immutable chunk-scope numeric bindings. It is the rollback/A-B path for
+	// compile-time constant propagation.
+	DisableNumericConstants bool
+	// DisableLiteralPrintSpecialization retains the generic root-protected
+	// print path even when the first argument is a static string literal.
+	DisableLiteralPrintSpecialization bool
+	// DisableFixedMapLayerSpecialization retains logical-layer lookup for
+	// compact maps even when the layer is a proven compile-time value.
+	DisableFixedMapLayerSpecialization bool
 	// Renderer is selected at build time. Its zero value deliberately preserves
 	// the shipping Mode 4 backend for every existing caller.
 	Renderer  Renderer
@@ -202,7 +216,16 @@ func TranspileWithReport(sourceName, source string, opts Options) (string, Rende
 	opts.Mode0Text = report.Mode0Text
 	opts.MapPlaneMask = report.MapPlaneMask
 	opts.MapDrawMask = report.MapDrawMask
-	generated, err := Generate(chunk, opts)
+	report.NativeAudioLinked = opts.NativeAudio != nil && chunkUsesNativeAudio(chunk)
+	if planeCells, ok := checkedProduct(opts.MapW, opts.MapH); ok {
+		if retainedCells, ok := checkedProduct(planeCells, mapMaskCount(report.MapPlaneMask)); ok {
+			report.MapStreaming = retainedCells > assetsync.MapStreamingThresholdCells
+		}
+	}
+	generated, metadata, err := generateWithMetadata(chunk, opts)
+	report.HeapLinked = metadata.heapLinked
+	report.SheetReadOnly = metadata.sheetReadOnly
+	report.StaticStrings = metadata.staticStrings
 	return generated, report, err
 }
 
@@ -245,14 +268,25 @@ func AnalyzeChunkGlobals(chunk *luaparser.Chunk) (GlobalReport, error) {
 
 // Generate emits a complete package main from a parsed chunk.
 func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
+	source, _, err := generateWithMetadata(chunk, opts)
+	return source, err
+}
+
+type generationMetadata struct {
+	heapLinked    bool
+	sheetReadOnly bool
+	staticStrings int
+}
+
+func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
 	if chunk == nil {
-		return "", errors.New("transpiler: nil chunk")
+		return "", generationMetadata{}, errors.New("transpiler: nil chunk")
 	}
 	if opts.MapLayers == 0 {
 		opts.MapLayers = 1
 	}
 	if opts.MapLayers < 1 || opts.MapLayers > assetsync.MapLayerCount {
-		return "", fmt.Errorf("transpiler: map layer count %d is outside 1..%d", opts.MapLayers, assetsync.MapLayerCount)
+		return "", generationMetadata{}, fmt.Errorf("transpiler: map layer count %d is outside 1..%d", opts.MapLayers, assetsync.MapLayerCount)
 	}
 	// Do not let direct AST callers bypass the forced Mode 0 proof. Mode 4 is
 	// the zero/default and needs no eligibility scan; every other preference is
@@ -260,7 +294,7 @@ func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
 	if opts.Renderer != RendererMode4 {
 		report, err := SelectRenderer(chunk, opts)
 		if err != nil {
-			return "", err
+			return "", generationMetadata{}, err
 		}
 		opts.Renderer = report.Selected
 		opts.Mode0Layers = report.Mode0Layers
@@ -271,37 +305,40 @@ func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
 	} else {
 		plan, err := validateMapContract(chunk, opts)
 		if err != nil {
-			return "", err
+			return "", generationMetadata{}, err
 		}
 		opts.MapPlaneMask = plan.storageMask
 		opts.MapDrawMask = plan.drawMask
 	}
 	g := newGenerator(chunk, opts)
 	if err := g.prepare(); err != nil {
-		return "", err
+		return "", generationMetadata{}, err
 	}
 	source := g.render()
 	if g.err != nil {
-		return "", g.err
+		return "", generationMetadata{}, g.err
 	}
 	if err := g.validateTransitiveRootBudget(); err != nil {
-		return "", err
+		return "", generationMetadata{}, err
 	}
-	return source, nil
+	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, staticStrings: len(g.statics)}, nil
 }
 
 func newGenerator(chunk *luaparser.Chunk, opts Options) *generator {
 	return &generator{
-		chunk:         chunk,
-		opts:          opts,
-		funcs:         make(map[string]*functionInfo),
-		globalGo:      make(map[string]string),
-		globalKinds:   make(map[string]monoKind),
-		globalOrigins: make(map[string]luaparser.Position),
-		staticGo:      make(map[string]string),
-		fieldCaches:   make(map[*luaparser.FieldExpr]int),
-		numericFields: make(map[string]bool),
-		numericArrays: make(map[string]*numericArrayInfo),
+		chunk:             chunk,
+		opts:              opts,
+		funcs:             make(map[string]*functionInfo),
+		globalGo:          make(map[string]string),
+		globalKinds:       make(map[string]monoKind),
+		globalOrigins:     make(map[string]luaparser.Position),
+		staticGo:          make(map[string]string),
+		fieldCaches:       make(map[*luaparser.FieldExpr]int),
+		numericFields:     make(map[string]bool),
+		numericArrays:     make(map[string]*numericArrayInfo),
+		numericRecords:    make(map[string]*numericRecordInfo),
+		numericRecordKeys: make(map[*luaparser.StringExpr]bool),
+		numericConstants:  make(map[string]*numericConstantInfo),
 	}
 }
 
@@ -328,6 +365,26 @@ type numericArrayInfo struct {
 	declaration *luaparser.LocalAssignStmt
 	literal     *luaparser.TableExpr
 	length      int
+}
+
+type numericRecordFieldInfo struct {
+	name  string
+	value luaparser.Expr
+	index int
+}
+
+type numericRecordInfo struct {
+	declaration luaparser.Stmt
+	literal     *luaparser.TableExpr
+	index       int
+	fields      map[string]*numericRecordFieldInfo
+	fieldOrder  []*numericRecordFieldInfo
+}
+
+type numericConstantInfo struct {
+	declaration luaparser.Stmt
+	value       int32
+	order       int
 }
 
 type monoKind uint8
@@ -376,10 +433,14 @@ type generator struct {
 	statics  []string
 	staticGo map[string]string
 
-	fieldCaches   map[*luaparser.FieldExpr]int
-	fieldCacheN   int
-	numericFields map[string]bool
-	numericArrays map[string]*numericArrayInfo
+	fieldCaches        map[*luaparser.FieldExpr]int
+	fieldCacheN        int
+	numericFields      map[string]bool
+	numericArrays      map[string]*numericArrayInfo
+	numericRecords     map[string]*numericRecordInfo
+	numericRecordOrder []*numericRecordInfo
+	numericRecordKeys  map[*luaparser.StringExpr]bool
+	numericConstants   map[string]*numericConstantInfo
 
 	current            *functionInfo
 	seq                int
@@ -403,6 +464,10 @@ type generator struct {
 	legacyAudioEnabled bool
 	nativeAudioEnabled bool
 	nativeAudioDecl    string
+	heapEnabled        bool
+	inputEnabled       bool
+	timeEnabled        bool
+	paletteIsDefault   bool
 }
 
 func (g *generator) pushScope() { g.scopes = append(g.scopes, &localScope{}) }
@@ -544,9 +609,7 @@ func (g *generator) prepare() error {
 			return fmt.Errorf("transpiler: native audio: %w", err)
 		}
 		g.opts.NativeAudio.Library = library
-		nativeCall := chunkCallsBuiltin(g.chunk, "sfx") || chunkCallsBuiltin(g.chunk, "music") ||
-			chunkCallsBuiltin(g.chunk, "gba_note") || chunkCallsBuiltin(g.chunk, "gba_stop")
-		g.nativeAudioEnabled = nativeCall || len(library.Sounds) != 0 || len(library.Clips) != 0 || len(library.Parts) != 0 || len(library.Songs) != 0
+		g.nativeAudioEnabled = chunkUsesNativeAudio(g.chunk)
 		if g.nativeAudioEnabled {
 			g.nativeAudioDecl, err = assetsync.NativeAudioGoDeclarations(library)
 			if err != nil {
@@ -555,6 +618,12 @@ func (g *generator) prepare() error {
 		}
 	}
 	g.audioEnabled = g.legacyAudioEnabled || g.nativeAudioEnabled
+	g.inputEnabled = chunkCallsBuiltin(g.chunk, "btn") || chunkCallsBuiltin(g.chunk, "btnp")
+	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time")
+	if len(g.opts.Palette) == 256 {
+		canonical := assetsync.CanonicalPaletteROM()
+		g.paletteIsDefault = slices.Equal(g.opts.Palette, canonical[:])
+	}
 	if err := g.validateStaticAudioCalls(); err != nil {
 		return err
 	}
@@ -582,8 +651,11 @@ func (g *generator) prepare() error {
 	g.discoverGlobals()
 	g.analyzeNumericArrays()
 	g.analyzeMonomorphicNumbers()
+	g.analyzeNumericConstants()
+	g.analyzeNumericRecords()
 	g.analyzeMonomorphicFunctions()
 	g.analyzeNoAllocFunctions()
+	g.heapEnabled = g.opts.DisableHeapElision || g.requiresHeap()
 	if len(g.globals) > GlobalLimit {
 		return &GlobalLimitError{Report: g.globalReport()}
 	}
@@ -602,6 +674,11 @@ func (g *generator) prepare() error {
 		return err
 	}
 	return nil
+}
+
+func chunkUsesNativeAudio(chunk *luaparser.Chunk) bool {
+	return chunkCallsBuiltin(chunk, "sfx") || chunkCallsBuiltin(chunk, "music") ||
+		chunkCallsBuiltin(chunk, "gba_note") || chunkCallsBuiltin(chunk, "gba_stop")
 }
 
 // validateGeneratedMemberNames catches Lua names which are distinct in the
@@ -636,6 +713,13 @@ func (g *generator) validateGeneratedMemberNames() error {
 	for i := 0; i < g.fieldCacheN; i++ {
 		if err := claim(fmt.Sprintf("_gluField%d", i), "a generated table-field cache", luaparser.Position{}); err != nil {
 			return err
+		}
+	}
+	for _, record := range g.numericRecordOrder {
+		for _, field := range record.fieldOrder {
+			if err := claim(numericRecordMember(record, field), "a generated numeric-record field", luaparser.Position{}); err != nil {
+				return err
+			}
 		}
 	}
 	for _, fn := range g.funcList {
@@ -879,6 +963,369 @@ func (g *generator) numericArrayUsesAreSafe(name string, declaration *luaparser.
 	return true
 }
 
+const maxNumericRecordFields = 32
+
+// analyzeNumericRecords performs scalar replacement for one deliberately
+// narrow Lua record shape: a chunk-scope local table with unique named fields,
+// numeric initializers, and no identity-observing use. Any alias, dynamic key,
+// rebinding, shadowing, shape change, or obviously nonnumeric write keeps the
+// ordinary heap-table representation.
+func (g *generator) analyzeNumericRecords() {
+	if g.opts.DisableMonomorphicNumbers || g.opts.DisableStableTableFields {
+		return
+	}
+	for _, stmt := range g.chunk.Body {
+		name, literal, ok := numericRecordDeclaration(stmt)
+		if !ok || len(literal.Fields) == 0 || len(literal.Fields) > maxNumericRecordFields {
+			continue
+		}
+		info := &numericRecordInfo{
+			declaration: stmt,
+			literal:     literal,
+			fields:      make(map[string]*numericRecordFieldInfo, len(literal.Fields)),
+		}
+		valid := true
+		for index, field := range literal.Fields {
+			key, named := field.Key.(*luaparser.StringExpr)
+			if field.Array || !named || key.Value == "" || info.fields[key.Value] != nil ||
+				!g.numericRecordInitializerSafe(field.Value, stmt) {
+				valid = false
+				break
+			}
+			recordField := &numericRecordFieldInfo{name: key.Value, value: field.Value, index: index}
+			info.fields[key.Value] = recordField
+			info.fieldOrder = append(info.fieldOrder, recordField)
+		}
+		if valid {
+			g.numericRecords[name] = info
+			g.numericRecordOrder = append(g.numericRecordOrder, info)
+		}
+	}
+
+	kept := g.numericRecordOrder[:0]
+	for name, info := range g.numericRecords {
+		if !g.numericRecordUsesAreSafe(name, info) {
+			delete(g.numericRecords, name)
+		}
+	}
+	// Restore source order after the map-based validation pass and assign
+	// deterministic generated member indices.
+	for _, stmt := range g.chunk.Body {
+		name, _, ok := numericRecordDeclaration(stmt)
+		info := g.numericRecords[name]
+		if !ok || info == nil || info.declaration != stmt {
+			continue
+		}
+		info.index = len(kept)
+		kept = append(kept, info)
+		for _, field := range info.literal.Fields {
+			g.numericRecordKeys[field.Key.(*luaparser.StringExpr)] = true
+		}
+	}
+	g.numericRecordOrder = kept
+}
+
+func (g *generator) numericRecordInitializerSafe(expr luaparser.Expr, declaration luaparser.Stmt) bool {
+	switch x := expr.(type) {
+	case *luaparser.NumberExpr:
+		return true
+	case *luaparser.ParenExpr:
+		return g.numericRecordInitializerSafe(x.Expr, declaration)
+	case *luaparser.VarExpr:
+		if g.globalKinds[x.Name] != monoNumber {
+			return false
+		}
+		for _, stmt := range g.chunk.Body {
+			if stmt == declaration {
+				return false
+			}
+			switch s := stmt.(type) {
+			case *luaparser.LocalAssignStmt:
+				for _, name := range s.Names {
+					if name == x.Name {
+						return true
+					}
+				}
+			case *luaparser.AssignStmt:
+				for _, target := range s.Targets {
+					if variable, ok := target.(*luaparser.VarExpr); ok && variable.Name == x.Name {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	case *luaparser.UnaryExpr:
+		return (x.Op == luaparser.OpNegate || x.Op == luaparser.OpBitNot) && g.numericRecordInitializerSafe(x.Expr, declaration)
+	case *luaparser.BinaryExpr:
+		switch x.Op {
+		case luaparser.OpAdd, luaparser.OpSubtract, luaparser.OpMultiply,
+			luaparser.OpDivide, luaparser.OpIntegerDivide, luaparser.OpModulo, luaparser.OpPower,
+			luaparser.OpBitOr, luaparser.OpBitXor, luaparser.OpBitAnd,
+			luaparser.OpShiftL, luaparser.OpShiftR, luaparser.OpShiftRLogical,
+			luaparser.OpRotateL, luaparser.OpRotateR:
+			return g.numericRecordInitializerSafe(x.Left, declaration) && g.numericRecordInitializerSafe(x.Right, declaration)
+		}
+	case *luaparser.CallExpr:
+		name, ok := callKey(x)
+		if !ok {
+			return false
+		}
+		switch name {
+		case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd",
+			"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr", "t", "time", "stat":
+			for _, argument := range x.Args {
+				if !g.numericRecordInitializerSafe(argument, declaration) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func numericRecordDeclaration(stmt luaparser.Stmt) (string, *luaparser.TableExpr, bool) {
+	switch declaration := stmt.(type) {
+	case *luaparser.LocalAssignStmt:
+		if len(declaration.Names) != 1 || len(declaration.Values) != 1 {
+			return "", nil, false
+		}
+		literal, ok := declaration.Values[0].(*luaparser.TableExpr)
+		return declaration.Names[0], literal, ok
+	case *luaparser.AssignStmt:
+		if len(declaration.Targets) != 1 || len(declaration.Values) != 1 {
+			return "", nil, false
+		}
+		variable, ok := declaration.Targets[0].(*luaparser.VarExpr)
+		if !ok {
+			return "", nil, false
+		}
+		literal, ok := declaration.Values[0].(*luaparser.TableExpr)
+		return variable.Name, literal, ok
+	default:
+		return "", nil, false
+	}
+}
+
+func (g *generator) numericRecordUsesAreSafe(name string, info *numericRecordInfo) bool {
+	for _, stmt := range g.chunk.Body {
+		if stmt == info.declaration {
+			break
+		}
+		referenced := false
+		collectStmtExprs(stmt, func(expr luaparser.Expr) {
+			if variable, ok := expr.(*luaparser.VarExpr); ok && variable.Name == name {
+				referenced = true
+			}
+		})
+		if referenced {
+			return false
+		}
+	}
+	obviouslyNonNumeric := func(expr luaparser.Expr) bool {
+		for {
+			paren, ok := expr.(*luaparser.ParenExpr)
+			if !ok {
+				break
+			}
+			expr = paren.Expr
+		}
+		switch x := expr.(type) {
+		case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.StringExpr, *luaparser.TableExpr:
+			return true
+		case *luaparser.UnaryExpr:
+			return x.Op == luaparser.OpNot
+		case *luaparser.BinaryExpr:
+			switch x.Op {
+			case luaparser.OpEqual, luaparser.OpNotEqual, luaparser.OpLess,
+				luaparser.OpLessEq, luaparser.OpGreater, luaparser.OpGreaterEq,
+				luaparser.OpConcat, luaparser.OpAnd, luaparser.OpOr:
+				return true
+			}
+		}
+		return false
+	}
+	directField := func(expr luaparser.Expr) (*luaparser.FieldExpr, bool) {
+		field, ok := expr.(*luaparser.FieldExpr)
+		if !ok {
+			return nil, false
+		}
+		base, ok := field.Base.(*luaparser.VarExpr)
+		return field, ok && base.Name == name
+	}
+	var safeExpr func(luaparser.Expr) bool
+	safeExpr = func(expr luaparser.Expr) bool {
+		switch x := expr.(type) {
+		case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.NumberExpr, *luaparser.StringExpr:
+			return true
+		case *luaparser.ParenExpr:
+			return safeExpr(x.Expr)
+		case *luaparser.VarExpr:
+			return x.Name != name
+		case *luaparser.UnaryExpr:
+			return safeExpr(x.Expr)
+		case *luaparser.BinaryExpr:
+			return safeExpr(x.Left) && safeExpr(x.Right)
+		case *luaparser.IndexExpr:
+			if base, ok := x.Base.(*luaparser.VarExpr); ok && base.Name == name {
+				return false
+			}
+			return safeExpr(x.Base) && safeExpr(x.Key)
+		case *luaparser.FieldExpr:
+			if field, ok := directField(x); ok {
+				return info.fields[field.Name] != nil
+			}
+			return safeExpr(x.Base)
+		case *luaparser.CallExpr:
+			if !safeExpr(x.Callee) {
+				return false
+			}
+			for _, argument := range x.Args {
+				if !safeExpr(argument) {
+					return false
+				}
+			}
+			return true
+		case *luaparser.TableExpr:
+			for _, field := range x.Fields {
+				if !safeExpr(field.Key) || !safeExpr(field.Value) {
+					return false
+				}
+			}
+			return true
+		}
+		return true
+	}
+
+	var safeBlock func(*luaparser.Block) bool
+	var safeStmt func(luaparser.Stmt) bool
+	safeBlock = func(block *luaparser.Block) bool {
+		for _, stmt := range block.Body {
+			if !safeStmt(stmt) {
+				return false
+			}
+		}
+		return true
+	}
+	safeStmt = func(stmt luaparser.Stmt) bool {
+		switch s := stmt.(type) {
+		case *luaparser.AssignStmt:
+			for index, target := range s.Targets {
+				if variable, ok := target.(*luaparser.VarExpr); ok && variable.Name == name {
+					if s != info.declaration {
+						return false
+					}
+					continue
+				}
+				if field, ok := directField(target); ok {
+					if info.fields[field.Name] == nil || len(s.Targets) != len(s.Values) || index >= len(s.Values) || obviouslyNonNumeric(s.Values[index]) {
+						return false
+					}
+				}
+				if !safeExpr(target) {
+					return false
+				}
+			}
+			for _, value := range s.Values {
+				if !safeExpr(value) {
+					return false
+				}
+			}
+		case *luaparser.LocalAssignStmt:
+			if luaparser.Stmt(s) != info.declaration {
+				for _, local := range s.Names {
+					if local == name {
+						return false
+					}
+				}
+			}
+			for _, value := range s.Values {
+				if !safeExpr(value) {
+					return false
+				}
+			}
+		case *luaparser.CallStmt:
+			return safeExpr(s.Call)
+		case *luaparser.IfStmt:
+			if !safeExpr(s.Condition) || !safeBlock(s.Then) {
+				return false
+			}
+			for _, branch := range s.ElseIf {
+				if !safeExpr(branch.Condition) || !safeBlock(branch.Body) {
+					return false
+				}
+			}
+			return s.Else == nil || safeBlock(s.Else)
+		case *luaparser.WhileStmt:
+			return safeExpr(s.Condition) && safeBlock(s.Body)
+		case *luaparser.RepeatStmt:
+			return safeBlock(s.Body) && safeExpr(s.Condition)
+		case *luaparser.DoStmt:
+			return safeBlock(s.Body)
+		case *luaparser.NumericForStmt:
+			return s.Name != name && safeExpr(s.Init) && safeExpr(s.Limit) && safeExpr(s.Step) && safeBlock(s.Body)
+		case *luaparser.GenericForStmt:
+			for _, local := range s.Names {
+				if local == name {
+					return false
+				}
+			}
+			for _, value := range s.Values {
+				if !safeExpr(value) {
+					return false
+				}
+			}
+			return safeBlock(s.Body)
+		case *luaparser.ReturnStmt:
+			for _, value := range s.Values {
+				if !safeExpr(value) {
+					return false
+				}
+			}
+		case *luaparser.FunctionDeclStmt:
+			if len(s.Name) != 0 && s.Name[0] == name {
+				return false
+			}
+			for _, parameter := range s.Params {
+				if parameter == name {
+					return false
+				}
+			}
+			return safeBlock(s.Body)
+		}
+		return true
+	}
+	for _, stmt := range g.chunk.Body {
+		if !safeStmt(stmt) {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *generator) numericRecordField(expr *luaparser.FieldExpr) (*numericRecordInfo, *numericRecordFieldInfo, bool) {
+	if expr == nil {
+		return nil, nil, false
+	}
+	base, ok := expr.Base.(*luaparser.VarExpr)
+	if !ok {
+		return nil, nil, false
+	}
+	if _, local := g.lookupLocal(base.Name); local {
+		return nil, nil, false
+	}
+	info := g.numericRecords[base.Name]
+	if info == nil || info.fields[expr.Name] == nil {
+		return nil, nil, false
+	}
+	return info, info.fields[expr.Name], true
+}
+
+func numericRecordMember(info *numericRecordInfo, field *numericRecordFieldInfo) string {
+	return fmt.Sprintf("_gluRecord%dField%d", info.index, field.index)
+}
+
 func (g *generator) numericArrayIndex(expr *luaparser.IndexExpr) (string, *numericArrayInfo, bool) {
 	if expr == nil {
 		return "", nil, false
@@ -909,7 +1356,7 @@ func (g *generator) analyzeMonomorphicNumbers() {
 					continue
 				}
 				seenGlobal[name] = true
-				if i < len(s.Values) && numericIntent(s.Values[i]) {
+				if i < len(s.Values) && g.numericInitializerIntent(s.Values[i]) {
 					g.globalKinds[name] = monoNumber
 				}
 			}
@@ -920,7 +1367,7 @@ func (g *generator) analyzeMonomorphicNumbers() {
 					continue
 				}
 				seenGlobal[v.Name] = true
-				if i < len(s.Values) && numericIntent(s.Values[i]) {
+				if i < len(s.Values) && g.numericInitializerIntent(s.Values[i]) {
 					g.globalKinds[v.Name] = monoNumber
 				}
 			}
@@ -943,7 +1390,7 @@ func (g *generator) analyzeMonomorphicNumbers() {
 			if !ok {
 				continue
 			}
-			isNumber := numericIntent(field.Value)
+			isNumber := g.numericFieldIntent(field.Value)
 			if !seenField[key.Value] {
 				seenField[key.Value] = true
 				g.numericFields[key.Value] = isNumber
@@ -961,6 +1408,24 @@ func (g *generator) analyzeMonomorphicNumbers() {
 		}
 		collectStmtExprs(stmt, observe)
 	}
+}
+
+func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
+	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return g.numericInitializerIntent(x.Expr)
+	case *luaparser.VarExpr:
+		// The first pass observes chunk-scope declarations in source order, so
+		// direct aliases of an already-proven numeric constant can keep native
+		// Number storage. Forward references conservatively remain Values.
+		return g.globalKinds[x.Name] == monoNumber
+	default:
+		return numericIntent(expr)
+	}
+}
+
+func (g *generator) numericFieldIntent(expr luaparser.Expr) bool {
+	return g.numericInitializerIntent(expr)
 }
 
 func numericIntent(expr luaparser.Expr) bool {
@@ -1245,6 +1710,9 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 		return env.lookup(x.Name)
 	case *luaparser.FieldExpr:
 		g.analyzeMonomorphicExpr(x.Base, env, params)
+		if _, _, ok := g.numericRecordField(x); ok {
+			return monoNumber
+		}
 		if !g.opts.DisableStableTableFields && g.numericFields[x.Name] {
 			return monoNumber
 		}
@@ -1392,12 +1860,15 @@ func (g *generator) stmtNoAlloc(stmt luaparser.Stmt) bool {
 	switch s := stmt.(type) {
 	case *luaparser.AssignStmt:
 		for _, target := range s.Targets {
-			switch target.(type) {
+			switch target := target.(type) {
 			case *luaparser.VarExpr:
 			case *luaparser.FieldExpr:
 				// A first field write may insert/grow a table even when later
-				// executions hit a stable cached slot.
-				return false
+				// executions hit a stable cached slot. Scalar-replaced records
+				// have no table identity or allocation left to observe.
+				if _, _, scalar := g.numericRecordField(target); !scalar {
+					return false
+				}
 			case *luaparser.IndexExpr:
 				return false
 			default:
@@ -1437,6 +1908,38 @@ func (g *generator) stmtNoAlloc(stmt luaparser.Stmt) bool {
 	return false
 }
 
+// requiresHeap is intentionally stricter than merely finding a table literal.
+// It reuses the transitive no-allocation proof and accounts only for the table
+// forms that earlier passes completely scalar-replaced. Any boxed global stays
+// conservative because generated root registration initializes the heap.
+func (g *generator) requiresHeap() bool {
+	for _, name := range g.globals {
+		if g.numericRecords[name] == nil && g.globalKinds[name] == monoValue {
+			return true
+		}
+	}
+	for _, fn := range g.funcList {
+		if !fn.noAlloc {
+			return true
+		}
+	}
+	for _, stmt := range g.chunk.Body {
+		if _, declaration := stmt.(*luaparser.FunctionDeclStmt); declaration {
+			continue
+		}
+		name, _, recordDeclaration := numericRecordDeclaration(stmt)
+		if recordDeclaration {
+			if info := g.numericRecords[name]; info != nil && info.declaration == stmt {
+				continue
+			}
+		}
+		if !g.stmtNoAlloc(stmt) {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *generator) exprsNoAlloc(exprs []luaparser.Expr) bool {
 	for _, expr := range exprs {
 		if !g.exprNoAlloc(expr) {
@@ -1469,7 +1972,20 @@ func (g *generator) exprNoAlloc(expr luaparser.Expr) bool {
 			return fn.noAlloc
 		}
 		name, ok := callKey(x)
-		return ok && builtinNoAlloc(name)
+		if !ok {
+			return false
+		}
+		if name == "print" && !g.opts.DisableLiteralPrintSpecialization {
+			// PrintV converts non-string values through Tostr, which allocates
+			// from the Lua heap. A literal is interned as KindStaticString at
+			// initialization and follows the allocation-free drawing path.
+			if len(x.Args) == 0 {
+				return false
+			}
+			_, literal := unparenExpr(x.Args[0]).(*luaparser.StringExpr)
+			return literal
+		}
+		return builtinNoAlloc(name)
 	case *luaparser.TableExpr:
 		return false
 	}
@@ -1483,6 +1999,8 @@ func builtinNoAlloc(name string) bool {
 	case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",
 		"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr",
 		"btn", "btnp", "t", "time", "stat", "tonum", "ord", "printh",
+		"sfx", "music", "sample", "gba_note", "gba_stop",
+		"del", "deli", "count", "all", "pairs",
 		"sget", "sset", "fget", "fset", "mget", "mset",
 		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "map",
 		"camera", "clip", "pal", "palt", "color", "cursor":
@@ -2777,8 +3295,14 @@ func (g *generator) collectBlockStatics(block *luaparser.Block) {
 func (g *generator) collectExprStatic(e luaparser.Expr) {
 	switch x := e.(type) {
 	case *luaparser.StringExpr:
+		if g.numericRecordKeys[x] {
+			return
+		}
 		g.staticValueAt(x.Value, x.Pos())
 	case *luaparser.FieldExpr:
+		if _, _, ok := g.numericRecordField(x); ok {
+			return
+		}
 		if !g.opts.DisableStableTableFields {
 			if _, exists := g.fieldCaches[x]; !exists {
 				g.fieldCaches[x] = g.fieldCacheN
@@ -3115,7 +3639,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var mode0TextTilesROM = [%d]uint32{%s}", len(g.mode0TextTiles), u32Literal(g.mode0TextTiles, len(g.mode0TextTiles))))
 	}
-	if len(g.opts.Palette) == 256 {
+	if len(g.opts.Palette) == 256 && !g.paletteIsDefault {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var paletteROM = [256]uint16{%s}", u16Literal(g.opts.Palette, 256)))
 	}
@@ -3170,10 +3694,18 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line("")
 	b.line("type Game struct {")
 	for _, name := range g.globals {
+		if g.numericRecords[name] != nil || g.numericConstants[name] != nil {
+			continue
+		}
 		if g.globalKinds[name] == monoNumber {
 			b.line("\t" + g.globalGo[name] + " rt.Number")
 		} else {
 			b.line("\t" + g.globalGo[name] + " rt.Value")
+		}
+	}
+	for _, record := range g.numericRecordOrder {
+		for _, field := range record.fieldOrder {
+			b.line("\t" + numericRecordMember(record, field) + " rt.Number")
 		}
 	}
 	for _, name := range g.statics {
@@ -3192,6 +3724,9 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("\tg." + g.staticGo[s] + " = c.InternStatic(" + strconv.Quote(s) + ")")
 	}
 	for _, name := range g.globals {
+		if g.numericRecords[name] != nil || g.numericConstants[name] != nil {
+			continue
+		}
 		if g.globalKinds[name] == monoValue {
 			b.line("\tc.RegisterGlobal(&g." + g.globalGo[name] + ")")
 		}
@@ -3252,14 +3787,16 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tcartData.MapChunks, cartData.MapEdits = mapChunksRAM[:], mapEditsRAM[:]")
 	}
 	b.line("\tif !ctx.Init(&cartImage, &cartData) { for {} }")
-	if len(g.opts.Palette) == 256 {
+	if len(g.opts.Palette) == 256 && !g.paletteIsDefault {
 		b.line("\tctx.LoadPalette(&paletteROM)")
 	}
 	b.line("\tctx.InitHardware()")
 	if len(g.mode0TextKeys) != 0 {
 		b.line("\tif !ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:]) { for {} }")
 	}
-	b.line("\tctx.SetTickRate(30)")
+	if g.timeEnabled {
+		b.line("\tctx.SetTickRate(30)")
+	}
 	if g.opts.Debug {
 		b.line("\tctx.SetProfiling(true)")
 	}
@@ -3314,8 +3851,12 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
 	}
 	b.line("\t\tctx.BeginProfilePhase(rt.ProfileUpdate)")
-	b.line("\t\tctx.PollInput()")
-	b.line("\t\tctx.AdvanceTick()")
+	if g.inputEnabled {
+		b.line("\t\tctx.PollInput()")
+	}
+	if g.inputEnabled || g.timeEnabled {
+		b.line("\t\tctx.AdvanceTick()")
+	}
 	b.line("\t\tgame.Update(&ctx)")
 	b.line("\t\tctx.EndProfilePhase(rt.ProfileUpdate)")
 	if g.legacyAudioEnabled {
@@ -3335,21 +3876,48 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	if g.legacyAudioEnabled {
 		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
 	}
-	b.line("\t\tctx.CollectIfNeeded()")
+	if g.heapEnabled {
+		b.line("\t\tctx.CollectIfNeeded()")
+	}
 	b.line("\t\tctx.PaceFrame30()")
 	b.line("\t\tctx.WaitForPresentWindow()")
 	b.line("\t\tctx.PresentRender()")
 	if g.opts.Debug {
-		b.line("\t\tdebugMailbox.Begin(ctx.PerformanceStats())")
-		for index, name := range g.globals {
-			if index >= runtimeapi.DebugWatchSlots {
+		if g.heapEnabled {
+			b.line("\t\tdebugMailbox.Begin(ctx.PerformanceStats())")
+		} else {
+			b.line("\t\theaplessStats := ctx.PerformanceStats()")
+			b.line("\t\theaplessStats.HeapCapacity, heaplessStats.HeapHandleLimit = 0, 0")
+			b.line("\t\tdebugMailbox.Begin(heaplessStats)")
+		}
+		watchIndex := 0
+		for _, name := range g.globals {
+			if watchIndex >= runtimeapi.DebugWatchSlots {
 				break
+			}
+			if record := g.numericRecords[name]; record != nil {
+				for _, field := range record.fieldOrder {
+					if watchIndex >= runtimeapi.DebugWatchSlots {
+						break
+					}
+					value := "rt.NumVal(game." + numericRecordMember(record, field) + ")"
+					b.line("\t\tdebugMailbox.Add(" + strconv.Quote(name+"."+field.name) + ", " + value + ")")
+					watchIndex++
+				}
+				continue
+			}
+			if constant := g.numericConstants[name]; constant != nil {
+				value := fmt.Sprintf("rt.NumVal(rt.Number(%d))", constant.value)
+				b.line("\t\tdebugMailbox.Add(" + strconv.Quote(name) + ", " + value + ")")
+				watchIndex++
+				continue
 			}
 			value := "game." + g.globalGo[name]
 			if g.globalKinds[name] == monoNumber {
 				value = "rt.NumVal(" + value + ")"
 			}
 			b.line("\t\tdebugMailbox.Add(" + strconv.Quote(name) + ", " + value + ")")
+			watchIndex++
 		}
 		b.line("\t\tdebugMailbox.End()")
 	}
@@ -3678,6 +4246,19 @@ func (g *generator) emitIfChain(b *sourceBuilder, indent int, cond luaparser.Exp
 
 func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent int) {
 	pad := strings.Repeat("\t", indent)
+	if len(g.scopes) == 0 && len(s.Targets) == 1 {
+		if variable, ok := s.Targets[0].(*luaparser.VarExpr); ok {
+			if info := g.numericConstants[variable.Name]; info != nil && info.declaration == s {
+				return
+			}
+			if info := g.numericRecords[variable.Name]; info != nil && info.declaration == s {
+				for _, field := range info.fieldOrder {
+					b.line(pad + "g." + numericRecordMember(info, field) + " = " + g.emitNumberExpr(field.value))
+				}
+				return
+			}
+		}
+	}
 	// Lua evaluates every l-value table/key, then every r-value, then stores.
 	// Materializing both sides into temps is what makes `a, b = b, a` and
 	// `i, t[i] = 2, 99` match Lua instead of Go's left-to-right stores.
@@ -3697,6 +4278,7 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 		lhsIndex
 		lhsField
 		lhsNumberArray
+		lhsNumericRecord
 	)
 	slots := make([]lhs, len(s.Targets))
 	for i, target := range s.Targets {
@@ -3719,6 +4301,10 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 			g.extraRoots = append(g.extraRoots, key)
 			slots[i] = lhs{kind: lhsIndex, base: base, key: key}
 		case *luaparser.FieldExpr:
+			if record, field, ok := g.numericRecordField(t); ok {
+				slots[i] = lhs{kind: lhsNumericRecord, mono: monoNumber, dest: "g." + numericRecordMember(record, field)}
+				continue
+			}
 			base := g.next("lhs")
 			b.line(pad + base + " := " + g.emitExprFlush(b, indent, t.Base))
 			g.extraRoots = append(g.extraRoots, base)
@@ -3750,6 +4336,8 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 			b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 		case lhsNumberArray:
 			b.line(pad + "_ = c.NumberArraySet(" + slot.base + ", " + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
+		case lhsNumericRecord:
+			b.line(pad + slot.dest + " = " + adjustedNumber(values[i]))
 		case lhsField:
 			if slot.mono == monoNumber && slot.cache != "" {
 				b.line(pad + "_ = gluTableSetStableNumber(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedNumber(values[i]) + ", " + slot.cache + g.rootArgsFor(5, s.Pos()) + ")")
@@ -3776,6 +4364,15 @@ func (g *generator) emitLocalAssign(b *sourceBuilder, s *luaparser.LocalAssignSt
 	// plain top-level `x = ...`.
 	topLevel := len(g.scopes) == 0
 	if topLevel && len(s.Names) == 1 {
+		if info := g.numericConstants[s.Names[0]]; info != nil && info.declaration == s {
+			return
+		}
+		if info := g.numericRecords[s.Names[0]]; info != nil && info.declaration == s {
+			for _, field := range info.fieldOrder {
+				b.line(pad + "g." + numericRecordMember(info, field) + " = " + g.emitNumberExpr(field.value))
+			}
+			return
+		}
 		if info := g.numericArrays[s.Names[0]]; info != nil && info.declaration == s {
 			array := g.lookup(s.Names[0])
 			errName := g.next("numArrayErr")
@@ -4227,6 +4824,9 @@ func (g *generator) emitExpr(e luaparser.Expr) string {
 		names := g.sequenceExprs([]luaparser.Expr{x.Base, x.Key})
 		return "c.TableGet(" + names[0] + ", " + names[1] + ")"
 	case *luaparser.FieldExpr:
+		if record, field, ok := g.numericRecordField(x); ok {
+			return "rt.NumVal(g." + numericRecordMember(record, field) + ")"
+		}
 		if cache := g.fieldCacheRef(x); cache != "" {
 			return "c.TableGetStable(" + g.emitExpr(x.Base) + ", " + g.staticExpr(x.Name) + ", " + cache + ")"
 		}
@@ -4251,6 +4851,9 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 	case *luaparser.VarExpr:
 		return g.lookupKind(x.Name) == monoNumber
 	case *luaparser.FieldExpr:
+		if _, _, ok := g.numericRecordField(x); ok {
+			return true
+		}
 		return !g.opts.DisableStableTableFields && g.numericFields[x.Name]
 	case *luaparser.IndexExpr:
 		_, _, ok := g.numericArrayIndex(x)
@@ -4326,6 +4929,9 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 	case *luaparser.VarExpr:
 		return g.lookup(x.Name)
 	case *luaparser.FieldExpr:
+		if record, field, ok := g.numericRecordField(x); ok {
+			return "g." + numericRecordMember(record, field)
+		}
 		return "c.TableGetStableNumber(" + g.emitExpr(x.Base) + ", " + g.staticExpr(x.Name) + ", " + g.fieldCacheRef(x) + ")"
 	case *luaparser.IndexExpr:
 		if name, _, ok := g.numericArrayIndex(x); ok {
@@ -4796,10 +5402,37 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 }
 
 func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bool) string {
-	adjusted := g.sequenceAdjustedExprs(argExprs)
+	// A proven map-layer operand has already served its purpose by selecting a
+	// fixed compact-plane path. Literals and immutable numeric constants are
+	// pure, so do not materialize a dead Go temporary. Keep a placeholder below
+	// so effective mget/mset positions remain unchanged, including trailing Lua
+	// calls that expand to multiple results.
+	skipMapLayerOperand := false
+	effectiveArity := g.exprListWidth(argExprs)
+	layeredMapCall := (name == "mget" && effectiveArity == 3 || name == "mset" && effectiveArity == 4) && len(argExprs) != 0
+	if layeredMapCall {
+		if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
+			_, skipMapLayerOperand = g.staticRuntimeInt(argExprs[0])
+		}
+		// Streaming maps and the specialization rollback still preserve the
+		// original BG0 shortcut below. It also ignores a pure literal layer,
+		// so omit that operand instead of declaring an unused Go temporary.
+		if !skipMapLayerOperand {
+			bg, literal := mode0StaticRuntimeInt(argExprs[0])
+			skipMapLayerOperand = literal && bg == 0
+		}
+	}
+	sequencedExprs := argExprs
+	if skipMapLayerOperand {
+		sequencedExprs = argExprs[1:]
+	}
+	adjusted := g.sequenceAdjustedExprs(sequencedExprs)
 	names := make([]string, len(adjusted))
 	for i, value := range adjusted {
 		names[i] = adjustedLuaValue(value)
+	}
+	if skipMapLayerOperand {
+		names = append([]string{""}, names...)
 	}
 	callPos := luaparser.Position{}
 	if len(argExprs) > 0 {
@@ -4833,8 +5466,7 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		if len(names) == 0 {
 			return void(fmt.Sprintf("c.MapAll(%d)", g.opts.MapDrawMask))
 		}
-		bgValue, _ := staticNumberLiteral(argExprs[0])
-		bg := int(bgValue)
+		bg, _ := g.staticRuntimeInt(argExprs[0])
 		slot := mapMaskSlot(g.opts.MapDrawMask, bg)
 		return void(fmt.Sprintf("c.MapBGAtV(%d,%s)", slot, argsUpTo(8)))
 	case "pal":
@@ -4859,6 +5491,14 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return wrap("c.PgetV(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "print":
 		call := "gluPrintV(c," + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + g.rootArgsFor(4, callPos) + ")"
+		if !g.opts.DisableLiteralPrintSpecialization && len(argExprs) != 0 {
+			if _, literal := unparenExpr(argExprs[0]).(*luaparser.StringExpr); literal {
+				// A static string cannot enter PrintV's Tostr allocation path, so
+				// no argument/root wrapper is required. This is also essential for
+				// a heapless build, whose root arrays are compile-only sentinels.
+				call = "c.PrintStaticV(" + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + ")"
+			}
+		}
 		if value {
 			return wrap("rt.IntVal(" + call + ")")
 		}
@@ -4879,7 +5519,17 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return void("c.Fset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Truthy())")
 	case "mget":
 		if len(names) == 2 {
+			if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
+				slot := mapMaskSlot(g.opts.MapPlaneMask, 0)
+				return wrap(fmt.Sprintf("rt.IntVal(int(c.MgetCompact(0,%d,%s.Int(),%s.Int())))", slot, arg(0), arg(1)))
+			}
 			return wrap("rt.IntVal(int(c.Mget(" + arg(0) + ".Int()," + arg(1) + ".Int())))")
+		}
+		if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
+			if bg, fixed := g.staticRuntimeInt(argExprs[0]); fixed {
+				slot := mapMaskSlot(g.opts.MapPlaneMask, bg)
+				return wrap(fmt.Sprintf("rt.IntVal(int(c.MgetCompact(%d,%d,%s.Int(),%s.Int())))", bg, slot, arg(1), arg(2)))
+			}
 		}
 		if bg, literal := mode0StaticRuntimeInt(argExprs[0]); literal && bg == 0 {
 			return wrap("rt.IntVal(int(c.Mget(" + arg(1) + ".Int()," + arg(2) + ".Int())))")
@@ -4887,7 +5537,17 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return wrap("rt.IntVal(int(c.MgetLayer(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())))")
 	case "mset":
 		if len(names) == 3 {
+			if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
+				slot := mapMaskSlot(g.opts.MapPlaneMask, 0)
+				return void(fmt.Sprintf("c.MsetCompact(0,%d,%s.Int(),%s.Int(),%s.Int())", slot, arg(0), arg(1), arg(2)))
+			}
 			return void("c.Mset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())")
+		}
+		if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
+			if bg, fixed := g.staticRuntimeInt(argExprs[0]); fixed {
+				slot := mapMaskSlot(g.opts.MapPlaneMask, bg)
+				return void(fmt.Sprintf("c.MsetCompact(%d,%d,%s.Int(),%s.Int(),%s.Int())", bg, slot, arg(1), arg(2), arg(3)))
+			}
 		}
 		if bg, literal := mode0StaticRuntimeInt(argExprs[0]); literal && bg == 0 {
 			return void("c.Mset(" + arg(1) + ".Int()," + arg(2) + ".Int()," + arg(3) + ".Int())")
@@ -4981,6 +5641,24 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return ""
 	}
 	return "rt.NilVal()"
+}
+
+func (g *generator) staticRuntimeInt(expr luaparser.Expr) (int, bool) {
+	if value, literal := mode0StaticRuntimeInt(expr); literal {
+		return value, true
+	}
+	variable, ok := unparenExpr(expr).(*luaparser.VarExpr)
+	if !ok {
+		return 0, false
+	}
+	if _, local := g.lookupLocal(variable.Name); local {
+		return 0, false
+	}
+	constant := g.numericConstants[variable.Name]
+	if constant == nil {
+		return 0, false
+	}
+	return int(constant.value >> 16), true
 }
 
 func validateTargetSFX(definitions []assetsync.TargetSFX, steps []assetsync.TargetSFXStep) error {
@@ -5599,6 +6277,9 @@ func (g *generator) fieldCacheRef(e *luaparser.FieldExpr) string {
 	if g.opts.DisableStableTableFields {
 		return ""
 	}
+	if _, _, ok := g.numericRecordField(e); ok {
+		return ""
+	}
 	id, ok := g.fieldCaches[e]
 	if !ok {
 		g.setErr(fmt.Errorf("transpiler: missing stable field cache at %s", e.Pos()))
@@ -5609,6 +6290,9 @@ func (g *generator) fieldCacheRef(e *luaparser.FieldExpr) string {
 func (g *generator) lookup(name string) string {
 	if goVar, ok := g.lookupLocal(name); ok {
 		return goVar
+	}
+	if constant := g.numericConstants[name]; constant != nil {
+		return fmt.Sprintf("rt.Number(%d)", constant.value)
 	}
 	if v, ok := g.globalGo[name]; ok {
 		return "g." + v

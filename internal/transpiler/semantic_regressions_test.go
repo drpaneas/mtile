@@ -75,6 +75,80 @@ end
 	compileGenerated(t, generated)
 }
 
+func TestLiteralBG0FastPathPreservesTrailingMultiReturnArguments(t *testing.T) {
+	generated, err := Transpile("bg0-multi-results.lua", `
+function coords() return 4, 5 end
+function edit() return 4, 5, 6 end
+function probe()
+  local tile = mget(0, coords())
+  mset(0, edit())
+  return tile
+end
+`, Options{MapW: 8, MapH: 8, Map: make([]uint16, 64)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(generated, "c.MgetCompact(0,0,") || !strings.Contains(generated, "c.MsetCompact(0,0,") ||
+		strings.Contains(generated, "c.MgetLayer(") || strings.Contains(generated, "c.MsetLayer(") {
+		t.Fatalf("literal BG0 trailing multi-results missed the compact fixed-slot path:\n%s", generated)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestStreamingLiteralBG0FastPathDoesNotMaterializeUnusedLayer(t *testing.T) {
+	generated, err := Transpile("streaming-bg0.lua", `
+function coords() return 4, 5 end
+function edit() return 4, 5, 6 end
+function probe()
+  local tile = mget(0, coords())
+  mset(0, edit())
+  return tile
+end
+`, Options{MapW: 129, MapH: 128, Map: make([]uint16, 129*128)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(generated, "c.Mget(") || !strings.Contains(generated, "c.Mset(") ||
+		strings.Contains(generated, "c.MgetLayer(") || strings.Contains(generated, "c.MsetLayer(") {
+		t.Fatalf("streaming literal BG0 missed the existing BG0 path:\n%s", generated)
+	}
+	compileGenerated(t, generated)
+}
+
+func TestCompactMapLayerConstantsUseFixedStorageSlots(t *testing.T) {
+	source := `
+local COLLISION_BG=1
+function probe(x,y)
+  local tile=mget(COLLISION_BG,x,y)
+  mset(COLLISION_BG,x,y,tile)
+  return tile
+end
+`
+	options := Options{MapW: 2, MapH: 2, MapLayers: 2, Map: make([]uint16, 8)}
+	generated, err := Transpile("fixed-map-layer.lua", source, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	probe := generatedSection(generated, "func (g *Game) probe(")
+	if !strings.Contains(probe, "c.MgetCompact(1,1,") || !strings.Contains(probe, "c.MsetCompact(1,1,") ||
+		strings.Contains(probe, "c.MgetLayer(") || strings.Contains(probe, "c.MsetLayer(") {
+		t.Fatalf("constant compact layer retained logical-to-storage lookup:\n%s", probe)
+	}
+	compileGenerated(t, generated)
+
+	options.DisableFixedMapLayerSpecialization = true
+	rollback, err := Transpile("fixed-map-layer-rollback.lua", source, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rollbackProbe := generatedSection(rollback, "func (g *Game) probe(")
+	if !strings.Contains(rollbackProbe, "c.MgetLayer(") || !strings.Contains(rollbackProbe, "c.MsetLayer(") ||
+		strings.Contains(rollbackProbe, "c.MgetCompact(") || strings.Contains(rollbackProbe, "c.MsetCompact(") {
+		t.Fatalf("fixed-layer rollback did not retain logical lookup:\n%s", rollbackProbe)
+	}
+	compileGenerated(t, rollback)
+}
+
 func TestGenericForChecksAdjustedIteratorArguments(t *testing.T) {
 	_, err := Transpile("iterator-results.lua", `
 function pair() return {}, {} end

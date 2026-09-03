@@ -24,3 +24,17 @@ func TestMode0ZeroLayersPresentsBackdrop(t *testing.T) {
 		t.Fatalf("backdrop palette = %#04x, want %#04x", got, palette[5])
 	}
 }
+
+func TestMode0ZeroLayersSkipsUnusedBGInitialization(t *testing.T) {
+	hw.ResetForTest()
+	const sentinel = uint32(0xdecafbad)
+	hw.SetVRAM32(hw.VRAM+32*1024, sentinel)
+
+	c := newMode0TestContext(t, 16, 8, 0, 0, make([]byte, 16*8), nil, make([]byte, 2))
+	if got := hw.ReadVRAM32(hw.VRAM + 32*1024); got != sentinel {
+		t.Fatalf("unused BG VRAM = %#08x, want untouched %#08x", got, sentinel)
+	}
+	if got := c.RendererUploadStats().ColdTileBytes; got != 0 {
+		t.Fatalf("cold BG tile upload = %d bytes, want 0", got)
+	}
+}

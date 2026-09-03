@@ -47,6 +47,26 @@ jobs:
         run: go test ./...
         working-directory: runtime
 
+      # Generated carts always combine renderer code with fixed storage and
+      # capacity tags. Exercise behavior under those constants as well as the
+      # generic host-test runtime, otherwise optimized methods can silently
+      # fall back to the generic branch during every ordinary unit test.
+      - name: Test generated runtime specialization matrix
+        working-directory: runtime
+        run: |
+          go test -tags=mtile_map_compact . \
+            -run '^(TestMapPlaneSlotTableCoversEverySparseMask|TestLayeredMgetMsetCompactSparsePlanes|TestMapAllDrawsSparseLogicalPlanesFromCompactStorage)$'
+          go test -tags=mtile_mode0,mtile_map_compact . \
+            -run '^(TestMapPlaneSlotTableCoversEverySparseMask|TestLayeredMgetMsetCompactSparsePlanes)$'
+          go test -tags=mtile_mode0,mtile_map_streaming . \
+            -run '^(TestLayeredMsetStreamingSurvivesCrossPlaneEviction|TestStreamingMap.*|TestMode0StreamsLargeLogicalMapWindow)$'
+          go test -tags=mtile_sheet_readonly . \
+            -run '^(TestReadOnlySheetUsesROMWithoutRAMCopy|TestReadOnlySheetRejectsWrongOptionalRAMLength)$'
+          go test -tags=mtile_mode0,mtile_mode0_sheet_immutable . \
+            -run '^TestMode0ImmutableSheetElidesDirtyTileScan$'
+          go test -tags=mtile_mode0,mtile_heapless,mtile_map_compact,mtile_static_strings_1 . \
+            -run '^(TestHeaplessContextUsesCompactMetadata|TestStaticStringTierFailsClosedAtSelectedCapacity)$'
+
       # Build-tag matrix for the compile-time Mode 0 state shapes. These are
       # intentionally focused because the ordinary framebuffer tests are a
       # different linked renderer and must not run under mtile_mode0.

@@ -177,7 +177,7 @@ func (c *Context) InternStatic(s string) Value {
 			return Value{Kind: KindStaticString, SRef: i}
 		}
 	}
-	if int(c.staticN) >= MaxStaticStrings {
+	if int(c.staticN) >= len(c.staticTab) {
 		return NilVal()
 	}
 	i := c.staticN
@@ -193,19 +193,26 @@ func (c *Context) InternStatic(s string) Value {
 func (c *Context) stringBytes(v Value) []byte {
 	switch v.Kind {
 	case KindStaticString:
-		if int(v.SRef) >= int(c.staticN) {
-			return nil
-		}
-		e := c.staticTab[v.SRef]
-		if e.Len == 0 || e.Ptr == nil {
-			return nil
-		}
-		return unsafe.Slice((*byte)(e.Ptr), int(e.Len))
+		return c.staticStringBytes(v)
 	case KindString:
 		return c.heapStringBytes(v.Ref)
 	default:
 		return nil
 	}
+}
+
+// staticStringBytes deliberately has no dynamic-string branch. Generated
+// literal-only paths call it directly so TinyGo does not retain the Lua heap
+// merely because the generic string decoder can also read KindString values.
+func (c *Context) staticStringBytes(v Value) []byte {
+	if v.Kind != KindStaticString || int(v.SRef) >= int(c.staticN) {
+		return nil
+	}
+	e := c.staticTab[v.SRef]
+	if e.Len == 0 || e.Ptr == nil {
+		return nil
+	}
+	return unsafe.Slice((*byte)(e.Ptr), int(e.Len))
 }
 
 func (c *Context) stringLen(v Value) int {
