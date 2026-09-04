@@ -1,0 +1,63 @@
+Generated GC root filtering: isolated target evidence
+Captured 2026-09-05
+
+Baseline commit: d5c96506fa0a61724655b22a155ff7bc6a233871
+Go: go1.26.4 darwin/arm64
+TinyGo: 0.41.1, LLVM 20.1.1, -gc=none -opt=2
+Player: build/player/mtile-player (headless mGBA)
+
+Both builds used the same baseline runtime, including the existing numeric
+hash mixing but excluding the later hashBucket power-of-two mask. Only the
+filtered build added the following generated gluPushRoots condition:
+
+  if root.Kind != rt.KindTable && root.Kind != rt.KindString { continue }
+
+The collector traces only those two moving heap kinds. Scalar values and
+ROM-backed static strings no longer consume temporary root-stack writes or
+clearing. Source root-capacity analysis remains conservatively unchanged.
+
+Workload: unchanged cmd/renderbench/testdata/workloads/numeric_hash_keys.lua
+Source SHA-256:
+87d598759b3fcff6a9ec00a11fb8c88b6afdf362fe4befd0a620a09122a3201e
+
+The workload was staged with examples/hello assets and built as debug ROMs
+through renderbench's buildAndCapture path. Each build captured the same 120
+runtime frames, 21 through 140, following 20 warmup frames.
+
+                                Baseline       Filtered       Delta
+Mode 0 median cycles             598,265        595,065       -3,200
+Mode 0 median draw cycles            470            470            0
+Mode 0 median commit cycles       15,274         15,274            0
+Mode 0 ROM bytes                  27,048         26,256         -792
+Mode 4 median cycles             731,907        729,731       -2,176
+Mode 4 median draw cycles         69,208         69,208            0
+Mode 4 median commit cycles       76,936         76,936            0
+Mode 4 ROM bytes                  28,244         27,452         -792
+
+Median cycle savings were 0.53% (Mode 0) and 0.30% (Mode 4). This isolated
+compiler change does not itself meet the 561,792-cycle deadline: all four
+captures ended with cumulative missed-frame counter 140. The separate
+hashBucket optimization supplies the large cycle reduction; the combined
+600-frame budget gate is recorded separately.
+
+Captured pixels and runtime frame numbers matched exactly. SHA-256 of all
+concatenated captured RGBA frames was identical for all four captures:
+5f05e955334c03509c1edbb78cf97dd25c78827203e81c11ba8afd533085c874
+
+ROM SHA-256:
+Baseline Mode 0: f4e17491dd10a9a0f97fad6bb4061256da84c3893e008c2a853d9ae6b8d97718
+Filtered Mode 0: 55d687b2af5c9af28ea9388a9266eff0b5e717c0744cae98fecf671383e4082f
+Baseline Mode 4: 1e94f9cba7ac29a6b70f039f393fddb34f1759d8dadb5e449789404fd79b973a
+Filtered Mode 4: ad085852beb0cc7a8ddbfd254059d26aa02005bc57cbcfb2f3f1602867efbd4d
+
+Correctness validation:
+The new generated-harness regression failed on the baseline (six roots rather
+than the two heap references). It passes with filtering and checks table and
+dynamic-string survival across collection, nested allocation preserving caller
+roots, partial-failure rollback retaining all preexisting roots, and zero
+roots for scalar-only argument lists. Existing root/collection tests pass.
+Full validation: go test ./internal/transpiler passed (97.365 seconds).
+
+Temporary isolated source trees, measurement test, individual JSON files, and
+ROMs were retained during this audit under:
+/private/tmp/mtile-root-filter-evidence

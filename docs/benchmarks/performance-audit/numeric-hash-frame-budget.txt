@@ -1,0 +1,64 @@
+Mtile unchanged numeric-hash workload frame-budget gate, 2026-09-05
+
+Baseline revision: d5c96506fa0a61724655b22a155ff7bc6a233871
+Baseline runtime snapshot: /private/tmp/mtile-hash-budget-before/runtime
+Candidate: power-of-two hash bucket masking and filtering non-heap local roots
+Workload: cmd/renderbench/testdata/workloads/numeric_hash_keys.lua (unchanged)
+Workload SHA-256: 87d598759b3fcff6a9ec00a11fb8c88b6afdf362fe4befd0a620a09122a3201e
+Toolchain: go version go1.26.4 darwin/arm64
+Toolchain: tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)
+Headless player SHA-256: 337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544
+
+Command:
+  go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run '^TestRuntimeNumericHashFrameBudget$' -count=1 -v
+
+The gate captures 600 synchronized runtime frames after 20 warm-up frames.
+It requires every LastFrame to be strictly below the 561,792-cycle 30 Hz
+budget, and the cumulative MissedFrames counter to stay unchanged after
+warm-up. It independently checks checksum == FromInt(2080 + 64*frame) on
+every frame using the debug watch, including signed 16:16 wrap at tick 480.
+Pixels must change over the capture and match between both renderers.
+LastFrame includes measured workload/renderer costs; it excludes deliberate
+pacing waits and subsequent debug-mailbox publication.
+
+Successful diagnostic output:
+
+=== RUN   TestRuntimeNumericHashFrameBudget
+=== RUN   TestRuntimeNumericHashFrameBudget/mode0
+    runtime_hash_budget_test.go:45: median=326897 p95=326897 max=326897 budget=561792 draw=454 commit=15270 rom=26116 iwram=3072 ewram_free=108664 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0 steady_missed=0
+=== RUN   TestRuntimeNumericHashFrameBudget/mode4
+    runtime_hash_budget_test.go:45: median=461235 p95=461235 max=461235 budget=561792 draw=69200 commit=76928 rom=27328 iwram=5364 ewram_free=71576 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0 steady_missed=0
+    runtime_hash_budget_test.go:94: cross_renderer_differing_pixels=0 checksum_frames=600
+--- PASS: TestRuntimeNumericHashFrameBudget (4.28s)
+    --- PASS: TestRuntimeNumericHashFrameBudget/mode0 (2.02s)
+    --- PASS: TestRuntimeNumericHashFrameBudget/mode4 (2.25s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	5.062s
+
+Assembly mechanism (same preserved generated Go, only runtime changed):
+
+The baseline hashFind enters __aeabi_uidivmod unconditionally after computing
+the numeric hash. That helper calls __udivmodsi4 -> __aeabi_uidiv, which uses
+two software count-leading-zero calls and a long-division loop. The workload
+does 64 reads and 64 updates of existing hash keys every tick: 128 divisions.
+
+Baseline excerpt:
+  08002314: mov r0, r2
+  08002318: bl __aeabi_uidivmod
+
+The candidate tests capacity & (capacity - 1), uses AND for power-of-two
+capacity 64, and only calls the divider on the other branch. Non-power-of-two
+table capacities retain exact modulo behavior.
+
+Candidate excerpt:
+  08002308: sub r6, r5, #1
+  0800230c: tst r5, r6
+  08002310: bne 08002334
+  08002314: and ip, r6, r2
+  08002318: b 0800235c
+  ...
+  08002348: bl __aeabi_uidivmod
+
+This removes 128 executed software divisions per steady-state workload tick;
+the divider remains linked for fallback and other operations. The measured
+runtime-only comparison is recorded separately in numeric-hash-bucket-target.txt.

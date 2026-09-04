@@ -3586,6 +3586,9 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
 	b.line("func gluPushRoots(c *rt.Context, roots ...rt.Value) int {")
 	b.line("\tn := 0")
 	b.line("\tfor _, root := range roots {")
+	// Only these two kinds refer to moving heap objects. Scalar values and
+	// ROM-backed static strings need no root-stack writes or later clearing.
+	b.line("\t\tif root.Kind != rt.KindTable && root.Kind != rt.KindString { continue }")
 	b.line("\t\tif !c.PushLocal(root) { c.PopLocals(n); return -1 }")
 	b.line("\t\tn++")
 	b.line("\t}")

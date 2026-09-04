@@ -51,10 +51,13 @@ type environmentReport struct {
 type capture struct {
 	frames        [][]byte
 	frameNumbers  []uint32
+	watches       [][]emulator.Watch
 	cycles        []uint32
 	draw          []uint32
 	commit        []uint32
 	missed        uint32
+	warmupFrame   uint32
+	warmupMissed  uint32
 	cold          uint32
 	heapAllocated uint32
 	heapLive      uint32
@@ -477,6 +480,10 @@ func buildAndCaptureAtFrames(service build.Service, renderer transpiler.Renderer
 		if stats.LastBlit > resultCapture.cold {
 			resultCapture.cold = stats.LastBlit
 		}
+		if stats.Frames <= uint32(warmup) {
+			resultCapture.warmupFrame = stats.Frames
+			resultCapture.warmupMissed = stats.MissedFrames
+		}
 		if stats.Frames == lastProfileFrame || stats.Frames <= uint32(warmup) {
 			continue
 		}
@@ -502,6 +509,7 @@ func buildAndCaptureAtFrames(service build.Service, renderer transpiler.Renderer
 		pixels := append([]byte(nil), frame.RGBA...)
 		resultCapture.frames = append(resultCapture.frames, pixels)
 		resultCapture.frameNumbers = append(resultCapture.frameNumbers, stats.Frames)
+		resultCapture.watches = append(resultCapture.watches, append([]emulator.Watch(nil), frame.Telemetry.Watches...))
 		resultCapture.lastRGB = pixels
 	}
 	if len(resultCapture.frames) != samples || len(resultCapture.cycles) != samples {

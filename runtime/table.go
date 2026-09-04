@@ -390,13 +390,24 @@ func (c *Context) tableFieldOffset(data []byte, key Value) (uint32, bool) {
 	return hashValOff(readU16(data, 2), readU16(data, 6), idx), true
 }
 
+// hashBucket preserves modulo for arbitrary capacities, but avoids software
+// division on the GBA for the common power-of-two tables. Callers have already
+// checked that capacity is nonzero.
+func hashBucket(hash uint32, capacity uint16) int {
+	mask := uint32(capacity) - 1
+	if uint32(capacity)&mask == 0 {
+		return int(hash & mask)
+	}
+	return int(hash % uint32(capacity))
+}
+
 func (c *Context) hashFind(data []byte, key Value) (int, bool) {
 	hashCap := int(readU16(data, 6))
 	if hashCap == 0 {
 		return 0, false
 	}
 	arrayCap := readU16(data, 2)
-	start := int(c.hashValue(key) % uint32(hashCap))
+	start := hashBucket(c.hashValue(key), uint16(hashCap))
 	i := start
 	for {
 		k := readValue(data, hashKeyOff(arrayCap, i))
@@ -427,7 +438,7 @@ func (c *Context) hashInsertSlot(data []byte, key Value) (int, bool) {
 	}
 	arrayCap := readU16(data, 2)
 	hashCapU := readU16(data, 6)
-	start := int(c.hashValue(key) % uint32(hashCap))
+	start := hashBucket(c.hashValue(key), uint16(hashCap))
 	i := start
 	tomb := -1
 	for {

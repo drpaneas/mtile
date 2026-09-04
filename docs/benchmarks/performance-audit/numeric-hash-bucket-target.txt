@@ -1,0 +1,14 @@
+=== RUN   TestRuntimeNumericHashDiagnostic
+=== RUN   TestRuntimeNumericHashDiagnostic/mode0
+    runtime_hash_diagnostic_test.go:77: baseline median=598265 p95=598265 draw=470 commit=15274 rom=27048 ewram_free=108664 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:77: optimized median=330097 p95=330097 draw=454 commit=15270 rom=26908 ewram_free=108664 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=0
+    runtime_hash_diagnostic_test.go:81: saving=44.82% differing_pixels=0
+=== RUN   TestRuntimeNumericHashDiagnostic/mode4
+    runtime_hash_diagnostic_test.go:77: baseline median=731907 p95=731907 draw=69208 commit=76936 rom=28244 ewram_free=71576 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:77: optimized median=463411 p95=463411 draw=69200 commit=76928 rom=28120 ewram_free=71576 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=0
+    runtime_hash_diagnostic_test.go:81: saving=36.68% differing_pixels=0
+--- PASS: TestRuntimeNumericHashDiagnostic (7.08s)
+    --- PASS: TestRuntimeNumericHashDiagnostic/mode0 (3.53s)
+    --- PASS: TestRuntimeNumericHashDiagnostic/mode4 (3.54s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	7.876s

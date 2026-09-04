@@ -1,5 +1,10 @@
 # Runtime performance audit — 2026-09-05
 
+**Follow-up:** the unchanged hash stress workload now meets its frame budget
+in both renderers, with zero missed ticks across 600 measured updates. See
+[the deadline follow-up](hash-frame-budget-2026-09-05.md). The measurements
+below retain the initial audit results before those additional optimizations.
+
 Two measured optimizations are implemented. Public Lua APIs and renderer
 eligibility are unchanged. The baseline is commit
 `25383ae05f43f7729b16e9003cae21a196115c28`.
