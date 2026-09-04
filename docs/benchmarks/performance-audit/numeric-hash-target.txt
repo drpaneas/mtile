@@ -1,0 +1,38 @@
+Mtile numeric-hash target diagnostic, 2026-09-05
+
+Baseline runtime: revision 25383ae05f43f7729b16e9003cae21a196115c28
+Baseline snapshot: /private/tmp/mtile-performance-baseline/runtime
+Candidate runtime: working tree with integer-bit mixing in hashValue
+Both builds use the same current transpiler and identical generated Go.
+Toolchain: go version go1.26.4 darwin/arm64
+Toolchain: tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)
+Headless player SHA-256: 337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544
+Workload: cmd/renderbench/testdata/workloads/numeric_hash_keys.lua
+Capture: 20 warm-up ticks, 120 samples aligned by runtime frame number
+
+Reproduce the baseline from the repository root:
+  mkdir -p /tmp/mtile-hash-baseline
+  git archive 25383ae05f43f7729b16e9003cae21a196115c28 runtime | tar -x -C /tmp/mtile-hash-baseline
+  MTILE_PERF_BASELINE_RUNTIME=/tmp/mtile-hash-baseline/runtime go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run '^TestRuntimeNumericHashDiagnostic$' -count=1 -v
+
+Successful diagnostic output:
+
+=== RUN   TestRuntimeNumericHashDiagnostic
+=== RUN   TestRuntimeNumericHashDiagnostic/mode0
+    runtime_hash_diagnostic_test.go:77: baseline median=943697 p95=943697 draw=438 commit=15278 rom=26980 ewram_free=108664 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:77: optimized median=598265 p95=598265 draw=470 commit=15274 rom=27048 ewram_free=108664 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:81: saving=36.60% differing_pixels=0
+=== RUN   TestRuntimeNumericHashDiagnostic/mode4
+    runtime_hash_diagnostic_test.go:77: baseline median=1079967 p95=1079967 draw=69200 commit=76928 rom=28292 ewram_free=71576 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:77: optimized median=731907 p95=731907 draw=69208 commit=76936 rom=28244 ewram_free=71576 heap_allocated=3188 heap_live=0 heap_peak=0 heap_handles=1 gc=0 missed=140
+    runtime_hash_diagnostic_test.go:81: saving=32.23% differing_pixels=0
+--- PASS: TestRuntimeNumericHashDiagnostic (7.09s)
+    --- PASS: TestRuntimeNumericHashDiagnostic/mode0 (3.60s)
+    --- PASS: TestRuntimeNumericHashDiagnostic/mode4 (3.48s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	7.407s
+
+This intentionally concentrated hash workload remains over its 561,792-cycle
+30 Hz tick budget in both versions. Missed-frame counts are unchanged, not a
+claim of restored full frame rate. Heap live/peak values are zero because no
+collection ran; heap_allocated records the unchanged allocation footprint.

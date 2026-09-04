@@ -252,8 +252,6 @@ type Game struct {
 	playReset                  bool
 	playPaused                 bool
 	playImage                  *ebiten.Image
-	playHistory                *ebiten.Image
-	playLCDUniforms            map[string]any
 	playPCM                    *emulator.PCMStream
 	playAudio                  *editorAudioPlayer
 	playStart                  time.Time

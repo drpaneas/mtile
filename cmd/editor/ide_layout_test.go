@@ -124,9 +124,6 @@ func TestPlayWorkspaceKeepsScreenAndControlsSeparated(t *testing.T) {
 				t.Fatalf("%dx%d run control escapes header: %#v", size[0], size[1], button)
 			}
 		}
-		if !rectInsideIDE(layout.LCD, layout.Inspector) {
-			t.Fatalf("%dx%d LCD control escapes inspector: %#v", size[0], size[1], layout.LCD)
-		}
 	}
 }
 
@@ -180,6 +177,12 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 		}
 		if !rectInsideIDE(layout.Play.Screen, layout.Play.Bezel) || !rectInsideIDE(layout.Play.Bezel, layout.Play.Stage) {
 			t.Fatalf("%dx%d live GBA screen/bezel escapes preview", size.width, size.height)
+		}
+		left := truncateTextToWidth("GBA PREVIEW  /  mGBA CORE", layout.Play.Stage.W/2-20, developSmallFace)
+		right := truncateTextToWidth("CLICK SCREEN TO PLAY", layout.Play.Stage.W/2-20, developSmallFace)
+		status := developPreviewStatusRect(layout, left, right)
+		if status.W > 0 && (!rectInsideIDE(status, layout.Play.Stage) || rectsOverlapIDE(status, layout.Play.Bezel)) {
+			t.Fatalf("%dx%d preview status does not fit its header: %#v", size.width, size.height, status)
 		}
 		if layout.Code.Editor.W < 600 {
 			t.Fatalf("%dx%d code viewport is too narrow: %d", size.width, size.height, layout.Code.Editor.W)
@@ -239,12 +242,6 @@ func TestApplicationChromeAlwaysUsesCleanPresentation(t *testing.T) {
 	}
 }
 
-func TestLCDShaderCompiles(t *testing.T) {
-	if _, err := playLCDShader(); err != nil {
-		t.Fatalf("compile LCD shader: %v", err)
-	}
-}
-
 func TestStatusMessageColorSeparatesInformationFromErrors(t *testing.T) {
 	if got := statusMessageColor("preferences restored"); got != color.Color(colorLCD) {
 		t.Fatalf("informational message should use LCD color, got %v", got)
@@ -290,25 +287,51 @@ func TestStalePlayBuildCannotReplaceCurrentRun(t *testing.T) {
 	}
 }
 
-func TestDevelopBuildNoticeTracksTheBuildLifecycle(t *testing.T) {
+func TestDevelopPreviewStatusTracksTheBuildLifecycle(t *testing.T) {
 	g := &Game{}
-	if label, _ := g.developBuildNotice(); label != "READY  /  BUILD + RELOAD TO START" {
-		t.Fatalf("ready notice = %q", label)
+	if label, _ := g.developPreviewStatus(); label != "READY" {
+		t.Fatalf("ready status = %q", label)
 	}
 	g.runBusy = true
-	g.runBuildEvents = []build.Event{{Phase: build.PhaseMemory, Message: "Checking EWRAM"}}
-	if label, _ := g.developBuildNotice(); label != "BUILDING  /  MEMORY  /  Checking EWRAM" {
-		t.Fatalf("building notice = %q", label)
+	if label, _ := g.developPreviewStatus(); label != "BUILDING" {
+		t.Fatalf("building status = %q", label)
 	}
 	g.runBusy = false
 	g.runStatus = "RUNNING ON mGBA CORE"
-	if label, _ := g.developBuildNotice(); label != "BUILD COMPLETE  /  LIVE PREVIEW RUNNING" {
-		t.Fatalf("running notice = %q", label)
+	if label, _ := g.developPreviewStatus(); label != "LIVE" {
+		t.Fatalf("running status = %q", label)
 	}
 	g.runError = "link failed"
 	g.runStatus = "BUILD FAILED"
-	if label, _ := g.developBuildNotice(); label != "BUILD FAILED  /  SEE BUILD LOG BELOW" {
-		t.Fatalf("failure notice = %q", label)
+	if label, _ := g.developPreviewStatus(); label != "FAILED" {
+		t.Fatalf("failure status = %q", label)
+	}
+}
+
+func TestDevelopWatchesPanelShowsEveryMailboxWatch(t *testing.T) {
+	watches := make([]emulator.Watch, 16)
+	for index := range watches {
+		watches[index] = emulator.Watch{
+			Name: fmt.Sprintf("global_%02d", index),
+			Kind: 2,
+			Raw:  int32(index) * 65536,
+		}
+	}
+	g := &Game{
+		playTelemetry:  emulator.Telemetry{Valid: true, DebugValid: true, Watches: watches},
+		runGlobalUsage: build.GlobalUsage{Count: 20, Limit: 256},
+	}
+	lines := g.developPanelLines(developWatches)
+	if len(lines) != len(watches)+1 {
+		t.Fatalf("watch panel has %d lines, want %d: %#v", len(lines), len(watches)+1, lines)
+	}
+	if !strings.Contains(lines[0], "16 / 20 GLOBALS") || !strings.Contains(lines[0], "FIRST 16") {
+		t.Fatalf("watch capacity is not explained: %q", lines[0])
+	}
+	for index, watch := range watches {
+		if !strings.Contains(lines[index+1], watch.Name) || !strings.Contains(lines[index+1], fmt.Sprint(index)) {
+			t.Fatalf("watch %q missing from line %q", watch.Name, lines[index+1])
+		}
 	}
 }
 

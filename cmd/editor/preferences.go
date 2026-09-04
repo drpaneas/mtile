@@ -64,7 +64,6 @@ func (g *Game) resetInterfaceTextZoom() {
 type editorPreferences struct {
 	Version             int               `json:"version"`
 	Effects             effectLevel       `json:"effects"`
-	LCDPreview          bool              `json:"lcdPreview"`
 	PreviewVolume       int               `json:"previewVolume"`
 	AutoSaveBeforeBuild bool              `json:"autoSaveBeforeBuild"`
 	TextSize            interfaceTextSize `json:"textSize"`
@@ -73,7 +72,7 @@ type editorPreferences struct {
 func defaultEditorPreferences() editorPreferences {
 	return editorPreferences{
 		Version: editorPreferencesVersion, Effects: effectsClean,
-		LCDPreview: true, PreviewVolume: 80, AutoSaveBeforeBuild: true, TextSize: textComfort,
+		PreviewVolume: 80, AutoSaveBeforeBuild: true, TextSize: textComfort,
 	}
 }
 
@@ -166,7 +165,6 @@ func (g *Game) savePreferences() {
 func (g *Game) applyPreferences() {
 	g.preferences = normalizeEditorPreferences(g.preferences)
 	g.theme.level = effectsClean
-	g.theme.playLCD = g.preferences.LCDPreview
 	previousTextHeight := uiTextHeight
 	setInterfaceTextSize(g.preferences.TextSize)
 	if uiTextHeight != previousTextHeight {
@@ -207,13 +205,13 @@ func (g *Game) setPreviewPlayerVolume(player editorVolumePlayer) {
 
 type preferencesLayout struct {
 	Shade, Panel, Close, Defaults editor.Rect
-	Rows                          [5]editor.Rect
-	Minus                         [5]editor.Rect
-	Plus                          [5]editor.Rect
+	Rows                          [4]editor.Rect
+	Minus                         [4]editor.Rect
+	Plus                          [4]editor.Rect
 }
 
 func newPreferencesLayout() preferencesLayout {
-	panel := editor.Rect{W: min(760, screenWidth-80), H: min(580, screenHeight-100)}
+	panel := editor.Rect{W: min(760, screenWidth-80), H: min(516, screenHeight-100)}
 	panel.X, panel.Y = (screenWidth-panel.W)/2, (screenHeight-panel.H)/2
 	layout := preferencesLayout{
 		Shade: editor.Rect{X: 0, Y: 0, W: screenWidth, H: screenHeight}, Panel: panel,
@@ -261,14 +259,12 @@ func (g *Game) updatePreferences() {
 		}
 		switch index {
 		case 0:
-			g.preferences.LCDPreview = !g.preferences.LCDPreview
-		case 1:
 			g.preferences.PreviewVolume = min(max(g.preferences.PreviewVolume+delta*10, 0), 100)
-		case 2:
+		case 1:
 			g.preferences.AutoSaveBeforeBuild = !g.preferences.AutoSaveBeforeBuild
-		case 3:
+		case 2:
 			g.preferences.TextSize = interfaceTextSize((int(g.preferences.TextSize) + delta + int(interfaceTextSizeCount)) % int(interfaceTextSizeCount))
-		case 4:
+		case 3:
 			g.cycleProjectRenderer(delta)
 			g.persist()
 			return
@@ -301,16 +297,14 @@ func (g *Game) drawPreferences(screen *ebiten.Image) {
 	drawText(screen, "Editor behaviour and this project's build renderer", layout.Panel.X+24, layout.Panel.Y+50, colorDim)
 	drawNativeButton(screen, layout.Close, "DONE", false, colorCode)
 
-	labels := [...]string{"GBA LCD TREATMENT", "PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT", "PROJECT RENDERER"}
+	labels := [...]string{"PREVIEW AUDIO", "AUTOSAVE BEFORE BUILD", "INTERFACE TEXT", "PROJECT RENDERER"}
 	details := [...]string{
-		"Dot-matrix shader on the embedded mGBA screen.",
 		"Music, note audition, metronome, and game preview volume.",
 		"OFF refuses dirty builds until source files are saved.",
 		"Readable editor chrome and source text; COMFORT is the default.",
 		"AUTO selects proven Mode 0 builds; incompatible programs fall back to Mode 4.",
 	}
 	values := [...]string{
-		map[bool]string{false: "OFF", true: "ON"}[g.preferences.LCDPreview],
 		fmt.Sprintf("%d%%", g.preferences.PreviewVolume),
 		map[bool]string{false: "OFF", true: "ON"}[g.preferences.AutoSaveBeforeBuild],
 		g.preferences.TextSize.String(),

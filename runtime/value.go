@@ -295,7 +295,12 @@ func (c *Context) hashValue(v Value) uint32 {
 	}
 	switch v.Kind {
 	case KindNumber:
-		return uint32(v.Num)
+		// Table capacities are small powers of two. The low 16 bits of an
+		// integer Number are zero, so hashing the raw payload sends every
+		// integer outside the array part to the same bucket. Fold in the
+		// integer bits while retaining the fractional bits for nonintegers.
+		raw := uint32(v.Num)
+		return raw ^ (raw >> 16)
 	case KindBool:
 		if v.Num != 0 {
 			return 2

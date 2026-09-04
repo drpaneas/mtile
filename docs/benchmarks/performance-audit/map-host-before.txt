@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkMapClippedExtent/OriginDefault-12         	   62985	      5808 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OriginDefault-12         	   62373	      5850 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OriginDefault-12         	   61570	      5903 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OriginDefault-12         	   61482	      5896 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OriginDefault-12         	   61744	      5795 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/FarCameraDefault-12      	   23242	     16156 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/FarCameraDefault-12      	   21490	     15918 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/FarCameraDefault-12      	   22861	     15700 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/FarCameraDefault-12      	   23526	     15247 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/FarCameraDefault-12      	   23632	     15341 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OutsideMapDefault-12     	  186212	      1915 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OutsideMapDefault-12     	  184185	      1891 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OutsideMapDefault-12     	  192938	      1889 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OutsideMapDefault-12     	  189904	      1887 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OutsideMapDefault-12     	  185989	      1890 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OversizedExplicit-12     	     237	   1519269 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OversizedExplicit-12     	     236	   1518057 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OversizedExplicit-12     	     235	   1561509 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OversizedExplicit-12     	     234	   1534077 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMapClippedExtent/OversizedExplicit-12     	     231	   1556920 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	9.866s

@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"sync"
 
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -52,13 +51,10 @@ type themeState struct {
 	codeCaretX      float64
 	codeCaretY      float64
 	completionFrame int
-
-	playLCD bool
 }
 
 func (g *Game) initTheme() {
 	g.theme.level = effectsClean
-	g.theme.playLCD = true
 	mx, my := ebiten.CursorPosition()
 	g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
 }
@@ -227,50 +223,4 @@ func drawWorkspaceHeaderWithTypography(screen *ebiten.Image, r editor.Rect, titl
 	} else {
 		drawText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
 	}
-}
-
-const lcdShaderSource = `//kage:unit pixels
-
-package main
-
-var Strength float
-var Time float
-
-func Fragment(dstPos vec4, srcPos vec2, colorScale vec4) vec4 {
-	origin := imageSrc0Origin()
-	size := imageSrc0Size()
-	p := srcPos - origin
-	uv := p / size
-	samplePos := floor(p) + origin + vec2(0.5)
-	c := imageSrc0At(samplePos)
-
-	scan := 1.0 - Strength * (0.035 + 0.025*cos(p.y*3.14159265))
-	column := mod(floor(p.x), 3.0)
-	mask := vec3(0.94)
-	if column < 1.0 {
-		mask.r = 1.0
-	} else if column < 2.0 {
-		mask.g = 1.0
-	} else {
-		mask.b = 1.0
-	}
-	d := uv - vec2(0.5)
-	vignette := 1.0 - Strength * 0.20 * dot(d, d) * 2.5
-	flicker := 1.0 + Strength * 0.006 * sin(Time*2.1 + p.y*0.17)
-	c.rgb *= scan * mix(vec3(1.0), mask, Strength*0.45) * vignette * flicker
-	return c * colorScale
-}
-`
-
-var (
-	lcdShaderOnce sync.Once
-	lcdShader     *ebiten.Shader
-	lcdShaderErr  error
-)
-
-func playLCDShader() (*ebiten.Shader, error) {
-	lcdShaderOnce.Do(func() {
-		lcdShader, lcdShaderErr = ebiten.NewShader([]byte(lcdShaderSource))
-	})
-	return lcdShader, lcdShaderErr
 }

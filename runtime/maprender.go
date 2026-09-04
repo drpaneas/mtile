@@ -11,10 +11,8 @@ package runtime
 // offsets, layers, streaming, palette, transparency, and call order exactly;
 // see docs/render-modes.md.
 //
-// Executes from IWRAM: a full-screen call walks 600 cells, and each cell
-// pays bounds checks plus two software divides (id % cols, id / cols)
-// before any pixel moves. Fetching that walk through the 16-bit ROM bus
-// measurably dominated dense-map frames in benchspike.
+// Full-screen calls can visit 600 cells. mapLayer clips the visible range
+// once before walking it.
 //
 //go:noinline
 //go:section .iwram
@@ -45,6 +43,28 @@ func (c *Context) MapAll(mask uint8) {
 	}
 }
 
+// mapVisibleCellRange intersects a requested cell span with the map and
+// screen clip before walking it. A camera far into a large map must not make
+// every frame visit all the off-screen cells preceding the visible ones.
+func mapVisibleCellRange(cellStart, cells, mapSize, origin, clipStart, clipEnd int) (int, int) {
+	first, end := 0, cells
+	if first < -cellStart {
+		first = -cellStart
+	}
+	if end > mapSize-cellStart {
+		end = mapSize - cellStart
+	}
+	// Signed shifts round down, including when the first cell starts to the
+	// right of the clip. The end uses ceil so a partly visible cell survives.
+	if visible := (clipStart - origin) >> 3; first < visible {
+		first = visible
+	}
+	if visible := (clipEnd - origin + 7) >> 3; end > visible {
+		end = visible
+	}
+	return first, end
+}
+
 func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	if c == nil || c.cart == nil {
 		return
@@ -57,6 +77,9 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 		return
 	}
 	c.ensureDrawState()
+	if c.clipX0 >= c.clipX1 || c.clipY0 >= c.clipY1 {
+		return
+	}
 	if cellsW <= 0 {
 		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
 		// Account for every cell hidden before the clip, not just a single
@@ -75,6 +98,14 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 		return
 	}
 	mapW, mapH := c.cart.MapW, c.cart.MapH
+	clipX0, clipY0, clipX1, clipY1 := c.clipX0, c.clipY0, c.clipX1, c.clipY1
+	baseXOrigin := screenX + cellX*8 - c.camX
+	baseYOrigin := screenY + cellY*8 - c.camY
+	mx0, mx1 := mapVisibleCellRange(cellX, cellsW, mapW, baseXOrigin, clipX0, clipX1)
+	my0, my1 := mapVisibleCellRange(cellY, cellsH, mapH, baseYOrigin, clipY0, clipY1)
+	if mx0 >= mx1 || my0 >= my1 {
+		return
+	}
 	mapPlaneN := mapW * mapH
 	mapData := c.cart.Map
 	mapStreaming := mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming
@@ -100,20 +131,11 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	transp := &c.transp
 	identity := c.drawPalIdentity
 	key0 := c.transpKey0
-	clipX0, clipY0, clipX1, clipY1 := c.clipX0, c.clipY0, c.clipX1, c.clipY1
-	camX, camY := c.camX, c.camY
-	baseXOrigin := screenX + cellX*8 - camX
 	canPack := identity && key0 && sheetW&3 == 0 && baseXOrigin&3 == 0
 
-	for my := 0; my < cellsH; my++ {
+	for my := my0; my < my1; my++ {
 		mapY := cellY + my
-		if mapY < 0 || mapY >= mapH {
-			continue
-		}
-		baseY := screenY + (cellY+my)*8 - camY
-		if baseY+8 <= clipY0 || baseY >= clipY1 {
-			continue
-		}
+		baseY := baseYOrigin + my*8
 		rowY0 := 0
 		rowY1 := 8
 		if baseY < clipY0 {
@@ -126,15 +148,9 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 		streamChunkX := -1
 		streamSlot := -1
 
-		for mx := 0; mx < cellsW; mx++ {
+		for mx := mx0; mx < mx1; mx++ {
 			mapX := cellX + mx
-			if mapX < 0 || mapX >= mapW {
-				continue
-			}
 			baseX := baseXOrigin + mx*8
-			if baseX+8 <= clipX0 || baseX >= clipX1 {
-				continue
-			}
 			var id uint16
 			if mapStreaming {
 				// A visible row crosses at most two 32-cell chunks. Resolve

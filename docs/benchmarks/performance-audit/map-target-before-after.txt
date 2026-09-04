@@ -1,0 +1,34 @@
+Mtile map-clipping target diagnostic, 2026-09-05
+
+Baseline runtime: revision 25383ae05f43f7729b16e9003cae21a196115c28
+Baseline snapshot: /private/tmp/mtile-performance-baseline/runtime
+Candidate runtime: working tree with visible-cell clipping in mapLayer
+Both builds use the same current transpiler and identical generated Go.
+Toolchain: go version go1.26.4 darwin/arm64
+Toolchain: tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)
+Headless player SHA-256: 337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544
+Assets: examples/mapdemo (4095x20 streaming map)
+Workload: cmd/renderbench/testdata/workloads/map_clipped_extent.lua
+Capture: 20 warm-up ticks, 120 samples aligned by runtime frame number
+The camera moves from x=1600 through x=1663; map(0) uses default extents.
+A partial screen-space clip exercises the first and last visible cell edges.
+The test also requires captured frames to change as the map scrolls.
+
+Reproduce the baseline from the repository root:
+  mkdir -p /tmp/mtile-map-baseline
+  git archive 25383ae05f43f7729b16e9003cae21a196115c28 runtime | tar -x -C /tmp/mtile-map-baseline
+  MTILE_PERF_BASELINE_RUNTIME=/tmp/mtile-map-baseline/runtime go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run '^TestRuntimeMapClippingDiagnostic$' -count=1 -v
+
+Successful diagnostic output:
+
+=== RUN   TestRuntimeMapClippingDiagnostic
+    runtime_map_diagnostic_test.go:61: baseline median=603391 p95=616929 draw=525935 commit=76944 rom=179024 ewram_free=35112 missed=140
+    runtime_map_diagnostic_test.go:61: optimized median=388066 p95=398839 draw=310652 commit=76932 rom=178976 ewram_free=35112 missed=1
+    runtime_map_diagnostic_test.go:67: saving=35.69% differing_pixels=0
+--- PASS: TestRuntimeMapClippingDiagnostic (19.26s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	20.105s
+
+The optimized steady-state median and p95 are below the 561,792-cycle 30 Hz
+tick budget. Its one cumulative missed tick includes the cold start; the
+baseline is over budget throughout the sample. EWRAM use is unchanged.

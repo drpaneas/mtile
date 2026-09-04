@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkTableNumericHash/Negative/Get-12     	 2154879	        96.82 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Get-12     	 2482142	        97.01 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Get-12     	 2492815	        96.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Get-12     	 2457894	        96.88 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Get-12     	 2487230	        96.44 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Set-12     	 2498948	        96.87 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Set-12     	 2499472	        96.11 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Set-12     	 2491640	        96.12 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Set-12     	 2507139	        96.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/Negative/Set-12     	 2513395	        96.84 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Get-12         	 2482454	        96.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Get-12         	 2492732	        96.33 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Get-12         	 2513316	        95.57 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Get-12         	 2471124	       101.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Get-12         	 2496852	        96.43 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Set-12         	 2505187	        95.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Set-12         	 2500626	        95.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Set-12         	 2521654	        95.71 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Set-12         	 2504598	        96.47 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTableNumericHash/SparsePositive/Set-12         	 2495488	        95.81 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	7.044s

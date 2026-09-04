@@ -13,7 +13,7 @@ func TestEditorPreferencesRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config", "editor.json")
 	want := editorPreferences{
 		Version: editorPreferencesVersion, Effects: effectsClean,
-		LCDPreview: false, PreviewVolume: 30, AutoSaveBeforeBuild: false, TextSize: textLarge,
+		PreviewVolume: 30, AutoSaveBeforeBuild: false, TextSize: textLarge,
 	}
 	if err := saveEditorPreferences(path, want); err != nil {
 		t.Fatal(err)

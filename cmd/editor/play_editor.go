@@ -42,7 +42,6 @@ type playLayout struct {
 	Reload    editor.Rect
 	Reset     editor.Rect
 	Stop      editor.Rect
-	LCD       editor.Rect
 	Stage     editor.Rect
 	Bezel     editor.Rect
 	Screen    editor.Rect
@@ -66,7 +65,6 @@ func newPlayLayout() playLayout {
 		Reload: editor.Rect{X: screenWidth - 458, Y: y + 17, W: 142, H: 38},
 		Reset:  editor.Rect{X: screenWidth - 304, Y: y + 17, W: 132, H: 38},
 		Stop:   editor.Rect{X: screenWidth - 160, Y: y + 17, W: 142, H: 38},
-		LCD:    editor.Rect{X: inspector.X + inspector.W - 148, Y: inspector.Y + 100, W: 128, H: 30},
 		Stage:  stage, Bezel: bezel, Screen: screen, Inspector: inspector,
 	}
 }
@@ -210,10 +208,6 @@ func (g *Game) pumpPlaySession() {
 				if g.playImage == nil {
 					g.playImage = ebiten.NewImage(emulator.Width, emulator.Height)
 				}
-				if g.playHistory == nil {
-					g.playHistory = ebiten.NewImage(emulator.Width, emulator.Height)
-				}
-				g.playHistory.DrawImage(g.playImage, nil)
 				g.playImage.ReplacePixels(frame.RGBA)
 				g.acceptPlayTelemetry(frame.Telemetry)
 				g.playCount++
@@ -308,11 +302,6 @@ func (g *Game) updatePlayMode() {
 			g.runMu.Unlock()
 		case rectContains(layout.Stop, mx, my):
 			g.stopPlaySession()
-		case rectContains(layout.LCD, mx, my):
-			g.theme.playLCD = !g.theme.playLCD
-			g.preferences.LCDPreview = g.theme.playLCD
-			g.savePreferences()
-			g.statusMsg = map[bool]string{false: "clean display", true: "LCD display"}[g.theme.playLCD]
 		}
 	}
 	keys := playKeyMask()
@@ -650,11 +639,6 @@ func (g *Game) drawPlayMode(screen *ebiten.Image) {
 	drawText(screen, filepath.Base(g.model.Dir), layout.Inspector.X+20, layout.Inspector.Y+54, colorText)
 	drawLine(screen, layout.Inspector.X+16, layout.Inspector.Y+84, layout.Inspector.X+layout.Inspector.W-16, layout.Inspector.Y+84, colorBorder)
 	drawText(screen, "DISPLAY", layout.Inspector.X+20, layout.Inspector.Y+110, colorDim)
-	displayLabel := "LCD  ON"
-	if !g.theme.playLCD {
-		displayLabel = "CLEAN"
-	}
-	drawNativeButton(screen, layout.LCD, displayLabel, g.theme.playLCD, colorCode)
 	drawText(screen, "240 x 160  /  59.73 Hz", layout.Inspector.X+20, layout.Inspector.Y+138, colorLCD)
 	drawText(screen, fmt.Sprintf("PREVIEW  %.1f FPS", g.playFPS), layout.Inspector.X+20, layout.Inspector.Y+164, colorText)
 	drawText(screen, "AUDIO", layout.Inspector.X+20, layout.Inspector.Y+210, colorDim)
@@ -728,7 +712,7 @@ func (g *Game) drawGBABezel(screen *ebiten.Image, layout playLayout) {
 		drawTextScale(screen, "MTILE", layout.Screen.X+layout.Screen.W/2-56, layout.Screen.Y+layout.Screen.H/2-22, 2, colorLCD)
 		drawText(screen, "BUILD A CARTRIDGE TO PLAY", layout.Screen.X+layout.Screen.W/2-94, layout.Screen.Y+layout.Screen.H/2+18, colorCommentMuted())
 	}
-	drawText(screen, "DOT MATRIX WITH STEREO SOUND", layout.Bezel.X+24, layout.Bezel.Y+layout.Bezel.H-24, colorLCD)
+	drawText(screen, "NATIVE 240 x 160  /  STEREO SOUND", layout.Bezel.X+24, layout.Bezel.Y+layout.Bezel.H-24, colorLCD)
 	fillRect(screen, editor.Rect{X: layout.Bezel.X + layout.Bezel.W - 44, Y: layout.Bezel.Y + layout.Bezel.H - 30, W: 10, H: 10}, colorRun)
 	for index := 0; index < 7; index++ {
 		x := layout.Bezel.X + layout.Bezel.W - 118 + index*10
@@ -738,40 +722,6 @@ func (g *Game) drawGBABezel(screen *ebiten.Image, layout playLayout) {
 
 func (g *Game) drawPlayDisplay(screen *ebiten.Image, layout playLayout) {
 	scale := float64(layout.Screen.W) / emulator.Width
-	if g.theme.playLCD && g.playHistory != nil && g.theme.level != effectsClean {
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(scale, scale)
-		op.GeoM.Translate(float64(layout.Screen.X), float64(layout.Screen.Y))
-		op.Filter = ebiten.FilterNearest
-		alpha := float32(.015)
-		if g.theme.level == effectsFull {
-			alpha = .035
-		}
-		op.ColorScale.ScaleAlpha(alpha)
-		screen.DrawImage(g.playHistory, op)
-	}
-	if g.theme.playLCD {
-		if shader, err := playLCDShader(); err == nil {
-			strength := float32(.32)
-			if g.theme.level == effectsClean {
-				strength = .20
-			} else if g.theme.level == effectsFull {
-				strength = .60
-			}
-			op := &ebiten.DrawRectShaderOptions{}
-			op.GeoM.Scale(scale, scale)
-			op.GeoM.Translate(float64(layout.Screen.X), float64(layout.Screen.Y))
-			op.Images[0] = g.playImage
-			if g.playLCDUniforms == nil {
-				g.playLCDUniforms = make(map[string]any, 2)
-			}
-			g.playLCDUniforms["Strength"] = strength
-			g.playLCDUniforms["Time"] = float32(g.theme.frame) / 60
-			op.Uniforms = g.playLCDUniforms
-			screen.DrawRectShader(emulator.Width, emulator.Height, shader, op)
-			return
-		}
-	}
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(float64(layout.Screen.X), float64(layout.Screen.Y))

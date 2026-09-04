@@ -1,0 +1,62 @@
+Literal integer power specialization: rejected (no target improvement)
+Captured 2026-09-05
+
+Baseline: 25383ae05f43f7729b16e9003cae21a196115c28
+Go: go1.26.4 darwin/arm64
+TinyGo: 0.41.1, LLVM 20.1.1, -gc=none -opt=2
+Player: build/player/mtile-player (headless mGBA)
+
+Candidate:
+Replace the generated gluNumberPow loop for proven numeric bases and literal
+exponents -4 through 4 with a fixed sequence. Evaluate the base once, preserve
+the helper's multiplication order and fixed-point wrapping, and use One.Div
+for negative powers. In particular, x^2 becomes x.Mul(x), x^3 becomes
+x.Mul(x.Mul(x)), and x^4 squares the stored x.Mul(x) result. Larger exponents
+retain the helper. The candidate was removed after the target comparison.
+
+Method:
+Two isolated source trees were copied from the baseline commit; only the
+candidate transpiler dispatch/helper was added to the second. Both compiled
+against the same unmodified baseline runtime. The workload below replaced
+game.lua in a temporary copy of examples/testio. The existing renderbench
+buildAndCapture path built debug ROMs and captured runtime frames 21 through
+140 after 20 warmup frames, separately for each renderer. No changes from the
+numeric hashing or map clipping optimizations were present in either build.
+
+                          Baseline       Candidate
+Mode 0 median cycles        16,358          16,358
+Mode 0 draw cycles             286             286
+Mode 0 commit cycles           156             156
+Mode 0 ROM bytes            20,012          20,012
+Mode 4 median cycles       159,660         159,660
+Mode 4 draw cycles          67,794          67,794
+Mode 4 commit cycles        76,920          76,920
+Mode 4 ROM bytes            20,908          20,908
+
+All four captures contained 120 synchronized frames and zero missed frames.
+SHA-256 of concatenated captured RGBA frames was identical for all captures:
+438af74e6419b31d73869cf001048e1752843f63c33dbb626bcee469109737f7
+
+The source-level specialization produced no cycle or ROM-size improvement in
+this workload. This is consistent with TinyGo/LLVM already simplifying the
+constant-exponent helper. It does not establish behavior for other toolchains
+or arbitrary exponents.
+
+Reproduction workload (384 small powers per update):
+
+local value = 0.5
+local total = 0
+function _update()
+  for i = 1, 128 do
+    value = (value + 0.015625) % 2
+    total = (total + value^2 + value^3 + value^4) % 100
+  end
+end
+function _draw()
+  cls(0)
+  spr(0, total, 0)
+end
+
+Temporary full source trees, the candidate implementation, measurement test,
+and individual JSON/ROM files were retained during this audit under:
+/private/tmp/mtile-power-evidence

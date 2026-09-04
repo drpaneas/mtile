@@ -22,12 +22,13 @@ const (
 	developOutput
 	developBuild
 	developRuntime
+	developWatches
 	developGenerated
 	developPanelCount
 )
 
 func (p developPanel) label() string {
-	return [...]string{"PROBLEMS", "OUTPUT", "BUILD", "RUNTIME", "GENERATED GO"}[p]
+	return [...]string{"PROBLEMS", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "GENERATED GO"}[p]
 }
 
 var developDiagnosticLocation = regexp.MustCompile(`(?:^|[ (])([^ :()]+\.lua):(\d+):(\d+)`)
@@ -114,13 +115,6 @@ func newDevelopLayout() developLayout {
 	sourceMode := editor.Rect{X: sourceX, Y: fileRect.Y, W: max(1, build.X-sourceX-8), H: fileRect.H}
 	search := editor.Rect{X: textRect.X + textRect.W - 390, Y: textRect.Y + 8, W: 370, H: 34}
 	diagnostics := editor.Rect{X: codeRect.X, Y: mainBottom + padding, W: screenWidth - codeRect.X - padding, H: statusBarRect.Y - mainBottom - padding}
-	telemetryColumns := 3
-	if compact {
-		telemetryColumns = 2
-	}
-	colW := max(1, telemetry.W/telemetryColumns)
-	lcd := editor.Rect{X: telemetry.X + 12, Y: telemetry.Y + telemetry.H - 40, W: colW - 24, H: 28}
-
 	code := codeLayout{
 		Header: header, Sidebar: sidebar, File: fileRect,
 		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal,
@@ -128,7 +122,7 @@ func newDevelopLayout() developLayout {
 	}
 	play := playLayout{
 		Header: header, Reload: build, Reset: reset, Stop: stop,
-		LCD: lcd, Stage: stage, Bezel: bezel, Screen: screen, Inspector: telemetry,
+		Stage: stage, Bezel: bezel, Screen: screen, Inspector: telemetry,
 	}
 	return developLayout{Header: header, SourceMode: sourceMode, Build: build, Reset: reset, Stop: stop, Code: code, Play: play}
 }
@@ -154,11 +148,6 @@ func (g *Game) updateDevelopMode() {
 		case rectContains(layout.Stop, mx, my):
 			g.releaseDevelopGameInput()
 			g.stopPlaySession()
-		case rectContains(layout.Play.LCD, mx, my):
-			g.theme.playLCD = !g.theme.playLCD
-			g.preferences.LCDPreview = g.theme.playLCD
-			g.savePreferences()
-			g.statusMsg = map[bool]string{false: "clean display", true: "LCD display"}[g.theme.playLCD]
 		case rectContains(layout.Play.Screen, mx, my):
 			g.developGameFocus = true
 			g.statusMsg = "game input active; press Esc to return to code"
@@ -273,52 +262,54 @@ func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 	right := truncateTextToWidth(label, layout.Play.Stage.W/2-20, developSmallFace)
 	drawDevelopSmallText(screen, left, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
 	drawDevelopSmallText(screen, right, layout.Play.Stage.X+layout.Play.Stage.W-12-developSmallTextWidth(right), layout.Play.Stage.Y+10, border)
+	g.drawDevelopPreviewStatus(screen, layout, left, right)
 	g.drawGBABezel(screen, layout.Play)
-	g.drawDevelopBuildNotice(screen, layout)
 	if g.developGameFocus {
 		strokeRoundedRect(screen, editor.Rect{X: layout.Play.Screen.X - 12, Y: layout.Play.Screen.Y - 12, W: layout.Play.Screen.W + 24, H: layout.Play.Screen.H + 24}, 5, rgba(colorRun, 210))
 	}
 }
 
-func (g *Game) developBuildNotice() (string, color.Color) {
+func (g *Game) developPreviewStatus() (string, color.Color) {
 	g.runMu.Lock()
 	busy, status, runError := g.runBusy, g.runStatus, g.runError
-	events := append([]build.Event(nil), g.runBuildEvents...)
 	g.runMu.Unlock()
 	if busy {
-		message := "PREPARING CARTRIDGE"
-		if len(events) != 0 {
-			last := events[len(events)-1]
-			message = strings.ToUpper(string(last.Phase)) + "  /  " + last.Message
-		}
-		return "BUILDING  /  " + message, colorHighlight
+		return "BUILDING", colorHighlight
 	}
 	if runError != "" {
-		if status == "PLAYER FAILED" || strings.Contains(status, "AUDIO") {
-			return "PREVIEW FAILED  /  SEE BUILD OR RUNTIME LOG", colorDanger
-		}
-		return "BUILD FAILED  /  SEE BUILD LOG BELOW", colorDanger
+		return "FAILED", colorDanger
 	}
 	switch status {
 	case "RUNNING ON mGBA CORE":
-		return "BUILD COMPLETE  /  LIVE PREVIEW RUNNING", colorRun
+		return "LIVE", colorRun
 	case "BUILD BLOCKED":
-		return "BUILD BLOCKED  /  SAVE SOURCE FILES", colorHighlight
+		return "BLOCKED", colorHighlight
 	case "PLAYER STOPPED":
-		return "PREVIEW STOPPED  /  BUILD + RELOAD TO START", colorDim
+		return "STOPPED", colorDim
 	default:
-		return "READY  /  BUILD + RELOAD TO START", colorDim
+		return "READY", colorDim
 	}
 }
 
-func (g *Game) drawDevelopBuildNotice(screen *ebiten.Image, layout developLayout) {
-	label, accent := g.developBuildNotice()
-	label = truncateDevelopText(label, layout.Play.Bezel.W-42)
-	w := min(layout.Play.Bezel.W-28, developTextWidth(label)+28)
-	r := editor.Rect{X: layout.Play.Bezel.X + (layout.Play.Bezel.W-w)/2, Y: layout.Play.Bezel.Y + 8, W: w, H: developTextHeight + 10}
+func developPreviewStatusRect(layout developLayout, left, right string) editor.Rect {
+	leftEdge := layout.Play.Stage.X + 28 + developSmallTextWidth(left)
+	rightEdge := layout.Play.Stage.X + layout.Play.Stage.W - 28 - developSmallTextWidth(right)
+	return editor.Rect{X: leftEdge, Y: layout.Play.Stage.Y + 5, W: max(0, rightEdge-leftEdge), H: 20}
+}
+
+func (g *Game) drawDevelopPreviewStatus(screen *ebiten.Image, layout developLayout, left, right string) {
+	available := developPreviewStatusRect(layout, left, right)
+	if available.W < 64 {
+		return
+	}
+	label, accent := g.developPreviewStatus()
+	label = truncateTextToWidth(label, available.W-30, developSmallFace)
+	w := min(available.W, developSmallTextWidth(label)+30)
+	r := editor.Rect{X: available.X + (available.W-w)/2, Y: available.Y, W: w, H: available.H}
 	fillRoundedRect(screen, r, 5, color.RGBA{R: 11, G: 12, B: 25, A: 238})
-	strokeRoundedRect(screen, r, 5, rgba(accent, 190))
-	drawDevelopTextCentered(screen, label, r, accent)
+	strokeRoundedRect(screen, r, 5, rgba(accent, 150))
+	fillRect(screen, editor.Rect{X: r.X + 8, Y: r.Y + 7, W: 6, H: 6}, accent)
+	drawDevelopSmallText(screen, label, r.X+20, r.Y+(r.H-developSmallTextHeight)/2, accent)
 }
 
 func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) {
@@ -353,8 +344,6 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	if r.H >= 205 {
 		drawDevelopText(screen, columnText("INPUT  "+playKeyLabel(inputKeys)), x, r.Y+146, playInputColor(inputKeys))
 	}
-	drawDevelopButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
-
 	x = r.X + colW + 12
 	drawDevelopText(screen, columnText("GAME BOY PSG  /  HW"), x, r.Y+14, colorDim)
 	if !g.playTelemetry.Valid {
@@ -419,32 +408,20 @@ func (g *Game) drawDevelopTelemetry(screen *ebiten.Image, layout developLayout) 
 	}
 	heapVisible := stats.HeapCapacity != 0
 	compact := r.H < 220
-	frameY, updateY, watchY := r.Y+112, r.Y+136, r.Y+164
+	frameY, updateY := r.Y+112, r.Y+136
 	if heapVisible {
 		drawDevelopText(screen, columnText(developHeapLabel(stats)), x, r.Y+112, developHeapColor(stats))
-		frameY, updateY, watchY = r.Y+136, r.Y+160, r.Y+188
+		frameY, updateY = r.Y+136, r.Y+160
 		compact = r.H < 240
 		if r.H >= 300 {
 			drawDevelopText(screen, columnText(developHeapAuxLabel(stats)), x, r.Y+136, developHeapColor(stats))
-			frameY, updateY, watchY = r.Y+160, r.Y+184, r.Y+212
+			frameY, updateY = r.Y+160, r.Y+184
 		}
 	}
-	if compact {
-		watchY = frameY + 24
-	} else {
+	if !compact {
 		drawDevelopText(screen, columnText(fmt.Sprintf("UPDATE %s  DRAW %s", formatDevelopCount(stats.LastUpdate), formatDevelopCount(stats.LastDraw))), x, updateY, colorText)
 	}
 	drawDevelopText(screen, columnText(fmt.Sprintf("FRAME %d  MISSED %d", stats.Frames, stats.MissedFrames)), x, frameY, colorText)
-	drawDevelopText(screen, columnText("WATCH / VARIABLES"), x, watchY, colorDim)
-	watchRows := min(1, len(g.playTelemetry.Watches))
-	for row := 0; row < watchRows; row++ {
-		watch := g.playTelemetry.Watches[row]
-		label := fmt.Sprintf("%s = %s", watch.Name, developWatchValue(watch))
-		drawDevelopText(screen, columnText(label), x, watchY+24+row*22, colorText)
-	}
-	if watchRows == 0 {
-		drawDevelopText(screen, columnText("No top-level globals"), x, watchY+24, colorDim)
-	}
 	if r.H >= 250 && (!heapVisible || r.H >= 300) {
 		g.drawDevelopCPUGraph(screen, editor.Rect{X: x, Y: r.Y + r.H - 42, W: colW - 24, H: 28})
 	}
@@ -523,8 +500,6 @@ func (g *Game) drawDevelopCompactTelemetry(screen *ebiten.Image, layout developL
 	if r.H >= 195 {
 		cell(0, 5, "INPUT  "+playKeyLabel(inputKeys), playInputColor(inputKeys))
 	}
-	drawDevelopButton(screen, layout.Play.LCD, map[bool]string{false: "CLEAN", true: "LCD ON"}[g.theme.playLCD], g.theme.playLCD, colorCode)
-
 	cell(1, 0, "DEBUG / RUNTIME", colorDim)
 	cell(1, 1, developRendererLabel(rendererRequested, rendererSelected), developRendererColor(rendererSelected))
 	if !g.playTelemetry.Valid {
@@ -843,7 +818,7 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 
 func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
 	r := layout.Code.Diagnostics
-	widths := [...]int{112, 96, 92, 106, 150}
+	widths := [...]int{112, 96, 92, 106, 112, 150}
 	tabs := make([]editor.Rect, 0, len(widths))
 	x := r.X + 1
 	for _, width := range widths {
@@ -893,6 +868,8 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 	events := append([]build.Event(nil), g.runBuildEvents...)
 	runtimeLog := append([]string(nil), g.runRuntimeLog...)
 	g.runMu.Unlock()
+	telemetryValid, debugValid := g.playTelemetry.Valid, g.playTelemetry.DebugValid
+	watches := append([]emulator.Watch(nil), g.playTelemetry.Watches...)
 	switch panel {
 	case developProblems:
 		var lines []string
@@ -972,6 +949,25 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 			return []string{"Runtime log is empty. Start the cartridge preview."}
 		}
 		return runtimeLog
+	case developWatches:
+		if !telemetryValid {
+			return []string{"Waiting for live mGBA telemetry. Build and start the cartridge preview."}
+		}
+		if !debugValid {
+			return []string{"Waiting for debug data from the preview ROM."}
+		}
+		if len(watches) == 0 {
+			return []string{"No top-level globals are available in this build."}
+		}
+		total := max(globalUsage.Count, len(watches))
+		lines := []string{fmt.Sprintf("LIVE WATCHES  %d / %d GLOBALS", len(watches), total)}
+		if total > len(watches) {
+			lines[0] += "  /  DEBUG MAILBOX SHOWS THE FIRST 16"
+		}
+		for _, watch := range watches {
+			lines = append(lines, fmt.Sprintf("%-15s = %s", watch.Name, developWatchValue(watch)))
+		}
+		return lines
 	case developGenerated:
 		if generated == "" {
 			return []string{"Generated Go is available after a successful build."}
