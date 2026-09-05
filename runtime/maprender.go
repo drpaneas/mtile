@@ -123,6 +123,10 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	if cols <= 0 {
 		return
 	}
+	if mask == 0 && c.drawPalIdentity && c.transpKey0 &&
+		c.drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin) {
+		return
+	}
 	// Hoist the id -> cell divide out of the 600-cell loop: one reciprocal
 	// multiply per cell instead of two software divides (see spriteCellRecip).
 	colsRecip := spriteCellRecip(cols)

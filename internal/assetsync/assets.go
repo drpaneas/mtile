@@ -117,6 +117,9 @@ func LoadProject(projectDir string) (Project, error) {
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return Project{}, fmt.Errorf("project renderer: %w", err)
 	}
+	if err := ValidateIWRAMFunctions(project.IWRAMFunctions); err != nil {
+		return Project{}, fmt.Errorf("project iwramFunctions: %w", err)
+	}
 	return project, nil
 }
 
@@ -135,6 +138,9 @@ func SaveProject(projectDir string, project Project) error {
 	}
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return fmt.Errorf("project renderer: %w", err)
+	}
+	if err := ValidateIWRAMFunctions(project.IWRAMFunctions); err != nil {
+		return fmt.Errorf("project iwramFunctions: %w", err)
 	}
 	return writeJSON(filepath.Join(projectDir, "project.json"), project)
 }

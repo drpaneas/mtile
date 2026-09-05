@@ -1,0 +1,45 @@
+Mtile Pong scope-aware numeric field comparison, 2026-09-05
+
+Baseline compiler: ad25985c3ac34902f4baeaccbc71ba03d6dcc9ca transpiler.go.
+Candidate compiler: lexical binding lookup for numeric table initializers.
+Both builds use the optimized drawing runtime and prior table IWRAM change.
+Toolchain: Go 1.26.4 darwin/arm64, TinyGo 0.41.1, LLVM 20.1.1.
+600 synchronized runtime ticks after 20 warm-up ticks; no button input.
+Original Pong source/audio assets; no misses, equal pixel hashes and watches.
+Audio assets enabled; PCM waveform identity is not checked.
+
+SHA-256 inputs:
+411b37a64a6e2593cf10b5176267d90b2658fbbc4947e8682798d0a4441f2aee  runtime/draw.go
+c6cdfe85e655c91ad6ab85f888152e6e36825178ec2d0ce7d2a4881ea75eb66d  runtime/camera.go
+716745b9784b003076768dc276116a319c63e52662d51bea5c1e8cdb9d80fb94  runtime/table.go
+a882d8f1656062d08ced7af8728490789dd290cbf6f66b0825b45324955a77b2  internal/transpiler/transpiler.go
+79e200fb6faf37bb8746adb3b4587692306129d612b39cd5cace2ffd8787b3b9  examples/pong/game.lua
+337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544  build/player/mtile-player
+e2342921655be6f7ccf6eeda76a73a3f426c98f676a3a12db6a545348b85ea70  baseline transpiler.go
+
+before generated Go SHA-256: b1f2a4e91c350f9025f4c5cedbb3af468bf13acb2ccb4cf1d9a5bdd0983dc13e
+TableGetStableNumber call sites: 54
+TableGetStable call sites: 23
+
+after generated Go SHA-256: cb0e7075709f536078393310d0aaf9d67f180a3dde13016bdfbb475c1a1da023
+TableGetStableNumber call sites: 77
+TableGetStable call sites: 0
+
+Reproduction: TestPongCompilerDiagnostic and docs/pong-performance-2026-09-05.md.
+The initial snapshot was recorded with the identical temporary harness before
+its permanent rename; the final run uses the permanent checked-in diagnostic.
+
+Baseline raw output:
+=== RUN   TestPongCompilerSnapshotTemporary
+    pong_compiler_snapshot_tmp_test.go:53: snapshot=/private/tmp/mtile-pong-before-compiler.json median=215034 p95=221113 p99=252872 max=359240 draw=111214 commit=78102 ROM=93172 IWRAM=12908 EWRAM=184808 heap=8872 handles=1264 GC=0 missed=0
+--- PASS: TestPongCompilerSnapshotTemporary (3.66s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	4.310s
+
+Final raw output:
+=== RUN   TestPongCompilerDiagnostic
+    pong_compiler_diagnostic_test.go:55: snapshot=/private/tmp/mtile-pong-final-compiler.json median=211544 p95=216848 p99=248944 max=355859 draw=110947 commit=78102 ROM=89372 IWRAM=12908 EWRAM=184808 heap=8872 handles=1264 GC=0 missed=0
+    pong_compiler_diagnostic_test.go:80: saving=1.62% unchanged_pixel_frames=600 ROM_delta=-3800 IWRAM_delta=0 EWRAM_delta=0
+--- PASS: TestPongCompilerDiagnostic (3.38s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	3.896s

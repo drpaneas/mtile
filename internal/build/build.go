@@ -63,6 +63,8 @@ type Service struct {
 	// DisableFixedMapLayerSpecialization retains logical-to-storage layer lookup
 	// for compile-time layers in compact-map A/B benchmarks.
 	DisableFixedMapLayerSpecialization bool
+	// DisableMapRasterCache retains per-cell Mode 4 map rendering for A/B tests.
+	DisableMapRasterCache bool
 	// DisableStaticStringSpecialization retains all 256 Context static slots.
 	DisableStaticStringSpecialization bool
 	// UseProjectRenderer reads project.json's renderer policy. Renderer remains
@@ -226,6 +228,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
 	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
 		PackageName:                        "main",
+		IWRAMFunctions:                     project.IWRAMFunctions,
 		Renderer:                           renderer,
 		DisableStableTableFields:           s.DisableStableTableFields,
 		DisableMonomorphicNumbers:          s.DisableMonomorphicNumbers,
@@ -237,6 +240,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		DisableNumericConstants:            s.DisableNumericConstants,
 		DisableLiteralPrintSpecialization:  s.DisableLiteralPrintSpecialization,
 		DisableFixedMapLayerSpecialization: s.DisableFixedMapLayerSpecialization,
+		DisableMapRasterCache:              s.DisableMapRasterCache,
 		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,

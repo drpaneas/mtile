@@ -137,3 +137,27 @@ func (c *Context) hlineWorld(x0, x1, y int, color byte) {
 	}
 	c.fillRow(sy, sx0, sx1, color)
 }
+
+// vlineWorld transforms and clips once before filling an inclusive vertical
+// span. Its callers initialize draw state and remap the color before calling.
+func (c *Context) vlineWorld(x, y0, y1 int, color byte) {
+	if y0 > y1 {
+		y0, y1 = y1, y0
+	}
+	sx := x - c.camX
+	if sx < c.clipX0 || sx >= c.clipX1 {
+		return
+	}
+	sy0 := y0 - c.camY
+	sy1 := y1 - c.camY
+	if sy0 < c.clipY0 {
+		sy0 = c.clipY0
+	}
+	if sy1 >= c.clipY1 {
+		sy1 = c.clipY1 - 1
+	}
+	if sy0 > sy1 {
+		return
+	}
+	c.fillColumn(sx, sy0, sy1, color)
+}

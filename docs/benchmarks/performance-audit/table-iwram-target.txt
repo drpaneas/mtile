@@ -1,0 +1,56 @@
+Mtile table-helper IWRAM placement diagnostic, 2026-09-05
+
+Baseline revision: ad25985c3ac34902f4baeaccbc71ba03d6dcc9ca
+Baseline runtime snapshot: /private/tmp/mtile-table-iwram-before/runtime
+Baseline runtime/table.go SHA-256: b95c5a30aabcaae0f73f9746a168342f1cbd7ce85b0c95f191878dc8acaf7e50
+Candidate runtime/table.go SHA-256: 716745b9784b003076768dc276116a319c63e52662d51bea5c1e8cdb9d80fb94
+Shared internal/transpiler/transpiler.go SHA-256: e2342921655be6f7ccf6eeda76a73a3f426c98f676a3a12db6a545348b85ea70
+Unchanged workload: cmd/renderbench/testdata/workloads/numeric_hash_keys.lua
+Workload SHA-256: 87d598759b3fcff6a9ec00a11fb8c88b6afdf362fe4befd0a620a09122a3201e
+Toolchain: go version go1.26.4 darwin/arm64
+Toolchain: tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)
+Headless player SHA-256: 337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544
+
+The candidate only adds noinline/IWRAM section annotations to tableData and
+hashFind. Both captures use identical generated Go, sprites, palettes, and Lua
+source. The baseline already includes the hash bucket mask and root filter.
+
+Reproduce from the repository root:
+  mkdir -p /tmp/mtile-table-iwram-baseline
+  git archive ad25985c3ac34902f4baeaccbc71ba03d6dcc9ca runtime | tar -x -C /tmp/mtile-table-iwram-baseline
+  MTILE_PERF_BASELINE_RUNTIME=/tmp/mtile-table-iwram-baseline/runtime go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run '^TestRuntimeTableIWRAMDiagnostic$' -count=1 -v
+
+Acceptance: 600 synchronized frames after 20 warm-up frames in each renderer;
+identical pixels before/after; independently correct checksum watches on all
+frames including signed 16:16 wrap; changing visible output; every tick below
+561,792 cycles; no missed-frame counter increase after warm-up; lower median
+with non-regressing p95; unchanged EWRAM and Lua heap usage. The test inspects
+each linked ELF and verifies the exact Go function bodies moved from ROM to
+0x03000000..0x03007FFF. Small ROM branch veneers are expected and are distinct
+from the function bodies. Reported cycles include branch-veneer overhead;
+IWRAM totals include all linked IWRAM code, data, and stacks.
+
+Successful diagnostic output:
+
+=== RUN   TestRuntimeTableIWRAMDiagnostic
+=== RUN   TestRuntimeTableIWRAMDiagnostic/mode0
+    runtime_table_iwram_diagnostic_test.go:70: rom median=326897 p95=326897 max=326897 draw=454 commit=15270 rom=26116 iwram=3072 ewram_free=108664 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: rom method=hashFind address=0x08002614 size=316
+    runtime_table_iwram_diagnostic_test.go:73: rom method=tableData address=0x080014d8 size=428
+    runtime_table_iwram_diagnostic_test.go:70: iwram median=282865 p95=282865 max=282865 draw=454 commit=15270 rom=26140 iwram=3824 ewram_free=108664 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=hashFind address=0x03000dac size=316
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=tableData address=0x03000c00 size=428
+    runtime_table_iwram_diagnostic_test.go:79: saving=13.47% rom_delta=24 iwram_delta=752 ewram_delta=0 differing_pixels=0 checksum_frames=600
+=== RUN   TestRuntimeTableIWRAMDiagnostic/mode4
+    runtime_table_iwram_diagnostic_test.go:70: rom median=461235 p95=461235 max=461235 draw=69200 commit=76928 rom=27328 iwram=5364 ewram_free=71576 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: rom method=hashFind address=0x080022cc size=316
+    runtime_table_iwram_diagnostic_test.go:73: rom method=tableData address=0x0800114c size=452
+    runtime_table_iwram_diagnostic_test.go:70: iwram median=414899 p95=414899 max=414899 draw=69200 commit=76928 rom=27352 iwram=6140 ewram_free=71576 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=hashFind address=0x03001674 size=316
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=tableData address=0x030014b0 size=452
+    runtime_table_iwram_diagnostic_test.go:79: saving=10.05% rom_delta=24 iwram_delta=776 ewram_delta=0 differing_pixels=0 checksum_frames=600
+--- PASS: TestRuntimeTableIWRAMDiagnostic (8.71s)
+    --- PASS: TestRuntimeTableIWRAMDiagnostic/mode0 (4.21s)
+    --- PASS: TestRuntimeTableIWRAMDiagnostic/mode4 (4.50s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	9.266s

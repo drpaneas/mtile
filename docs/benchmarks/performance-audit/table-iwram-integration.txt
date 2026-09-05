@@ -1,0 +1,70 @@
+Mtile IWRAM integration controls, 2026-09-05
+
+Baseline: ad25985c3ac34902f4baeaccbc71ba03d6dcc9ca
+Candidate: only tableData/hashFind noinline and .iwram annotations
+Baseline runtime: /private/tmp/mtile-table-iwram-before/runtime
+Toolchain: TinyGo 0.41.1, LLVM 20.1.1; Go 1.26.4 darwin/arm64
+All paired builds use identical generated Go and project assets.
+IWRAM totals include stacks, code, and data; limit is 32,672 bytes.
+ELF _ebss was checked against the linker limit and exact function bodies
+were distinguished from ROM call veneers.
+
+Controls: examples/background-layers (Mode 0), examples/physics-stress
+(Mode 4), examples/pong (Mode 4). The first cartridge does not retain the
+moved helpers and its before/after ROMs were byte-identical. Pong exercises
+PSG audio and bitmap rendering alongside table access.
+
+Pong capture: 20 warm-up ticks, 120 synchronized ticks, zero pixel differences
+and zero missed ticks. Its total median increased 0.39% and p95 increased
+0.29%; the placement benefit is workload-dependent. Draw changed 18 cycles.
+The cause of this small total-cost increase was not isolated.
+
+The attempted examples/loop control was excluded because its existing
+repeated BG0 map calls fail transpilation in both configurations. No game
+source or assets were changed for the accepted controls.
+
+The temporary integration harness is retained for this session at
+/private/tmp/mtile-runtime-iwram-integration-test.go. The permanent numeric
+workload A/B test and reproduction command are in table-iwram-target.txt.
+
+Successful integration-build output:
+
+=== RUN   TestRuntimeIWRAMIntegrationTemporary
+=== RUN   TestRuntimeIWRAMIntegrationTemporary/background-layers/mode0
+    runtime_iwram_integration_tmp_test.go:54: background-layers-mode0-before ROM=25076 IWRAM=3072/32672 IWRAMfree=29600 EWRAMused=31608 EWRAMfree=230024 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1486709858/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1486709858/game.map
+    runtime_iwram_integration_tmp_test.go:54: background-layers-mode0-after ROM=25076 IWRAM=3072/32672 IWRAMfree=29600 EWRAMused=31608 EWRAMfree=230024 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3042928062/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3042928062/game.map
+=== RUN   TestRuntimeIWRAMIntegrationTemporary/physics-stress/mode4
+    runtime_iwram_integration_tmp_test.go:54: physics-stress-mode4-before ROM=49924 IWRAM=4592/32672 IWRAMfree=28080 EWRAMused=183960 EWRAMfree=77672 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-461624251/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-461624251/game.map
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-before (*github.com/drpaneas/mtile/runtime.Context).fillRowWord address=0x03000c7c size=376
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-before (*github.com/drpaneas/mtile/runtime.Context).tableData address=0x08002a30 size=452
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-before (*github.com/drpaneas/mtile/runtime.Context).hashFind address=0x08003e74 size=668
+    runtime_iwram_integration_tmp_test.go:54: physics-stress-mode4-after ROM=49964 IWRAM=5736/32672 IWRAMfree=26936 EWRAMused=183960 EWRAMfree=77672 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-472816683/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-472816683/game.map
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-after (*github.com/drpaneas/mtile/runtime.Context).fillRowWord address=0x03000c7c size=376
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-after (*github.com/drpaneas/mtile/runtime.Context).tableData address=0x030011ec size=452
+    runtime_iwram_integration_tmp_test.go:72: physics-stress-mode4-after (*github.com/drpaneas/mtile/runtime.Context).hashFind address=0x030013b0 size=668
+=== RUN   TestRuntimeIWRAMIntegrationTemporary/pong/mode4
+    runtime_iwram_integration_tmp_test.go:54: pong-mode4-before ROM=91324 IWRAM=11672/32672 IWRAMfree=21000 EWRAMused=184808 EWRAMfree=76824 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1471860137/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1471860137/game.map
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-before github.com/drpaneas/mtile/runtime/audio.handleNativeTimer0 address=0x03000c7c size=7028
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-before (*github.com/drpaneas/mtile/runtime.Context).fillRowWord address=0x030027f0 size=376
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-before (*github.com/drpaneas/mtile/runtime.Context).tableData address=0x080088c0 size=452
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-before (*github.com/drpaneas/mtile/runtime.Context).hashFind address=0x08009be4 size=668
+    runtime_iwram_integration_tmp_test.go:54: pong-mode4-after ROM=91364 IWRAM=12816/32672 IWRAMfree=19856 EWRAMused=184808 EWRAMfree=76824 ELF=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-702389539/game.elf MAP=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-702389539/game.map
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-after github.com/drpaneas/mtile/runtime/audio.handleNativeTimer0 address=0x03000c7c size=7028
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-after (*github.com/drpaneas/mtile/runtime.Context).fillRowWord address=0x030027f0 size=376
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-after (*github.com/drpaneas/mtile/runtime.Context).tableData address=0x03002d60 size=452
+    runtime_iwram_integration_tmp_test.go:72: pong-mode4-after (*github.com/drpaneas/mtile/runtime.Context).hashFind address=0x03002f24 size=668
+--- PASS: TestRuntimeIWRAMIntegrationTemporary (13.03s)
+    --- PASS: TestRuntimeIWRAMIntegrationTemporary/background-layers/mode0 (2.91s)
+    --- PASS: TestRuntimeIWRAMIntegrationTemporary/physics-stress/mode4 (4.28s)
+    --- PASS: TestRuntimeIWRAMIntegrationTemporary/pong/mode4 (5.83s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	13.648s
+
+Pong capture output:
+
+=== RUN   TestRuntimeIWRAMPongCaptureTemporary
+    runtime_iwram_integration_tmp_test.go:110: before median=263384 p95=271307 draw=159359 commit=78102 misses=0 warmupMisses=0
+    runtime_iwram_integration_tmp_test.go:111: after median=264414 p95=272086 draw=159377 commit=78128 misses=0 warmupMisses=0 differing_pixels=0
+--- PASS: TestRuntimeIWRAMPongCaptureTemporary (6.22s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	6.821s

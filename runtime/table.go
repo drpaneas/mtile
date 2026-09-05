@@ -145,6 +145,11 @@ func (c *Context) NewTableWithCaps(arrayCap, hashCap int) (Value, HeapError) {
 	return Value{Kind: KindTable, Ref: ref}, HeapOK
 }
 
+// Table reads and writes share these validation checks. Keep the repeated
+// instruction fetches in fast internal RAM on the GBA.
+//
+//go:noinline
+//go:section .iwram
 func (c *Context) tableData(t Value) ([]byte, HeapError) {
 	if t.Kind != KindTable {
 		return nil, HeapCorruptRef
@@ -241,6 +246,8 @@ func (c *Context) TableGet(t, key Value) Value {
 // reads the cached byte offset without repeating type, handle-kind, capacity,
 // hash, or key-equality checks. The table may move during GC because its stable
 // handle is resolved on every access; its type and layout must not change.
+//go:noinline
+//go:section .iwram
 func (c *Context) TableGetStable(t, key Value, cache *TableFieldCache) Value {
 	if *cache == 0 {
 		return c.tableGetStableFirst(t, key, cache)
@@ -249,6 +256,8 @@ func (c *Context) TableGetStable(t, key Value, cache *TableFieldCache) Value {
 	return readValue(c.activeSpace(), hdr.Offset+uint32(*cache)-1)
 }
 
+// Keep first-use validation in ROM; warm field access is the IWRAM hot path.
+//go:noinline
 func (c *Context) tableGetStableFirst(t, key Value, cache *TableFieldCache) Value {
 	data, err := c.tableData(t)
 	if err != HeapOK {
@@ -265,25 +274,32 @@ func (c *Context) tableGetStableFirst(t, key Value, cache *TableFieldCache) Valu
 // TableGetStableNumber is the numeric monomorphic field path. Its first read
 // validates both the table slot and the field's number kind. Warm reads load
 // the fixed-point payload directly and deliberately assume both stay stable.
+//go:noinline
+//go:section .iwram
 func (c *Context) TableGetStableNumber(t, key Value, cache *TableFieldCache) Number {
 	if *cache == 0 {
-		data, err := c.tableData(t)
-		if err != HeapOK {
-			return 0
-		}
-		off, found := c.tableFieldOffset(data, key)
-		if !found {
-			return 0
-		}
-		value := readValue(data, off)
-		if value.Kind != KindNumber {
-			return 0
-		}
-		*cache = TableFieldCache(off + 1)
-		return value.Num
+		return c.tableGetStableNumberFirst(t, key, cache)
 	}
 	hdr := &c.heap.handles[t.Ref]
 	return readValue(c.activeSpace(), hdr.Offset+uint32(*cache)-1).Num
+}
+
+//go:noinline
+func (c *Context) tableGetStableNumberFirst(t, key Value, cache *TableFieldCache) Number {
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return 0
+	}
+	off, found := c.tableFieldOffset(data, key)
+	if !found {
+		return 0
+	}
+	value := readValue(data, off)
+	if value.Kind != KindNumber {
+		return 0
+	}
+	*cache = TableFieldCache(off + 1)
+	return value.Num
 }
 
 func (c *Context) TableSet(t, key, val Value) HeapError {
@@ -348,6 +364,8 @@ func (c *Context) TableSet(t, key, val Value) HeapError {
 // TableSetStable is the write counterpart to TableGetStable. The first write
 // uses normal table semantics and caches the resulting field offset. Later
 // writes assume the same table type and layout and update that slot directly.
+//go:noinline
+//go:section .iwram
 func (c *Context) TableSetStable(t, key, val Value, cache *TableFieldCache) HeapError {
 	if *cache == 0 {
 		return c.tableSetStableFirst(t, key, val, cache)
@@ -357,6 +375,7 @@ func (c *Context) TableSetStable(t, key, val Value, cache *TableFieldCache) Heap
 	return HeapOK
 }
 
+//go:noinline
 func (c *Context) tableSetStableFirst(t, key, val Value, cache *TableFieldCache) HeapError {
 	if err := c.TableSet(t, key, val); err != HeapOK {
 		return err
@@ -401,6 +420,11 @@ func hashBucket(hash uint32, capacity uint16) int {
 	return int(hash % uint32(capacity))
 }
 
+// Run the lookup/probe loop in fast internal RAM, including the common
+// existing-key path used by both TableGet and TableSet.
+//
+//go:noinline
+//go:section .iwram
 func (c *Context) hashFind(data []byte, key Value) (int, bool) {
 	hashCap := int(readU16(data, 6))
 	if hashCap == 0 {

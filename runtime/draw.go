@@ -140,16 +140,44 @@ func (c *Context) fillRow(y, x0, x1 int, value byte) {
 //go:section .iwram
 func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
 	row := y * ScreenWidth
-	for x := x0; x <= x1 && x&3 != 0; x++ {
+	x := x0
+	for ; x <= x1 && x&3 != 0; x++ {
 		c.framebuffer[row+x] = value
 	}
-	for x := x0 + ((4 - (x0 & 3)) & 3); x+3 <= x1; x += 4 {
-		*(*uint32)(unsafe.Pointer(&c.framebuffer[row+x])) = word
-	}
-	for x := x1 - ((x1 + 1) & 3) + 1; x <= x1; x++ {
-		if x >= x0 {
-			c.framebuffer[row+x] = value
+	words := (x1 + 1 - x) / 4
+	if words > 0 {
+		// The caller clipped this span. Check its base once, then use the
+		// aligned pointer instead of checking framebuffer[row+x] per word.
+		dst := unsafe.Pointer(&c.framebuffer[row+x])
+		x += words * 4
+		for ; words >= 4; words -= 4 {
+			*(*uint32)(dst) = word
+			*(*uint32)(unsafe.Add(dst, 4)) = word
+			*(*uint32)(unsafe.Add(dst, 8)) = word
+			*(*uint32)(unsafe.Add(dst, 12)) = word
+			dst = unsafe.Add(dst, 16)
 		}
+		for ; words > 0; words-- {
+			*(*uint32)(dst) = word
+			dst = unsafe.Add(dst, 4)
+		}
+	}
+	for ; x <= x1; x++ {
+		c.framebuffer[row+x] = value
+	}
+}
+
+// fillColumn writes an already-clipped inclusive screen-space column. The
+// caller guarantees 0 <= x < ScreenWidth and 0 <= y0 <= y1 < ScreenHeight,
+// so the IWRAM loop needs only a byte store and a constant row stride.
+//
+//go:noinline
+//go:section .iwram
+func (c *Context) fillColumn(x, y0, y1 int, value byte) {
+	first := unsafe.Pointer(&c.framebuffer[y0*ScreenWidth+x])
+	end := (y1 - y0) * ScreenWidth
+	for offset := 0; offset <= end; offset += ScreenWidth {
+		*(*byte)(unsafe.Add(first, offset)) = value
 	}
 }
 
@@ -161,6 +189,14 @@ func (c *Context) Line(x0, y0, x1, y1, color int) {
 	c.ensureDrawState()
 	c.cursor.color = byte(color)
 	value := c.drawPal[color]
+	if y0 == y1 {
+		c.hlineWorld(x0, x1, y0, value)
+		return
+	}
+	if x0 == x1 {
+		c.vlineWorld(x0, y0, y1, value)
+		return
+	}
 	dx := x1 - x0
 	if dx < 0 {
 		dx = -dx
@@ -219,10 +255,14 @@ func (c *Context) Rect(x0, y0, x1, y1, color int) {
 		y0, y1 = y1, y0
 	}
 	c.hlineWorld(x0, x1, y0, value)
-	c.hlineWorld(x0, x1, y1, value)
-	for y := y0 + 1; y < y1; y++ {
-		c.setWorldPixel(x0, y, value)
-		c.setWorldPixel(x1, y, value)
+	if y0 < y1 {
+		c.hlineWorld(x0, x1, y1, value)
+		if y0+1 < y1 {
+			c.vlineWorld(x0, y0+1, y1-1, value)
+			if x0 != x1 {
+				c.vlineWorld(x1, y0+1, y1-1, value)
+			}
+		}
 	}
 }
 

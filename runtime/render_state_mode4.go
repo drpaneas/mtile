@@ -6,13 +6,17 @@ package runtime
 // build tag makes renderer selection a link-time memory decision, not a hot
 // runtime branch.
 type renderState struct {
-	framebuffer [FramebufferSize]byte
+	framebuffer        [FramebufferSize]byte
+	mapRasterReady     bool
+	mapRasterFailed    bool
+	mapRasterBG        int
+	mapRasterSpanCount int
 }
 
-func (c *Context) resetRendererState()             {}
-func (c *Context) sheetMutated(x, y int)           {}
-func (c *Context) mapMutated(x, y int)             {}
-func (c *Context) mapLayerMutated(layer, x, y int) {}
+func (c *Context) resetRendererState()             { c.invalidateMapRaster() }
+func (c *Context) sheetMutated(x, y int)           { c.invalidateMapRaster() }
+func (c *Context) mapMutated(x, y int)             { c.invalidateMapRaster() }
+func (c *Context) mapLayerMutated(layer, x, y int) { c.invalidateMapRaster() }
 func (c *Context) flagsMutated(id int)             {}
 func (c *Context) drawPaletteMutated()             {}
 

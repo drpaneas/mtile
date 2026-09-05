@@ -62,6 +62,9 @@ func (e *GlobalLimitError) Error() string {
 // fields with real ROM data.
 type Options struct {
 	PackageName string
+	// IWRAMFunctions selects plain top-level Lua helpers for fast internal RAM.
+	// Empty preserves normal code placement. The target linker enforces capacity.
+	IWRAMFunctions []string
 	// DisableStableTableFields retains the fully dynamic table.field lowering.
 	// By default each static field access checks and resolves its table slot on
 	// first execution, then assumes that the table type/layout stays stable.
@@ -97,6 +100,8 @@ type Options struct {
 	// DisableFixedMapLayerSpecialization retains logical-layer lookup for
 	// compact maps even when the layer is a proven compile-time value.
 	DisableFixedMapLayerSpecialization bool
+	// DisableMapRasterCache keeps the per-cell Mode 4 map path for A/B checks.
+	DisableMapRasterCache bool
 	// Renderer is selected at build time. Its zero value deliberately preserves
 	// the shipping Mode 4 backend for every existing caller.
 	Renderer  Renderer
@@ -585,6 +590,9 @@ func (g *generator) prepare() error {
 		return err
 	}
 	if err := g.discoverFunctions(); err != nil {
+		return err
+	}
+	if err := g.validateIWRAMFunctions(); err != nil {
 		return err
 	}
 	if err := g.validateSemantics(); err != nil {
@@ -1376,38 +1384,34 @@ func (g *generator) analyzeMonomorphicNumbers() {
 
 	// Record fields retain Value storage, but a field name whose observed table
 	// literal initializers are all numeric can use native Number reads/writes.
-	seenField := make(map[string]bool)
-	observe := func(expr luaparser.Expr) {
-		table, ok := expr.(*luaparser.TableExpr)
-		if !ok {
-			return
-		}
-		for _, field := range table.Fields {
-			if field.Array {
-				continue
-			}
-			key, ok := field.Key.(*luaparser.StringExpr)
-			if !ok {
-				continue
-			}
-			isNumber := g.numericFieldIntent(field.Value)
-			if !seenField[key.Value] {
-				seenField[key.Value] = true
-				g.numericFields[key.Value] = isNumber
-			} else if !isNumber {
-				g.numericFields[key.Value] = false
-			}
+	// Resolve initializer aliases in their lexical scope. In particular, a
+	// local or parameter must hide a same-named numeric global. Keep provisional
+	// field observations out of expression inference until every constructor
+	// has been visited: a later mixed initializer may invalidate an early one.
+	fields := make(map[string]bool)
+	observe := func(name string, isNumber bool) {
+		if previous, seen := fields[name]; !seen || previous {
+			fields[name] = isNumber
 		}
 	}
+	params := make(map[*functionInfo][]functionParamObservation)
+	top := &monomorphicAnalysisEnv{g: g, observeField: observe}
+	top.push()
 	for _, stmt := range g.chunk.Body {
 		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
+			env := &monomorphicAnalysisEnv{g: g, observeField: observe}
+			env.push()
+			for _, name := range fn.Params {
+				env.declare(name, monoValue)
+			}
 			for _, bodyStmt := range fn.Body.Body {
-				collectStmtExprs(bodyStmt, observe)
+				g.analyzeMonomorphicStmt(bodyStmt, env, params, nil, false)
 			}
 			continue
 		}
-		collectStmtExprs(stmt, observe)
+		g.analyzeMonomorphicStmt(stmt, top, params, nil, true)
 	}
+	g.numericFields = fields
 }
 
 func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
@@ -1424,8 +1428,15 @@ func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
 	}
 }
 
-func (g *generator) numericFieldIntent(expr luaparser.Expr) bool {
-	return g.numericInitializerIntent(expr)
+func (e *monomorphicAnalysisEnv) numericFieldIntent(expr luaparser.Expr) bool {
+	switch x := expr.(type) {
+	case *luaparser.ParenExpr:
+		return e.numericFieldIntent(x.Expr)
+	case *luaparser.VarExpr:
+		return e.lookup(x.Name) == monoNumber
+	default:
+		return numericIntent(expr)
+	}
 }
 
 func numericIntent(expr luaparser.Expr) bool {
@@ -1470,8 +1481,9 @@ type functionReturnObservation struct {
 }
 
 type monomorphicAnalysisEnv struct {
-	g      *generator
-	scopes []map[string]monoKind
+	g            *generator
+	scopes       []map[string]monoKind
+	observeField func(name string, isNumber bool)
 }
 
 func (e *monomorphicAnalysisEnv) push() {
@@ -1769,6 +1781,12 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 		if !ok {
 			return monoValue
 		}
+		// These builtins coerce every argument with NumberOr(0), so their
+		// result is numeric even when an argument is a generic Lua Value.
+		// Preserve argument observations above: only the result narrows.
+		if name == "min" || name == "max" || name == "mid" {
+			return monoNumber
+		}
 		allNumber := true
 		for _, kind := range kinds {
 			if kind != monoNumber {
@@ -1789,6 +1807,11 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 				g.analyzeMonomorphicExpr(field.Key, env, params)
 			}
 			g.analyzeMonomorphicExpr(field.Value, env, params)
+			if env.observeField != nil && !field.Array {
+				if key, ok := field.Key.(*luaparser.StringExpr); ok {
+					env.observeField(key.Value, env.numericFieldIntent(field.Value))
+				}
+			}
 		}
 	}
 	return monoValue
@@ -3559,6 +3582,12 @@ func collectStmtExprs(stmt luaparser.Stmt, add func(luaparser.Expr)) {
 	stmtExpr(stmt)
 }
 
+func (g *generator) mapRasterEligible() bool {
+	return !g.opts.DisableMapRasterCache && !g.legacyAudioEnabled && g.opts.Renderer != RendererMode0 && !g.sheetMutable &&
+		!g.opts.MapStreaming && g.opts.MapDrawMask != 0 && g.opts.MapW > 0 && g.opts.MapW <= 30 &&
+		g.opts.MapH > 0 && g.opts.MapH <= 20 && len(g.mapCompact) == g.opts.MapW*g.opts.MapH
+}
+
 func (g *generator) render() string {
 	var b sourceBuilder
 	b.line("package " + g.opts.PackageName)
@@ -3569,7 +3598,11 @@ func (g *generator) render() string {
 		b.line("\t\"github.com/drpaneas/mtile/runtime/audio\"")
 		b.line("\t\"github.com/drpaneas/mtile/runtime/hw\"")
 	}
-	b.line("\t_ \"unsafe\"")
+	if g.mapRasterEligible() {
+		b.line("\t\"unsafe\"")
+	} else {
+		b.line("\t_ \"unsafe\"")
+	}
 	b.line(")")
 	b.line("")
 	g.renderHelpers(&b)
@@ -3612,8 +3645,11 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
 	b.line("func gluTostr(c *rt.Context, v rt.Value, hex bool, roots ...rt.Value) rt.Value { k := gluPushRoots(c,v); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; out,err := c.Tostr(v,hex); gluPopRoots(c,k+m); return gluMust(out,err) }")
 	b.line("func gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }")
 	b.line("func gluTableSet(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }")
-	b.line("func gluTableSetStable(c *rt.Context, t, k, v rt.Value, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStable(t,k,v,cache); gluPopRoots(c,n+m); return err }")
-	b.line("func gluTableSetStableNumber(c *rt.Context, t, k rt.Value, v rt.Number, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStableNumber(t,k,v,cache); gluPopRoots(c,n+m); return err }")
+	// A cached field write resolves its handle and stores without allocating.
+	// RHS evaluation has already rooted allocations; only the cold lookup/
+	// insertion path can collect and needs the temporary root scopes below.
+	b.line("func gluTableSetStable(c *rt.Context, t, k, v rt.Value, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStable(t,k,v,cache) }; n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStable(t,k,v,cache); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableSetStableNumber(c *rt.Context, t, k rt.Value, v rt.Number, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStableNumber(t,k,v,cache) }; n := gluPushRoots(c,t,k); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStableNumber(t,k,v,cache); gluPopRoots(c,n+m); return err }")
 	b.line("func gluPrintV(c *rt.Context, s, x, y, color rt.Value, roots ...rt.Value) int { n := gluPushRoots(c,s,x,y,color); if n < 0 { return x.Int() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return x.Int() }; out := c.PrintV(s,x,y,color); gluPopRoots(c,n+m); return out }")
 }
 
@@ -3683,6 +3719,20 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line("//go:section .ewram\nvar cartData rt.AssetMemory")
 	b.line("//go:section .ewram\nvar ctx rt.Context")
 	b.line("//go:section .ewram\nvar game Game")
+	if g.mapRasterEligible() {
+		// Use target sizes: host pointer widths and target capacity tags differ.
+		// Reserving both Lua semispaces plus 8 KiB makes the optimization fail
+		// closed to zero-length arrays when a small map belongs to a large cart.
+		budget := "256*1024 - 512 - 8192 - rt.MapRasterHeapReserve - int(unsafe.Sizeof(ctx)) - int(unsafe.Sizeof(cartData)) - int(unsafe.Sizeof(game)) - int(unsafe.Sizeof(sheetRAM)) - int(unsafe.Sizeof(sheetIndexRAM)) - int(unsafe.Sizeof(mapRAM)) - int(unsafe.Sizeof(flagRAM))"
+		if g.nativeAudioEnabled {
+			budget += " - int(unsafe.Sizeof(nativeAudioController))"
+		}
+		b.line("const mapRasterBudget = " + budget)
+		b.line("const mapRasterBytes = MapW*8*MapH*8 + rt.MapRasterMaxSpans*int(unsafe.Sizeof(rt.MapRasterSpan{}))")
+		b.line("const mapRasterEnabled = max(0, min(1, mapRasterBudget/mapRasterBytes))")
+		b.line("//go:section .ewram\nvar mapRasterPixelsRAM [mapRasterEnabled*MapW*8*MapH*8]byte")
+		b.line("//go:section .ewram\nvar mapRasterSpansRAM [mapRasterEnabled*rt.MapRasterMaxSpans]rt.MapRasterSpan")
+	}
 	if g.opts.Debug {
 		b.line("//go:section .debug_mailbox\nvar debugMailbox rt.DebugMailbox")
 	}
@@ -3786,6 +3836,9 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tcartData.SheetIndex = sheetIndexRAM[:]")
 	}
 	b.line("\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]")
+	if g.mapRasterEligible() {
+		b.line("\tcartData.MapRasterPixels, cartData.MapRasterSpans = mapRasterPixelsRAM[:], mapRasterSpansRAM[:]")
+	}
 	if g.opts.MapStreaming {
 		b.line("\tcartData.MapChunks, cartData.MapEdits = mapChunksRAM[:], mapEditsRAM[:]")
 	}
@@ -3831,6 +3884,9 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tctx.AttachNativeAudio(&nativeAudioController)")
 	}
 	b.line("\tgame.Init(&ctx)")
+	if g.mapRasterEligible() {
+		b.line("\tctx.PrepareMapRaster()")
+	}
 	if g.opts.Renderer == RendererMode0 {
 		b.line("\t// _init runs while Mode 0 is force-blanked; commit its")
 		b.line("\t// spritesheet mutations before the first visible frame.")
@@ -3942,6 +3998,10 @@ func transpilerPSGRatioGoName(ratio int) string {
 }
 
 func (g *generator) emitFunction(b *sourceBuilder, fn *functionInfo) {
+	if slices.Contains(g.opts.IWRAMFunctions, fn.key) {
+		b.line("//go:noinline")
+		b.line("//go:section .iwram")
+	}
 	b.line("func (g *Game) " + fn.goName + "(c *rt.Context" + functionParams(fn) + ")" + functionReturnSignature(fn) + " {")
 	g.pushScope()
 	for i, p := range fn.params {
@@ -4888,6 +4948,9 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 		}
 		if fn := g.calledFunction(x); fn != nil {
 			return fn.returnN > 0 && fn.returnKind(0) == monoNumber
+		}
+		if name == "min" || name == "max" || name == "mid" {
+			return true
 		}
 		requireNumbers := func() bool {
 			for i, arg := range x.Args {

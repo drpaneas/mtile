@@ -37,6 +37,9 @@ type Project struct {
 	// is normalized to mode4 so projects created before this field retain their
 	// established framebuffer behavior.
 	Renderer string `json:"renderer,omitempty"`
+	// IWRAMFunctions optionally places named top-level Lua helpers in fast
+	// internal RAM. Lifecycle callbacks remain under the generated shell.
+	IWRAMFunctions []string `json:"iwramFunctions,omitempty"`
 }
 
 // RGB15 is a GBA-compatible color component triple. Components are five-bit

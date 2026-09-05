@@ -95,3 +95,64 @@ handleInterruptARM:
     ldr     r0, =handleInterrupt
     bx      r0
     .ltorg
+
+// Copy an opaque span list into an equally aligned 240-pixel framebuffer.
+// r0/r1 are EWRAM raster/framebuffer bases, r2 is the packed four-byte
+// Offset/Length/Y span array, and r3 is its count. This common unshifted
+// map path pays one call/stack frame for the whole layer. Clipped or shifted
+// maps retain the general Go path. Bytes outside spans remain untouched.
+.section .iwram.map_raster_copy,"ax",%progbits
+.align 2
+.arm
+.global mtile_copy_map_raster_full
+.type mtile_copy_map_raster_full,%function
+mtile_copy_map_raster_full:
+    stmdb   sp!, {r4-r11, lr}
+    mov     r4, r0
+    mov     r5, r1
+    mov     r6, r2
+    movs    r7, r3
+    beq     .Lmap_raster_done
+.Lmap_raster_next:
+    ldrh    r0, [r6]
+    ldrb    r2, [r6, #2]
+    add     r6, r6, #4
+    add     r1, r5, r0
+    add     r0, r4, r0
+.Lmap_raster_prefix:
+    cmp     r2, #0
+    beq     .Lmap_raster_advance
+    tst     r1, #3
+    beq     .Lmap_raster_words16
+    ldrb    r3, [r0], #1
+    strb    r3, [r1], #1
+    sub     r2, r2, #1
+    b       .Lmap_raster_prefix
+.Lmap_raster_words16:
+    cmp     r2, #16
+    blo     .Lmap_raster_words4
+    ldmia   r0!, {r8-r11}
+    stmia   r1!, {r8-r11}
+    sub     r2, r2, #16
+    b       .Lmap_raster_words16
+.Lmap_raster_words4:
+    cmp     r2, #4
+    blo     .Lmap_raster_tail
+    ldr     r3, [r0], #4
+    str     r3, [r1], #4
+    sub     r2, r2, #4
+    b       .Lmap_raster_words4
+.Lmap_raster_tail:
+    cmp     r2, #0
+    beq     .Lmap_raster_advance
+    ldrb    r3, [r0], #1
+    strb    r3, [r1], #1
+    subs    r2, r2, #1
+    bne     .Lmap_raster_tail
+.Lmap_raster_advance:
+    subs    r7, r7, #1
+    bne     .Lmap_raster_next
+.Lmap_raster_done:
+    ldmia   sp!, {r4-r11, lr}
+    bx      lr
+.size mtile_copy_map_raster_full, .-mtile_copy_map_raster_full

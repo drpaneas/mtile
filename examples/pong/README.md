@@ -46,3 +46,11 @@ and score value after each of 400 updates; legacy and stable-field builds were
 identical. The host microbenchmark for one string-key field read measured
 28.4 ns/op dynamically versus 3.48 ns/op through the warm cache (8.16x), with
 zero allocations in both cases.
+
+A later runtime and compiler pass reduced the current game's median from
+263,509 to 211,544 cycles (19.7%), with unchanged Lua source, identical pixels
+over 600 measured ticks, and zero misses. It specializes axis-aligned drawing
+and recognizes numeric locals in table initializers. The debug ROM also shrank
+4,324 bytes; IWRAM grew 92 bytes and EWRAM usage stayed the same. See the
+[Pong performance report](../../docs/pong-performance-2026-09-05.md) for the
+paired measurements and reproduction commands.

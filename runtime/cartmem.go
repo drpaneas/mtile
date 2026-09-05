@@ -37,7 +37,26 @@ type AssetMemory struct {
 	Flags                  []byte
 	MapChunks              []MapChunk
 	MapEdits               []MapEdit
+	// Optional Mode 4 raster storage. The generator supplies it only when a
+	// small, fixed, single-plane map and the target's EWRAM budget permit it.
+	MapRasterPixels []byte
+	MapRasterSpans  []MapRasterSpan
 }
+
+// MapRasterSpan is one opaque horizontal run in a cached small map.
+// The linear offset makes an unshifted full-screen pass a compact copy list.
+// Y avoids division when clipping or translating that list for camera motion.
+type MapRasterSpan struct {
+	Offset uint16
+	Length uint8
+	Y      uint8
+}
+
+const MapRasterMaxSpans = 2048
+
+// MapRasterHeapReserve lets generated constant memory accounting include both
+// Lua semispaces, even in heap-elided builds where that is conservative.
+const MapRasterHeapReserve = 2 * heapSize
 
 func mulFitInt(a, b int) (int, bool) {
 	if a < 0 || b < 0 {

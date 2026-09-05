@@ -14,6 +14,12 @@ only when both its semantic and benchmark-backed cost proofs succeed. The exact 
 [render-mode compatibility guide](render-modes.md) and
 [engineering plan](render-mode-plan.md).
 
+The tables below retain their stated benchmark snapshots. The September 5
+[Celeste port measurements](celeste-port-performance-2026-09-05.md) add a
+bounded Mode 4 raster cache for one small static map plane. Its exact-pixel
+fast path substantially changes eligible map costs; older per-cell map timings
+remain relevant to fallback calls, not to the new cached path.
+
 ## Paired static-map proof
 
 `cmd/renderbench` built `examples/testio` twice with identical source/assets,
@@ -325,7 +331,7 @@ logic is effectively never the bottleneck; pixels are.
 
 | Region | Size | Speed | What lives there |
 | --- | --- | --- | --- |
-| IWRAM | 32 KB | 32-bit, zero-wait | stacks (3 KB), blit/print/span cores (~5 KB), TinyGo runtime data |
+| IWRAM | 32 KB | 32-bit, zero-wait | stacks (9 KB: 8 KB user + 1 KB IRQ), blit/print/span cores (~5 KB), TinyGo runtime data |
 | EWRAM | 256 KB | 16-bit, 2-wait | `Context` (framebuffer, palettes), mutable sheet/map/flag RAM, 2x56 KB Lua heap |
 | VRAM | 96 KB | 16-bit | two Mode 4 pages |
 | ROM | up to 32 MB | 16-bit + prefetch | code, assets, LUTs |
@@ -347,6 +353,23 @@ more than doubled sprite and print throughput without changing a line of
 logic. IWRAM is the scarcest resource; only proven hot loops earn a place
 there, and the linker map (`make benchspike-elf`, then check `.data` size)
 must stay well under 32 KB.
+
+Projects can opt measured hot Lua helpers into IWRAM with `iwramFunctions`
+in `project.json`, for example `"iwramFunctions": ["draw_particles"]`.
+Names must identify plain top-level functions from the resolved Lua source;
+duplicates, unknown names, methods and the `_init`, `_update`, `_draw`
+callbacks are rejected. The setting is optional, works with either renderer,
+and survives editor saves. It changes code placement only: selected functions
+receive `//go:noinline` and `//go:section .iwram`; their arguments, return
+values and Lua behavior stay the same. Other functions retain normal placement.
+
+The available IWRAM is shared with runtime code, data, the 8 KiB user stack,
+the 1 KiB IRQ stack, and 96 reserved bytes. A helper's callees are not relocated
+automatically. Check the build's linker-measured IWRAM usage and compare real
+GBA cycle counts before keeping a selection; avoiding inlining can also cost
+performance. The linker rejects an overflowing selection rather than silently
+moving functions back to ROM. Remove names from the array to restore ordinary
+placement; omitting the array preserves existing projects' behavior.
 
 ## Runtime design rules (enforced, not aspirational)
 
@@ -488,8 +511,9 @@ must stay well under 32 KB.
   total/draw/commit cycles, missed frames, and pixels remained exactly
   unchanged. The one-entry tier is a sentinel for the zero-string case. After
   this tier, fixed map-slot lowering, and immutable-sheet upload elision, the
-  current release Celeste cart is 20,612 ROM bytes with 243,404 bytes of EWRAM
-  free.
+  collision-only Celeste benchmark cartridge at that measurement was 20,612
+  ROM bytes with 243,404 bytes of EWRAM free. This is not the later full port
+  with player, objects, effects and music.
 - Fixed, non-escaping global numeric array literals use compact 4-byte Number
   elements instead of 12-byte Value slots. Direct indexed reads/writes and
   `#array` stay native; an escape, shadow, hash field, or explicit non-number
@@ -549,7 +573,9 @@ must stay well under 32 KB.
 
 **Avoid:**
 
-- Full-screen `map()` per frame (see above; it cannot fit).
+- Repeated full-screen per-cell map rendering. A qualifying static Mode 4
+  plane now uses a raster cache; measure the complete frame and its fallbacks
+  before assuming it fits. See the Celeste measurements linked above.
 - `sspr` scaling on many entities per frame.
 - Flipping sprites at draw time when the art could carry both facings.
 - String building in `_update`/`_draw`. Concat allocates from the Lua
@@ -565,7 +591,7 @@ must stay well under 32 KB.
 | --- | --- | --- |
 | Update rate | 30 Hz (two 59.73 Hz scans per tick) | generated loop |
 | Sprites on screen per tick (cls + draw) | ~180 8x8 | budget math above |
-| Full-screen map redraws per tick | room transitions only | budget math above |
+| Full-screen map redraws per tick | cache/renderer dependent; measure the full frame | map raster eligibility and target timing |
 | Lua heap | 56 KB live data when allocation is reachable; collector and both 56 KiB semispaces are link-elided after a whole-program no-allocation proof | `runtime/heap.go`, transpiler effect analysis |
 | Table array part | 256 entries | `maxArrayCap` |
 | Table hash part | 128 entries | `maxHashCap` |

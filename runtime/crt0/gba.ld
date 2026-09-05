@@ -12,7 +12,10 @@ MEMORY {
 }
 
 __stack_size_irq = 1K;
-__stack_size_usr = 2K;
+/* Generated Lua controllers can have a >3 KiB native frame before their
+ * callers, table helpers and GC. Keep the CPU stack separate from the Lua
+ * heap and leave room for these nested calls (Celeste target regression). */
+__stack_size_usr = 8K;
 
 SECTIONS
 {
