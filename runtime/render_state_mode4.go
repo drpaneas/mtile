@@ -1,4 +1,4 @@
-//go:build !mtile_mode0
+//go:build !mtile_mode0 && !mtile_tilecanvas
 
 package runtime
 
@@ -13,12 +13,12 @@ type renderState struct {
 	mapRasterSpanCount int
 }
 
-func (c *Context) resetRendererState()             { c.invalidateMapRaster() }
-func (c *Context) sheetMutated(x, y int)           { c.invalidateMapRaster() }
-func (c *Context) mapMutated(x, y int)             { c.invalidateMapRaster() }
-func (c *Context) mapLayerMutated(layer, x, y int) { c.invalidateMapRaster() }
-func (c *Context) flagsMutated(id int)             {}
-func (c *Context) drawPaletteMutated()             {}
+func (c *Context) resetRendererState()                        { c.invalidateMapRaster() }
+func (c *Context) sheetMutated(x, y int)                      { c.invalidateMapRaster() }
+func (c *Context) mapMutated(x, y int, id uint16)             { c.invalidateMapRaster() }
+func (c *Context) mapLayerMutated(layer, x, y int, id uint16) { c.invalidateMapRaster() }
+func (c *Context) flagsMutated(id int)                        {}
+func (c *Context) drawPaletteMutated()                        {}
 
 func (c *Context) rendererPaletteIndex(index int) byte {
 	return c.displayPal[index]

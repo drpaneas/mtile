@@ -1,0 +1,233 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	rt "github.com/drpaneas/mtile/runtime"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+type entityCase struct {
+	Name    string
+	Objects []map[string]float64
+	Ticks   int
+	Player  map[string]interface{}
+	Events  map[string]map[string]interface{}
+}
+type entityRow struct {
+	Case     string
+	Tick     int
+	Entities []map[string]int32
+	Player   map[string]int32
+}
+type entityHarness struct {
+	c      *rt.Context
+	g      *Game
+	memory *rt.AssetMemory
+}
+
+func newEntityHarness(t *testing.T) *entityHarness {
+	t.Helper()
+	image := rt.AssetImage{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:], SheetIndex: sheetIndexROM[:]}
+	memory := &rt.AssetMemory{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: make([]byte, len(sheetRAM)), Map: make([]uint16, len(mapRAM)), Flags: make([]byte, len(flagRAM)), SheetIndex: make([]uint16, len(sheetIndexRAM))}
+	c := new(rt.Context)
+	if !c.Init(&image, memory) {
+		t.Fatal("asset init")
+	}
+	g := new(Game)
+	g.Init(c)
+	return &entityHarness{c, g, memory}
+}
+func (h *entityHarness) set(t *testing.T, obj rt.Value, key string, v interface{}) {
+	t.Helper()
+	value := rt.NilVal()
+	switch n := v.(type) {
+	case float64:
+		value = rt.NumVal(rt.FromFloat(n))
+	case bool:
+		value = rt.BoolVal(n)
+	case int:
+		value = rt.IntVal(n)
+	}
+	if status := h.c.TableSet(obj, h.c.InternStatic(key), value); status != rt.HeapOK {
+		t.Fatalf("set %s: %v", key, status)
+	}
+}
+func (h *entityHarness) val(obj rt.Value, key string) rt.Value {
+	return h.c.TableGet(obj, h.c.InternStatic(key))
+}
+func entityRaw(v rt.Value) int32 {
+	if v.Kind == rt.KindNumber {
+		return int32(v.Num)
+	}
+	if v.Truthy() {
+		return 65536
+	}
+	return 0
+}
+func TestNativeEntitiesParity(t *testing.T) {
+	dir := os.Getenv("CELESTE_ENTITIES_DIR")
+	var cases []entityCase
+	var rows []entityRow
+	for file, dst := range map[string]interface{}{"cases.json": &cases, "traces.json": &rows} {
+		b, err := os.ReadFile(filepath.Join(dir, file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(b, dst); err != nil {
+			t.Fatal(err)
+		}
+	}
+	byCase := map[string][]entityRow{}
+	for _, r := range rows {
+		byCase[r.Case] = append(byCase[r.Case], r)
+	}
+	var limits struct{ Entities map[string]map[string]int64 }
+	b, err := os.ReadFile(filepath.Join(dir, "numeric_tolerances.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal(b, &limits); err != nil {
+		t.Fatal(err)
+	}
+	for name, fields := range limits.Entities {
+		for field, limit := range fields {
+			switch field {
+			case "22.y", "26.y", "8.spr":
+				if limit > 38 {
+					t.Fatalf("invalid sine bound %s/%s", name, field)
+				}
+			case "28.y", "28.ry", "28.vy", "28.off":
+				if name != "flying_fruit_flee" || limit > 65536 {
+					t.Fatalf("invalid flying-fruit bound %s/%s", name, field)
+				}
+			default:
+				t.Fatalf("entity field %s must remain exact", field)
+			}
+		}
+	}
+	drifted := 0
+	checked := 0
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			h := newEntityHarness(t)
+			for _, e := range tc.Objects {
+				obj := h.g.entity_add(h.c, rt.FromFloat(e["kind"]), rt.FromFloat(e["x"]), rt.FromFloat(e["y"]))
+				for k, v := range e {
+					if k != "kind" && k != "x" && k != "y" {
+						h.set(t, obj, k, v)
+					}
+				}
+			}
+			for k, v := range tc.Player {
+				h.set(t, h.g.player, k, v)
+			}
+			if len(byCase[tc.Name]) != tc.Ticks {
+				t.Fatalf("oracle %d ticks want%d", len(byCase[tc.Name]), tc.Ticks)
+			}
+			for i, row := range byCase[tc.Name] {
+				if row.Tick != i+1 {
+					t.Fatal("oracle tick order")
+				}
+				for k, v := range tc.Events[fmt.Sprint(row.Tick)] {
+					if k == "has_dashed" {
+						h.g.has_dashed = rt.BoolVal(v.(bool))
+					} else {
+						h.set(t, h.g.player, k, v)
+					}
+				}
+				h.c.AdvanceTick()
+				h.g.Update(h.c)
+				h.g.Draw(h.c)
+				if n := h.c.TableLen(h.g.entities); n != len(row.Entities) {
+					t.Fatalf("tick%d entity count%d want%d", row.Tick, n, len(row.Entities))
+				}
+				for j, want := range row.Entities {
+					e := h.c.TableGetInt(h.g.entities, j+1)
+					for k, w := range want {
+						got := entityRaw(h.val(e, k))
+						key := fmt.Sprintf("%d.%s", want["kind"]/65536, k)
+						delta := int64(got) - int64(w)
+						if delta < 0 {
+							delta = -delta
+						}
+						if got != w {
+							drifted++
+						}
+						if k == "spr" && got>>16 != w>>16 {
+							t.Fatalf("tick%d actual sprite frame changed", row.Tick)
+						}
+						if delta > limits.Entities[tc.Name][key] {
+							t.Fatalf("tick%d entity%d.%s raw%d (%g), want%d (%g)", row.Tick, j, k, got, float64(got)/65536, w, float64(w)/65536)
+						}
+					}
+				}
+				for k, w := range row.Player {
+					got := entityRaw(h.val(h.g.player, k))
+					switch k {
+					case "berry_collected":
+						got = entityRaw(h.g.berry_collected)
+					case "has_key":
+						got = entityRaw(h.g.has_key)
+					case "sound_count":
+						got = int32(h.g.sound_count)
+					case "sound_sum":
+						got = int32(h.g.sound_sum)
+					case "sfx_timer":
+						got = int32(h.g.sfx_timer)
+					case "smoke_count":
+						got = int32(h.g.smoke_count)
+					case "count":
+						got = int32(h.c.TableLen(h.g.entities)) * 65536
+					case "solid_down":
+						got = entityRaw(h.g.entities_solid(h.c, 0, rt.One))
+					case "solid_right":
+						got = entityRaw(h.g.entities_solid(h.c, rt.One, 0))
+					case "solid_up":
+						got = entityRaw(h.g.entities_solid(h.c, 0, -rt.One))
+					}
+					if got != w {
+						t.Fatalf("tick%d player/global.%s raw%d (%g), want%d (%g)", row.Tick, k, got, float64(got)/65536, w, float64(w)/65536)
+					}
+				}
+				checked++
+			}
+		})
+	}
+	t.Logf("Compared %d object ticks across %d native scenarios: timings, collection, collision and sprite frames exact; %d raw sine/motion fields within explicit bounds", checked, len(cases), drifted)
+}
+func TestNativeEntitiesMarkerReload(t *testing.T) {
+	h := newEntityHarness(t)
+	for i := range h.memory.Map {
+		h.memory.Map[i] = 0
+	}
+	kinds := []int{8, 11, 12, 18, 20, 22, 23, 26, 28, 64, 118}
+	for i, k := range kinds {
+		h.c.MsetLayer(3, i, 0, k/16*30+k%16)
+	}
+	h.g.entities_init(h.c)
+	h.g.entities_reset(h.c)
+	if h.c.TableLen(h.g.entities) != len(kinds) {
+		t.Fatal("all supported markers must spawn")
+	}
+	for i := range kinds {
+		if h.c.MgetLayer(3, i, 0) != 0 {
+			t.Fatal("marker remained visible/static in RAM map")
+		}
+	}
+	h.g.berry_collected = rt.BoolVal(true)
+	h.g.has_key = rt.BoolVal(true)
+	h.g.has_dashed = rt.BoolVal(true)
+	h.g.entities_reset(h.c)
+	if h.c.TableLen(h.g.entities) != 6 {
+		t.Fatalf("berry persists: expected6 non-berry objects, got%d", h.c.TableLen(h.g.entities))
+	}
+	if h.g.has_key.Truthy() || h.g.has_dashed.Truthy() {
+		t.Fatal("room-local state must reset")
+	}
+	if !h.g.berry_collected.Truthy() {
+		t.Fatal("collected berry must survive death")
+	}
+}

@@ -145,3 +145,65 @@ func TestMode0TextAtlasStillRejects129RepeatedOAMEntries(t *testing.T) {
 		t.Fatalf("error = %v, want OAM occurrence rejection independent of one interned tile", err)
 	}
 }
+
+func TestMode0TextTileLimitMatchesRuntimeBank(t *testing.T) {
+	if mode0TextTileLimit != runtimeapi.Mode0TextTileCount {
+		t.Fatalf("transpiler text-tile limit %d, runtime bank %d", mode0TextTileLimit, runtimeapi.Mode0TextTileCount)
+	}
+}
+
+func TestMode0TextAtlasInternsNumericPrintFromHelpers(t *testing.T) {
+	generated, report, err := TranspileWithReport("helper-print.lua", `
+score=0
+function show(n)
+  print(n,0,0,7)
+end
+function _draw()
+  cls()
+  show(score)
+end
+`, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0Text || report.Mode0OAMEntries != mode0PrintNumberOAMEntries {
+		t.Fatalf("helper numeric print report = %+v", report)
+	}
+	if len(report.Mode0TextKeys) != len(mode0PrintNumberCharset) {
+		t.Fatalf("helper atlas keys = %d, want digit bank %d", len(report.Mode0TextKeys), len(mode0PrintNumberCharset))
+	}
+	if !strings.Contains(generated, "c.PrintV(") {
+		t.Fatalf("helper numeric print must emit heapless PrintV:\n%s", generated)
+	}
+}
+
+func TestMode0TextAtlasStampsReservedSheetCells(t *testing.T) {
+	const sheetW, sheetH = 240, 160
+	sheet := make([]byte, sheetW*sheetH)
+	for i := range sheet {
+		sheet[i] = 9
+	}
+	_, report, err := TranspileWithReport("stamp.lua", `function _draw() cls() print("A",0,0,7) end`, Options{
+		Renderer: RendererMode0, SheetW: sheetW, SheetH: sheetH, Sheet: sheet,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0Text || len(report.Mode0TextKeys) != 1 {
+		t.Fatalf("report = %+v, want one interned A/7 tile", report)
+	}
+	want := runtimeapi.BuildMode0GlyphTile('A', 7)
+	id := runtimeapi.Mode0TextTileBase
+	cols := sheetW / 8
+	origin := (id/cols)*8*sheetW + (id%cols)*8
+	if sheet[origin] != want[0] {
+		t.Fatalf("reserved sheet cell kept authored ink: got %d want %d", sheet[origin], want[0])
+	}
+	unusedOrigin := ((id+1)/cols)*8*sheetW + ((id+1)%cols)*8
+	if sheet[unusedOrigin] != 0 {
+		t.Fatalf("unused reserved cell kept authored ink %d", sheet[unusedOrigin])
+	}
+	if sheet[0] != 9 {
+		t.Fatal("overlay mutated a cell outside the Mode 0 text bank")
+	}
+}

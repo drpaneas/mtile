@@ -402,6 +402,35 @@ func TestReservedSpriteZeroCannotBePaintedOrPasted(t *testing.T) {
 	}
 }
 
+func TestReservedMode0TextSpriteCannotBePaintedOrPasted(t *testing.T) {
+	g := newTestGame(t, 240, 160, 2, 2)
+	id := 480
+	g.paintPixel(id, 0, 0, 9)
+	if !strings.Contains(g.statusMsg, "480") || !strings.Contains(g.statusMsg, "locked") {
+		t.Fatalf("paint status = %q, want locked Mode 0 font bank", g.statusMsg)
+	}
+	if g.dirty {
+		t.Fatal("painting reserved text tile marked the project dirty")
+	}
+
+	g.hasCopied = true
+	g.copiedSprite[0][0] = 7
+	g.currentSprite = id
+	g.statusMsg = ""
+	g.pasteCurrentSprite()
+	if !strings.Contains(g.statusMsg, "480") || !strings.Contains(g.statusMsg, "locked") {
+		t.Fatalf("paste status = %q, want locked Mode 0 font bank", g.statusMsg)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	cols := g.spriteCols()
+	px, py := (id%cols)*8, (id/cols)*8
+	if got := g.pixelAt(px, py); got != 0 {
+		t.Fatalf("reserved text-tile pixel = %d, want unchanged 0", got)
+	}
+}
+
 func TestEraserIndexIsZeroOnly(t *testing.T) {
 	if !isEraserIndex(0) {
 		t.Fatal("index 0 must be the eraser")

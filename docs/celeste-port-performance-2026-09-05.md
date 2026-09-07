@@ -46,11 +46,15 @@ neighboring transparent pixels. One call handles the entire plane instead of
 one Go helper invocation per run. The ordinary Go implementation remains the
 host-test oracle.
 
-Camera shifts, clipping, and cell subrectangles use the general span path. For
+The initial cache implementation used a Go span loop for camera shifts,
+clipping, and cell subrectangles. For
 unaligned source/destination relationships, it combines two aligned source
 words with shifts. It never relies on an unaligned ARM7TDMI word load behaving
 like a modern CPU load. Prefix/tail and allocation-bound checks keep those reads
 inside the source raster.
+
+The 2026-09-06 follow-up below replaces the width-240 shifted/clipped loop with
+an ARM routine. Narrow maps continue to use the general Go path.
 
 ### Eligibility and bounded memory
 
@@ -197,6 +201,65 @@ The completed functionality therefore preserves tested per-update behavior,
 but the game can run more slowly than the original in real time. Further work
 is required for steady 30 Hz; no such performance guarantee is made here.
 
+## Follow-up, 2026-09-06: reduce camera-shake map cost
+
+The final combined results, numerical tradeoffs, transpiler/GC changes and
+Mode 0 experiment are in the [September 6 follow-up](celeste-optimization-2026-09-06.md).
+The whole-game figures preceding this section describe the September 5 build.
+
+The warm cache still spent substantially more time during screen shake. At
+camera `(1,1)`, the map fixture took 316,189 draw cycles compared with 167,744
+unshifted. The shifted path called a Go copy helper for every clipped opaque run
+and repeated loop work and register-controlled shifts for each four-byte copy.
+
+The width-240 path now calls `mtile_copy_map_raster_shifted` once for the whole
+list. It clips each span to the existing source-pixel rectangle and derives its
+destination from the camera offset. Destination prefixes/tails use byte writes;
+aligned interiors use grouped word transfers. Misaligned interiors select one
+of three constant-shift loops and copy two words per iteration. ARM7TDMI's extra
+cycle for register-controlled shifts is avoided, and the last aligned source
+word is retained for the next pair. Every source row ends at a four-byte
+boundary, so rounding the final complete copied word up to an aligned look-ahead
+read stays inside that row. It may read transparent bytes after a run, but only
+the requested opaque bytes are written. This leaves just 0–3 byte writes at a
+run's tail instead of the earlier conservative 4–7.
+
+This routine occupies **556 bytes of IWRAM**, with no additional EWRAM storage.
+It preserves the existing full/unshifted fast path and the Go path for narrower
+maps. The source rectangle already includes the map cell request, clip, and
+camera; there is no public Lua API or renderer-selection change.
+
+| Camera | Previous cached draw | New cached draw | Saved cycles |
+| --- | ---: | ---: | ---: |
+| 0, 0 | 167,744 | 167,739 | 5 |
+| 0, 1 | 235,557 | 183,381 | 52,176 |
+| 1, 1 | 316,189 | 227,497 | 88,692 |
+| 2, 1 | 315,524 | 226,868 | 88,656 |
+| 3, 1 | 314,267 | 225,331 | 88,936 |
+
+These are paired native fixture medians including `cls(0)`, using unchanged
+assets. The five-cycle unshifted difference is incidental call-site layout, not
+a distinct algorithmic improvement. The original full-frame hashes remain
+identical. The baseline/new evidence directories are
+`celeste-map-raster-3867877326` and `celeste-map-raster-3660766761`.
+
+The expanded `map_raster_probe.go parity` builds cached/fallback pairs for **15
+cases**, including negative cameras, all horizontal alignments, edge pixels,
+custom clipping, and partial map requests. It draws a nonuniform colored
+background before the map, so overwriting transparent holes is visible in the
+comparison. Every complete RGBA SHA-256 matched. This native check exercises the
+ARM implementation; host framebuffer comparisons exercise its Go oracle.
+Evidence: `celeste-map-raster-459864821`.
+
+The complete runtime suite passes. An intermediate production build with this
+same-sized assembly section
+also fits and runs 1,800 LCD frames with healthy heap telemetry and audio output
+(`celeste-target-822337726`). That stress run still includes frames above the
+30 Hz budget. These map savings do not by themselves establish whole-game
+real-time performance; the earlier whole-game figures above describe the
+2026-09-05 baseline, and the ongoing integrated optimization requires a new final
+measurement.
+
 ## Reproduce the checks
 
 The example's native probes require the local asset checkout, TinyGo toolchain,
@@ -207,6 +270,7 @@ the authored game.
 go test ./internal/transpiler ./internal/build ./cmd/mtile
 (cd runtime && go test ./...)
 go run examples/celeste/tests/map_raster_probe.go
+go run examples/celeste/tests/map_raster_probe.go parity
 go run examples/celeste/tests/performance_probe.go full no-map
 python3 examples/celeste/tests/verify_all.py --gba
 ```

@@ -48,7 +48,7 @@ end
 	got = string(formatted)
 	for _, want := range []string{
 		"func (g *Game) Init(c *rt.Context)",
-		"c.SprV(",
+		"c.Spr(",
 		"&ctx",
 		"ctx.BeginFramePace()",
 		"ctx.BeginProfilePhase(rt.ProfileUpdate)",

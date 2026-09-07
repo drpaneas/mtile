@@ -1,0 +1,437 @@
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"sort"
+	"testing"
+
+	rt "github.com/drpaneas/mtile/runtime"
+	"github.com/drpaneas/mtile/runtime/hw"
+)
+
+type presentationAnimation struct {
+	Ground, Wall  bool
+	Direction, VX int
+	Keys          uint16
+}
+type presentationHairStep struct {
+	X, Y float64
+	Flip bool
+	Keys uint16
+}
+type presentationHair struct {
+	Name  string
+	X, Y  float64
+	Steps []presentationHairStep
+}
+type presentationSmoke struct {
+	Name         string
+	X, Y, VX, VY float64
+}
+type presentationInputs struct {
+	Animation       []presentationAnimation
+	Hair            []presentationHair
+	Smoke           []presentationSmoke
+	Clouds, Ambient []map[string]float64
+	AmbientPixels   []map[string]float64 `json:"ambient_pixels"`
+}
+type presentationRow struct {
+	Kind, Case  string
+	Tick, Count int
+	Values      []int32
+	Pixels      []int
+}
+type presentationHarness struct {
+	c      *rt.Context
+	g      *Game
+	memory *rt.AssetMemory
+}
+
+func newPresentationHarness(t *testing.T) *presentationHarness {
+	t.Helper()
+	image := rt.AssetImage{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:], SheetIndex: sheetIndexROM[:]}
+	memory := &rt.AssetMemory{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: make([]byte, len(sheetRAM)), SheetIndex: make([]uint16, len(sheetIndexRAM)), Map: make([]uint16, len(mapRAM)), Flags: make([]byte, len(flagRAM))}
+	c := new(rt.Context)
+	if !c.Init(&image, memory) {
+		t.Fatal("asset init")
+	}
+	h := &presentationHarness{c: c, g: new(Game), memory: memory}
+	h.keys(0)
+	h.g.Init(c)
+	h.g.reset_player(c)
+	h.g.spawning = rt.BoolVal(false)
+	for i := range memory.Map {
+		memory.Map[i] = 0
+	}
+	return h
+}
+func (h *presentationHarness) keys(keys uint16) {
+	var gba uint16
+	for i, mask := range []uint16{0x20, 0x10, 0x40, 0x80, 2, 1, 8} {
+		if keys&(1<<i) != 0 {
+			gba |= mask
+		}
+	}
+	hw.SetReg16(hw.KEYINPUT, 0x03ff&^gba)
+	h.c.PollInput()
+}
+func (h *presentationHarness) get(table rt.Value, key string) rt.Value {
+	return h.c.TableGet(table, h.c.InternStatic(key))
+}
+func (h *presentationHarness) put(t *testing.T, table rt.Value, key string, value rt.Value) {
+	t.Helper()
+	if err := h.c.TableSet(table, h.c.InternStatic(key), value); err != rt.HeapOK {
+		t.Fatalf("set %s: %v", key, err)
+	}
+}
+func (h *presentationHarness) table(t *testing.T, fields map[string]float64) rt.Value {
+	t.Helper()
+	v, err := h.c.NewTableWithCaps(0, len(fields))
+	if err != rt.HeapOK {
+		t.Fatal(err)
+	}
+	keys := make([]string, 0, len(fields))
+	for key := range fields {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		h.put(t, v, key, rt.NumVal(rt.FromFloat(fields[key])))
+	}
+	return v
+}
+func (h *presentationHarness) list(t *testing.T, fields []map[string]float64) rt.Value {
+	t.Helper()
+	v, err := h.c.NewTableWithCaps(len(fields), 0)
+	if err != rt.HeapOK {
+		t.Fatal(err)
+	}
+	for i, f := range fields {
+		if err := h.c.TableSet(v, rt.IntVal(i+1), h.table(t, f)); err != rt.HeapOK {
+			t.Fatal(err)
+		}
+	}
+	return v
+}
+func (h *presentationHarness) numbers(table rt.Value, fields ...string) []int32 {
+	var out []int32
+	for _, name := range fields {
+		out = append(out, int32(h.get(table, name).Num))
+	}
+	return out
+}
+func (h *presentationHarness) listNumbers(table rt.Value, fields ...string) []int32 {
+	var out []int32
+	for i := 1; i <= h.c.TableLen(table); i++ {
+		out = append(out, h.numbers(h.c.TableGetInt(table, i), fields...)...)
+	}
+	return out
+}
+func presentationEqual(t *testing.T, row presentationRow, got []int32) {
+	t.Helper()
+	if len(got) != len(row.Values) {
+		t.Fatalf("%s/%s tick %d: %d values want %d", row.Kind, row.Case, row.Tick, len(got), len(row.Values))
+	}
+	for i, want := range row.Values {
+		if got[i] != want {
+			t.Fatalf("%s/%s tick %d field %d = %d (%g), want %d (%g)", row.Kind, row.Case, row.Tick, i, got[i], float64(got[i])/65536, want, float64(want)/65536)
+		}
+	}
+}
+func TestNativePico8Presentation(t *testing.T) {
+	dir := os.Getenv("CELESTE_PRESENTATION_DIR")
+	if dir == "" {
+		t.Fatal("CELESTE_PRESENTATION_DIR not set")
+	}
+	var inputs presentationInputs
+	var rows []presentationRow
+	for name, target := range map[string]interface{}{"presentation-inputs.json": &inputs, "presentation-traces.json": &rows} {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(b, target); err != nil {
+			t.Fatal(err)
+		}
+	}
+	byKind := map[string][]presentationRow{}
+	for _, row := range rows {
+		byKind[row.Kind] = append(byKind[row.Kind], row)
+	}
+	t.Run("hair_dash_palette", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		h.put(t, h.g.player, "djump", rt.IntVal(1))
+		if got := h.g.hair_color(h.c).Int(); got != 158 {
+			t.Fatalf("charged hair %d want 158", got)
+		}
+		h.put(t, h.g.player, "djump", rt.IntVal(0))
+		if got := h.g.hair_color(h.c).Int(); got != 214 {
+			t.Fatalf("used hair %d want 214", got)
+		}
+	})
+	t.Run("animation", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		h.put(t, h.g.player, "x", rt.IntVal(64))
+		h.put(t, h.g.player, "y", rt.IntVal(64))
+		if len(byKind["animation"]) != len(inputs.Animation) {
+			t.Fatal("missing oracle animation rows")
+		}
+		for i, c := range inputs.Animation {
+			h.keys(c.Keys)
+			h.c.MsetLayer(3, 8, 8, 0)
+			if c.Wall {
+				h.c.MsetLayer(3, 8, 8, 26)
+				h.memory.Flags[26] = 1
+			}
+			h.put(t, h.g.player, "vx", rt.IntVal(c.VX))
+			h.g.update_animation(h.c, rt.FromInt(c.Direction), rt.BoolVal(c.Ground))
+			presentationEqual(t, byKind["animation"][i], h.numbers(h.g.player, "spr_off", "sprite"))
+		}
+	})
+	t.Run("hair_state", func(t *testing.T) {
+		index := 0
+		for _, c := range inputs.Hair {
+			h := newPresentationHarness(t)
+			h.put(t, h.g.player, "x", rt.NumVal(rt.FromFloat(c.X)))
+			h.put(t, h.g.player, "y", rt.NumVal(rt.FromFloat(c.Y)))
+			h.g.create_hair(h.c)
+			for _, step := range c.Steps {
+				row := byKind["hair"][index]
+				index++
+				h.keys(step.Keys)
+				h.put(t, h.g.player, "x", rt.NumVal(rt.FromFloat(step.X)))
+				h.put(t, h.g.player, "y", rt.NumVal(rt.FromFloat(step.Y)))
+				h.put(t, h.g.player, "flip_x", rt.BoolVal(step.Flip))
+				h.c.CameraReset()
+				h.c.PalReset()
+				h.c.Cls(0)
+				h.g.update_hair(h.c)
+				h.g.draw_hair(h.c)
+				presentationEqual(t, row, h.listNumbers(h.get(h.g.player, "hair"), "x", "y"))
+			}
+		}
+	})
+	t.Run("smoke_movement_animation_expiry", func(t *testing.T) {
+		index := 0
+		for _, c := range inputs.Smoke {
+			h := newPresentationHarness(t)
+			h.g.smoke_particles = h.list(t, []map[string]float64{{"x": c.X, "y": c.Y, "vx": c.VX, "vy": c.VY, "rx": 0, "ry": 0, "sprite": 29}})
+			for tick := 1; tick <= 17; tick++ {
+				row := byKind["smoke"][index]
+				index++
+				h.g.update_smoke(h.c)
+				if n := h.c.TableLen(h.g.smoke_particles); n != row.Count {
+					t.Fatalf("%s tick%d count %d want %d", c.Name, tick, n, row.Count)
+				}
+				if row.Count > 0 {
+					presentationEqual(t, row, h.numbers(h.c.TableGetInt(h.g.smoke_particles, 1), "x", "y", "rx", "ry", "sprite"))
+				}
+			}
+		}
+	})
+	t.Run("death_particles", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		h.g.create_death_particles(h.c, rt.IntVal(40), rt.IntVal(40))
+		for _, row := range byKind["death"] {
+			if row.Tick > 0 {
+				h.g.update_death_particles(h.c)
+			}
+			if n := h.c.TableLen(h.g.dead_particles); n != row.Count {
+				t.Fatalf("tick%d count%d want%d", row.Tick, n, row.Count)
+			}
+			presentationEqual(t, row, h.listNumbers(h.g.dead_particles, "x", "y", "t", "dx", "dy"))
+		}
+	})
+	t.Run("effect_construction_and_freeze", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		if h.g.cloud_phase != 0 {
+			t.Fatalf("cloud_phase %v want 0", h.g.cloud_phase)
+		}
+		if got := h.c.TableLen(h.g.particles); got != 25 {
+			t.Fatalf("ambient count%d want25", got)
+		}
+		h.g.effect_smoke(h.c, rt.IntVal(40), rt.IntVal(40))
+		smoke := h.c.TableGetInt(h.g.smoke_particles, 1)
+		for _, field := range []string{"x", "y"} {
+			n := h.get(smoke, field).Num
+			if n < rt.FromInt(39) || n >= rt.FromInt(41) {
+				t.Fatalf("smoke %s outside original jitter range: %v", field, n)
+			}
+		}
+		vx := h.get(smoke, "vx").Num
+		// Native decimal 0.3 rounds one raw unit above PICO-8's truncation.
+		if vx < 19661 || vx >= 32768 {
+			t.Fatalf("smoke vx outside native-decimal range: %d", vx)
+		}
+		if vy := h.get(smoke, "vy").Num; vy != -6554 {
+			t.Fatalf("smoke vy%d want-6554 (native -0.1)", vy)
+		}
+		beforeHair := h.listNumbers(h.get(h.g.player, "hair"), "x", "y")
+		beforePhase := h.g.cloud_phase
+		beforeSmoke := h.listNumbers(h.g.smoke_particles, "x", "y", "sprite")
+		h.g.freeze = rt.FromInt(2)
+		h.g.shake = rt.FromInt(6)
+		h.g.Update(h.c)
+		h.g.Draw(h.c)
+		if h.g.freeze != rt.FromInt(1) || h.g.shake != rt.FromInt(6) {
+			t.Fatal("freeze did not suspend shake/update")
+		}
+		if !reflect.DeepEqual(beforeHair, h.listNumbers(h.get(h.g.player, "hair"), "x", "y")) || beforePhase != h.g.cloud_phase || !reflect.DeepEqual(beforeSmoke, h.listNumbers(h.g.smoke_particles, "x", "y", "sprite")) {
+			t.Fatal("freeze changed presentation state")
+		}
+		for _, enabled := range []bool{true, false} {
+			h.g.screenshake = rt.BoolVal(enabled)
+			h.g.shake = rt.FromInt(6)
+			for tick := 1; tick <= 8; tick++ {
+				h.g.update_shake(h.c)
+				want := 6 - tick
+				if want < 0 {
+					want = 0
+				}
+				if h.g.shake != rt.FromInt(want) {
+					t.Fatalf("shake tick%d=%v want%d", tick, h.g.shake, want)
+				}
+				if !enabled || want == 0 {
+					if h.g.shake_x != 0 || h.g.shake_y != 0 {
+						t.Fatal("shake failed to reset camera")
+					}
+				} else if h.g.shake_x < rt.FromInt(-2) || h.g.shake_x > rt.FromInt(2) || h.g.shake_y < rt.FromInt(-2) || h.g.shake_y > rt.FromInt(2) {
+					t.Fatal("shake outside source [-2,2] integer range")
+				}
+			}
+		}
+	})
+	t.Run("cloud_phase_wraps", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		for tick := 1; tick <= 240; tick++ {
+			h.g.update_parallax(h.c)
+		}
+		if h.g.cloud_phase != 0 {
+			t.Fatalf("wrapped cloud_phase %v want 0", h.g.cloud_phase)
+		}
+		h.g.update_parallax(h.c)
+		if h.g.cloud_phase != rt.FromInt(1) {
+			t.Fatalf("cloud_phase after wrap %v want 1", h.g.cloud_phase)
+		}
+	})
+	t.Run("ambient_motion_and_wrap", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		h.g.particles = h.list(t, inputs.Ambient)
+		if len(inputs.Ambient) != 4 || inputs.Ambient[0]["spd"] != 0.25 || inputs.Ambient[1]["spd"] != 2.5 || inputs.Ambient[2]["spd"] != 0.25 || inputs.Ambient[3]["spd"] != 2.5 {
+			t.Fatal("ambient fixture changed; review the phase/drift proof before changing bounds")
+		}
+		var maxYDrift [2]int32
+		var maxPhaseDrift int32
+		for _, row := range byKind["ambient"] {
+			h.g.update_ambient_particles(h.c)
+			got := h.listNumbers(h.g.particles, "x", "y", "s", "spd", "off", "c")
+			// The second fixture wraps on frame one; its RNG position is not a parity claim.
+			if row.Tick == 1 && (got[7] < 0 || got[7] >= 160*65536) {
+				t.Fatalf("wrapped ambient y out of range: %d", got[7])
+			}
+			got[7] = row.Values[7]
+			// Fixture 1 stays entirely exact on its 1/128-turn sample grid.
+			// Fixtures 3/4 expose off-grid sine error without any RNG wrap.
+			// Stock sine has <=15 raw error at an equal phase. Fixture 4's
+			// additional one-raw phase step contributes <=ceil(2*pi)=7 raw
+			// velocity error per prior step, summed over elapsed frames.
+			for fixture, field := range []int{13, 19} {
+				dy := got[field] - row.Values[field]
+				if dy < 0 {
+					dy = -dy
+				}
+				bound := int32(row.Tick) * 15
+				if fixture == 1 {
+					bound += 7 * int32(row.Tick*(row.Tick-1)) / 2
+				}
+				// Also retain the measured 40-frame ceiling for each fixed
+				// fixture; a different approximation needs a fresh review.
+				bound = min(bound, []int32{177, 644}[fixture])
+				if dy > bound {
+					t.Fatalf("ambient fixture%d tick%d y drift%d exceeds bound%d", fixture+3, row.Tick, dy, bound)
+				}
+				if dy > maxYDrift[fixture] {
+					maxYDrift[fixture] = dy
+				}
+				got[field] = row.Values[field]
+			}
+			// Fixtures 2/4 reach the 0.05 phase cap: native decimal uses
+			// 3277 raw units, exactly one more than PICO-8 on each tick.
+			for _, field := range []int{10, 22} {
+				phaseDrift := got[field] - row.Values[field]
+				if phaseDrift != int32(row.Tick) {
+					t.Fatalf("ambient field%d tick%d phase drift%d want%d", field, row.Tick, phaseDrift, row.Tick)
+				}
+				if phaseDrift > maxPhaseDrift {
+					maxPhaseDrift = phaseDrift
+				}
+				got[field] = row.Values[field]
+			}
+			presentationEqual(t, row, got)
+		}
+		t.Logf("Accepted ambient drift: fixture3/4 max y %v raw (%g/%g pixels); capped phase max %d raw. Other compared fields remain exact.", maxYDrift, float64(maxYDrift[0])/65536, float64(maxYDrift[1])/65536, maxPhaseDrift)
+	})
+	t.Run("complete_actual_level_and_restart", func(t *testing.T) {
+		h := newPresentationHarness(t)
+		copy(h.memory.Map, mapROM[:])
+		h.g.start_spawn(h.c)
+		var route struct{ Inputs []uint16 }
+		b, err := os.ReadFile(filepath.Join(dir, "completion-route.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(b, &route); err != nil {
+			t.Fatal(err)
+		}
+		spawnTicks := 0
+		for h.g.spawning.Truthy() && spawnTicks < 100 {
+			h.keys(0)
+			h.g.Update(h.c)
+			h.g.Draw(h.c)
+			spawnTicks++
+			if n := h.c.TableLen(h.get(h.g.player, "hair")); n != 5 {
+				t.Fatalf("spawn update%d hair nodes%d want5", spawnTicks, n)
+			}
+		}
+		if h.g.spawning.Truthy() {
+			t.Fatal("spawn did not finish")
+		}
+		for i, key := range route.Inputs {
+			h.keys(key)
+			h.g.Update(h.c)
+			h.g.Draw(h.c)
+			if h.get(h.g.player, "dead").Truthy() {
+				t.Fatalf("route died at update%d", i+1)
+			}
+			if err := h.c.LastHeapError(); err != rt.HeapOK {
+				t.Fatalf("route heap error at update%d: %v", i+1, err)
+			}
+		}
+		if !h.g.level_complete.Truthy() {
+			t.Fatal("stored route did not complete the actual level")
+		}
+		h.g.deaths = rt.FromInt(7)
+		h.keys(64)
+		h.g.Update(h.c)
+		h.g.Draw(h.c)
+		if h.g.level_complete.Truthy() || !h.g.spawning.Truthy() {
+			t.Fatal("Start did not begin a new run")
+		}
+		if h.g.deaths != 0 {
+			t.Fatal("Start did not reset death state")
+		}
+		if n := h.c.TableLen(h.get(h.g.player, "hair")); n != 5 {
+			t.Fatalf("restart hair nodes%d want5", n)
+		}
+		for i, tile := range mapROM[:] {
+			if h.memory.Map[i] != tile {
+				t.Fatalf("restart map cell%d=%d want%d", i, h.memory.Map[i], tile)
+			}
+		}
+		t.Logf("Completed actual map: %d spawn updates + %d route updates; Start reset run state", spawnTicks, len(route.Inputs))
+	})
+	t.Logf("Verified %d source-oracle presentation rows; exact hair state and lifetimes, with explicitly bounded ambient sine/phase drift", len(rows))
+}

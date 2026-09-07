@@ -10,3 +10,6 @@ var _ [unsafe.Sizeof(MapRasterSpan{}) - 4]byte
 
 //export mtile_copy_map_raster_full
 func copyMapRasterFull(src, dst, spans unsafe.Pointer, count int)
+
+//export mtile_copy_map_raster_shifted
+func copyMapRasterShifted(src, dst, spans unsafe.Pointer, count, originOffset, x0, x1, y0, y1 int)

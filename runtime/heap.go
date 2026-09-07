@@ -184,6 +184,10 @@ func (c *Context) PushLocal(v Value) bool {
 	return true
 }
 
+// Keep root unwinding shared: inlining this small routine into every generated
+// helper duplicates it through IWRAM callers, consuming their fixed code budget.
+//
+//go:noinline
 func (c *Context) PopLocals(n int) {
 	if !c.heapReady || n <= 0 {
 		return
@@ -192,9 +196,9 @@ func (c *Context) PopLocals(n int) {
 	if sp < 0 {
 		sp = 0
 	}
-	for i := sp; i < c.heap.roots.localSP; i++ {
-		c.heap.roots.locals[i] = Value{}
-	}
+	// The collector scans only the active prefix, and PushLocal overwrites a
+	// slot before extending it. Values hold integer handles, not Go pointers,
+	// so clearing the dead tail cannot release any additional object.
 	c.heap.roots.localSP = sp
 }
 
@@ -208,6 +212,10 @@ func (c *Context) PushTemp(v Value) bool {
 	return true
 }
 
+// Keep temp unwinding shared with PopLocals: inlining duplicates the same
+// small routine through IWRAM callers and consumes their fixed code budget.
+//
+//go:noinline
 func (c *Context) PopTemps(n int) {
 	if !c.heapReady || n <= 0 {
 		return
@@ -216,9 +224,8 @@ func (c *Context) PopTemps(n int) {
 	if sp < 0 {
 		sp = 0
 	}
-	for i := sp; i < c.heap.roots.tempCount; i++ {
-		c.heap.roots.temps[i] = Value{}
-	}
+	// As with locals, only the active prefix is a root. PushTemp replaces the
+	// entire Value before making an inactive slot visible to the collector.
 	c.heap.roots.tempCount = sp
 }
 
@@ -226,6 +233,11 @@ func (c *Context) PopTemp() {
 	c.PopTemps(1)
 }
 
+// Allocation initializes every byte of ordinary table records. Keep its
+// validation and word-clear loop in fast internal RAM on the GBA.
+//
+//go:noinline
+//go:section .iwram
 func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 	if h.terminal != HeapOK {
 		return 0, h.terminal
@@ -237,24 +249,9 @@ func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 	if aligned > uint32(heapSize) {
 		return 0, HeapOOM
 	}
-	if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor {
-		err := h.collect()
-		if err != HeapOK {
+	if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor || h.freeHead == invalidRef {
+		if err := h.prepareAllocation(aligned); err != HeapOK {
 			return 0, err
-		}
-		if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor {
-			h.terminal = HeapOOM
-			return 0, HeapOOM
-		}
-	}
-	if h.freeHead == invalidRef {
-		err := h.collect()
-		if err != HeapOK {
-			return 0, err
-		}
-		if h.freeHead == invalidRef {
-			h.terminal = HeapOOM
-			return 0, HeapOOM
 		}
 	}
 	ref := h.freeHead
@@ -270,8 +267,31 @@ func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 	h.freeHead = Ref(hdr.Offset)
 	off := h.cursor
 	space := h.space(h.active)
-	for i := uint32(0); i < aligned; i++ {
-		space[off+i] = 0
+	// Bounds were proved above. Allocated payloads are normally word-aligned;
+	// clear in native words so a large table does not pay one EWRAM store and
+	// one loop/bounds check per byte. The fallback retains exact behavior for
+	// an unusual in-bounds unaligned cursor. Padding is still cleared too.
+	if aligned != 0 {
+		base := unsafe.Add(unsafe.Pointer(&space[0]), off)
+		at := uint32(0)
+		if uintptr(base)&3 == 0 {
+			for aligned-at >= 16 {
+				pointer := unsafe.Add(base, at)
+				*(*uint32)(pointer) = 0
+				*(*uint32)(unsafe.Add(pointer, 4)) = 0
+				*(*uint32)(unsafe.Add(pointer, 8)) = 0
+				*(*uint32)(unsafe.Add(pointer, 12)) = 0
+				at += 16
+			}
+			for aligned-at >= 4 {
+				*(*uint32)(unsafe.Add(base, at)) = 0
+				at += 4
+			}
+		}
+		for at < aligned {
+			*(*byte)(unsafe.Add(base, at)) = 0
+			at++
+		}
 	}
 	hdr.KindState = (uint8(kind) << 2) | uint8(HandleAllocated)
 	hdr.Size = dataSize
@@ -279,6 +299,87 @@ func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 	h.cursor += aligned
 	h.handleN++
 	return ref, HeapOK
+}
+
+// allocObjectFilled reserves the same handle and payload as allocObject, then
+// copies a complete image over the payload instead of clearing it first.
+// Constructor images already define every byte of hdr.Size; skipping the
+// EWRAM zero-fill avoids writing the same range twice. Padding up to the
+// 4-byte cursor rounding is still cleared, matching allocObject. Stay in ROM:
+// inlining a copy loop into IWRAM callers would spend their fixed code budget.
+//
+//go:noinline
+func (h *Heap) allocObjectFilled(kind ObjectKind, image []byte) (Ref, HeapError) {
+	if h.terminal != HeapOK {
+		return 0, h.terminal
+	}
+	if h.collecting {
+		return 0, HeapBusy
+	}
+	dataSize := uint16(len(image))
+	aligned := alignUp4(uint32(dataSize))
+	if aligned > uint32(heapSize) {
+		return 0, HeapOOM
+	}
+	if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor || h.freeHead == invalidRef {
+		if err := h.prepareAllocation(aligned); err != HeapOK {
+			return 0, err
+		}
+	}
+	ref := h.freeHead
+	if ref >= maxHandles {
+		h.terminal = HeapCorrupt
+		return 0, HeapCorrupt
+	}
+	hdr := &h.handles[ref]
+	if hdr.State() != HandleFree {
+		h.terminal = HeapCorrupt
+		return 0, HeapCorrupt
+	}
+	h.freeHead = Ref(hdr.Offset)
+	off := h.cursor
+	space := h.space(h.active)
+	base := unsafe.Add(unsafe.Pointer(&space[0]), off)
+	if dataSize != 0 {
+		copy(unsafe.Slice((*byte)(base), int(dataSize)), image)
+	}
+	for at := uint32(dataSize); at < aligned; at++ {
+		*(*byte)(unsafe.Add(base, at)) = 0
+	}
+	hdr.KindState = (uint8(kind) << 2) | uint8(HandleAllocated)
+	hdr.Size = dataSize
+	hdr.Offset = off
+	h.cursor += aligned
+	h.handleN++
+	return ref, HeapOK
+}
+
+// Collection is infrequent compared with bump allocation. Keep its retry
+// branches in ROM so the allocator's checked common path fits in IWRAM.
+// The space-first, handles-second order matches allocObject's original error
+// behavior, including the second collection when handles remain exhausted.
+//
+//go:noinline
+func (h *Heap) prepareAllocation(aligned uint32) HeapError {
+	if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor {
+		if err := h.collect(); err != HeapOK {
+			return err
+		}
+		if h.cursor > uint32(heapSize) || aligned > uint32(heapSize)-h.cursor {
+			h.terminal = HeapOOM
+			return HeapOOM
+		}
+	}
+	if h.freeHead == invalidRef {
+		if err := h.collect(); err != HeapOK {
+			return err
+		}
+		if h.freeHead == invalidRef {
+			h.terminal = HeapOOM
+			return HeapOOM
+		}
+	}
+	return HeapOK
 }
 
 func (h *Heap) collect() HeapError {
@@ -336,15 +437,15 @@ func (h *Heap) collectCore() HeapError {
 	}
 	for i := 0; i < maxHandles; i++ {
 		hdr := &h.handles[i]
-		if hdr.State() == HandleAllocated {
+		switch hdr.State() {
+		case HandleAllocated:
 			hdr.SetState(HandleFree)
 			hdr.Offset = uint32(h.freeHead)
 			h.freeHead = Ref(i)
-		}
-	}
-	for i := 0; i < maxHandles; i++ {
-		if h.handles[i].State() == HandleForwarded {
-			h.handles[i].SetState(HandleAllocated)
+		case HandleForwarded:
+			// Tracing is finished: restoring copied handles while reclaiming
+			// dead ones preserves the same free-list order in one sweep.
+			hdr.SetState(HandleAllocated)
 		}
 	}
 	h.active = 1 - h.active
@@ -434,8 +535,36 @@ func (h *Heap) copyObject(ref Ref) HeapError {
 	srcOff := hdr.Offset
 	dstOff := h.toCursor
 	size := uint32(hdr.Size)
-	for i := uint32(0); i < size; i++ {
-		to[dstOff+i] = from[srcOff+i]
+	// The bounds above validate both ranges, and semispaces are disjoint.
+	// Normal object offsets are four-byte aligned. Copy whole words without
+	// repeating slice bounds checks for every byte, then preserve the exact
+	// payload tail (odd-sized strings must not copy neighboring padding).
+	// The fallback retains byte-copy behavior for an unusual unaligned offset.
+	src := unsafe.Add(unsafe.Pointer(&from[0]), srcOff)
+	dst := unsafe.Add(unsafe.Pointer(&to[0]), dstOff)
+	remaining := size
+	if (uintptr(src)|uintptr(dst))&3 == 0 {
+		for remaining >= 16 {
+			*(*uint32)(dst) = *(*uint32)(src)
+			*(*uint32)(unsafe.Add(dst, 4)) = *(*uint32)(unsafe.Add(src, 4))
+			*(*uint32)(unsafe.Add(dst, 8)) = *(*uint32)(unsafe.Add(src, 8))
+			*(*uint32)(unsafe.Add(dst, 12)) = *(*uint32)(unsafe.Add(src, 12))
+			src = unsafe.Add(src, 16)
+			dst = unsafe.Add(dst, 16)
+			remaining -= 16
+		}
+		for remaining >= 4 {
+			*(*uint32)(dst) = *(*uint32)(src)
+			src = unsafe.Add(src, 4)
+			dst = unsafe.Add(dst, 4)
+			remaining -= 4
+		}
+	}
+	for remaining > 0 {
+		*(*byte)(dst) = *(*byte)(src)
+		src = unsafe.Add(src, 1)
+		dst = unsafe.Add(dst, 1)
+		remaining--
 	}
 	hdr.Offset = dstOff
 	hdr.SetState(HandleForwarded)
@@ -458,6 +587,14 @@ func (h *Heap) checkLive(ref Ref) HeapError {
 
 func (c *Context) activeSpace() []byte {
 	return c.heap.space(c.heap.active)
+}
+
+// freshObjectBytes is only used immediately after allocObject succeeds,
+// before any allocation/collection or handle mutation. That success already
+// proves the live handle and complete payload range checked by objectBytes.
+func (c *Context) freshObjectBytes(ref Ref) []byte {
+	header := &c.heap.handles[ref]
+	return c.activeSpace()[header.Offset : header.Offset+uint32(header.Size)]
 }
 
 func (c *Context) objectBytes(ref Ref) ([]byte, HeapError) {

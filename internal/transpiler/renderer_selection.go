@@ -8,6 +8,7 @@ import (
 
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/luaparser"
+	runtimeapi "github.com/drpaneas/mtile/runtime"
 )
 
 // Renderer is a compile-time cartridge backend. RendererMode4 is zero so old
@@ -72,6 +73,9 @@ type RendererReport struct {
 	// allocation and conservative worst scanline proof for the linked renderer.
 	Mode0OAMEntries    int
 	Mode0OBJLineCycles int
+	// Mode0TextKeys is the interned (glyph,color) atlas uploaded into OBJ tiles
+	// 480-511. Build stamps those sheet cells from the same keys.
+	Mode0TextKeys []uint16
 	// MapPlaneMask identifies authored (or runtime-mutable) logical planes
 	// that need map storage. MapDrawMask is the subset materialized by map()
 	// calls. Both preserve logical BG numbers while allowing dense allocation.
@@ -649,77 +653,99 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if draw == nil || clsCalls != 1 || mapCalls > 4 {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires one direct cls() and at most four direct map() calls in _draw", reasonMode0DrawShape)
 	}
+	if hidden := callGraph.firstBuiltinFromFunction("_init", "spr", "sspr", "print", "cls", "map"); hidden != nil {
+		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/print() belong to _draw")
+	}
+	if hidden := callGraph.firstBuiltinFromFunction("_update", "spr", "sspr", "print", "cls", "map"); hidden != nil {
+		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/print() belong to _draw")
+	}
 
-	directCls, directMap, directSpr, directSSpr, directPrint, textEntryCount := 0, 0, 0, 0, 0, 0
+	ops, unbounded, err := mode0WalkDraw(chunk, draw, spriteIDs, cols, rows)
+	if err != nil {
+		return 0, false, false, err
+	}
+	if unbounded {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 object loops need a proven finite trip count; unproven object count", draw.Pos(), reasonMode0ObjectBudget)
+	}
+	directCls, directMap, textEntryCount := 0, 0, 0
 	clsIndex, mapIndex, lastMapIndex, firstSpriteIndex, firstPrintIndex := -1, -1, -1, -1, -1
 	maxSpriteID := -1
-	for statementIndex, stmt := range draw.Body.Body {
-		callStmt, ok := stmt.(*luaparser.CallStmt)
-		if !ok {
-			continue
-		}
-		name, ok := callKey(callStmt.Call)
-		if !ok {
-			continue
-		}
-		switch name {
+	materializedMaps := 0
+	mode0Layers := mapMaskCount(plan.drawMask)
+	for opIndex, op := range ops {
+		switch op.name {
 		case "cls":
 			directCls++
 			if clsIndex < 0 {
-				clsIndex = statementIndex
+				clsIndex = opIndex
 			}
-			if err := validateMode0ClsCall(callStmt.Call); err != nil {
+			if err := validateMode0ClsCall(op.call); err != nil {
 				return 0, false, false, err
 			}
 		case "map":
 			directMap++
 			if mapIndex < 0 {
-				mapIndex = statementIndex
+				mapIndex = opIndex
 			}
-			lastMapIndex = statementIndex
-			if err := validateMode0MapCall(callStmt.Call); err != nil {
+			lastMapIndex = opIndex
+			if err := validateMode0MapCall(op.call); err != nil {
 				return 0, false, false, err
+			}
+			if len(op.call.Args) == 0 {
+				materializedMaps = mode0Layers
+			} else if bgValue, ok := staticNumberLiteral(op.call.Args[0]); ok {
+				if bg := int(bgValue); plan.drawMask&(1<<uint(bg)) != 0 {
+					materializedMaps++
+				}
 			}
 		case "spr":
-			directSpr++
 			if firstSpriteIndex < 0 {
-				firstSpriteIndex = statementIndex
+				firstSpriteIndex = opIndex
 			}
-			_, lastID, err := validateMode0SprCallWithFiniteIDs(callStmt.Call, cols, rows, spriteIDs)
-			if err != nil {
-				return 0, false, false, err
+			if op.lastID > maxSpriteID {
+				maxSpriteID = op.lastID
 			}
-			if lastID > maxSpriteID {
-				maxSpriteID = lastID
+			if mode0Layers > 0 && materializedMaps == 0 {
+				return 0, false, false, mode0CallError(op.call, reasonMode0SpriteShape,
+					"Mode 0 cannot place an object behind every materialized background; draw at least one non-empty map before spr()/sspr()")
 			}
 		case "sspr":
-			directSSpr++
 			if firstSpriteIndex < 0 {
-				firstSpriteIndex = statementIndex
+				firstSpriteIndex = opIndex
 			}
-			_, lastID, err := validateMode0SSprCall(callStmt.Call, opts.SheetW, opts.SheetH, cols)
+			_, lastID, err := validateMode0SSprCall(op.call, opts.SheetW, opts.SheetH, cols)
 			if err != nil {
 				return 0, false, false, err
 			}
 			if lastID > maxSpriteID {
 				maxSpriteID = lastID
 			}
-		case "print":
-			directPrint++
-			if firstPrintIndex < 0 {
-				firstPrintIndex = statementIndex
+			if mode0Layers > 0 && materializedMaps == 0 {
+				return 0, false, false, mode0CallError(op.call, reasonMode0SpriteShape,
+					"Mode 0 cannot place an object behind every materialized background; draw at least one non-empty map before spr()/sspr()")
 			}
-			objects, err := validateMode0PrintCall(callStmt.Call)
+		case "print":
+			if firstPrintIndex < 0 {
+				firstPrintIndex = opIndex
+			}
+			objects, err := validateMode0PrintCall(op.call, op.printKind)
 			if err != nil {
 				return 0, false, false, err
 			}
-			textEntryCount += objects
+			textEntryCount += objects * op.copies
 		}
 	}
-	if directCls != 1 || directMap != mapCalls || directSpr != sprCalls || directSSpr != ssprCalls || directPrint != printCalls {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] cls(), map(), spr()/sspr(), and print() must be unconditional direct statements in _draw", draw.Pos(), reasonMode0DrawShape)
+	if directCls != 1 || directMap != mapCalls {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] cls() and map() must be unconditional direct statements in _draw", draw.Pos(), reasonMode0DrawShape)
 	}
-	if returned := firstMode0Return(draw.Body.Body[:clsIndex]); returned != nil {
+	if firstSpriteIndex < 0 && firstPrintIndex < 0 && (sprCalls > 0 || ssprCalls > 0 || printCalls > 0) {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/sspr()/print() belong to _draw", draw.Pos(), reasonMode0DrawShape)
+	}
+	clsStmt := indexOfDirectMode0Call(draw, "cls")
+	if clsStmt < 0 {
+		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires one direct cls() and at most four direct map() calls in _draw", reasonMode0DrawShape)
+	}
+	if returned := firstMode0Return(draw.Body.Body[:clsStmt]); returned != nil {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] cls() must execute before every return from _draw", returned.Pos(), reasonMode0ClsShape)
 	}
 	if paletteCall := callGraph.firstBuiltinFromFunction("_draw", "pal", "palt"); paletteCall != nil {
@@ -734,40 +760,10 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if firstPrintIndex >= 0 && firstPrintIndex < clsIndex {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/print() calls must follow cls()", draw.Pos(), reasonMode0SpriteShape)
 	}
-	if firstPrintIndex >= 0 && firstPrintIndex < lastMapIndex {
+	if firstPrintIndex >= 0 && lastMapIndex >= 0 && firstPrintIndex < lastMapIndex {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 print() calls must follow cls() and every map() call", draw.Pos(), reasonMode0TextShape)
 	}
-	mode0Layers := mapMaskCount(plan.drawMask)
-	if mode0Layers > 0 && firstSpriteIndex >= 0 {
-		materializedMaps := 0
-		for _, stmt := range draw.Body.Body {
-			callStmt, ok := stmt.(*luaparser.CallStmt)
-			if !ok {
-				continue
-			}
-			name, ok := callKey(callStmt.Call)
-			if !ok {
-				continue
-			}
-			switch name {
-			case "map":
-				if len(callStmt.Call.Args) == 0 {
-					materializedMaps = mode0Layers
-					continue
-				}
-				bgValue, _ := staticNumberLiteral(callStmt.Call.Args[0])
-				if bg := int(bgValue); plan.drawMask&(1<<uint(bg)) != 0 {
-					materializedMaps++
-				}
-			case "spr", "sspr":
-				if materializedMaps == 0 {
-					return 0, false, false, mode0CallError(callStmt.Call, reasonMode0SpriteShape,
-						"Mode 0 cannot place an object behind every materialized background; draw at least one non-empty map before spr()/sspr()")
-				}
-			}
-		}
-	}
-	budget := mode0ObjectBudgetForDraw(chunk, draw, opts)
+	budget := mode0ObjectBudgetFromOps(chunk, draw, ops, unbounded, opts)
 	if budget.TextTiles > mode0TextTileLimit {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text needs %d unique glyph/color tiles; the reserved text-tile capacity is %d", draw.Pos(), reasonMode0ObjectBudget, budget.TextTiles, mode0TextTileLimit)
 	}
@@ -777,8 +773,9 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if budget.MaxLineCycles > mode0OBJLineCycleLimit {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 worst OBJ scanline needs %d rendering cycles; the hardware limit is %d with H-Blank Interval Free disabled", draw.Pos(), reasonMode0ObjectBudget, budget.MaxLineCycles, mode0OBJLineCycleLimit)
 	}
-	if textEntryCount != 0 && maxSpriteID >= 480 {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text reserves OBJ tiles 480-511; spr() source IDs must stay below 480", draw.Pos(), reasonMode0ResourceLimit)
+	if textEntryCount != 0 && maxSpriteID >= runtimeapi.Mode0TextTileBase {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text reserves OBJ tiles %d-%d; spr() source IDs must stay below %d",
+			draw.Pos(), reasonMode0ResourceLimit, runtimeapi.Mode0TextTileBase, runtimeapi.Mode0TextTileBase+runtimeapi.Mode0TextTileCount-1, runtimeapi.Mode0TextTileBase)
 	}
 	tileLimit := (30 - 2*(mode0Layers-1)) * 32
 	if cols*rows > tileLimit {
@@ -818,6 +815,23 @@ func countDirectMode0Calls(function *luaparser.FunctionDeclStmt, name string) in
 		}
 	}
 	return count
+}
+
+func indexOfDirectMode0Call(function *luaparser.FunctionDeclStmt, name string) int {
+	if function == nil {
+		return -1
+	}
+	for index, stmt := range function.Body.Body {
+		callStmt, ok := stmt.(*luaparser.CallStmt)
+		if !ok {
+			continue
+		}
+		key, ok := callKey(callStmt.Call)
+		if ok && key == name {
+			return index
+		}
+	}
+	return -1
 }
 
 func validateMode0ClipCall(call *luaparser.CallExpr) error {
@@ -901,56 +915,95 @@ func validateMode0SprCall(call *luaparser.CallExpr, cols, rows int) (int, int, e
 	return w * h, lastID, nil
 }
 
-func validateMode0SprCallWithFiniteIDs(call *luaparser.CallExpr, cols, rows int, analysis *mode0SpriteIDAnalysis) (int, int, error) {
+func validateMode0SprCallWithEnv(call *luaparser.CallExpr, cols, rows int, analysis *mode0SpriteIDAnalysis, eval *mode0NumEval, env mode0NumEnv) (int, int, int, error) {
 	if call == nil || len(call.Args) < 3 || len(call.Args) > 7 {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() requires 3 to 7 arguments")
+		return 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() requires 3 to 7 arguments")
 	}
 	if _, literal := staticNumberLiteral(call.Args[0]); literal {
-		return validateMode0SprCall(call, cols, rows)
+		_, lastID, err := validateMode0SprCall(call, cols, rows)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		w, h := mode0SprCallCells(call)
+		return lastID, w, h, nil
 	}
-	ids, proven, detail := analysis.finiteIDs(call.Args[0])
+	var ids []int
+	var proven bool
+	var detail string
+	if eval != nil {
+		ids, proven, detail = eval.spriteIDs(call.Args[0], env)
+	}
+	if !proven && analysis != nil {
+		ids, proven, detail = analysis.finiteIDs(call.Args[0])
+	}
 	if !proven || len(ids) == 0 {
-		message := "Mode 0 spr() id must be an integer literal or a scalar assigned only from an explicit finite integer set"
+		message := "Mode 0 spr() id must be an integer literal or a finite integer set"
 		if detail != "" {
 			message += ": " + detail
 		}
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, message)
+		return 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, message)
 	}
-	readPositive := func(index int, fallback int, name string) (int, error) {
+	readPositive := func(index int, fallback int, name string) ([]int, error) {
 		if len(call.Args) <= index {
-			return fallback, nil
+			return []int{fallback}, nil
 		}
-		value, literal := staticNumberLiteral(call.Args[index])
-		if !literal || value != math.Trunc(value) || value < 1 || value > 32 {
-			return 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() "+name+" must be an integer literal from 1 to 32")
+		if value, literal := staticNumberLiteral(call.Args[index]); literal {
+			if value != math.Trunc(value) || value < 1 || value > 32 {
+				return nil, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() "+name+" must be an integer literal from 1 to 32")
+			}
+			return []int{int(value)}, nil
 		}
-		return int(value), nil
+		if eval != nil {
+			if values, ok := eval.nums(call.Args[index], env); ok {
+				ints, ok := mode0IntsFromNums(values)
+				if ok && len(ints) > 0 {
+					for _, size := range ints {
+						if size < 1 || size > 32 {
+							return nil, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() "+name+" must be an integer from 1 to 32")
+						}
+					}
+					return ints, nil
+				}
+			}
+		}
+		return nil, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() "+name+" must be an integer literal from 1 to 32")
 	}
-	w, err := readPositive(3, 1, "width")
+	widths, err := readPositive(3, 1, "width")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
-	h, err := readPositive(4, 1, "height")
+	heights, err := readPositive(4, 1, "height")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 	maxLastID := -1
+	maxW, maxH := 1, 1
 	for _, id := range ids {
-		if id < 0 || id >= cols*rows {
-			return 0, 0, mode0CallError(call, reasonMode0SpriteShape,
-				fmt.Sprintf("Mode 0 spr() finite id set contains %d, outside the declared sheet", id))
-		}
-		cellX, cellY := id%cols, id/cols
-		lastID := id + (h-1)*cols + w - 1
-		if cellX+w > cols || cellY+h > rows || lastID >= 512 {
-			return 0, 0, mode0CallError(call, reasonMode0SpriteShape,
-				fmt.Sprintf("Mode 0 spr() finite id %d has a source rectangle outside the sheet or OBJ tile IDs 0-511", id))
-		}
-		if lastID > maxLastID {
-			maxLastID = lastID
+		for _, w := range widths {
+			if w > maxW {
+				maxW = w
+			}
+			for _, h := range heights {
+				if h > maxH {
+					maxH = h
+				}
+				if id < 0 || id >= cols*rows {
+					return 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape,
+						fmt.Sprintf("Mode 0 spr() finite id set contains %d, outside the declared sheet", id))
+				}
+				cellX, cellY := id%cols, id/cols
+				lastID := id + (h-1)*cols + w - 1
+				if cellX+w > cols || cellY+h > rows || lastID >= 512 {
+					return 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape,
+						fmt.Sprintf("Mode 0 spr() finite id %d has a source rectangle outside the sheet or OBJ tile IDs 0-511", id))
+				}
+				if lastID > maxLastID {
+					maxLastID = lastID
+				}
+			}
 		}
 	}
-	return w * h, maxLastID, nil
+	return maxLastID, maxW, maxH, nil
 }
 
 func validateMode0SSprCall(call *luaparser.CallExpr, sheetW, sheetH, cols int) (int, int, error) {
@@ -1008,27 +1061,25 @@ func validateMode0SSprCall(call *luaparser.CallExpr, sheetW, sheetH, cols int) (
 	return w * h, lastID, nil
 }
 
-func validateMode0PrintCall(call *luaparser.CallExpr) (int, error) {
+func validateMode0PrintCall(call *luaparser.CallExpr, kind mode0PrintTextKind) (int, error) {
 	if call == nil || len(call.Args) != 4 {
-		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() requires explicit string, x, y, and color arguments")
+		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() requires explicit text, x, y, and color arguments")
 	}
-	text, ok := unparenExpr(call.Args[0]).(*luaparser.StringExpr)
-	if !ok {
-		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() text must be a static string literal")
-	}
-	for index := 0; index < len(text.Value); index++ {
-		if text.Value[index] < 32 || text.Value[index] > 126 {
-			return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() supports printable ASCII without control codes")
-		}
+	if kind == mode0PrintTextInvalid {
+		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() text must be a static printable-ASCII string or a proven decimal number; concat, tostr, chr, sub, and control codes are not eligible")
 	}
 	color, literal := staticNumberLiteral(call.Args[3])
 	if !literal || color != math.Trunc(color) || color < 0 || color > 255 {
 		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() color must be an integer literal from 0 to 255")
 	}
-	if len(text.Value) != 0 && color == 0 {
+	entries, ok := mode0PrintOAMEntries(call, kind)
+	if !ok {
+		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 print() text must be a static printable-ASCII string or a proven decimal number; concat, tostr, chr, sub, and control codes are not eligible")
+	}
+	if entries != 0 && color == 0 {
 		return 0, mode0CallError(call, reasonMode0TextShape, "Mode 0 non-empty print() color must be an integer literal from 1 to 255 because OBJ palette index 0 is transparent")
 	}
-	return len(text.Value), nil
+	return entries, nil
 }
 
 func firstMode0Return(statements []luaparser.Stmt) *luaparser.ReturnStmt {

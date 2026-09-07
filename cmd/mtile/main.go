@@ -224,6 +224,8 @@ func formatInteger(value int) string {
 func runEdit(args []string, out, errOut io.Writer) error {
 	flags := flag.NewFlagSet("edit", flag.ContinueOnError)
 	editor := flags.String("editor", "", "editor executable (default: MTILE_EDITOR or sibling mtile-editor/editor)")
+	tileCanvas := flags.Bool("experimental-tilecanvas", false, "preview this project with generic tiled backgrounds and a sparse OBJ canvas")
+	tileObjects := flags.Bool("experimental-tilecanvas-objects", false, "compatibility alias for -experimental-tilecanvas")
 	help, err := parseFlags(flags, args, out)
 	if err != nil {
 		return err
@@ -244,6 +246,19 @@ func runEdit(args []string, out, errOut io.Writer) error {
 	}
 	cmd := exec.Command(command, commandArgs...)
 	cmd.Dir = workDir
+	if *tileCanvas || *tileObjects {
+		const key = "MTILE_EXPERIMENTAL_TILECANVAS_PROJECT="
+		const objectsKey = "MTILE_EXPERIMENTAL_TILECANVAS_OBJECTS="
+		for _, value := range os.Environ() {
+			if !strings.HasPrefix(value, key) && !strings.HasPrefix(value, objectsKey) {
+				cmd.Env = append(cmd.Env, value)
+			}
+		}
+		cmd.Env = append(cmd.Env, key+dir)
+		if *tileObjects {
+			cmd.Env = append(cmd.Env, objectsKey+"1")
+		}
+	}
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, out, errOut
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("run editor: %w", err)

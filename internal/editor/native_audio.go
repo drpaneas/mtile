@@ -905,7 +905,7 @@ func (m *Model) SetNativeNoteTicksWithSound(sequenceIndex, channel, startTick, n
 func setNativeClipEventTicks(clip *assetsync.NativeClipAsset, start, note, soundID, durationTicks int) {
 	finish := min(clip.LengthTicks, start+durationTicks)
 	setNativeClipEventAsset(clip, assetsync.NativeEventAsset{
-		Tick: start, DurationTicks: finish - start, Note: note, SoundID: soundID, Priority: 128,
+		Tick: start, DurationTicks: finish - start, Note: note, SoundID: soundID, Priority: audio.NativeEditorNotePriority,
 	})
 }
 

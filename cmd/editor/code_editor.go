@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/drpaneas/mtile/internal/editor"
@@ -26,6 +27,7 @@ var (
 const (
 	codeHorizontalScrollbarHeight = 12
 	codeHorizontalThumbMinWidth   = 36
+	codeVerticalScrollbarWidth    = 14
 )
 
 var (
@@ -48,18 +50,21 @@ type codeLayout struct {
 	Gutter      editor.Rect
 	Text        editor.Rect
 	Horizontal  editor.Rect
+	Vertical    editor.Rect
+	Format      editor.Rect
 	Inspector   editor.Rect
 	Diagnostics editor.Rect
 	Search      editor.Rect
 }
 
-func codeViewportLayout(editorRect editor.Rect) (gutter, textRect, horizontal editor.Rect) {
+func codeViewportLayout(editorRect editor.Rect) (gutter, textRect, horizontal, vertical editor.Rect) {
 	gutterWidth := codeCharWidth*4 + 20
 	gutter = editor.Rect{X: editorRect.X, Y: editorRect.Y, W: gutterWidth, H: editorRect.H}
 	textHeight := max(1, editorRect.H-codeHorizontalScrollbarHeight)
-	textRect = editor.Rect{X: gutter.X + gutter.W, Y: editorRect.Y, W: editorRect.W - gutter.W, H: textHeight}
+	textRect = editor.Rect{X: gutter.X + gutter.W, Y: editorRect.Y, W: max(1, editorRect.W-gutter.W-codeVerticalScrollbarWidth), H: textHeight}
 	horizontal = editor.Rect{X: textRect.X, Y: textRect.Y + textRect.H, W: textRect.W, H: editorRect.H - textRect.H}
-	return gutter, textRect, horizontal
+	vertical = editor.Rect{X: textRect.X + textRect.W, Y: editorRect.Y, W: codeVerticalScrollbarWidth, H: textHeight}
+	return gutter, textRect, horizontal, vertical
 }
 
 type codeTabHit struct {
@@ -73,14 +78,18 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 		return nil
 	}
 	const preferredWidth = 168
-	count := max(1, layout.Tabs.W/preferredWidth)
+	available := layout.Tabs.W
+	if layout.Format.W > 0 {
+		available = max(1, layout.Format.X-layout.Tabs.X-6)
+	}
+	count := max(1, available/preferredWidth)
 	count = min(count, len(g.codeTabs))
 	start := 0
 	if g.codeActiveTab >= count {
 		start = g.codeActiveTab - count + 1
 	}
 	start = min(start, len(g.codeTabs)-count)
-	width := layout.Tabs.W / count
+	width := available / count
 	hits := make([]codeTabHit, 0, count)
 	for index := 0; index < count; index++ {
 		path := g.codeTabs[start+index]
@@ -91,6 +100,10 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 }
 
 func (g *Game) updateCodeTabClick(layout codeLayout, x, y int) bool {
+	if rectContains(layout.Format, x, y) {
+		g.formatCodeIndentation(layout)
+		return true
+	}
 	if !rectContains(layout.Tabs, x, y) {
 		return false
 	}
@@ -171,14 +184,14 @@ func newCodeLayout() codeLayout {
 	sidebar := editor.Rect{X: 0, Y: contentY + headerH, W: sidebarW, H: statusBarRect.Y - contentY - headerH}
 	tabs := editor.Rect{X: sidebarW + padding, Y: contentY + headerH + padding, W: screenWidth - sidebarW - inspectorW - padding*3, H: 34}
 	editorRect := editor.Rect{X: tabs.X, Y: tabs.Y + tabs.H, W: tabs.W, H: statusBarRect.Y - (tabs.Y + tabs.H) - bottomH - padding}
-	gutter, textRect, horizontal := codeViewportLayout(editorRect)
+	gutter, textRect, horizontal, vertical := codeViewportLayout(editorRect)
 	inspector := editor.Rect{X: editorRect.X + editorRect.W + padding, Y: editorRect.Y, W: inspectorW, H: editorRect.H}
 	diagnostics := editor.Rect{X: editorRect.X, Y: editorRect.Y + editorRect.H + padding, W: screenWidth - editorRect.X - padding, H: bottomH - padding}
 	fileRect := editor.Rect{X: 178, Y: contentY + 18, W: min(560, screenWidth/3), H: 34}
 	saveRect := editor.Rect{X: screenWidth - 302, Y: contentY + 15, W: 126, H: 38}
 	runRect := editor.Rect{X: screenWidth - 164, Y: contentY + 15, W: 146, H: 38}
 	search := editor.Rect{X: textRect.X + textRect.W - 390, Y: textRect.Y + 8, W: 370, H: 34}
-	return codeLayout{Header: header, Sidebar: sidebar, File: fileRect, Save: saveRect, Run: runRect, Tabs: tabs, Editor: editorRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Inspector: inspector, Diagnostics: diagnostics, Search: search}
+	return codeLayout{Header: header, Sidebar: sidebar, File: fileRect, Save: saveRect, Run: runRect, Tabs: tabs, Editor: editorRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Vertical: vertical, Format: codeFormatRect(tabs), Inspector: inspector, Diagnostics: diagnostics, Search: search}
 }
 
 func codeKeyRepeat(key ebiten.Key) bool {
@@ -198,6 +211,13 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 	if g.code == nil {
 		return
 	}
+	document := g.code
+	revealCursor := false
+	defer func() {
+		if g.code == document {
+			g.finishCodeInput(layout, revealCursor)
+		}
+	}()
 	mx, my := ebiten.CursorPosition()
 	if g.codeQuickOpen {
 		g.updateCodeQuickOpenInput()
@@ -216,31 +236,31 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 			g.startRun()
 		case rectContains(layout.Horizontal, mx, my):
 			g.beginCodeHorizontalDrag(layout, mx)
+		case rectContains(layout.Vertical, mx, my):
+			g.beginCodeVerticalDrag(layout, my)
+		case rectContains(layout.Gutter, mx, my):
+			g.beginCodeLineSelection(layout, mx, my)
 		case rectContains(layout.Text, mx, my):
-			g.code.SetCursor(g.codeOffsetAt(layout, mx, my), ebiten.IsKeyPressed(ebiten.KeyShift))
-			g.codeDragging = true
-			g.codeCompletionOpen = false
+			g.beginCodeSelection(layout, mx, my, ebiten.IsKeyPressed(ebiten.KeyShift), time.Now())
 		}
 	}
 	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		g.codeDragging = false
 		g.codeHorizontalDragging = false
+		g.codeVerticalDragging = false
 	} else if g.codeHorizontalDragging {
 		g.updateCodeHorizontalDrag(layout, mx)
+	} else if g.codeVerticalDragging {
+		g.updateCodeVerticalDrag(layout, my)
 	} else if g.codeDragging {
-		g.code.SetCursor(g.codeOffsetAt(layout, mx, my), true)
+		g.dragCodeSelection(layout, mx, my)
 	}
-	if rectContains(layout.Text, mx, my) {
+	if rectContains(layout.Editor, mx, my) {
 		wheelX, wheelY := ebiten.Wheel()
 		if ebiten.IsKeyPressed(ebiten.KeyShift) && wheelX == 0 {
 			wheelX, wheelY = wheelY, 0
 		}
-		if wheelY != 0 {
-			g.codeScrollLine = max(0, g.codeScrollLine-codeWheelSteps(wheelY))
-		}
-		if wheelX != 0 {
-			g.codeScrollColumn = min(max(0, g.codeScrollColumn-codeWheelSteps(wheelX)), g.codeHorizontalScrollLimit(layout))
-		}
+		g.scrollCodeWheel(layout, wheelX, wheelY)
 	} else if rectContains(layout.Sidebar, mx, my) {
 		_, wheelY := ebiten.Wheel()
 		if wheelY != 0 {
@@ -253,6 +273,11 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 	mod := codeModifier()
 	shift := ebiten.IsKeyPressed(ebiten.KeyShift)
 	alt := ebiten.IsKeyPressed(ebiten.KeyAlt)
+	meta := ebiten.IsKeyPressed(ebiten.KeyMeta)
+	if shift && alt && inpututil.IsKeyJustPressed(ebiten.KeyF) {
+		g.formatCodeIndentation(layout)
+		return
+	}
 	if mod && shift && inpututil.IsKeyJustPressed(ebiten.KeyS) {
 		g.saveAllCode()
 		return
@@ -307,38 +332,71 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 			g.copyCodeSelection(false)
 			return
 		case inpututil.IsKeyJustPressed(ebiten.KeyX):
+			revealCursor = true
 			g.copyCodeSelection(true)
 			return
 		case inpututil.IsKeyJustPressed(ebiten.KeyV):
+			revealCursor = true
 			g.pasteCode()
 			return
 		case inpututil.IsKeyJustPressed(ebiten.KeyZ) && shift:
+			revealCursor = true
 			g.code.Redo()
 			return
 		case inpututil.IsKeyJustPressed(ebiten.KeyZ):
+			revealCursor = true
 			g.code.Undo()
+			return
+		case inpututil.IsKeyJustPressed(ebiten.KeyY):
+			revealCursor = true
+			g.code.Redo()
 			return
 		}
 	}
 
 	word := mod || alt
+	revealCursor = true
 	switch {
 	case codeKeyRepeat(ebiten.KeyArrowLeft):
-		g.code.MoveHorizontal(-1, shift, word)
+		if meta {
+			g.code.MoveLineBoundary(false, shift)
+		} else {
+			g.code.MoveHorizontal(-1, shift, word)
+		}
 	case codeKeyRepeat(ebiten.KeyArrowRight):
-		g.code.MoveHorizontal(1, shift, word)
+		if meta {
+			g.code.MoveLineBoundary(true, shift)
+		} else {
+			g.code.MoveHorizontal(1, shift, word)
+		}
 	case codeKeyRepeat(ebiten.KeyArrowUp):
-		g.code.MoveVertical(-1, shift)
+		if meta {
+			g.code.SetCursor(0, shift)
+		} else {
+			g.code.MoveVertical(-1, shift)
+		}
 	case codeKeyRepeat(ebiten.KeyArrowDown):
-		g.code.MoveVertical(1, shift)
+		if meta {
+			g.code.SetCursor(len([]rune(g.code.Text())), shift)
+		} else {
+			g.code.MoveVertical(1, shift)
+		}
 	case codeKeyRepeat(ebiten.KeyPageUp):
 		g.code.MoveVertical(-max(1, layout.Text.H/codeLineHeight-2), shift)
 	case codeKeyRepeat(ebiten.KeyPageDown):
 		g.code.MoveVertical(max(1, layout.Text.H/codeLineHeight-2), shift)
 	case codeKeyRepeat(ebiten.KeyHome):
-		g.code.MoveLineBoundary(false, shift)
+		if mod {
+			g.code.SetCursor(0, shift)
+		} else {
+			g.code.MoveLineBoundary(false, shift)
+		}
 	case codeKeyRepeat(ebiten.KeyEnd):
-		g.code.MoveLineBoundary(true, shift)
+		if mod {
+			g.code.SetCursor(len([]rune(g.code.Text())), shift)
+		} else {
+			g.code.MoveLineBoundary(true, shift)
+		}
 	case codeKeyRepeat(ebiten.KeyBackspace):
 		g.code.DeleteBackward(word)
 	case codeKeyRepeat(ebiten.KeyDelete):
@@ -348,31 +406,20 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 	case inpututil.IsKeyJustPressed(ebiten.KeyTab):
 		g.code.Indent(shift)
 	default:
+		revealCursor = false
 		if !mod && !alt {
 			if input := ebiten.AppendInputChars(nil); len(input) != 0 {
-				g.code.Insert(string(input))
+				g.code.InsertTyped(string(input))
+				revealCursor = true
 			}
 		}
 	}
-	g.refreshCodeDiagnostics()
-	g.keepCodeCursorVisible(layout)
 }
 
 func (g *Game) codeOffsetAt(layout codeLayout, x, y int) int {
-	line := g.codeScrollLine + max(0, y-layout.Text.Y-4)/codeLineHeight
+	line := g.codeScrollLine + max(0, y-layout.Text.Y-1)/codeLineHeight
 	column := g.codeScrollColumn + max(0, x-layout.Text.X-8)/codeCharWidth
 	return g.code.Offset(line, column)
-}
-
-func codeWheelSteps(offset float64) int {
-	steps := int(math.Round(offset * 3))
-	if steps == 0 && offset > 0 {
-		return 1
-	}
-	if steps == 0 && offset < 0 {
-		return -1
-	}
-	return steps
 }
 
 func (g *Game) codeVisibleColumns(layout codeLayout) int {
@@ -380,11 +427,15 @@ func (g *Game) codeVisibleColumns(layout codeLayout) int {
 }
 
 func (g *Game) codeLongestLineColumns() int {
-	longest := 0
-	for line := 0; line < g.code.LineCount(); line++ {
-		longest = max(longest, len([]rune(g.code.Line(line))))
+	longest, column := 0, 0
+	for _, r := range g.code.Text() {
+		if r == '\n' {
+			longest, column = max(longest, column), 0
+		} else {
+			column++
+		}
 	}
-	return longest
+	return max(longest, column)
 }
 
 func (g *Game) codeHorizontalScrollLimit(layout codeLayout) int {
@@ -417,6 +468,7 @@ func (g *Game) beginCodeHorizontalDrag(layout codeLayout, x int) {
 		return
 	}
 	g.codeDragging = false
+	g.codeVerticalDragging = false
 	g.codeHorizontalDragging = true
 	if x >= thumb.X && x < thumb.X+thumb.W {
 		g.codeHorizontalDragOffset = x - thumb.X
@@ -454,8 +506,7 @@ func (g *Game) keepCodeCursorVisible(layout codeLayout) {
 	} else if column >= g.codeScrollColumn+visibleColumns {
 		g.codeScrollColumn = column - visibleColumns + 1
 	}
-	g.codeScrollLine = min(g.codeScrollLine, max(0, g.code.LineCount()-1))
-	g.codeScrollColumn = min(max(0, g.codeScrollColumn), g.codeHorizontalScrollLimit(layout))
+	g.clampCodeScroll(layout)
 }
 
 func (g *Game) saveCode() bool {
@@ -753,6 +804,9 @@ func (g *Game) drawCodeTabs(screen *ebiten.Image, layout codeLayout) {
 		drawDevelopText(screen, name, hit.Rect.X+11, hit.Rect.Y+(hit.Rect.H-developTextHeight)/2, clr)
 		drawDevelopTextCentered(screen, "x", hit.Close, map[bool]color.Color{false: colorDim, true: colorCode}[active])
 	}
+	if layout.Format.W > 0 {
+		drawDevelopButton(screen, layout.Format, "INDENT", false, colorCode)
+	}
 }
 
 func (g *Game) drawCodeQuickOpen(screen *ebiten.Image, layout codeLayout) {
@@ -831,6 +885,7 @@ func (g *Game) drawCodeDocument(screen *ebiten.Image, layout codeLayout) {
 		}
 	}
 	g.drawCodeHorizontalScrollbar(screen, layout)
+	g.drawCodeVerticalScrollbar(screen, layout)
 }
 
 func (g *Game) drawCodeHorizontalScrollbar(screen *ebiten.Image, layout codeLayout) {

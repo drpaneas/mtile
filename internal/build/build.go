@@ -65,11 +65,19 @@ type Service struct {
 	DisableFixedMapLayerSpecialization bool
 	// DisableMapRasterCache retains per-cell Mode 4 map rendering for A/B tests.
 	DisableMapRasterCache bool
+	// DisableConditionSpecialization retains boxed logical branch temporaries.
+	DisableConditionSpecialization bool
+	// DisableStableWriteSpecialization retains variadic roots before warm stores.
+	DisableStableWriteSpecialization bool
+	// DisableConstantDivision retains generic +/-1.5 division for target A/B.
+	DisableConstantDivision bool
 	// DisableStaticStringSpecialization retains all 256 Context static slots.
 	DisableStaticStringSpecialization bool
 	// UseProjectRenderer reads project.json's renderer policy. Renderer remains
 	// an explicit programmatic override for renderbench and build tests.
 	UseProjectRenderer bool
+	// Set only for the explicitly selected editor project, never by AUTO.
+	tileCanvasExperiment bool
 }
 
 type Phase string
@@ -199,6 +207,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	if err != nil {
 		return Result{}, err
 	}
+	s.configureTileCanvasExperiment(projectDir)
 	renderer, err := s.resolveRenderer(project)
 	if err != nil {
 		return Result{}, err
@@ -241,6 +250,9 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		DisableLiteralPrintSpecialization:  s.DisableLiteralPrintSpecialization,
 		DisableFixedMapLayerSpecialization: s.DisableFixedMapLayerSpecialization,
 		DisableMapRasterCache:              s.DisableMapRasterCache,
+		DisableConditionSpecialization:     s.DisableConditionSpecialization,
+		DisableStableWriteSpecialization:   s.DisableStableWriteSpecialization,
+		DisableConstantDivision:            s.DisableConstantDivision,
 		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
@@ -258,11 +270,23 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	if err != nil {
 		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
 	}
+	if rendererReport.Selected == transpiler.RendererMode0 && len(rendererReport.Mode0TextKeys) > 0 {
+		runtimebundle.OverlayMode0TextSheet(assets.SheetROM, assets.SheetW, assets.SheetH, rendererReport.Mode0TextKeys)
+	}
+	if rendererReport.Diagnostic != "" {
+		// AUTO fallback diagnostics are successful-build metadata, but need
+		// the same original-module positions as rejected forced-mode builds.
+		rendererReport.Diagnostic = bundle.RemapError(errors.New(rendererReport.Diagnostic)).Error()
+	}
 	audioROMBytes, err := validateLinkedAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask, rendererReport.NativeAudioLinked)
 	if err != nil {
 		return result, err
 	}
-	s.emit(PhaseTranspile, fmt.Sprintf("Renderer: requested %s -> selected %s (%s)", rendererReport.Requested, rendererReport.Selected, rendererReport.Reason))
+	if s.tileCanvasExperiment {
+		s.emit(PhaseTranspile, "Renderer: EXPERIMENTAL tile canvas (up to four regular BGs plus a sparse OBJ foreground canvas)")
+	} else {
+		s.emit(PhaseTranspile, fmt.Sprintf("Renderer: requested %s -> selected %s (%s)", rendererReport.Requested, rendererReport.Selected, rendererReport.Reason))
+	}
 	if rendererReport.Profile != "" {
 		s.emit(PhaseTranspile, "Renderer AUTO profile: "+rendererReport.Profile)
 	}
@@ -374,6 +398,15 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		RendererProfile: rendererReport.Profile, RendererDiagnostic: rendererReport.Diagnostic,
 		RendererLayers: rendererReport.Mode0Layers, RendererObjects: rendererReport.Mode0Objects, RendererText: rendererReport.Mode0Text,
 		RendererOAMEntries: rendererReport.Mode0OAMEntries, RendererLineCycles: rendererReport.Mode0OBJLineCycles,
+	}
+	if s.tileCanvasExperiment {
+		// Report the hardware actually shown in the editor. The transpiler's
+		// public renderer report and eligibility remain unchanged.
+		result.Renderer = transpiler.RendererMode0
+		result.RendererProfile = "experimental-tilecanvas"
+		result.RendererReason = "Explicit generic tilemap and sparse OBJ canvas experiment"
+		result.RendererLayers = 4
+		result.RendererObjects = true
 	}
 	if s.KeepWork {
 		result.MapPath = mapPath
@@ -549,7 +582,7 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	// ROM cap; -opt=2 keeps the per-VBlank _update/_draw/cls path in the
 	// speed-optimized LLVM pipeline instead of the size one.
 	args := []string{"build", "-gc=none", "-opt=2", "-target=" + targetPath}
-	if tags := runtimeBuildTags(report); tags != "" {
+	if tags := s.runtimeBuildTags(report); tags != "" {
 		args = append(args, "-tags="+tags)
 	}
 	if mapPath != "" {

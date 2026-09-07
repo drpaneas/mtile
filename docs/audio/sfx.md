@@ -21,10 +21,12 @@ existing SFX on its own channel.
 - CH3 effects use a custom Wave RAM tone.
 - CH4 effects use noise and are the default for percussion.
 
-`sfx(id, priority)` requests ownership of the clip's channel. It may replace a
-song note only when its priority is at least the song event priority. Direct
-`gba_note` calls may replace any owner. The next song part reclaims lanes it
-uses. `sfx(-1)` stops only SFX-owned channels.
+`sfx(id)` uses priority 160 when the second argument is omitted. Music Lab
+notes default to 128, so a gameplay effect replaces an active song note on
+that channel. `sfx(id, priority)` requests ownership explicitly: it may
+replace a song note only when its priority is at least the song event
+priority. Direct `gba_note` calls may replace any owner. The next song part
+reclaims lanes it uses. `sfx(-1)` stops only SFX-owned channels.
 
 The queue is fixed and overflow is observable. Invalid IDs, channel-kind
 mismatches, and out-of-range notes fail closed. There are no PICO waveforms,

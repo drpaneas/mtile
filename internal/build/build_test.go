@@ -1405,7 +1405,7 @@ func TestBackgroundLayersExampleSelectsFourParallaxBackgrounds(t *testing.T) {
 		t.Fatalf("background-layers report = %+v, want the player object and overlay text", report)
 	}
 	for slot := 0; slot < 4; slot++ {
-		if !strings.Contains(generated, fmt.Sprintf("c.MapBGAtV(%d,", slot)) {
+		if !strings.Contains(generated, fmt.Sprintf("c.MapBGAt(%d,", slot)) {
 			t.Fatalf("BG%d did not compile to dense hardware slot %d", slot, slot)
 		}
 	}

@@ -326,7 +326,7 @@ func (c *Context) Mset(x, y, id int) {
 	}
 	if mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming {
 		if c.mapStreamingSet(x, y, uint16(id)) {
-			c.mapMutated(x, y)
+			c.mapMutated(x, y, uint16(id))
 		}
 		return
 	}
@@ -339,7 +339,7 @@ func (c *Context) Mset(x, y, id int) {
 		return
 	}
 	c.cart.Map[index] = value
-	c.mapMutated(x, y)
+	c.mapMutated(x, y, uint16(id))
 }
 
 // MsetLayer updates one logical authored background plane. The build planner
@@ -358,7 +358,7 @@ func (c *Context) MsetLayer(layer, x, y, id int) {
 	}
 	if mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming {
 		if c.mapStreamingSetLayer(layer, x, y, uint16(id)) {
-			c.mapLayerMutated(layer, x, y)
+			c.mapLayerMutated(layer, x, y, uint16(id))
 		}
 		return
 	}
@@ -372,7 +372,7 @@ func (c *Context) MsetLayer(layer, x, y, id int) {
 		return
 	}
 	c.cart.Map[index] = value
-	c.mapLayerMutated(layer, x, y)
+	c.mapLayerMutated(layer, x, y, uint16(id))
 }
 
 // MsetCompact is MgetCompact's mutation counterpart. The logical layer is
@@ -394,7 +394,7 @@ func (c *Context) MsetCompact(layer, storageLayer, x, y, id int) {
 		return
 	}
 	c.cart.Map[index] = value
-	c.mapLayerMutated(layer, x, y)
+	c.mapLayerMutated(layer, x, y, uint16(id))
 }
 
 // Fget reports one flag bit for sprite id. Out-of-range id or bit is false.

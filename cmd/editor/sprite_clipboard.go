@@ -136,8 +136,16 @@ func (g *Game) spritePasteTargetError(placement *spritePastePlacement, startCol,
 	if startCol < 0 || startRow < 0 || startCol+tileCols > cols || startRow+tileRows > rows {
 		return fmt.Errorf("%dx%d tile area at (%d,%d) exceeds the %dx%d spritesheet", tileCols, tileRows, startCol, startRow, cols, rows)
 	}
-	if startCol == 0 && startRow == 0 {
-		return fmt.Errorf("sprite 0 is locked as the transparent map eraser")
+	for row := 0; row < tileRows; row++ {
+		for col := 0; col < tileCols; col++ {
+			id := (startRow+row)*cols + (startCol + col)
+			if editor.SpriteIsReserved(id) {
+				if id == editor.ReservedSpriteID {
+					return fmt.Errorf("sprite 0 is locked as the transparent map eraser")
+				}
+				return fmt.Errorf("sprite %d is locked for Mode 0 print glyphs", id)
+			}
+		}
 	}
 	return nil
 }

@@ -379,6 +379,95 @@ func TestRunEditRunsExplicitEditorAndPropagatesFailure(t *testing.T) {
 	}
 }
 
+func TestRunEditScopesExperimentalTileCanvasToChildProject(t *testing.T) {
+	const key = "MTILE_EXPERIMENTAL_TILECANVAS_PROJECT"
+	for _, tc := range []struct {
+		name      string
+		enabled   bool
+		inherited string
+	}{
+		{name: "enabled replaces inherited project", enabled: true, inherited: "/previous/project"},
+		{name: "disabled does not opt in"},
+		{name: "disabled preserves inherited environment", inherited: "/previous/project"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv(key, tc.inherited)
+			if tc.inherited == "" {
+				if err := os.Unsetenv(key); err != nil {
+					t.Fatal(err)
+				}
+			}
+			original, originallySet := os.LookupEnv(key)
+			dir := t.TempDir()
+			project := filepath.Join(dir, "Celeste project")
+			if err := os.Mkdir(project, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			script := filepath.Join(dir, "editor.sh")
+			body := "#!/bin/sh\nprintf '%s\\n' \"${MTILE_EXPERIMENTAL_TILECANVAS_PROJECT-}\" \"$#\" \"$1\" \"$2\"\n"
+			if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			cwd, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
+			relative, err := filepath.Rel(cwd, project)
+			if err != nil {
+				t.Fatal(err)
+			}
+			args := []string{"edit", "-editor", script}
+			if tc.enabled {
+				args = append(args, "-experimental-tilecanvas")
+			}
+			args = append(args, relative)
+			var out bytes.Buffer
+			if err := run(args, &out, &bytes.Buffer{}); err != nil {
+				t.Fatal(err)
+			}
+			wantScope := tc.inherited
+			if tc.enabled {
+				wantScope = project
+			}
+			want := wantScope + "\n2\n-project\n" + project + "\n"
+			if out.String() != want {
+				t.Fatalf("child environment and arguments = %q, want %q", out.String(), want)
+			}
+			if value, set := os.LookupEnv(key); value != original || set != originallySet {
+				t.Fatalf("parent environment changed from (%q, %v) to (%q, %v)", original, originallySet, value, set)
+			}
+		})
+	}
+}
+
+func TestRunEditScopesExperimentalObjectsToChild(t *testing.T) {
+	const scope = "MTILE_EXPERIMENTAL_TILECANVAS_PROJECT"
+	const objects = "MTILE_EXPERIMENTAL_TILECANVAS_OBJECTS"
+	t.Setenv(scope, "/previous/project")
+	t.Setenv(objects, "1")
+	dir := t.TempDir()
+	script := filepath.Join(dir, "editor.sh")
+	body := "#!/bin/sh\nprintf '%s\\n' \"${MTILE_EXPERIMENTAL_TILECANVAS_PROJECT-}\" \"${MTILE_EXPERIMENTAL_TILECANVAS_OBJECTS-}\"\n"
+	if err := os.WriteFile(script, []byte(body), 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ flag, want string }{
+		{"-experimental-tilecanvas-objects", "1"},
+		{"-experimental-tilecanvas", ""},
+	} {
+		var out bytes.Buffer
+		if err := run([]string{"edit", "-editor", script, tc.flag, dir}, &out, &bytes.Buffer{}); err != nil {
+			t.Fatal(err)
+		}
+		if want := dir + "\n" + tc.want + "\n"; out.String() != want {
+			t.Fatalf("%s child environment=%q want=%q", tc.flag, out.String(), want)
+		}
+		if os.Getenv(scope) != "/previous/project" || os.Getenv(objects) != "1" {
+			t.Fatal("child launch modified parent environment")
+		}
+	}
+}
+
 func TestEditorCommandPrefersExplicitFlagOverEnv(t *testing.T) {
 	t.Setenv("MTILE_EDITOR", "/env/editor")
 	command, args, workDir, err := editorCommand("/flag/editor", "/proj")

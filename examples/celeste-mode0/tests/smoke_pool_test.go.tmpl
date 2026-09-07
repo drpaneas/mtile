@@ -1,0 +1,80 @@
+package main
+
+import (
+	"encoding/json"
+	rt "github.com/drpaneas/mtile/runtime"
+	"os"
+	"testing"
+)
+
+type smokeTrace struct {
+	Tick   int
+	Values []int32
+	Pixels uint64
+}
+
+func TestSmokeTrace(t *testing.T) {
+	h := newParityHarness(t)
+	rows := []smokeTrace{}
+	for tick := 0; tick < 500; tick++ {
+		if tick == 170 {
+			h.g.start_spawn(h.c)
+		}
+		if tick == 340 {
+			h.g.initialize_effects(h.c)
+		}
+		if tick%3 == 0 {
+			h.g.effect_smoke(h.c, rt.IntVal(100), rt.IntVal(80))
+		}
+		if tick%97 == 0 {
+			for i := 0; i < 8; i++ {
+				h.g.effect_smoke(h.c, rt.IntVal(100+i), rt.IntVal(80))
+			}
+		}
+		h.g.update_smoke(h.c)
+		// Moving GC between active-list and future pool accesses proves retained roots.
+		if tick%37 == 0 {
+			if e := h.c.Collect(); e != rt.HeapOK {
+				t.Fatal(e)
+			}
+		}
+		row := smokeTrace{Tick: tick, Pixels: 14695981039346656037}
+		for i := 1; i <= h.c.TableLen(h.g.smoke_particles); i++ {
+			p := h.c.TableGetInt(h.g.smoke_particles, i)
+			for _, key := range []string{"x", "y", "vx", "vy", "rx", "ry", "sprite", "flip_x", "flip_y"} {
+				v := h.c.TableGet(p, h.c.InternStatic(key))
+				n := int32(v.Num)
+				if v.Kind == rt.KindBool {
+					if v.Truthy() {
+						n = 1
+					} else {
+						n = 0
+					}
+				}
+				row.Values = append(row.Values, n)
+			}
+		}
+		h.c.Cls(0)
+		h.g.draw_smoke(h.c)
+		for y := 0; y < 160; y++ {
+			for x := 0; x < 240; x++ {
+				row.Pixels = (row.Pixels ^ uint64(h.c.Pget(x, y))) * 1099511628211
+			}
+		}
+		rows = append(rows, row)
+		if e := h.c.LastHeapError(); e != rt.HeapOK {
+			t.Fatalf("tick%d heap%v", tick, e)
+		}
+	}
+	output := struct {
+		Rows       []smokeTrace
+		NextRandom int32
+	}{rows, int32(h.c.Rnd(rt.One))}
+	b, e := json.Marshal(output)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile(os.Getenv("SMOKE_TRACE_OUT"), b, 0644); e != nil {
+		t.Fatal(e)
+	}
+}

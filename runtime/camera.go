@@ -108,6 +108,9 @@ func (c *Context) plotClipped(sx, sy int, color byte) {
 	if sx < c.clipX0 || sx >= c.clipX1 || sy < c.clipY0 || sy >= c.clipY1 {
 		return
 	}
+	if tileCanvasExperiment {
+		c.markCanvasPixel(sx, sy)
+	}
 	c.framebuffer[sy*ScreenWidth+sx] = color
 }
 

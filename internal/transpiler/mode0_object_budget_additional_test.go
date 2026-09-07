@@ -241,3 +241,59 @@ func TestMode0ObjectBudgetReportsZeroForObjectFreeDraw(t *testing.T) {
 		t.Fatalf("object-free report = %+v, want zero budget", report)
 	}
 }
+
+func TestMode0ObjectBudgetUsesWorstFiniteSpriteSize(t *testing.T) {
+	source := `
+id=1
+size=1
+function _update()
+  if btn(0) then size=2 else size=1 end
+end
+function _draw()
+  cls()
+  spr(id,0,0,size,size)
+end
+`
+	_, report, err := TranspileWithReport("finite-spr-size.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Mode0OAMEntries != 4 || report.Mode0OBJLineCycles != 16 {
+		t.Fatalf("report = %+v, want 2x2 worst-case OAM=4 and 16 line cycles", report)
+	}
+}
+
+func TestMode0RejectsUnprovenObjectLoop(t *testing.T) {
+	source := `
+sprites={{id=1,x=0,y=0}}
+function _draw()
+  cls()
+  for s in all(sprites) do
+    spr(s.id,s.x,s.y)
+  end
+end
+`
+	_, _, err := TranspileWithReport("unproven-loop.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err == nil || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), "unproven object count") {
+		t.Fatalf("error = %v, want unproven loop rejected", err)
+	}
+	_, report, err := TranspileWithReport("unproven-loop-auto.lua", source, Options{
+		Renderer: RendererAuto,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_OBJ_BUDGET]") {
+		t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+	}
+}

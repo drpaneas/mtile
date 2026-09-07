@@ -104,7 +104,7 @@ func mode0VRAMEntry(x, y int) uint16 {
 	return hw.GetReg16(mode0ScreenBase + uintptr(mode0ScreenEntry(x, y)*2))
 }
 
-func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
+func TestMode0CameraOffsetsFiniteWindowWithoutMapUpload(t *testing.T) {
 	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	mapData := make([]uint16, 80*40)
@@ -118,17 +118,17 @@ func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
 	c.Camera(7, 9)
 	c.Map(10, 5, 3, -2, 2, 2, 0)
 	c.PresentRender()
-	if got := hw.GetReg16(hw.BG0HOFS); got != 4 {
-		t.Fatalf("BG0HOFS = %d, want 4", got)
+	if got := hw.GetReg16(hw.BG0HOFS); got != 436 {
+		t.Fatalf("BG0HOFS = %d, want wrapped finite-map offset 436", got)
 	}
-	if got := hw.GetReg16(hw.BG0VOFS); got != 3 {
-		t.Fatalf("BG0VOFS = %d, want 3", got)
+	if got := hw.GetReg16(hw.BG0VOFS); got != 227 {
+		t.Fatalf("BG0VOFS = %d, want wrapped finite-map offset 227", got)
 	}
-	if got := mode0VRAMEntry(10, 4); got != 1 {
-		t.Fatalf("window entry (10,4) = %d, want 1", got)
+	if got := mode0VRAMEntry(0, 0); got != 1 {
+		t.Fatalf("finite window entry (0,0) = %d, want 1", got)
 	}
-	if got := mode0VRAMEntry(11, 4); got != 2 {
-		t.Fatalf("window entry (11,4) = %d, want 2", got)
+	if got := mode0VRAMEntry(1, 0); got != 2 {
+		t.Fatalf("finite window entry (1,0) = %d, want 2", got)
 	}
 
 	// One-pixel camera movement changes only hardware scroll while the source
@@ -138,24 +138,24 @@ func TestMode0CameraOffsetsWindowAndAvoidsSubtileMapUpload(t *testing.T) {
 	c.Camera(8, 9)
 	c.Map(10, 5, 3, -2, 2, 2, 0)
 	c.PresentRender()
-	if got := hw.GetReg16(hw.BG0HOFS); got != 5 {
-		t.Fatalf("BG0HOFS after subtile pan = %d, want 5", got)
+	if got := hw.GetReg16(hw.BG0HOFS); got != 437 {
+		t.Fatalf("BG0HOFS after subtile pan = %d, want 437", got)
 	}
 	if stats := c.RendererUploadStats(); stats.LastMapBytes != 0 {
 		t.Fatalf("subtile pan uploaded %d map bytes, want 0", stats.LastMapBytes)
 	}
 
-	// Crossing a tile boundary rematerializes the wrapped screen placement.
+	// Crossing a tile boundary also changes only scroll, retaining the finite rectangle.
 	c.BeginRenderFrame()
 	c.Cls(0)
 	c.Camera(15, 9)
 	c.Map(10, 5, 3, -2, 2, 2, 0)
 	c.PresentRender()
-	if stats := c.RendererUploadStats(); stats.LastMapBytes != 4096 {
-		t.Fatalf("tile-boundary pan uploaded %d map bytes, want 4096", stats.LastMapBytes)
+	if stats := c.RendererUploadStats(); stats.LastMapBytes != 0 {
+		t.Fatalf("tile-boundary pan uploaded %d map bytes, want 0", stats.LastMapBytes)
 	}
-	if got := mode0VRAMEntry(9, 4); got != 1 {
-		t.Fatalf("shifted window entry (9,4) = %d, want 1", got)
+	if got := mode0VRAMEntry(0, 0); got != 1 {
+		t.Fatalf("cached window entry (0,0) = %d, want 1", got)
 	}
 }
 
@@ -194,8 +194,8 @@ func TestMode0SubtilePanRevealsRightAndBottomGuardCells(t *testing.T) {
 		wantScrollX uint16
 		wantScrollY uint16
 	}{
-		{name: "right", initialX: 240, pannedX: 239, entryX: 30, wantScrollX: 1},
-		{name: "bottom", initialY: 160, pannedY: 159, entryY: 20, wantScrollY: 1},
+		{name: "right", initialX: 240, pannedX: 239, wantScrollX: 273},
+		{name: "bottom", initialY: 160, pannedY: 159, wantScrollY: 97},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -242,7 +242,7 @@ func TestMode0MutationUpdatesRightGuardCellBeforeSubtilePan(t *testing.T) {
 	c.Cls(0)
 	c.Map(0, 0, 239, 0, 1, 1, 0)
 	c.PresentRender()
-	if got := mode0VRAMEntry(30, 0); got != 1 {
+	if got := mode0VRAMEntry(0, 0); got != 1 {
 		t.Fatalf("mutated right guard entry = %d, want tile 1", got)
 	}
 	if stats := c.RendererUploadStats(); stats.LastMapBytes != 4096 {

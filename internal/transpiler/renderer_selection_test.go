@@ -183,7 +183,7 @@ end
 		if renderer != RendererMode4 && (report.Selected != RendererMode0 || report.Mode0Layers != 3) {
 			t.Fatalf("renderer %s report = %+v", renderer, report)
 		}
-		if strings.Count(generated, "c.MapBGAtV(") != 3 || !strings.Contains(generated, "c.MapBGAtV(0,") || !strings.Contains(generated, "c.MapBGAtV(1,") || !strings.Contains(generated, "c.MapBGAtV(2,") {
+		if strings.Count(generated, "c.MapBGAt(") != 3 || !strings.Contains(generated, "c.MapBGAt(0,") || !strings.Contains(generated, "c.MapBGAt(1,") || !strings.Contains(generated, "c.MapBGAt(2,") {
 			t.Fatalf("renderer %s did not emit explicit 8-argument map calls:\n%s", renderer, generated)
 		}
 	}
@@ -217,7 +217,7 @@ end
 	if report.Selected != RendererMode0 || report.Mode0Layers != 1 {
 		t.Fatalf("single map renderer report = %+v", report)
 	}
-	if !strings.Contains(generated, "c.MapBGAtV(0,") || strings.Contains(generated, "c.MapV(") {
+	if !strings.Contains(generated, "c.MapBGAt(0,") || strings.Contains(generated, "c.MapV(") {
 		t.Fatalf("single-BG map did not use the dense runtime call:\n%s", generated)
 	}
 }
@@ -280,7 +280,7 @@ func TestMapOnePlanePreservesLogicalIDButUsesDenseSlot(t *testing.T) {
 	if report.Mode0Layers != 1 || report.MapPlaneMask != 0x0a || report.MapDrawMask != 0x08 {
 		t.Fatalf("BG3 report = %+v", report)
 	}
-	if !strings.Contains(generated, "c.MapBGAtV(0,") {
+	if !strings.Contains(generated, "c.MapBGAt(0,") {
 		t.Fatalf("BG3 was not assigned dense slot 0:\n%s", generated)
 	}
 }
@@ -527,7 +527,6 @@ func TestMode0RejectsUnsafeHardwareSpriteShapes(t *testing.T) {
 		code   string
 	}{
 		{"before-map", `function _draw() cls() spr(1,0,0) map() end`, "M0_SPR_SHAPE"},
-		{"conditional", `function _draw() cls() map() if btn(0) then spr(1,0,0) end end`, "M0_DRAW_SHAPE"},
 		{"dynamic-id", `function _draw() cls() map() spr(player,0,0) end`, "M0_SPR_SHAPE"},
 		{"obj-vram", `function _draw() cls() map() spr(512,0,0) end`, "M0_SPR_SHAPE"},
 	}
@@ -928,10 +927,15 @@ func TestMode0RejectsUserLifecycleCallbackInvocationOrReference(t *testing.T) {
 
 func TestMode0RejectsDynamicOrControlCodeText(t *testing.T) {
 	tests := []string{
-		`function _draw() cls() map() print(label,0,0,7) end`,
+		`function _draw() cls() map() print("x"..n,0,0,7) end`,
+		`function _draw() cls() map() print(tostr(n),0,0,7) end`,
 		"function _draw() cls() map() print(\"line\\n\",0,0,7) end",
 		`function _draw() cls() map() print("text",0,0,ink) end`,
 		`function _draw() cls() map() print("implicit") end`,
+		`function _draw() cls() map() print(true,0,0,7) end`,
+		`label="HI" function _draw() cls() map() print(label,0,0,7) end`,
+		`flag=false function _draw() cls() map() print(flag,0,0,7) end`,
+		`player={dead=false} function _draw() cls() map() print(player.dead,0,0,7) end`,
 	}
 	for index, source := range tests {
 		_, _, err := TranspileWithReport("bad-text.lua", source,
@@ -939,6 +943,25 @@ func TestMode0RejectsDynamicOrControlCodeText(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "M0_PRINT_SHAPE") {
 			t.Fatalf("case %d error = %v", index, err)
 		}
+	}
+}
+
+func TestMode0AcceptsNumericPrint(t *testing.T) {
+	_, report, err := TranspileWithReport("num-print.lua", `
+n=42
+function _draw()
+  cls()
+  print(n,0,0,7)
+end
+`, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Mode0Text || report.Mode0OAMEntries != mode0PrintNumberOAMEntries {
+		t.Fatalf("report = %+v, want numeric print with %d OAM entries", report, mode0PrintNumberOAMEntries)
+	}
+	if len(report.Mode0TextKeys) != len(mode0PrintNumberCharset) {
+		t.Fatalf("numeric atlas keys = %d, want %d digit-bank glyphs", len(report.Mode0TextKeys), len(mode0PrintNumberCharset))
 	}
 }
 
@@ -1161,6 +1184,104 @@ func TestParseRenderer(t *testing.T) {
 	}
 	if _, err := ParseRenderer("adaptive"); err == nil {
 		t.Fatal("ParseRenderer accepted an unsupported alias")
+	}
+}
+
+func TestMode0AcceptsConditionalAndHelperSprites(t *testing.T) {
+	mapData := nonEmptyMap(30, 20, 1, 0)
+	opts := Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160, MapW: 30, MapH: 20, Map: mapData}
+	tests := []struct {
+		name, source string
+	}{
+		{"conditional", "function _draw() cls() map() if btn(0) then spr(1,0,0) end end"},
+		{"helper-after-map", `
+function draw_player()
+  spr(3, 8, 8)
+end
+function _draw()
+  cls()
+  map()
+  draw_player()
+end
+`},
+		{"numeric-for", `
+function _draw()
+  cls()
+  map()
+  for i = 0, 3 do
+    spr(1, i * 8, 0)
+  end
+end
+`},
+		{"finite-arithmetic-helper", `
+function sheet_id(id)
+  local tile = flr(id)
+  return flr(tile / 16) * 30 + tile % 16
+end
+function _draw()
+  cls()
+  map()
+  spr(sheet_id(29), 0, 0)
+end
+`},
+		{"trig-wrapper", `
+function unit_sin(turn)
+  return sin(turn)
+end
+function _draw()
+  cls()
+  map()
+  spr(flr(9.5 + unit_sin(0.25)), 0, 0)
+end
+`},
+		{"numeric-for-table", `
+sprites = {{id=1, x=0, y=0}}
+function _draw()
+  cls()
+  map()
+  for i = 1, 1 do
+    local s = sprites[i]
+    if s then
+      spr(s.id, s.x, s.y)
+    end
+  end
+end
+`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, report, err := TranspileWithReport(test.name+".lua", test.source, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if report.Selected != RendererMode0 || !report.Mode0Objects {
+				t.Fatalf("report = %+v, want Mode 0 objects", report)
+			}
+		})
+	}
+}
+
+func TestMode0RejectsHelperSpriteBeforeMaterializedMap(t *testing.T) {
+	source := `
+function draw_player()
+  spr(1, 0, 0)
+end
+function _draw()
+  cls()
+  draw_player()
+  map()
+end
+`
+	_, _, err := TranspileWithReport("helper-before-map.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+		MapW:     30,
+		MapH:     20,
+		Map:      nonEmptyMap(30, 20, 1, 0),
+	})
+	if err == nil || !strings.Contains(err.Error(), "[M0_SPR_SHAPE]") || !strings.Contains(err.Error(), "behind every materialized background") {
+		t.Fatalf("error = %v, want helper spr before map rejected", err)
 	}
 }
 

@@ -11,11 +11,29 @@ import (
 	"slices"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	runtimeapi "github.com/drpaneas/mtile/runtime"
 )
 
 // ReservedSpriteID is the permanently transparent map eraser. The editor may
 // select it so users can erase map cells, but must never author pixels into it.
 const ReservedSpriteID = 0
+
+// SpriteIsReserved reports cells the editor must not paint. Sprite 0 is the
+// transparent map eraser. IDs 480-511 are the Mode 0 print glyph bank whenever
+// they exist on the sheet.
+func SpriteIsReserved(id int) bool {
+	if id == ReservedSpriteID {
+		return true
+	}
+	return id >= runtimeapi.Mode0TextTileBase && id < runtimeapi.Mode0TextTileBase+runtimeapi.Mode0TextTileCount
+}
+
+func reservedSpriteEditError(id int) error {
+	if id == ReservedSpriteID {
+		return fmt.Errorf("sprite 0 is reserved as the transparent map eraser and cannot be edited")
+	}
+	return fmt.Errorf("sprite %d is reserved for Mode 0 print glyphs and cannot be edited", id)
+}
 
 // Model is one editable native project. Sheet and map dimensions are project
 // data, not a fixed display or cartridge size.
@@ -462,8 +480,8 @@ func (m *Model) SetSpritePixel(id, x, y, color int) error {
 	if m == nil {
 		return fmt.Errorf("editor model is required")
 	}
-	if id == ReservedSpriteID {
-		return fmt.Errorf("sprite 0 is reserved as the transparent map eraser and cannot be edited")
+	if SpriteIsReserved(id) {
+		return reservedSpriteEditError(id)
 	}
 	cols, rows := m.Sheet.Width/8, m.Sheet.Height/8
 	spriteN := cols * rows
@@ -526,8 +544,8 @@ func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixel
 		for tileX := 0; tileX < tileCols; tileX++ {
 			col, row := startCol+tileX, startRow+tileY
 			id := row*cols + col
-			if id == ReservedSpriteID {
-				return false, fmt.Errorf("sprite 0 is reserved as the transparent map eraser and cannot be edited")
+			if SpriteIsReserved(id) {
+				return false, reservedSpriteEditError(id)
 			}
 			if index, ok := records[id]; ok {
 				sprite := updated.Sprites[index]

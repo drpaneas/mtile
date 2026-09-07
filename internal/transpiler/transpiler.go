@@ -102,6 +102,54 @@ type Options struct {
 	DisableFixedMapLayerSpecialization bool
 	// DisableMapRasterCache keeps the per-cell Mode 4 map path for A/B checks.
 	DisableMapRasterCache bool
+	// DisableConditionSpecialization retains value-producing logical temporaries
+	// in truth-only branches for paired code-generation and target checks.
+	DisableConditionSpecialization bool
+	// DisableStableWriteSpecialization retains caller-side variadic root
+	// construction for already-cached table stores in paired target checks.
+	DisableStableWriteSpecialization bool
+	// DisableStableReadSpecialization retains full table/key Values on warm
+	// numeric-field reads for paired target and correctness checks.
+	DisableStableReadSpecialization bool
+	// DisableConstantDivision retains generic fixed-point division by +/-1.5
+	// for paired code-generation and target checks.
+	DisableConstantDivision bool
+	// DisableTypedDrawCalls retains the Value ABI for numeric spr, camera,
+	// and map calls. It is the narrow rollback/A-B path for typed draw calls.
+	DisableTypedDrawCalls bool
+	// DisableNumericLengths retains boxed lengths of ordinary tables/strings.
+	// The runtime's # result is always numeric, even for unsupported operands.
+	DisableNumericLengths bool
+	// DisableStaticTableLiterals retains generic hash insertion for all
+	// constructor fields. It is the rollback/A-B path for literal slot plans.
+	DisableStaticTableLiterals bool
+	// DisableTableLiteralViews retains per-field validation even when a fresh
+	// static constructor cannot allocate while evaluating any of its values.
+	DisableTableLiteralViews bool
+	// DisableTrustedTableLiteralWrites retains the guarded per-field view
+	// method even for a fresh complete non-nil static constructor.
+	DisableTrustedTableLiteralWrites bool
+	// DisableTableLiteralImages retains per-field insertion instead of copying
+	// a ROM image of a trusted constructor's keys and constant values.
+	DisableTableLiteralImages bool
+	// DisableLoopTableReservations retains incremental array growth for fresh
+	// tables immediately filled by a proved fixed-count append loop.
+	DisableLoopTableReservations bool
+	// DisableKnownTableAppends retains dense-prefix scans in the exact fresh
+	// append loops whose final array capacities have already been reserved.
+	DisableKnownTableAppends bool
+	// DisableCoercedNumberParams retains Value parameters even when every
+	// use in a non-allocating function explicitly coerces them to numbers.
+	DisableCoercedNumberParams bool
+	// DisableNumberArrayViews retains validation for every numeric-array
+	// element access in proven non-allocating numeric loops.
+	DisableNumberArrayViews bool
+	// DisableMapLayerViews retains per-cell cart/plane validation in proven
+	// non-allocating loops over literal resident map layers.
+	DisableMapLayerViews bool
+	// DisableIntegerNumericFor retains 16.16 induction for compile-time
+	// integer numeric loops. The default emits a native Go integer for.
+	DisableIntegerNumericFor bool
 	// Renderer is selected at build time. Its zero value deliberately preserves
 	// the shipping Mode 4 backend for every existing caller.
 	Renderer  Renderer
@@ -231,6 +279,7 @@ func TranspileWithReport(sourceName, source string, opts Options) (string, Rende
 	report.HeapLinked = metadata.heapLinked
 	report.SheetReadOnly = metadata.sheetReadOnly
 	report.StaticStrings = metadata.staticStrings
+	report.Mode0TextKeys = metadata.mode0TextKeys
 	return generated, report, err
 }
 
@@ -281,6 +330,7 @@ type generationMetadata struct {
 	heapLinked    bool
 	sheetReadOnly bool
 	staticStrings int
+	mode0TextKeys []uint16
 }
 
 func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
@@ -326,7 +376,7 @@ func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generat
 	if err := g.validateTransitiveRootBudget(); err != nil {
 		return "", generationMetadata{}, err
 	}
-	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, staticStrings: len(g.statics)}, nil
+	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, staticStrings: len(g.statics), mode0TextKeys: g.mode0TextKeys}, nil
 }
 
 func newGenerator(chunk *luaparser.Chunk, opts Options) *generator {
@@ -348,15 +398,16 @@ func newGenerator(chunk *luaparser.Chunk, opts Options) *generator {
 }
 
 type functionInfo struct {
-	decl        *luaparser.FunctionDeclStmt
-	key         string
-	goName      string
-	returnN     int
-	returnKinds []monoKind
-	params      []string
-	paramKinds  []monoKind
-	noAlloc     bool
-	rootPeak    int
+	decl                *luaparser.FunctionDeclStmt
+	key                 string
+	goName              string
+	returnN             int
+	returnKinds         []monoKind
+	params              []string
+	paramKinds          []monoKind
+	coercedNumberParams []bool
+	noAlloc             bool
+	rootPeak            int
 }
 
 type rootCallEdge struct {
@@ -438,14 +489,19 @@ type generator struct {
 	statics  []string
 	staticGo map[string]string
 
-	fieldCaches        map[*luaparser.FieldExpr]int
-	fieldCacheN        int
-	numericFields      map[string]bool
-	numericArrays      map[string]*numericArrayInfo
-	numericRecords     map[string]*numericRecordInfo
-	numericRecordOrder []*numericRecordInfo
-	numericRecordKeys  map[*luaparser.StringExpr]bool
-	numericConstants   map[string]*numericConstantInfo
+	fieldCaches          map[*luaparser.FieldExpr]int
+	fieldCacheN          int
+	numericFields        map[string]bool
+	numericArrays        map[string]*numericArrayInfo
+	borrowedNumberArrays map[string]string
+	borrowedMapLayers    map[int]string
+	literalArrayCaps     map[*luaparser.TableExpr]int
+	reservedAppendLoops  map[*luaparser.NumericForStmt]*luaparser.CallExpr
+	knownAppendPositions map[*luaparser.CallExpr]string
+	numericRecords       map[string]*numericRecordInfo
+	numericRecordOrder   []*numericRecordInfo
+	numericRecordKeys    map[*luaparser.StringExpr]bool
+	numericConstants     map[string]*numericConstantInfo
 
 	current            *functionInfo
 	seq                int
@@ -469,6 +525,7 @@ type generator struct {
 	legacyAudioEnabled bool
 	nativeAudioEnabled bool
 	nativeAudioDecl    string
+	tableImages        []generatedTableImage
 	heapEnabled        bool
 	inputEnabled       bool
 	timeEnabled        bool
@@ -640,16 +697,17 @@ func (g *generator) prepare() error {
 		info.returnKinds = make([]monoKind, info.returnN)
 	}
 	g.sheetMutable = chunkCallsBuiltin(g.chunk, "sset")
-	if !g.sheetMutable {
-		g.compactSheet()
-	}
 	if g.opts.Renderer == RendererMode0 && g.opts.Mode0Text {
 		draw := g.funcs["_draw"]
 		if draw == nil || draw.decl == nil {
 			return errors.New("transpiler: Mode 0 text selected without a _draw callback")
 		}
-		atlas := buildMode0TextAtlas(draw.decl)
+		atlas := buildMode0TextAtlasForSource(g.chunk, draw.decl, g.opts)
 		g.mode0TextKeys, g.mode0TextTiles = atlas.keys, atlas.tiles
+		runtimeapi.OverlayMode0TextSheet(g.opts.Sheet, g.opts.SheetW, g.opts.SheetH, atlas.keys)
+	}
+	if !g.sheetMutable {
+		g.compactSheet()
 	}
 	for _, info := range g.funcList {
 		if (info.key == "_init" || info.key == "_update" || info.key == "_draw") && len(info.params) != 0 {
@@ -658,11 +716,13 @@ func (g *generator) prepare() error {
 	}
 	g.discoverGlobals()
 	g.analyzeNumericArrays()
-	g.analyzeMonomorphicNumbers()
+	g.analyzeMonomorphicNumbers(false)
 	g.analyzeNumericConstants()
 	g.analyzeNumericRecords()
-	g.analyzeMonomorphicFunctions()
 	g.analyzeNoAllocFunctions()
+	g.analyzeMonomorphicFunctions()
+	g.refineMonomorphicFieldSignatures()
+	g.analyzeLoopTableReservations()
 	g.heapEnabled = g.opts.DisableHeapElision || g.requiresHeap()
 	if len(g.globals) > GlobalLimit {
 		return &GlobalLimitError{Report: g.globalReport()}
@@ -1081,7 +1141,7 @@ func (g *generator) numericRecordInitializerSafe(expr luaparser.Expr, declaratio
 		}
 		switch name {
 		case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd",
-			"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr", "t", "time", "stat":
+			"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr", "t", "time", "stat", "mget":
 			for _, argument := range x.Args {
 				if !g.numericRecordInitializerSafe(argument, declaration) {
 					return false
@@ -1349,9 +1409,15 @@ func (g *generator) numericArrayIndex(expr *luaparser.IndexExpr) (string, *numer
 	return base.Name, info, info != nil
 }
 
-func (g *generator) analyzeMonomorphicNumbers() {
+func (g *generator) analyzeMonomorphicNumbers(poisonUnknown bool) {
 	if g.opts.DisableMonomorphicNumbers {
 		return
+	}
+	if poisonUnknown {
+		// Confirmation must not keep optimistic field types while poisoning
+		// remaining unknown initializers: a local alias of box.size would
+		// otherwise stay numeric after a later string constructor of size.
+		g.numericFields = make(map[string]bool)
 	}
 	// Top-level declarations own Game fields. Their first source assignment is
 	// the type observation used by the monomorphic contract.
@@ -1383,8 +1449,8 @@ func (g *generator) analyzeMonomorphicNumbers() {
 	}
 
 	// Record fields retain Value storage, but a field name whose observed table
-	// literal initializers are all numeric can use native Number reads/writes.
-	// Resolve initializer aliases in their lexical scope. In particular, a
+	// literal initializers and named-field writes are all numeric can use native
+	// Number reads/writes. Resolve initializer aliases in their lexical scope.
 	// local or parameter must hide a same-named numeric global. Keep provisional
 	// field observations out of expression inference until every constructor
 	// has been visited: a later mixed initializer may invalidate an early one.
@@ -1395,14 +1461,19 @@ func (g *generator) analyzeMonomorphicNumbers() {
 		}
 	}
 	params := make(map[*functionInfo][]functionParamObservation)
-	top := &monomorphicAnalysisEnv{g: g, observeField: observe}
+	top := &monomorphicAnalysisEnv{g: g, observeField: observe, poisonUnknownFields: poisonUnknown}
 	top.push()
 	for _, stmt := range g.chunk.Body {
 		if fn, ok := stmt.(*luaparser.FunctionDeclStmt); ok {
-			env := &monomorphicAnalysisEnv{g: g, observeField: observe}
+			env := &monomorphicAnalysisEnv{g: g, observeField: observe, poisonUnknownFields: poisonUnknown}
 			env.push()
-			for _, name := range fn.Params {
-				env.declare(name, monoValue)
+			info := g.funcs[functionKey(fn)]
+			for i, name := range fn.Params {
+				kind := monoValue
+				if info != nil && i < len(info.paramKinds) {
+					kind = info.paramKinds[i]
+				}
+				env.declare(name, kind)
 			}
 			for _, bodyStmt := range fn.Body.Body {
 				g.analyzeMonomorphicStmt(bodyStmt, env, params, nil, false)
@@ -1412,6 +1483,66 @@ func (g *generator) analyzeMonomorphicNumbers() {
 		g.analyzeMonomorphicStmt(stmt, top, params, nil, true)
 	}
 	g.numericFields = fields
+}
+
+func numericFieldsEqual(a, b map[string]bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for name, isNumber := range a {
+		if b[name] != isNumber {
+			return false
+		}
+	}
+	return true
+}
+
+func cloneNumericFields(fields map[string]bool) map[string]bool {
+	cloned := make(map[string]bool, len(fields))
+	for name, isNumber := range fields {
+		cloned[name] = isNumber
+	}
+	return cloned
+}
+
+func (g *generator) resetMonomorphicSignatures() {
+	for _, fn := range g.funcList {
+		for i := range fn.paramKinds {
+			fn.paramKinds[i] = monoValue
+		}
+		for i := range fn.returnKinds {
+			fn.returnKinds[i] = monoValue
+		}
+		fn.coercedNumberParams = nil
+	}
+}
+
+// refineMonomorphicFieldSignatures closes the loop between function signatures
+// and named-field observations. Untyped aliases are skipped until a later
+// confirmation pass poisons any initializer that is still not a number, so a
+// numeric parameter constructor can keep native fields without letting a
+// string parameter keep a provisional numeric type.
+func (g *generator) refineMonomorphicFieldSignatures() {
+	if g.opts.DisableMonomorphicNumbers {
+		return
+	}
+	for pass := 0; pass < 32; pass++ {
+		before := cloneNumericFields(g.numericFields)
+		g.analyzeMonomorphicNumbers(false)
+		if !g.opts.DisableMonomorphicFunctions {
+			g.analyzeMonomorphicFunctions()
+		}
+		if numericFieldsEqual(before, g.numericFields) {
+			break
+		}
+	}
+	before := cloneNumericFields(g.numericFields)
+	g.analyzeMonomorphicNumbers(true)
+	if numericFieldsEqual(before, g.numericFields) {
+		return
+	}
+	g.resetMonomorphicSignatures()
+	g.analyzeMonomorphicFunctions()
 }
 
 func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
@@ -1428,14 +1559,68 @@ func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
 	}
 }
 
+// observeNamedField records constructor-style evidence from `t.name = value`.
+// It uses the previous analysis pass for field reads, never the in-progress
+// map, so a later mixed store can still poison a provisional numeric name.
+func (e *monomorphicAnalysisEnv) observeNamedField(name string, value luaparser.Expr, kind monoKind) {
+	if e.observeField == nil || name == "" {
+		return
+	}
+	if kind == monoNumber || (value != nil && e.numericFieldIntent(value)) {
+		e.observeField(name, true)
+		return
+	}
+	if value != nil && (provenNonNumericFieldValue(value) || e.poisonUnknownFields && poisonUnknownFieldValue(value)) {
+		e.observeField(name, false)
+		return
+	}
+	if value == nil && e.poisonUnknownFields {
+		e.observeField(name, false)
+	}
+}
+
 func (e *monomorphicAnalysisEnv) numericFieldIntent(expr luaparser.Expr) bool {
 	switch x := expr.(type) {
 	case *luaparser.ParenExpr:
 		return e.numericFieldIntent(x.Expr)
 	case *luaparser.VarExpr:
 		return e.lookup(x.Name) == monoNumber
+	case *luaparser.FieldExpr:
+		return !e.g.opts.DisableStableTableFields && e.g.numericFields[x.Name]
+	case *luaparser.CallExpr:
+		if fn := e.g.calledFunction(x); fn != nil {
+			return fn.returnN > 0 && fn.returnKind(0) == monoNumber
+		}
+		return numericIntent(expr)
 	default:
 		return numericIntent(expr)
+	}
+}
+
+func provenNonNumericFieldValue(expr luaparser.Expr) bool {
+	switch x := unparenExpr(expr).(type) {
+	case *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.StringExpr, *luaparser.TableExpr:
+		return true
+	case *luaparser.UnaryExpr:
+		return x.Op == luaparser.OpNot
+	case *luaparser.BinaryExpr:
+		switch x.Op {
+		case luaparser.OpEqual, luaparser.OpNotEqual, luaparser.OpLess, luaparser.OpLessEq,
+			luaparser.OpGreater, luaparser.OpGreaterEq, luaparser.OpConcat:
+			return true
+		}
+	}
+	return false
+}
+
+func poisonUnknownFieldValue(expr luaparser.Expr) bool {
+	switch unparenExpr(expr).(type) {
+	case *luaparser.FieldExpr, *luaparser.IndexExpr:
+		// A read of another table's field is not proof this name is non-numeric.
+		// Confirmation still poisons untyped aliases and non-numeric literals.
+		return false
+	default:
+		return true
 	}
 }
 
@@ -1463,7 +1648,7 @@ func numericIntent(expr luaparser.Expr) bool {
 		}
 		switch name {
 		case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd",
-			"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr", "t", "time", "stat":
+			"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr", "t", "time", "stat", "mget":
 			return true
 		}
 	}
@@ -1481,9 +1666,10 @@ type functionReturnObservation struct {
 }
 
 type monomorphicAnalysisEnv struct {
-	g            *generator
-	scopes       []map[string]monoKind
-	observeField func(name string, isNumber bool)
+	g                   *generator
+	scopes              []map[string]monoKind
+	observeField        func(name string, isNumber bool)
+	poisonUnknownFields bool
 }
 
 func (e *monomorphicAnalysisEnv) push() {
@@ -1555,7 +1741,15 @@ func (g *generator) analyzeMonomorphicFunctions() {
 		changed := false
 		for _, fn := range g.funcList {
 			for i, observation := range params[fn] {
-				if fn.paramKinds[i] == monoValue && observation.seen && observation.allNumber {
+				demanded := observation.seen && g.parameterAlwaysCoerced(fn, i)
+				if demanded && !fn.coercesNumberParam(i) {
+					if fn.coercedNumberParams == nil {
+						fn.coercedNumberParams = make([]bool, len(fn.params))
+					}
+					fn.coercedNumberParams[i] = true
+					changed = true
+				}
+				if fn.paramKinds[i] == monoValue && observation.seen && (observation.allNumber || demanded) {
 					fn.paramKinds[i] = monoNumber
 					changed = true
 				}
@@ -1589,8 +1783,21 @@ func (g *generator) analyzeMonomorphicStmt(stmt luaparser.Stmt, env *monomorphic
 				g.analyzeMonomorphicExpr(target.Key, env, params)
 			}
 		}
-		for _, value := range s.Values {
-			g.analyzeMonomorphicExpr(value, env, params)
+		kinds := g.analyzeMonomorphicExprList(s.Values, env, params)
+		for i, target := range s.Targets {
+			field, ok := target.(*luaparser.FieldExpr)
+			if !ok {
+				continue
+			}
+			var value luaparser.Expr
+			if i < len(s.Values) {
+				value = s.Values[i]
+			}
+			kind := monoValue
+			if i < len(kinds) {
+				kind = kinds[i]
+			}
+			env.observeNamedField(field.Name, value, kind)
 		}
 	case *luaparser.LocalAssignStmt:
 		kinds := g.analyzeMonomorphicValues(s.Values, len(s.Names), env, params)
@@ -1633,7 +1840,7 @@ func (g *generator) analyzeMonomorphicStmt(stmt luaparser.Stmt, env *monomorphic
 		stepKind := g.analyzeMonomorphicExpr(s.Step, env, params)
 		env.push()
 		kind := monoValue
-		if initKind == monoNumber && limitKind == monoNumber && stepKind == monoNumber {
+		if initKind == monoNumber && limitKind == monoNumber && stepKind == monoNumber && !numericForVariableReassigned(s) {
 			kind = monoNumber
 		}
 		env.declare(s.Name, kind)
@@ -1741,6 +1948,9 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 			}
 		}
 		kind := g.analyzeMonomorphicExpr(x.Expr, env, params)
+		if x.Op == luaparser.OpLength && !g.opts.DisableNumericLengths {
+			return monoNumber
+		}
 		if kind == monoNumber && (x.Op == luaparser.OpNegate || x.Op == luaparser.OpBitNot) {
 			return monoNumber
 		}
@@ -1781,10 +1991,11 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 		if !ok {
 			return monoValue
 		}
-		// These builtins coerce every argument with NumberOr(0), so their
-		// result is numeric even when an argument is a generic Lua Value.
-		// Preserve argument observations above: only the result narrows.
-		if name == "min" || name == "max" || name == "mid" {
+		// These builtins produce a number even when an argument is a generic
+		// Lua Value: min/max/mid coerce with NumberOr(0), and mget always
+		// returns a tile id (0 for invalid layers/coordinates). Preserve
+		// argument observations above: only the result narrows.
+		if name == "min" || name == "max" || name == "mid" || name == "mget" {
 			return monoNumber
 		}
 		allNumber := true
@@ -1809,7 +2020,12 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 			g.analyzeMonomorphicExpr(field.Value, env, params)
 			if env.observeField != nil && !field.Array {
 				if key, ok := field.Key.(*luaparser.StringExpr); ok {
-					env.observeField(key.Value, env.numericFieldIntent(field.Value))
+					if env.numericFieldIntent(field.Value) {
+						env.observeField(key.Value, true)
+					} else if provenNonNumericFieldValue(field.Value) ||
+						env.poisonUnknownFields && poisonUnknownFieldValue(field.Value) {
+						env.observeField(key.Value, false)
+					}
 				}
 			}
 		}
@@ -2002,11 +2218,14 @@ func (g *generator) exprNoAlloc(expr luaparser.Expr) bool {
 			// PrintV converts non-string values through Tostr, which allocates
 			// from the Lua heap. A literal is interned as KindStaticString at
 			// initialization and follows the allocation-free drawing path.
+			// Mode 0 numbers use formatNumber on a stack buffer instead.
 			if len(x.Args) == 0 {
 				return false
 			}
-			_, literal := unparenExpr(x.Args[0]).(*luaparser.StringExpr)
-			return literal
+			if _, literal := unparenExpr(x.Args[0]).(*luaparser.StringExpr); literal {
+				return true
+			}
+			return g.mode0HeaplessPrintNumber(x.Args[0])
 		}
 		return builtinNoAlloc(name)
 	case *luaparser.TableExpr:
@@ -3611,11 +3830,17 @@ func (g *generator) render() string {
 	b.line("")
 	g.renderFunctions(&b)
 	b.line("")
+	g.renderTableImages(&b)
 	g.renderMain(&b)
 	return b.String()
 }
 
 func (g *generator) renderHelpers(b *sourceBuilder) {
+	renderConstantDivisionHelpers(b)
+	// This variadic root walker includes heap initialization and failure
+	// cleanup. Keep it shared instead of duplicating those cold paths into
+	// every IWRAM loop and generated allocation helper after LLVM inlining.
+	b.line("//go:noinline")
 	b.line("func gluPushRoots(c *rt.Context, roots ...rt.Value) int {")
 	b.line("\tn := 0")
 	b.line("\tfor _, root := range roots {")
@@ -3644,6 +3869,8 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
 	b.line("func gluChr(c *rt.Context, n rt.Value, roots ...rt.Value) rt.Value { k := gluPushRoots(c,n); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; v,err := c.Chr(n); gluPopRoots(c,k+m); return gluMust(v,err) }")
 	b.line("func gluTostr(c *rt.Context, v rt.Value, hex bool, roots ...rt.Value) rt.Value { k := gluPushRoots(c,v); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; out,err := c.Tostr(v,hex); gluPopRoots(c,k+m); return gluMust(out,err) }")
 	b.line("func gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableAppendKnown(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }")
+	b.line("func gluTableAppendKnownHeld(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }")
 	b.line("func gluTableSet(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }")
 	// A cached field write resolves its handle and stores without allocating.
 	// RHS evaluation has already rooted allocations; only the cold lookup/
@@ -4150,8 +4377,8 @@ func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) 
 		g.emitIfChain(b, indent, s.Condition, s.Then.Body, s.ElseIf, elseBody)
 	case *luaparser.WhileStmt:
 		b.line(pad + "for {")
-		cond := g.emitExprFlush(b, indent+1, s.Condition)
-		b.line(pad + "\tif !(" + cond + ").Truthy() { break }")
+		cond := g.emitConditionFlush(b, indent+1, s.Condition)
+		b.line(pad + "\tif !(" + cond + ") { break }")
 		g.pushScope()
 		for _, q := range s.Body.Body {
 			g.emitStmt(b, q, indent+1)
@@ -4164,9 +4391,9 @@ func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) 
 		for _, q := range s.Body.Body {
 			g.emitStmt(b, q, indent+1)
 		}
-		cond := g.emitExprFlush(b, indent+1, s.Condition)
+		cond := g.emitConditionFlush(b, indent+1, s.Condition)
 		g.popScope()
-		b.line(pad + "\tif (" + cond + ").Truthy() { break }")
+		b.line(pad + "\tif (" + cond + ") { break }")
 		b.line(pad + "}")
 	case *luaparser.DoStmt:
 		b.line(pad + "{")
@@ -4245,8 +4472,11 @@ func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) 
 }
 
 func (g *generator) emitMonomorphicNumericFor(b *sourceBuilder, s *luaparser.NumericForStmt, indent int) bool {
-	if !g.exprNumber(s.Init) || !g.exprNumber(s.Limit) || !g.exprNumber(s.Step) {
+	if !g.exprNumber(s.Init) || !g.exprNumber(s.Limit) || !g.exprNumber(s.Step) || numericForVariableReassigned(s) {
 		return false
+	}
+	if g.emitIntegerNumericFor(b, s, indent) {
+		return true
 	}
 	pad := strings.Repeat("\t", indent)
 	id := g.next("numFor")
@@ -4259,6 +4489,10 @@ func (g *generator) emitMonomorphicNumericFor(b *sourceBuilder, s *luaparser.Num
 	stepExpr := g.emitNumberExpr(s.Step)
 	g.writePending(b, indent)
 	b.line(pad + id + "Step := " + stepExpr)
+	restoreViews := g.borrowLoopViews(b, s.Body, indent)
+	defer restoreViews()
+	appendPosition, restoreAppend := g.beginKnownAppendLoop(b, s, indent)
+	defer restoreAppend()
 	g.pushScope()
 	loopVar := g.declareLocalKind(s.Name, monoNumber)
 	b.line(pad + "var " + loopVar + " rt.Number")
@@ -4270,7 +4504,54 @@ func (g *generator) emitMonomorphicNumericFor(b *sourceBuilder, s *luaparser.Num
 		g.emitStmt(b, stmt, indent+1)
 	}
 	g.popScope()
+	if appendPosition != "" {
+		b.line(pad + "\t" + appendPosition + "++")
+	}
 	b.line(pad + "\t" + id + "Init += " + id + "Step")
+	b.line(pad + "}")
+	g.popScope()
+	return true
+}
+
+func (g *generator) emitIntegerNumericFor(b *sourceBuilder, s *luaparser.NumericForStmt, indent int) bool {
+	if g.opts.DisableIntegerNumericFor {
+		return false
+	}
+	init, limit, step, ok := integerNumericForBounds(s)
+	if !ok {
+		return false
+	}
+	count := (limit-init)/step + 1
+	next := init + count*step
+	if count < 1 || next < -32768 || next > 32767 {
+		return false
+	}
+	pad := strings.Repeat("\t", indent)
+	id := g.next("intFor")
+	restoreViews := g.borrowLoopViews(b, s.Body, indent)
+	defer restoreViews()
+	appendPosition, restoreAppend := g.beginKnownAppendLoop(b, s, indent)
+	defer restoreAppend()
+	g.pushScope()
+	used := numericForVariableReferenced(s)
+	loopVar := ""
+	if used {
+		loopVar = g.declareLocalKind(s.Name, monoNumber)
+		b.line(pad + "var " + loopVar + " rt.Number")
+		b.line(pad + "_ = " + loopVar)
+	}
+	b.line(pad + integerNumericForHeader(id, init, limit, step))
+	if used {
+		b.line(pad + "\t" + loopVar + " = rt.FromInt(" + id + ")")
+	}
+	g.pushScope()
+	for _, stmt := range s.Body.Body {
+		g.emitStmt(b, stmt, indent+1)
+	}
+	g.popScope()
+	if appendPosition != "" {
+		b.line(pad + "\t" + appendPosition + "++")
+	}
 	b.line(pad + "}")
 	g.popScope()
 	return true
@@ -4278,8 +4559,8 @@ func (g *generator) emitMonomorphicNumericFor(b *sourceBuilder, s *luaparser.Num
 
 func (g *generator) emitIfChain(b *sourceBuilder, indent int, cond luaparser.Expr, thenBody []luaparser.Stmt, elseIfs []*luaparser.IfBranch, elseBody []luaparser.Stmt) {
 	pad := strings.Repeat("\t", indent)
-	condExpr := g.emitExprFlush(b, indent, cond)
-	b.line(pad + "if (" + condExpr + ").Truthy() {")
+	condExpr := g.emitConditionFlush(b, indent, cond)
+	b.line(pad + "if (" + condExpr + ") {")
 	g.pushScope()
 	for _, q := range thenBody {
 		g.emitStmt(b, q, indent+1)
@@ -4335,6 +4616,7 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 		key   string
 		field string
 		cache string
+		view  string
 	}
 	const (
 		lhsVar = iota
@@ -4353,7 +4635,7 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 				key := g.next("lhs")
 				b.line(pad + key + " := " + g.emitExprFlush(b, indent, t.Key))
 				g.extraRoots = append(g.extraRoots, key)
-				slots[i] = lhs{kind: lhsNumberArray, mono: monoNumber, base: g.lookup(name), key: key}
+				slots[i] = lhs{kind: lhsNumberArray, mono: monoNumber, base: g.lookup(name), key: key, view: g.borrowedNumberArrays[name]}
 				continue
 			}
 			base := g.next("lhs")
@@ -4398,14 +4680,18 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 		case lhsIndex:
 			b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 		case lhsNumberArray:
-			b.line(pad + "_ = c.NumberArraySet(" + slot.base + ", " + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
+			if slot.view != "" {
+				b.line(pad + "_ = " + slot.view + ".Set(" + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
+			} else {
+				b.line(pad + "_ = c.NumberArraySet(" + slot.base + ", " + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
+			}
 		case lhsNumericRecord:
 			b.line(pad + slot.dest + " = " + adjustedNumber(values[i]))
 		case lhsField:
 			if slot.mono == monoNumber && slot.cache != "" {
-				b.line(pad + "_ = gluTableSetStableNumber(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedNumber(values[i]) + ", " + slot.cache + g.rootArgsFor(5, s.Pos()) + ")")
+				g.emitStableWrite(b, indent, true, slot.base, g.staticExpr(slot.field), adjustedNumber(values[i]), slot.cache, g.rootArgsFor(5, s.Pos()))
 			} else if slot.cache != "" {
-				b.line(pad + "_ = gluTableSetStable(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + ", " + slot.cache + g.rootArgsFor(6, s.Pos()) + ")")
+				g.emitStableWrite(b, indent, false, slot.base, g.staticExpr(slot.field), adjustedLuaValue(values[i]), slot.cache, g.rootArgsFor(6, s.Pos()))
 			} else {
 				b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 			}
@@ -4930,6 +5216,7 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 					}
 				}
 			}
+			return !g.opts.DisableNumericLengths
 		}
 		return (x.Op == luaparser.OpNegate || x.Op == luaparser.OpBitNot) && g.exprNumber(x.Expr)
 	case *luaparser.BinaryExpr:
@@ -4949,7 +5236,7 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 		if fn := g.calledFunction(x); fn != nil {
 			return fn.returnN > 0 && fn.returnKind(0) == monoNumber
 		}
-		if name == "min" || name == "max" || name == "mid" {
+		if name == "min" || name == "max" || name == "mid" || name == "mget" {
 			return true
 		}
 		requireNumbers := func() bool {
@@ -4986,11 +5273,6 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 	case *luaparser.ParenExpr:
 		return g.emitNumberExpr(x.Expr)
 	case *luaparser.NumberExpr:
-		if x.Integer {
-			if value, ok := targetIntLiteral(x.Value); ok {
-				return fmt.Sprintf("rt.FromInt(%d)", value)
-			}
-		}
 		return fmt.Sprintf("rt.Number(%d)", fixedNumberLiteral(x.Value))
 	case *luaparser.VarExpr:
 		return g.lookup(x.Name)
@@ -4998,10 +5280,13 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		if record, field, ok := g.numericRecordField(x); ok {
 			return "g." + numericRecordMember(record, field)
 		}
-		return "c.TableGetStableNumber(" + g.emitExpr(x.Base) + ", " + g.staticExpr(x.Name) + ", " + g.fieldCacheRef(x) + ")"
+		return g.emitStableNumberRead(x)
 	case *luaparser.IndexExpr:
 		if name, _, ok := g.numericArrayIndex(x); ok {
 			key := g.emitExpr(x.Key)
+			if view := g.borrowedNumberArrays[name]; view != "" {
+				return view + ".Get((" + key + ").Int())"
+			}
 			return "c.NumberArrayGet(" + g.lookup(name) + ", (" + key + ").Int())"
 		}
 	case *luaparser.UnaryExpr:
@@ -5013,6 +5298,9 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 					}
 				}
 			}
+			// gluLen returns IntVal for every operand kind, including zero
+			// for unsupported types. Its input must still evaluate normally.
+			return "(gluLen(c," + g.emitExpr(x.Expr) + ")).Num"
 		}
 		value := g.emitNumberExpr(x.Expr)
 		if x.Op == luaparser.OpNegate {
@@ -5026,6 +5314,9 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		}
 		return "(" + value + ").Bnot()"
 	case *luaparser.BinaryExpr:
+		if specialized, ok := g.emitConstantNumberDivision(x); ok {
+			return specialized
+		}
 		parts := g.sequenceNumberExprs([]luaparser.Expr{x.Left, x.Right})
 		left, right := parts[0], parts[1]
 		switch x.Op {
@@ -5068,16 +5359,32 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 			return g.emitFirstCall(x, fn)
 		}
 		name, _ := callKey(x)
-		values := g.sequenceAdjustedExprs(x.Args)
-		args := make([]string, len(values))
-		for i, value := range values {
-			args[i] = adjustedNumber(value)
+		if name == "mget" {
+			return "(" + g.emitBuiltin("mget", x.Args, true) + ").Num"
 		}
 		arg := func(i int, fallback string) string {
-			if i >= len(args) {
-				return fallback
+			return fallback
+		}
+		if g.numberBuiltinArgs(x.Args) {
+			args := g.sequenceNumberExprs(x.Args)
+			arg = func(i int, fallback string) string {
+				if i >= len(args) {
+					return fallback
+				}
+				return args[i]
 			}
-			return args[i]
+		} else {
+			values := g.sequenceAdjustedExprs(x.Args)
+			args := make([]string, len(values))
+			for i, value := range values {
+				args[i] = adjustedNumber(value)
+			}
+			arg = func(i int, fallback string) string {
+				if i >= len(args) {
+					return fallback
+				}
+				return args[i]
+			}
 		}
 		switch name {
 		case "flr":
@@ -5130,6 +5437,22 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 	}
 	g.setErr(fmt.Errorf("transpiler: unsupported monomorphic number expression at %s", expr.Pos()))
 	return "0"
+}
+
+func (g *generator) numberBuiltinArgs(args []luaparser.Expr) bool {
+	for _, arg := range args {
+		if !g.exprNumber(arg) {
+			return false
+		}
+		call, ok := unparenExpr(arg).(*luaparser.CallExpr)
+		if !ok {
+			continue
+		}
+		if fn := g.calledFunction(call); fn != nil && fn.returnN > 1 {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *generator) sequenceNumberExprs(exprs []luaparser.Expr) []string {
@@ -5265,35 +5588,76 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 	} else if trailingFn != nil {
 		arrayN += trailingFn.returnN - 1
 	}
+	arrayN = max(arrayN, g.literalArrayCaps[x])
+	arrayCap, hashCap := max(arrayN, 1), max(hashN, 1)
+	literalPlans := g.staticTableLiteralPlans(x, arrayCap, hashCap)
+	borrowLiteral := g.borrowableTableLiteral(x, literalPlans)
+	trustedLiteral := borrowLiteral && g.trustedTableLiteralValues(x)
+	image := g.tableLiteralImage(x, literalPlans, arrayCap, hashCap)
+	keepTableRoot := g.tableLiteralNeedsLiveRoot(x)
+	initialRoots := g.rootVars()
+	skipRooting := len(initialRoots) == 0 && !keepTableRoot && trailingFn == nil && !trailingZero
+	if skipRooting && image.name != "" {
+		return g.emitTrustedImageConstructor(x, image)
+	}
+	if skipRooting && len(x.Fields) == 0 {
+		return g.emitEmptyTableConstructor(arrayCap, hashCap)
+	}
 	tbl := g.next("tbl")
 	fail := g.next("tblFail")
-	pushed := g.next("tblPush")
+	pushed := ""
 	errName := g.next("tblErr")
 	g.pending = append(g.pending, "var "+tbl+" rt.Value")
 	g.pending = append(g.pending, fail+" := false")
-	g.pending = append(g.pending, pushed+" := 0")
 	// Existing Values only need to remain rooted across the allocation itself.
 	// Once the table exists, release those temporary copies and keep just the
 	// new table persistently rooted; nested field expressions will root the
 	// caller's still-live Go Values only while they allocate.
-	initialRoots := g.rootVars()
-	g.requireActiveRootSlots(len(initialRoots), x.Pos())
-	for _, root := range initialRoots {
+	if skipRooting {
+		g.pending = append(g.pending, "var "+errName+" rt.HeapError")
+		if image.name != "" {
+			g.pending = append(g.pending, tbl+", "+errName+" = c.NewTableFromImage("+image.name+"[:])")
+		} else {
+			g.pending = append(g.pending, tbl+", "+errName+" = c.NewTableWithCaps("+strconv.Itoa(arrayCap)+", "+strconv.Itoa(hashCap)+")")
+		}
+		g.pending = append(g.pending, "if "+errName+" != rt.HeapOK { "+fail+" = true }")
+	} else {
+		pushed = g.next("tblPush")
+		g.pending = append(g.pending, pushed+" := 0")
+		g.requireActiveRootSlots(len(initialRoots), x.Pos())
+		for _, root := range initialRoots {
+			g.pending = append(g.pending, "if !"+fail+" {")
+			g.pending = append(g.pending, "\tif c.PushLocal("+root+") { "+pushed+"++ } else { "+fail+" = true }")
+			g.pending = append(g.pending, "}")
+		}
 		g.pending = append(g.pending, "if !"+fail+" {")
-		g.pending = append(g.pending, "\tif c.PushLocal("+root+") { "+pushed+"++ } else { "+fail+" = true }")
+		g.pending = append(g.pending, "\tvar "+errName+" rt.HeapError")
+		if image.name != "" {
+			g.pending = append(g.pending, "\t"+tbl+", "+errName+" = c.NewTableFromImage("+image.name+"[:])")
+		} else {
+			g.pending = append(g.pending, "\t"+tbl+", "+errName+" = c.NewTableWithCaps("+strconv.Itoa(arrayCap)+", "+strconv.Itoa(hashCap)+")")
+		}
+		g.pending = append(g.pending, "\tif "+errName+" != rt.HeapOK { "+fail+" = true }")
 		g.pending = append(g.pending, "}")
+		g.pending = append(g.pending, "c.PopLocals("+pushed+")")
+		g.pending = append(g.pending, pushed+" = 0")
+		if keepTableRoot {
+			g.requireActiveRootSlots(1, x.Pos())
+			g.pending = append(g.pending, "if !"+fail+" {")
+			g.pending = append(g.pending, "\tif c.PushLocal("+tbl+") { "+pushed+" = 1 } else { "+fail+" = true }")
+			g.pending = append(g.pending, "}")
+		}
 	}
-	g.pending = append(g.pending, "if !"+fail+" {")
-	g.pending = append(g.pending, "\tvar "+errName+" rt.HeapError")
-	g.pending = append(g.pending, "\t"+tbl+", "+errName+" = c.NewTableWithCaps("+strconv.Itoa(max(arrayN, 1))+", "+strconv.Itoa(max(hashN, 1))+")")
-	g.pending = append(g.pending, "\tif "+errName+" != rt.HeapOK { "+fail+" = true }")
-	g.pending = append(g.pending, "}")
-	g.pending = append(g.pending, "c.PopLocals("+pushed+")")
-	g.pending = append(g.pending, pushed+" = 0")
-	g.requireActiveRootSlots(1, x.Pos())
-	g.pending = append(g.pending, "if !"+fail+" {")
-	g.pending = append(g.pending, "\tif c.PushLocal("+tbl+") { "+pushed+" = 1 } else { "+fail+" = true }")
-	g.pending = append(g.pending, "}")
+	view := ""
+	if image.name != "" && len(image.dynamic) != 0 || (borrowLiteral && image.name == "") {
+		view = g.next("tblView")
+		g.pending = append(g.pending, "var "+view+" rt.TableLiteralView")
+		borrow := "c.BorrowTableLiteral(" + tbl + ")"
+		if trustedLiteral && image.name == "" {
+			borrow = "c.BorrowFreshTableLiteral(" + tbl + "," + strconv.Itoa(arrayCap) + "," + strconv.Itoa(hashCap) + ")"
+		}
+		g.pending = append(g.pending, "if !"+fail+" { "+view+" = "+borrow+" }")
+	}
 	oldRoots := g.extraRoots
 	g.extraRoots = append([]string(nil), oldRoots...)
 	rootSlots := g.activeRootSlots
@@ -5318,6 +5682,11 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 				arrayIndex += trailingFn.returnN
 			} else {
 				arrayIndex++
+			}
+		}
+		if image.name != "" {
+			if _, overlay := image.dynamic[i]; !overlay && !f.Array {
+				continue
 			}
 		}
 		g.pending = append(g.pending, "if !"+fail+" {")
@@ -5354,8 +5723,41 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 				g.pending = append(g.pending, "if c.TableSet("+tbl+",rt.IntVal("+strconv.Itoa(firstArrayIndex)+"),"+v+") != rt.HeapOK { "+fail+" = true }")
 				return ""
 			}
+			if image.name != "" {
+				plan, overlay := image.dynamic[i]
+				if !overlay {
+					return ""
+				}
+				key, _ := unparenExpr(f.Key).(*luaparser.StringExpr)
+				keyID, _ := g.staticID(key.Value)
+				if _, nested := unparenExpr(f.Value).(*luaparser.TableExpr); nested {
+					value := g.emitExpr(f.Value)
+					g.pending = append(g.pending, "if !"+fail+" { "+view+" = c.BorrowTableLiteral("+tbl+") }")
+					g.pending = append(g.pending, "if "+view+".StorePlanned("+strconv.Itoa(int(keyID))+","+value+","+strconv.FormatUint(uint64(plan), 10)+") != rt.HeapOK { "+fail+" = true }")
+					return ""
+				}
+				if g.exprNumber(f.Value) {
+					value := g.emitNumberExpr(f.Value)
+					g.pending = append(g.pending, "if "+view+".StorePlannedNumber("+strconv.Itoa(int(keyID))+","+value+","+strconv.FormatUint(uint64(plan), 10)+") != rt.HeapOK { "+fail+" = true }")
+				} else {
+					value := g.emitExpr(f.Value)
+					g.pending = append(g.pending, "if "+view+".StorePlanned("+strconv.Itoa(int(keyID))+","+value+","+strconv.FormatUint(uint64(plan), 10)+") != rt.HeapOK { "+fail+" = true }")
+				}
+				return ""
+			}
 			names := g.sequenceExprs([]luaparser.Expr{f.Key, f.Value})
-			g.pending = append(g.pending, "if c.TableSet("+tbl+","+names[0]+","+names[1]+") != rt.HeapOK { "+fail+" = true }")
+			if plan, ok := literalPlans[i]; ok {
+				callee := "c.TableInitStatic(" + tbl + ","
+				if view != "" {
+					callee = view + ".InitStatic("
+					if trustedLiteral {
+						callee = view + ".InitKnown("
+					}
+				}
+				g.pending = append(g.pending, "if "+callee+"("+names[0]+").SRef,"+names[1]+","+strconv.FormatUint(uint64(plan), 10)+") != rt.HeapOK { "+fail+" = true }")
+			} else {
+				g.pending = append(g.pending, "if c.TableSet("+tbl+","+names[0]+","+names[1]+") != rt.HeapOK { "+fail+" = true }")
+			}
 			return ""
 		})
 		g.indentPending(inner)
@@ -5363,7 +5765,9 @@ func (g *generator) emitTableLiteral(x *luaparser.TableExpr) string {
 	}
 	g.extraRoots = oldRoots
 	g.activeRootSlots = rootSlots
-	g.pending = append(g.pending, "c.PopLocals("+pushed+")")
+	if !skipRooting {
+		g.pending = append(g.pending, "c.PopLocals("+pushed+")")
+	}
 	g.pending = append(g.pending, "if "+fail+" { "+tbl+" = rt.NilVal() }")
 	return tbl
 }
@@ -5433,6 +5837,9 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		if argCount < spec.MinArgs || argCount > spec.MaxArgs {
 			g.setErr(fmt.Errorf("transpiler: %s expects %d..%d arguments, got %d", name, spec.MinArgs, spec.MaxArgs, argCount))
 			return "rt.NilVal()"
+		}
+		if at := g.knownAppendPositions[call]; at != "" {
+			return g.emitKnownTableAppend(call, at)
 		}
 		return g.emitBuiltin(name, call.Args, value)
 	}
@@ -5526,7 +5933,12 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return "rt.NilVal()"
 	}
 	switch name {
-	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "camera", "clip", "color", "cursor":
+	case "spr", "camera":
+		if call, ok := g.typedDrawCall(name, adjusted); ok {
+			return void(call)
+		}
+		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
+	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "clip", "color", "cursor":
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "map":
 		if len(names) == 0 {
@@ -5534,6 +5946,9 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		}
 		bg, _ := g.staticRuntimeInt(argExprs[0])
 		slot := mapMaskSlot(g.opts.MapDrawMask, bg)
+		if args, ok := g.typedDrawIntegers(adjusted, []int{0, 0, 0, 0, 0, 0, 0, 0}); ok {
+			return void(fmt.Sprintf("c.MapBGAt(%d,%s)", slot, strings.Join(args, ",")))
+		}
 		return void(fmt.Sprintf("c.MapBGAtV(%d,%s)", slot, argsUpTo(8)))
 	case "pal":
 		switch len(names) {
@@ -5563,6 +5978,8 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 				// no argument/root wrapper is required. This is also essential for
 				// a heapless build, whose root arrays are compile-only sentinels.
 				call = "c.PrintStaticV(" + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + ")"
+			} else if g.mode0HeaplessPrintNumber(argExprs[0]) {
+				call = "c.PrintV(" + arg(0) + "," + arg(1) + "," + arg(2) + "," + arg(3) + ")"
 			}
 		}
 		if value {
@@ -5584,6 +6001,9 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		}
 		return void("c.Fset(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Truthy())")
 	case "mget":
+		if view, first := g.borrowedMapCall(name, argExprs, len(names)); view != "" {
+			return wrap("rt.IntVal(int(" + view + ".Get(" + arg(first) + ".Int()," + arg(first+1) + ".Int())))")
+		}
 		if len(names) == 2 {
 			if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
 				slot := mapMaskSlot(g.opts.MapPlaneMask, 0)
@@ -5602,6 +6022,9 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		}
 		return wrap("rt.IntVal(int(c.MgetLayer(" + arg(0) + ".Int()," + arg(1) + ".Int()," + arg(2) + ".Int())))")
 	case "mset":
+		if view, first := g.borrowedMapCall(name, argExprs, len(names)); view != "" {
+			return void(view + ".Set(" + arg(first) + ".Int()," + arg(first+1) + ".Int()," + arg(first+2) + ".Int())")
+		}
 		if len(names) == 3 {
 			if !g.opts.DisableFixedMapLayerSpecialization && !g.opts.MapStreaming {
 				slot := mapMaskSlot(g.opts.MapPlaneMask, 0)
@@ -5977,6 +6400,9 @@ func staticMemberPath(e luaparser.Expr) (string, bool) {
 }
 
 func callKey(call *luaparser.CallExpr) (string, bool) {
+	if call == nil {
+		return "", false
+	}
 	path, ok := calleePath(call.Callee)
 	if !ok {
 		return "", false
@@ -6054,8 +6480,12 @@ func (g *generator) sequenceFunctionOperands(exprs []luaparser.Expr, fn *functio
 		}
 		if want == monoNumber {
 			if value.kind != monoNumber {
-				g.setErr(fmt.Errorf("transpiler: internal numeric argument mismatch for %s", fn.key))
-				names[i] = "0"
+				if fn.coercesNumberParam(i) {
+					names[i] = adjustedNumber(value)
+				} else {
+					g.setErr(fmt.Errorf("transpiler: internal numeric argument mismatch for %s", fn.key))
+					names[i] = "0"
+				}
 			} else {
 				names[i] = value.code
 			}

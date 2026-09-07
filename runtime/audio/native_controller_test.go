@@ -630,3 +630,15 @@ func TestNativeCycleTelemetryIgnoresImpossibleZeroSample(t *testing.T) {
 		t.Fatalf("filtered cycle telemetry = %+v", stats)
 	}
 }
+
+func TestNativeServiceCycleBudgetMatchesDocumentedIRQBound(t *testing.T) {
+	if NativeServicePeriodCycles != 65536 {
+		t.Fatalf("period %d want 65536", NativeServicePeriodCycles)
+	}
+	if NativeServiceCycleBudget != 16384 {
+		t.Fatalf("budget %d want 16384", NativeServiceCycleBudget)
+	}
+	if NativeServiceCycleBudget*2 > NativeServicePeriodCycles {
+		t.Fatal("two IRQ budgets already exceed one service period")
+	}
+}

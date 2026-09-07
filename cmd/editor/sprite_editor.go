@@ -390,8 +390,8 @@ func (g *Game) paintPixel(id, px, py, colorIndex int) bool {
 	if cols == 0 || id < 0 || id >= g.spriteN() {
 		return false
 	}
-	if id == editor.ReservedSpriteID {
-		g.statusMsg = spriteZeroLockedMessage
+	if editor.SpriteIsReserved(id) {
+		g.statusMsg = reservedSpriteLockedMessage(id)
 		return false
 	}
 	if g.pixelAt((id%cols)*8+px, (id/cols)*8+py) == colorIndex {
@@ -521,12 +521,52 @@ func spriteCanvasGridColor(alpha uint8) color.Color {
 	return color.NRGBA{R: colorGrid.R, G: colorGrid.G, B: colorGrid.B, A: alpha}
 }
 
-// drawReservedSpriteCanvasLock makes the immutable first cell unmistakable
-// while still allowing it to remain selected as the map eraser. It also works
-// for a multi-cell selection whose top-left constituent includes sprite 0.
+// drawReservedSpriteCanvasLock makes immutable cells unmistakable while still
+// allowing sprite 0 to remain selected as the map eraser.
 func (g *Game) drawReservedSpriteCanvasLock(screen *ebiten.Image) {
 	baseRow, baseCol := g.baseSpriteRowCol()
-	if baseRow != 0 || baseCol != 0 || g.spriteN() == 0 {
+	cols := g.spriteCols()
+	if cols == 0 || g.spriteN() == 0 {
+		return
+	}
+	id := baseRow*cols + baseCol
+	if id == editor.ReservedSpriteID {
+		r := g.canvasPixelBounds(0, 0, 8, 8)
+		var visible bool
+		r, visible = intersectEditorRects(r, canvasRect)
+		if !visible {
+			return
+		}
+		if r.W < 160 || r.H < 120 {
+			drawSpriteLockOverlay(screen, r)
+			return
+		}
+		fillRoundedRect(screen, r, min(8, max(2, min(r.W, r.H)/10)), rgba(colorInk, 184))
+		if r.W < 300 {
+			cardW := min(208, r.W-24)
+			cardH := 116
+			card := editor.Rect{X: r.X + (r.W-cardW)/2, Y: r.Y + (r.H-cardH)/2, W: cardW, H: cardH}
+			fillRoundedRect(screen, card, 7, color.RGBA{R: 24, G: 25, B: 48, A: 245})
+			strokeRoundedRect(screen, card, 7, rgba(colorSprite, 190))
+			icon := editor.Rect{X: card.X + (card.W-32)/2, Y: card.Y + 10, W: 32, H: 32}
+			drawSpriteLockOverlay(screen, icon)
+			drawTextCentered(screen, "SPRITE 0 · RESERVED", editor.Rect{X: card.X, Y: card.Y + 46, W: card.W, H: uiTextHeight}, colorText)
+			drawSmallTextCentered(screen, "TRANSPARENT MAP ERASER", editor.Rect{X: card.X, Y: card.Y + 75, W: card.W, H: uiSmallTextHeight}, colorSprite)
+			drawSmallTextCentered(screen, "SELECT SPRITE 1 TO DRAW", editor.Rect{X: card.X, Y: card.Y + 96, W: card.W, H: uiSmallTextHeight}, colorDim)
+			return
+		}
+		cardW := min(260, r.W-32)
+		card := editor.Rect{X: r.X + (r.W-cardW)/2, Y: r.Y + (r.H-94)/2, W: cardW, H: 94}
+		fillRoundedRect(screen, card, 7, color.RGBA{R: 24, G: 25, B: 48, A: 245})
+		strokeRoundedRect(screen, card, 7, rgba(colorSprite, 190))
+		icon := editor.Rect{X: card.X + 14, Y: card.Y + 20, W: 48, H: 48}
+		drawSpriteLockOverlay(screen, icon)
+		drawText(screen, "SPRITE 0 · RESERVED", card.X+76, card.Y+17, colorText)
+		drawSmallText(screen, "TRANSPARENT MAP ERASER", card.X+76, card.Y+48, colorSprite)
+		drawSmallText(screen, "SELECT SPRITE 1 TO DRAW", card.X+76, card.Y+68, colorDim)
+		return
+	}
+	if !editor.SpriteIsReserved(id) || g.spriteGridRows() != 1 || g.spriteGridCols() != 1 {
 		return
 	}
 	r := g.canvasPixelBounds(0, 0, 8, 8)
@@ -535,33 +575,7 @@ func (g *Game) drawReservedSpriteCanvasLock(screen *ebiten.Image) {
 	if !visible {
 		return
 	}
-	if r.W < 160 || r.H < 120 {
-		drawSpriteLockOverlay(screen, r)
-		return
-	}
-	fillRoundedRect(screen, r, min(8, max(2, min(r.W, r.H)/10)), rgba(colorInk, 184))
-	if r.W < 300 {
-		cardW := min(208, r.W-24)
-		cardH := 116
-		card := editor.Rect{X: r.X + (r.W-cardW)/2, Y: r.Y + (r.H-cardH)/2, W: cardW, H: cardH}
-		fillRoundedRect(screen, card, 7, color.RGBA{R: 24, G: 25, B: 48, A: 245})
-		strokeRoundedRect(screen, card, 7, rgba(colorSprite, 190))
-		icon := editor.Rect{X: card.X + (card.W-32)/2, Y: card.Y + 10, W: 32, H: 32}
-		drawSpriteLockOverlay(screen, icon)
-		drawTextCentered(screen, "SPRITE 0 · RESERVED", editor.Rect{X: card.X, Y: card.Y + 46, W: card.W, H: uiTextHeight}, colorText)
-		drawSmallTextCentered(screen, "TRANSPARENT MAP ERASER", editor.Rect{X: card.X, Y: card.Y + 75, W: card.W, H: uiSmallTextHeight}, colorSprite)
-		drawSmallTextCentered(screen, "SELECT SPRITE 1 TO DRAW", editor.Rect{X: card.X, Y: card.Y + 96, W: card.W, H: uiSmallTextHeight}, colorDim)
-		return
-	}
-	cardW := min(260, r.W-32)
-	card := editor.Rect{X: r.X + (r.W-cardW)/2, Y: r.Y + (r.H-94)/2, W: cardW, H: 94}
-	fillRoundedRect(screen, card, 7, color.RGBA{R: 24, G: 25, B: 48, A: 245})
-	strokeRoundedRect(screen, card, 7, rgba(colorSprite, 190))
-	icon := editor.Rect{X: card.X + 14, Y: card.Y + 20, W: 48, H: 48}
-	drawSpriteLockOverlay(screen, icon)
-	drawText(screen, "SPRITE 0 · RESERVED", card.X+76, card.Y+17, colorText)
-	drawSmallText(screen, "TRANSPARENT MAP ERASER", card.X+76, card.Y+48, colorSprite)
-	drawSmallText(screen, "SELECT SPRITE 1 TO DRAW", card.X+76, card.Y+68, colorDim)
+	drawSpriteLockOverlay(screen, r)
 }
 
 func spriteNumberText(spriteID int) string {
@@ -849,16 +863,13 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 
 	minC, minR, maxC, maxR := g.sheetCam.VisibleBounds(canvas, cols, rows)
 	tileW, tileH := g.sheetCam.TileSize(), g.sheetCam.TileSizeY()
-	var lockedRect editor.Rect
-	lockedVisible := false
 	for row := minR; row < maxR; row++ {
 		for col := minC; col < maxC; col++ {
 			cell := sheetCameraRect(g.sheetCam, canvas, col, row, 1, 1)
 			id := row*cols + col
 			g.drawSpriteThumb(screen, id, float64(cell.X), float64(cell.Y), float64(cell.W), float64(cell.H), cell)
-			if id == editor.ReservedSpriteID {
-				lockedRect = cell
-				lockedVisible = true
+			if spriteSheetCellShowsLock(id) {
+				drawSpriteLockOverlay(screen, cell)
 			}
 		}
 	}
@@ -868,9 +879,6 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	// much brighter than the editing canvas.
 	drawSpritePixelGrid(screen, sheetLeft, sheetTop, tileW/8, tileH/8, cols*8, rows*8, canvas, false)
 	g.drawSpritePastePreview(screen, canvas)
-	if lockedVisible {
-		drawSpriteLockOverlay(screen, lockedRect)
-	}
 	g.drawSelectionBorder(screen, canvas)
 }
 
@@ -1154,8 +1162,8 @@ func (g *Game) pasteCurrentSprite() {
 	if !g.hasCopied {
 		return
 	}
-	if g.currentSprite == editor.ReservedSpriteID {
-		g.statusMsg = spriteZeroLockedMessage
+	if editor.SpriteIsReserved(g.currentSprite) {
+		g.statusMsg = reservedSpriteLockedMessage(g.currentSprite)
 		return
 	}
 	limit := g.paintableColorCount()

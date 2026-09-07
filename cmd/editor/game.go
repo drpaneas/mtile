@@ -198,6 +198,11 @@ type Game struct {
 	codeDragging             bool
 	codeHorizontalDragging   bool
 	codeHorizontalDragOffset int
+	codeVerticalDragging     bool
+	codeVerticalDragOffset   int
+	codeWheelX               float64
+	codeWheelY               float64
+	codePointer              codePointerState
 	codeSearchOpen           bool
 	codeSearchDraft          string
 	codeSearchMatches        []int

@@ -5,8 +5,8 @@ package runtime
 import "github.com/drpaneas/mtile/runtime/hw"
 
 const (
-	mode0TextTileBase = 480
-	mode0TextLimit    = mode0ObjectTileLimit - mode0TextTileBase
+	mode0TextTileBase = Mode0TextTileBase
+	mode0TextLimit    = Mode0TextTileCount
 )
 
 type mode0TextState struct {
@@ -71,62 +71,31 @@ func (c *Context) renderMode0Glyph(ch byte, sx, sy int, value byte) bool {
 	tileIndex := low
 
 	slot := 127 - c.mode0ObjectCount
-	offset := slot * 8
-	mode0PutOAM16(&c.mode0OAM, offset, uint16(sy&0xff)|0x2000)
-	mode0PutOAM16(&c.mode0OAM, offset+2, uint16(sx&0x1ff))
-	mode0PutOAM16(&c.mode0OAM, offset+4, uint16((mode0TextTileBase+tileIndex)*2))
-	mode0PutOAM16(&c.mode0OAM, offset+6, 0)
+	mode0PutOAMEntry(&c.mode0OAM, slot, uint16(sy&0xff)|0x2000, uint16(sx&0x1ff), uint16((mode0TextTileBase+tileIndex)*2))
 	c.mode0ObjectCount++
 	c.mode0OAMDirty = true
 	return true
 }
 
-// hardwarePrint implements the statically admitted print("ASCII", x, y,
-// color) subset. Non-numeric positions use the shared cursor exactly like the
-// software renderer; the compiler excludes controls, palette remaps, and
-// object-budget overflow before adding mtile_mode0_text.
+// hardwarePrint implements the statically admitted print() subset: a literal
+// ASCII string or a decimal number, with a literal color. Numbers use the same
+// formatNumber layout as Tostr, on a stack buffer, so a heapless cart can print
+// scores. Non-numeric positions use the shared cursor exactly like the software
+// renderer; the compiler excludes controls, concat, tostr/chr/sub, palette
+// remaps, and object-budget overflow before adding mtile_mode0_text.
 func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool) {
-	if c == nil || !isStringKind(s.Kind) || color.Kind != KindNumber {
+	if c == nil || color.Kind != KindNumber {
 		return 0, true
 	}
-	c.ensureDrawState()
-	implicitPosition := x.Kind != KindNumber || y.Kind != KindNumber
-	worldX, worldY := x.Int(), y.Int()
-	if implicitPosition {
-		worldX, worldY = c.cursor.x, c.cursor.y
+	if s.Kind == KindNumber {
+		var buf [16]byte
+		n := formatNumber(buf[:], s.Num, false)
+		return c.hardwarePrintStaticBytes(buf[:n], x, y, color)
 	}
-	colorIndex := color.Int()
-	if colorIndex < 0 || colorIndex > 255 {
-		return worldX, true
+	if !isStringKind(s.Kind) {
+		return 0, true
 	}
-	c.cursor.color = byte(colorIndex)
-	sx, sy := worldX-c.camX, worldY-c.camY
-	left := sx
-	if left < c.clipX0 {
-		left = c.clipX0
-	}
-	rightMost := sx
-	bytes := c.stringBytes(s)
-	for index := 0; index < len(bytes); index++ {
-		if sx+glyphW > c.clipX1 && sx > left {
-			sx = left
-			sy += glyphH
-		}
-		if !c.renderMode0Glyph(bytes[index], sx, sy, c.cursor.color) {
-			break
-		}
-		sx += glyphW
-		if sx > rightMost {
-			rightMost = sx
-		}
-	}
-	if implicitPosition {
-		c.cursor.x = worldX
-		c.cursor.y = sy + c.camY + glyphH
-	} else {
-		c.cursor.x, c.cursor.y = worldX, worldY
-	}
-	return rightMost + c.camX, true
+	return c.hardwarePrintStaticBytes(c.stringBytes(s), x, y, color)
 }
 
 // hardwarePrintStatic is kept separate from hardwarePrint so the generated

@@ -346,8 +346,8 @@ func (g *Game) fillSpriteSelection(startX, startY, replacement int) bool {
 	if !ok {
 		return false
 	}
-	if id == editor.ReservedSpriteID {
-		g.statusMsg = spriteZeroLockedMessage
+	if editor.SpriteIsReserved(id) {
+		g.statusMsg = reservedSpriteLockedMessage(id)
 		return false
 	}
 	target, _ := g.selectionPixelAt(startX, startY)
@@ -367,7 +367,7 @@ func (g *Game) fillSpriteSelection(startX, startY, replacement int) bool {
 		}
 		seen[p.y*w+p.x] = true
 		pixelID, _, _, valid := g.selectionPixelTarget(p.x, p.y)
-		if !valid || pixelID == editor.ReservedSpriteID {
+		if !valid || editor.SpriteIsReserved(pixelID) {
 			continue
 		}
 		value, _ := g.selectionPixelAt(p.x, p.y)
@@ -505,14 +505,31 @@ func (g *Game) drawSpriteShapePreview(screen *ebiten.Image) {
 	})
 }
 
+func (g *Game) selectionReservedSprite() (int, bool) {
+	cols := g.spriteCols()
+	if cols == 0 {
+		return 0, false
+	}
+	baseRow, baseCol := g.baseSpriteRowCol()
+	for row := 0; row < g.spriteGridRows(); row++ {
+		for col := 0; col < g.spriteGridCols(); col++ {
+			id := (baseRow+row)*cols + (baseCol + col)
+			if editor.SpriteIsReserved(id) {
+				return id, true
+			}
+		}
+	}
+	return 0, false
+}
+
 func (g *Game) flipSpriteSelection(horizontal bool) bool {
 	baseRow, baseCol := g.baseSpriteRowCol()
 	if baseRow+g.spriteGridRows() > g.spriteRows() || baseCol+g.spriteGridCols() > g.spriteCols() {
 		g.statusMsg = "Cannot flip: selection extends outside the spritesheet"
 		return false
 	}
-	if baseRow == 0 && baseCol == 0 {
-		g.statusMsg = spriteZeroLockedMessage
+	if id, ok := g.selectionReservedSprite(); ok {
+		g.statusMsg = reservedSpriteLockedMessage(id)
 		return false
 	}
 	w, h := g.gridPixelsW(), g.gridPixelsH()
@@ -546,9 +563,19 @@ func (g *Game) flipSpriteSelection(horizontal bool) bool {
 	return changed
 }
 
+// spriteSheetCellShowsLock reports padlocks drawn on the spritesheet grid.
+// Sprite 0 is the map eraser and must stay obviously immutable. Mode 0 print
+// tiles 480-511 stay unpaintable, but on a 30-wide 240x160 sheet they sit in
+// the middle of empty cells: GBA 8bpp OBJ VRAM ends at tile 511, while the
+// canvas can be larger, so a 32-cell lock stripe is not the bottom of the
+// sheet and just looks broken.
+func spriteSheetCellShowsLock(id int) bool {
+	return id == editor.ReservedSpriteID
+}
+
 // drawSpriteLockOverlay is presentation-only. It never touches sprite data;
-// it simply makes the immutable transparent eraser cell read as a deliberate
-// cartridge lock instead of a broken thumbnail.
+// it simply makes an immutable cell read as a deliberate cartridge lock
+// instead of a broken thumbnail.
 func drawSpriteLockOverlay(screen *ebiten.Image, r editor.Rect) {
 	if screen == nil || r.W <= 0 || r.H <= 0 {
 		return

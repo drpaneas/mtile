@@ -47,6 +47,9 @@ func (c *Context) Pset(x, y, color int) {
 // Pget reads the logical index currently stored in the software framebuffer.
 // Camera applies; clip does not.
 func (c *Context) Pget(x, y int) byte {
+	if tileCanvasExperiment {
+		panic("tile canvas composed pixel readback is unsupported; use Mode 4")
+	}
 	return c.pixelRaw(x-c.camX, y-c.camY)
 }
 
@@ -117,6 +120,9 @@ func (c *Context) hlineSpan(x0, x1, y0, y1 int, value byte) {
 	// multiple of 4, so the run is always word-sized, and the largest
 	// possible run (38,400 bytes = 9,600 words) fits DMA3's 16-bit count.
 	if sx0 == 0 && sx1 == ScreenWidth-1 {
+		if tileCanvasExperiment {
+			c.markCanvasRect(sx0, sy0, sx1, sy1)
+		}
 		start := sy0 * ScreenWidth
 		hw.Fill32(c.framebuffer[start:], word, (sy1-sy0+1)*ScreenWidth/4)
 		return
@@ -139,6 +145,9 @@ func (c *Context) fillRow(y, x0, x1 int, value byte) {
 //go:noinline
 //go:section .iwram
 func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
+	if tileCanvasExperiment {
+		c.markCanvasRect(x0, y, x1, y)
+	}
 	row := y * ScreenWidth
 	x := x0
 	for ; x <= x1 && x&3 != 0; x++ {
@@ -174,6 +183,9 @@ func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
 //go:noinline
 //go:section .iwram
 func (c *Context) fillColumn(x, y0, y1 int, value byte) {
+	if tileCanvasExperiment {
+		c.markCanvasRect(x, y0, x, y1)
+	}
 	first := unsafe.Pointer(&c.framebuffer[y0*ScreenWidth+x])
 	end := (y1 - y0) * ScreenWidth
 	for offset := 0; offset <= end; offset += ScreenWidth {

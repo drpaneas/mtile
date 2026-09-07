@@ -62,9 +62,16 @@ prove all of these conditions:
 - every map viewport has a static width no greater than 64 cells and a static
   height no greater than 32 cells; map origin, destination, layer mask, camera,
   and the logical map size may be dynamic/large;
-- all `spr`, supported `sspr`, and `print` calls are unconditional direct
-  statements after `cls`. `spr`/`sspr` may follow any materialized explicit
-  map and thereby occupy its exact object-depth lane; an object behind every
+- all `spr`, supported `sspr`, and `print` calls run from `_draw`, including
+  through user helpers, `if` branches, and numeric `for` loops with a proven
+  finite trip count. Generic `for`, `while`, and `repeat` loops that reach
+  `spr`/`sspr`/`print` cannot prove an object count, so forced Mode 0 fails
+  with `M0_OBJ_BUDGET` ("unproven object count") and AUTO falls back to Mode 4.
+  They are not required to be top-level statements in `_draw`. `cls` and `map`
+  remain unconditional direct `_draw` statements. `spr`/`sspr` may follow any
+  materialized explicit map
+  (including when the object call lives in a helper invoked after that map)
+  and thereby occupy its exact object-depth lane; an object behind every
   materialized BG is unrepresentable. `print` remains after every map. After
   the deterministic packing plan they use at most 128 OAM entries and at most
   1,226 normal-OBJ rendering cycles on every scanline. Literal Y positions are
@@ -75,20 +82,44 @@ prove all of these conditions:
   camera rebase cannot bypass the scanline proof. Static text X positions
   include the runtime's six-pixel wrapping; dynamic text X/camera phases use a
   conservative coincident-glyph bound;
-- `spr` uses either a valid integer-literal source ID or a scalar source-ID
-  variable whose complete value set is statically enumerated; width/height
-  remain static 1..32-cell integers, while x/y and flips may be dynamic;
+- `spr` uses a source ID whose complete integer set is statically proven:
+  an integer literal, a scalar assigned from an explicit finite integer set,
+  a helper/local/parameter/field expression built from those values, or a
+  public numeric builtin (`flr`, `ceil`, `min`, `max`, `mid`, `abs`, `sin`,
+  `cos`, `rnd`, and arithmetic, including `%` ranges). Array indexes of a
+  numeric table literal and parameters narrowed by a returning comparison
+  guard (`if n < 1 or n > 5 then return`) are included. Width and height are
+  proven integers from 1 to 32: either literals or the same finite integer
+  sets as IDs. The object budget uses the worst proven width and height, so a
+  call that may be 1x1 or 2x2 counts as four OAM entries. x/y and flips may
+  be dynamic;
 - `sspr` uses a static, in-bounds, 8x8-aligned source rectangle and performs no
   scaling; destination position and flips may be dynamic;
-- `print` uses the four-argument form, a static printable-ASCII string, and a
-  static 1..255 color for non-empty text (an empty string may use 0); OBJ
-  palette index 0 is always transparent, whereas Mode 4 draws color 0
-  opaquely, so non-empty color-0 text is not eligible. x/y may be dynamic or non-numeric, in which case the
+- `print` uses the four-argument form, a static printable-ASCII string or a
+  proven decimal number, and a static 1..255 color for non-empty text (an empty
+  string
+  may use 0); OBJ palette index 0 is always transparent, whereas Mode 4 draws
+  color 0 opaquely, so non-empty color-0 text is not eligible. A number is
+  proven when every evaluation is a decimal `formatNumber` value: numeric
+  literals, arithmetic, `#`, numeric builtins, globals whose assignments are
+  only those forms (so `deaths = deaths + 1` counts), helper parameters
+  passed those values, and fields/indexes the numeric analysis already
+  enumerates. Any variable, boolean, table field, or unproven call is not
+  eligible, even if a later runtime value happens to be numeric. Numbers use the
+  same decimal `formatNumber` layout as `tostr` (digits, minus, and a fractional
+  dot) without allocating a Lua string. Concatenation (`"x"..n`), `tostr`,
+  `chr`, `sub`, control codes, and non-number/non-string values are not eligible.
+  x/y may be dynamic or non-numeric, in which case the
   shared cursor position and implicit-newline update exactly match Mode 4.
   Text reserves OBJ tiles 480..511 and is limited to 32 unique `(glyph,color)`
-  pairs, not 32 character occurrences. The transpiler sorts and rasterizes
-  those unique pairs into a ROM atlas, which is uploaded once while the LCD is
-  force-blanked. Every visible occurrence still consumes one OAM entry and its
+  pairs, not 32 character occurrences. Numeric prints intern the charset
+  `-.0123456789` at that color and budget 12 OAM entries, covering the widest
+  decimal `formatNumber` form. The transpiler sorts and rasterizes
+  those unique pairs into a ROM atlas from every `_draw` helper the walk reaches,
+  which is uploaded once while the LCD is
+  force-blanked. Build also stamps those reserved sheet cells from the atlas so
+  leftover authored pixels cannot remain. The sprite editor locks IDs 480..511
+  whenever the sheet contains them. Every visible occurrence still consumes one OAM entry and its
   true eight-cycle scanline cost, so the shared 128-entry/1,226-cycle proof
   remains unchanged. Repeated characters may therefore exceed 32 occurrences
   when the occurrence budgets fit; 33 unique pairs fail forced Mode 0 or make
@@ -122,6 +153,36 @@ framebuffer and page-copy code are excluded by build tag. Unsupported forced
 Mode 0 source fails before TinyGo
 with a source position and stable `M0_*` reason code; it is never approximated.
 
+### Finite-map caching and hardware scrolling
+
+An admitted `map` rectangle can now remain in the existing 64x32 screen shadow
+and VRAM across camera moves, including whole-tile moves. This is a runtime
+optimization of the same finite map semantics; it adds no public API, changes
+no renderer classification, and does not expand AUTO eligibility. Give `map`
+the stable source rectangle and move `camera` to benefit from hardware scroll
+registers without rebuilding a sliding source window.
+
+Caching requires a full-screen clip and a viewport that cannot see a repeated
+hardware copy of the finite rectangle. For source origin `(cx,cy)`, destination
+`(x,y)`, size `(w,h)`, and camera `(camX,camY)`, define
+`left = camX-x-cx*8` and `top = camY-y-cy*8`. The exact conditions are
+`w*8-512 <= left`, `left+240 <= 512`, `h*8-256 <= top`, and
+`top+160 <= 256`. The rectangle still obeys the existing 64x32 admission limit.
+Outside these bounds the existing viewport materializer is used automatically;
+the renderer does not wrap a finite Lua map or approximate its clipping.
+
+The cache uses the existing screen storage and one state flag per BG. Source,
+size, flags and cache/materializer transitions invalidate it as needed. `mset`
+and `fset` also update affected cached off-screen cells, since those cells can
+later scroll into view; cells outside the cached rectangle cannot alias it.
+Mutations after a map pass retain the existing draw-order snapshot semantics.
+Resident and streaming logical maps use the same visible result.
+
+Independent finite-map pixel fixtures cover wrap boundaries, negative origins,
+four and sparse planes, clipping, masks, mutation and streaming. Native examples
+and before/after CPU/upload measurements are recorded in
+[the general optimization report](mode0-general-optimizations-2026-09-06.md).
+
 A bounded runtime `spr(id, ...)` variable must be initialized by an
 unconditional top-level or direct `_init` assignment. Every assignment to that
 same scalar must be either an integer literal or an immutable top-level integer
@@ -147,11 +208,14 @@ function _draw()
 end
 ```
 
-The set above is exactly `{1,32,35}`; IDs need not be adjacent. Arithmetic
-such as `player_sprite = player_sprite + 1` or
-`player_sprite = BASE + animation_step`, function results, table/field IDs,
-random/map-derived IDs, conditional-only initialization, and ambiguous local
-shadowing are not proofs. Forced Mode 0 rejects them with source-positioned
+The set above is exactly `{1,32,35}`; IDs need not be adjacent. A `spr` id may
+also be a helper, local, parameter, or field expression whose integer set the
+analyzer can close: public numeric builtins (`flr`, `ceil`, `min`, `max`,
+`mid`, `abs`, `sin`, `cos`, `rnd`), arithmetic including `%` ranges, numeric
+array-literal indexes, returning comparison guards that close a parameter to
+a finite integer range or equality set, user functions that only return those,
+and field increments that stop at a compared bound. Unbounded or
+unknown ids still fail. Forced Mode 0 rejects them with source-positioned
 `M0_SPR_SHAPE`; AUTO uses the same diagnostic and falls back to Mode 4. Every
 enumerated source rectangle must fit the sheet, OBJ IDs 0..511, the optional
 text reservation, and the existing OAM/scanline budgets. This is renderer
@@ -245,7 +309,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `rectfill` | Mode 4 only | Arbitrary coordinates, sizes, overlap, and clipping require bitmap rasterization. |
 | `circ` | Mode 4 only | Midpoint-circle pixels cannot generally be represented as a fixed tile or OBJ allocation. |
 | `circfill` | Mode 4 only | Arbitrary span-filled circles require bitmap rasterization. |
-| `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic/table/function-derived or otherwise unproven IDs use Mode 4. |
+| `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. Width and height use the worst proven 1..32 values in the object budget. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic/table/function-derived or otherwise unproven IDs use Mode 4. |
 | `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: normally tile-aligned source rectangles and hardware-supported destination transforms. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops or resampling/scaling require Mode 4. |
 | `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. Retained compact maps select a link-time compact runtime in both renderers; large maps select the fixed streaming runtime in Mode 0, while Mode 4 keeps the semantically identical generic path because target benchmarks reject the fixed variant there. |
 | `camera` | Both | It is logical draw state. Mode 0 can apply it through BG scroll and OBJ coordinates; other reachable calls still decide whether that frame is compatible. |
@@ -254,7 +318,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `palt` | Mode 0 conditional | Default source color 0 transparency maps naturally to transparent tile/OBJ index 0. Arbitrary transparent source colors require proven asset conversion/duplication with no conflicting opaque use; otherwise use Mode 4. |
 | `color` | Both | Changes logical default draw/text color and does not itself rasterize. |
 | `cursor` | Both | Changes logical text position/color and does not itself rasterize. |
-| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal glyph tiles are interned at build time and uploaded once; every visible occurrence still owns one OAM entry. Non-empty text requires color 1..255 because hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
+| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal ASCII strings and proven decimal numbers (the same `formatNumber` layout as `tostr`, without a Lua string) intern glyph tiles at build time and upload them once into OBJ 480-511; the sprite editor locks those IDs and build overwrites leftover sheet pixels. The number proof is assignment and expression based, not "any variable". Concat, `tostr`/`chr`/`sub`, booleans, unproven fields, and control codes are not eligible. Every visible occurrence still owns one OAM entry. Numeric prints budget 12 entries. Non-empty text requires color 1..255 because hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
 
 The classification is intentionally semantic, not merely based on whether a
 similar picture could be produced. A Mode 0 backend must not silently round
@@ -294,10 +358,10 @@ costs still count toward the frame budget.
 | Input | `btn`, `btnp` | Same GBA keypad state in either backend. |
 | Math | `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`, `atan2`, `sqrt`, `rnd`, `srand` | Fixed-point math and PRNG behavior remain unchanged. `%` uses Lua floor-modulo signs and `^` requires an integer literal exponent; both rules are renderer-independent. First-observed numeric globals, locals, loops, expressions, and numeric record fields lower to native `rt.Number` identically in both renderers and must retain that type. A once-initialized chunk-scope numeric literal, or an alias of an earlier proven constant, is propagated as its exact 16:16 value in both renderers; any write, shadow, pre-declaration read, computed initializer, ambiguous capture, or disabled proof keeps runtime storage. Direct user-function parameters do likewise only when all static call sites are numeric. Return positions specialize independently when every path supplies a number in that slot and no path falls through; a mixed tuple may therefore use both `rt.Number` and `rt.Value`. Missing, mixed, or unproven positions retain `rt.Value` in both renderers. Transitively non-allocating user calls bypass temporary GC-root wrappers identically in both renderers; any possible table/string allocation or unknown call effect retains protection. Transitive root-stack overflow and root-growing recursion fail during transpilation in either renderer. |
 | Bitwise | `band`, `bor`, `bxor`, `bnot`, `shl`, `shr`, `lshr`, `rotl`, `rotr` | No graphics state. |
-| Tables | `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach` | Renderer-independent. Bracket indexing remains fully dynamic except for fixed global numeric array literals proven not to escape, shadow, use hash fields, or receive an explicit non-number; those use compact native Number slots identically in both renderers and must remain numeric. A fixed-shape chunk-scope numeric record used only through its declared static fields is scalar-replaced identically in both renderers. Any alias, bracket access, rebinding, shape change, explicit non-number, or shadowing retains the ordinary table. Other static field syntax (`object.x`) resolves and validates its field slot once per access site, then assumes a stable table type/layout in both renderers; use `object["x"]` for dynamic shapes. If the complete post-lowering program cannot allocate, both renderers omit the periodic collector, target semispaces, and unreachable handle/root metadata; any unproven allocation retains the full heap unchanged. |
+| Tables | `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach` | Renderer-independent. Indexed `add(table, value, index)` grows the array before shifting when its dense prefix fills the current capacity; it preserves hash fields and fails with the existing heap-capacity error when no additional array slot is available. Both renderers use this same insertion behavior. Bracket indexing remains fully dynamic except for fixed global numeric array literals proven not to escape, shadow, use hash fields, or receive an explicit non-number; those use compact native Number slots identically in both renderers and must remain numeric. A fixed-shape chunk-scope numeric record used only through its declared static fields is scalar-replaced identically in both renderers. Any alias, bracket access, rebinding, shape change, explicit non-number, or shadowing retains the ordinary table. Other static field syntax (`object.x`) resolves and validates its field slot once per access site, then assumes a stable table type/layout in both renderers; use `object["x"]` for dynamic shapes. If the complete post-lowering program cannot allocate, both renderers omit the periodic collector, target semispaces, and unreachable handle/root metadata; any unproven allocation retains the full heap unchanged. |
 | Strings | `sub`, `tostr`, `tonum`, `chr`, `ord` | No graphics state. Static and heap strings compare with the same bytewise lexicographic ordering in both renderers; over-capacity static strings fail during transpilation instead of becoming nil at runtime. The exact unique-static count selects the same smallest safe `Context` capacity tier in both renderers without changing the 256-string source limit. |
 | Time/telemetry | `t`, `time`, `stat` | API shape is unchanged; renderer-dependent CPU counters reported by `stat` will naturally differ. |
-| Audio | `sfx`, `music`, `sample`, `gba_note`, `gba_stop` | PSG/audio scheduling is independent of the display mode. |
+| Audio | `sfx`, `music`, `sample`, `gba_note`, `gba_stop` | PSG/audio scheduling is independent of the display mode. `sfx(id)` uses priority 160 when omitted, above Music Lab's default note priority 128, so a gameplay effect steals an active song channel. Pass a lower priority to yield. |
 | Debug | `printh` | Does not affect display-mode selection. |
 
 ## What a Mode 0 backend must own
@@ -319,6 +383,21 @@ A correct tile renderer is more than changing `DISPCNT`:
 Mode 0 removes the full 38,400-byte framebuffer clear/blit path for compatible
 tile scenes and lets the PPU compose BGs and OBJs. It does not make Lua, the
 TinyGo runtime, garbage collection, audio scheduling, or game logic free.
+
+The normal Mode 0 presenter starts visible VRAM/OAM commits at the first
+VBlank scanline (160), waiting for a fresh window if the outer frame pacer
+returns later. This reserves all 67 remaining complete scanlines; it does
+not make an oversized commit fit. `LastBlitWindow` records the actual writes,
+excluding the wait. Native fixtures must still demonstrate that the commit
+finishes before active display resumes.
+
+BG and OBJ palette uploads share the palette dirty flag. Moving sprites
+alone does not rewrite the unchanged OBJ palette. Palette changes made by
+`_init` are committed in `FinalizeInitHardware`, while the LCD remains
+force-blanked, before the first visible map/OAM commit. Later remaps and
+resets update both banks at the next presentation, including frames with
+no visible objects. These are general lifecycle/cost fixes; no public Lua
+classification or AUTO admission rules change.
 
 ## Renderer selection and project policy
 
@@ -367,6 +446,37 @@ threshold-based live switch would lose or reinterpret state. An explicit scene
 transition may switch backends only through a controlled blanking/reinitializing
 step with the required assets uploaded again. Telemetry may recommend a renderer
 for the next build; it must not mutate the current one.
+
+## Private tile-canvas experiment
+
+The private `mtile_tilecanvas` engineering build tag combines up to four tiled
+backgrounds with a sparse foreground canvas presented as 16×16 hardware OBJs.
+The current implementation derives behavior from map geometry, pixel coverage,
+and hardware/storage limits; it no longer reserves Celeste colors or admits
+only one fixed room. A complete-map cache uses hardware scrolling only where
+its camera/wrap bounds preserve the finite map call's exact image.
+
+It is not a project renderer value, public Mode 0 capability, or AUTO profile,
+and it changes no builtin classification above. The private path requires an
+immutable sheet, ordered map calls before raster drawing, identity map palette,
+key-zero transparency and full map clip. It admits one frame-initial `cls`,
+up to 96 occupied 16×16 foreground blocks, and a bounded VBlank upload. Opaque
+color zero requires an unused nonzero OBJ palette entry; no fixed source index
+is reserved. Composed `pget` remains unsupported. Unsupported private behavior
+is rejected rather than silently rendered approximately.
+
+See [the current implementation and constraints](celeste-parallax-2026-09-06.md).
+The earlier scene-specific allocation and measurements remain in the
+[historical tile-canvas notes](celeste-tilecanvas-experiment-2026-09-06.md).
+Public builds continue to reject/fall back for unsupported raster calls as
+documented above; the experiment is not evidence for wider public eligibility.
+
+For interactive engineering work, `mtile edit -experimental-tilecanvas
+examples/celeste` opts only that editor's selected project into the experiment.
+It uses Mode 4 code generation with the private runtime tag and reports the
+actual Mode 0 presentation as `experimental-tilecanvas`. This explicit opt-in
+is not public Mode 0/AUTO eligibility; the private composition and resource
+bounds above still apply. Omit the flag to use the normal project renderer policy.
 
 ## `examples/testio`
 

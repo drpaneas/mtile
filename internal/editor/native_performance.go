@@ -117,7 +117,7 @@ func (m *Model) applyNativePerformanceTake(sequenceIndex int, raw performance.Ra
 					}
 					events = append(events, assetsync.NativeEventAsset{
 						Tick: segment.StartTick, DurationTicks: segment.DurationTicks, Note: int(segment.Note),
-						SoundID: soundID, Priority: 128, Legato: previousSound == soundID,
+						SoundID: soundID, Priority: audio.NativeEditorNotePriority, Legato: previousSound == soundID,
 					})
 					previousSound = soundID
 				}

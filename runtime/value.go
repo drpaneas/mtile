@@ -40,6 +40,13 @@ const (
 type StaticString struct {
 	Ptr unsafe.Pointer
 	Len uint16
+	// A checked lookup hint occupies existing alignment padding. It is only
+	// accepted when the current table contains this exact static ID there.
+	slotHint uint8
+	hintSet  bool
+	// Static strings never change; reuse their exact FNV hash for table probes.
+	// This preserves the hash layout and pairs order of heap-backed strings.
+	hash uint32
 }
 
 var (
@@ -186,6 +193,7 @@ func (c *Context) InternStatic(s string) Value {
 	if len(s) > 0 {
 		c.staticTab[i].Ptr = unsafe.Pointer(unsafe.StringData(s))
 	}
+	c.staticTab[i].hash = hashBytes(unsafe.Slice((*byte)(c.staticTab[i].Ptr), len(s)))
 	c.staticN++
 	return Value{Kind: KindStaticString, SRef: i}
 }
@@ -231,6 +239,14 @@ func (c *Context) stringLen(v Value) int {
 }
 
 func (c *Context) ValuesEqual(a, b Value) bool {
+	// InternStatic is the sole writer of the static registry and deduplicates
+	// by contents. Valid static IDs therefore already represent string equality;
+	// decoding and comparing their ROM bytes again costs nothing useful.
+	// Retain the bytewise fallback for invalid refs and mixed storage kinds.
+	if a.Kind == KindStaticString && b.Kind == KindStaticString &&
+		a.SRef < c.staticN && b.SRef < c.staticN {
+		return a.SRef == b.SRef
+	}
 	if isStringKind(a.Kind) && isStringKind(b.Kind) {
 		return bytesEqual(c.stringBytes(a), c.stringBytes(b))
 	}
@@ -290,6 +306,9 @@ func bytesEqual(a, b []byte) bool {
 }
 
 func (c *Context) hashValue(v Value) uint32 {
+	if v.Kind == KindStaticString && v.SRef < c.staticN {
+		return c.staticTab[v.SRef].hash
+	}
 	if isStringKind(v.Kind) {
 		return hashBytes(c.stringBytes(v))
 	}

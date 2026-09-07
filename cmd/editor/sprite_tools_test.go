@@ -134,3 +134,14 @@ func TestFlipTransformsWholeMultiSpriteSelection(t *testing.T) {
 		t.Fatalf("flipped right edge = %d, want original far-left color 3", got)
 	}
 }
+
+func TestSpriteSheetLockOverlayMarksOnlyTheMapEraser(t *testing.T) {
+	if !spriteSheetCellShowsLock(editor.ReservedSpriteID) {
+		t.Fatal("sprite 0 must keep the spritesheet padlock")
+	}
+	for _, id := range []int{1, 7, 103, 479, 480, 511, 512, 599} {
+		if spriteSheetCellShowsLock(id) {
+			t.Fatalf("spritesheet padlock on id %d; Mode 0 print tiles stay locked for paint, not as a sheet stripe", id)
+		}
+	}
+}

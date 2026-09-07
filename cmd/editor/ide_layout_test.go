@@ -580,18 +580,25 @@ func TestCodeHorizontalViewportClampsAndMapsScrollbar(t *testing.T) {
 	}
 }
 
-func TestCodeWheelStepsPreserveFineTrackpadMotion(t *testing.T) {
-	for _, test := range []struct {
-		offset float64
-		want   int
-	}{
-		{offset: 0.1, want: 1},
-		{offset: -0.1, want: -1},
-		{offset: 2, want: 6},
-		{offset: 0, want: 0},
-	} {
-		if got := codeWheelSteps(test.offset); got != test.want {
-			t.Fatalf("codeWheelSteps(%v) = %d, want %d", test.offset, got, test.want)
+func TestCodeWheelAccumulatesFineTrackpadMotion(t *testing.T) {
+	var remainder float64
+	position := 10
+	for i := 0; i < 3; i++ {
+		position = codeWheelAxis(position, 100, -0.1, &remainder)
+		if position != 10 {
+			t.Fatalf("tiny movement jumped a line at event %d", i)
 		}
+	}
+	position = codeWheelAxis(position, 100, -0.1, &remainder)
+	if position != 11 {
+		t.Fatalf("fractional movement was lost: %d", position)
+	}
+	remainder = 0
+	if got := codeWheelAxis(position, 100, -2, &remainder); got != 17 {
+		t.Fatalf("mouse wheel movement = %d, want 17", got)
+	}
+	position = codeWheelAxis(99, 100, -2, &remainder)
+	if position != 100 || remainder != 0 {
+		t.Fatal("wheel did not clamp at end")
 	}
 }

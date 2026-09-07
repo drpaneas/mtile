@@ -7,7 +7,11 @@ sfx(id [, priority])
 music(id)
 ```
 
-- `sfx(id)` starts a compiled one-channel effect clip.
+- `sfx(id)` starts a compiled one-channel effect clip. Omitted priority is
+  160, which replaces an active Music Lab song note (those notes default to
+  128) on the same hardware channel.
+- `sfx(id, priority)` uses an explicit 0–255 value. Lower than the current
+  song note yields; equal or higher steals the channel.
 - `sfx(-1)` stops gameplay-owned SFX without stopping song/direct ownership.
 - `music(id)` starts a song at its first part.
 - `music(-1)` stops song-owned notes without stopping gameplay/direct notes.

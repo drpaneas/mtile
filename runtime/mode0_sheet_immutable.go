@@ -7,3 +7,9 @@ package runtime
 // the faster generic sheet representation but can remove its impossible
 // per-frame dirty-tile upload scan.
 const mode0SheetImmutable = true
+
+type mode0SheetUploadState struct{}
+
+func (c *Context) prepareMode0TileUploads()                {}
+func (c *Context) invalidateMode0TileUploads()             {}
+func (c *Context) uploadMode0DirtyTiles() (uint32, uint32) { return 0, 0 }

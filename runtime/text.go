@@ -399,8 +399,11 @@ func (c *Context) drawGlyph(ch byte, sx, sy int, value byte) {
 			// Mask to the 5 bitmap rows.
 			bits := columns[col] & 0x1F
 			dst := base + col
-			for ; bits != 0; bits >>= 1 {
+			for row := 0; bits != 0; row, bits = row+1, bits>>1 {
 				if bits&1 != 0 {
+					if tileCanvasExperiment {
+						c.markCanvasPixel(sx+col, sy+row)
+					}
 					c.framebuffer[dst] = value
 				}
 				dst += ScreenWidth

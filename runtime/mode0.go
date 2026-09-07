@@ -15,20 +15,28 @@ const (
 	mode0ScreenBase  = hw.VRAM + 60*1024
 	mode0BGVRAMBytes = 64 * 1024
 	mode0TileLimit   = (30 - 2*(mode0LayerCount-1)) * 32
+	// A commit includes CPU work as well as DMA: up to four 4 KiB maps,
+	// mutable/packed tiles, OAM compaction, and both hardware palettes. Reserve
+	// all 67 complete scanlines for the general path. A separately verified
+	// immutable warm path uses mode0RequiredCommitCycles to account for its
+	// actual dirty maps. VCOUNT cannot tell how much of the current scanline
+	// has elapsed, so neither path counts that partial line. Preparation and
+	// compiler resource limits must still keep the actual commit inside one
+	// VBlank; waiting cannot make oversized work fit. LastBlitWindow records
+	// the actual transfer for native verification.
+	mode0CommitReserve = (scanlinesPerFrame - ScreenHeight - 1) * cyclesPerScanline
 )
-
-func mode0LayerScreenBase(layer int) uintptr {
-	return hw.VRAM + uintptr((30-layer*2)*2048)
-}
-
-func mode0LayerControl(layer int) uint16 {
-	// Later map() calls are in front, matching Mode 4 painter order.
-	priority := mode0LayerCount - 1 - layer
-	return uint16(priority) | 0x0080 | uint16(30-layer*2)<<8 | 0x4000
-}
 
 func mode0LayerDisplay(seen uint8) uint16 {
 	return uint16(seen)<<8 | mode0ObjectDisplayBits()
+}
+
+func mode0PresentWindowFits(line uint16, cycles uint32) bool {
+	if line < ScreenHeight || line >= scanlinesPerFrame {
+		return false
+	}
+	completeLines := scanlinesPerFrame - int(line) - 1
+	return cycles <= uint32(completeLines*cyclesPerScanline)
 }
 
 // InitHardware materializes the cartridge sheet in tile VRAM. Immutable
@@ -77,216 +85,29 @@ func (c *Context) InitHardware() {
 	c.mode0UploadStats.ColdTileBytes = uploaded
 }
 
-// FinalizeInitHardware commits sset() calls made by _init while the LCD is
-// still force-blanked. Per-frame sset() is separately bounded by the compiler
-// so the later visible commit remains inside VBlank.
+// FinalizeInitHardware commits sset() and palette changes made by _init while
+// the LCD is still force-blanked. Otherwise the first visible frame would need
+// both complete palette uploads alongside its cold map/OAM commit. Per-frame
+// sset() is separately bounded by the compiler for the later VBlank commits.
 func (c *Context) FinalizeInitHardware() {
 	if c == nil {
 		return
 	}
 	start := hw.ReadFrameCycleCounter()
 	uploaded, _ := c.uploadMode0DirtyTiles()
+	c.applyMode0Palettes()
 	c.mode0ColdCycles += hw.ReadFrameCycleCounter() - start
 	c.mode0UploadStats.ColdTileBytes += uploaded
 }
 
 // stageMode0Tile resolves either generated sheet representation into the
 // fixed 64-byte GBA tile layout. It returns false for an implicit empty tile.
-func (c *Context) stageMode0Tile(id int) bool {
-	if c == nil || c.cart == nil || id < 0 || id >= c.cart.SpriteN {
-		return false
-	}
-	if sheetStorageReadOnly || c.cart.SheetReadOnly {
-		if id >= len(c.cart.SheetIndex) {
-			return false
-		}
-		slot := int(c.cart.SheetIndex[id])
-		if slot == 0 {
-			for i := range c.mode0TileStage {
-				c.mode0TileStage[i] = 0
-			}
-			return false
-		}
-		start := (slot - 1) * 64
-		if start < 0 || start+64 > len(c.cart.Sheet) {
-			return false
-		}
-		copy(c.mode0TileStage[:], c.cart.Sheet[start:start+64])
-		return true
-	}
-	cols := c.cart.SpriteCols
-	if cols <= 0 {
-		return false
-	}
-	cellX, cellY := id%cols, id/cols
-	startX, startY := cellX*8, cellY*8
-	if startX+8 > c.cart.SheetW || startY+8 > c.cart.SheetH {
-		return false
-	}
-	for row := 0; row < 8; row++ {
-		src := (startY+row)*c.cart.SheetW + startX
-		copy(c.mode0TileStage[row*8:row*8+8], c.cart.Sheet[src:src+8])
-	}
-	return true
-}
-
 func (c *Context) clearRender(color int) {
 	c.ensureDrawState()
 	c.ClipReset()
 	c.cursor.x, c.cursor.y = 0, 0
 	c.mode0Clear = c.drawPal[color]
 	c.mode0ClsCalled = true
-}
-
-func positiveMod(value, modulus int) int {
-	result := value % modulus
-	if result < 0 {
-		result += modulus
-	}
-	return result
-}
-
-// mode0ScreenEntry implements the GBA's 64x32 regular-background block
-// layout: the right half lives in the second 32x32 screen block.
-func mode0ScreenEntry(x, y int) int {
-	x = positiveMod(x, 64)
-	y = positiveMod(y, 32)
-	return (x/32)*1024 + y*32 + x%32
-}
-
-// Map preserves the Mode 4 map contract while materializing only the window
-// required by the current call. Each statically proven call owns one hardware
-// BG; fine camera movement updates scroll registers without a screen upload.
-func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
-	if c == nil {
-		return
-	}
-	mapIndex := c.mode0MapCalls
-	c.mapLayerAt(mapIndex, 0, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
-}
-
-// MapBG binds one authored plane to its matching logical hardware BG slot.
-// The transpiler proves stable BG IDs and ordering before selecting Mode 0.
-func (c *Context) MapBG(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
-	c.mapLayerAt(bg, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
-}
-
-// MapBGAt binds a stable logical source plane to a densely allocated hardware
-// BG slot. Empty gaps in BG0..BG3 therefore consume neither a screen shadow
-// nor a hardware background.
-func (c *Context) MapBGAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
-	if slot < 0 {
-		return
-	}
-	c.mapLayerAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
-}
-
-// MapAll materializes the selected non-empty logical planes in BG order while
-// packing them into consecutive hardware slots.
-func (c *Context) MapAll(mask uint8) {
-	slot := 0
-	for bg := 0; bg < 4; bg++ {
-		if mask&(1<<uint(bg)) == 0 {
-			continue
-		}
-		c.MapBGAt(slot, bg, 0, 0, 0, 0, 0, 0, 0)
-		slot++
-	}
-}
-
-func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
-	if c == nil || c.cart == nil {
-		return
-	}
-	if sourceBG < 0 || sourceBG >= c.cart.MapLayers {
-		return
-	}
-	c.ensureDrawState()
-	if cellsW <= 0 {
-		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
-		if hidden := c.clipX0 - (screenX + cellX*8 - c.camX); hidden > 0 {
-			cellsW += (hidden + 7) / 8
-		}
-	}
-	if cellsH <= 0 {
-		cellsH = (c.clipY1 - c.clipY0 + 7) / 8
-		if hidden := c.clipY0 - (screenY + cellY*8 - c.camY); hidden > 0 {
-			cellsH += (hidden + 7) / 8
-		}
-	}
-	if cellsW <= 0 || cellsH <= 0 || cellsW > 64 || cellsH > 32 {
-		return
-	}
-	if mapIndex >= mode0LayerCount {
-		return
-	}
-	c.mode0MapCalls++
-	c.mode0MapSeen |= 1 << uint(mapIndex)
-
-	originX := screenX + cellX*8 - c.camX
-	originY := screenY + cellY*8 - c.camY
-	scrollX := positiveMod(-originX, 8)
-	scrollY := positiveMod(-originY, 8)
-	tileX := (originX + scrollX) / 8
-	tileY := (originY + scrollY) / 8
-	c.mode0ScrollX[mapIndex] = uint16(scrollX)
-	c.mode0ScrollY[mapIndex] = uint16(scrollY)
-
-	var mask byte
-	if layer > 0 && layer <= 255 {
-		mask = byte(layer)
-	}
-	if c.mode0MapSigSet[mapIndex] && c.mode0MapCellX[mapIndex] == cellX && c.mode0MapCellY[mapIndex] == cellY &&
-		c.mode0MapTileX[mapIndex] == tileX && c.mode0MapTileY[mapIndex] == tileY &&
-		c.mode0MapCellsW[mapIndex] == cellsW && c.mode0MapCellsH[mapIndex] == cellsH &&
-		c.mode0MapLayer[mapIndex] == mask && c.mode0MapSource[mapIndex] == uint8(sourceBG) {
-		return
-	}
-
-	for i := range c.mode0Screen[mapIndex] {
-		c.mode0Screen[mapIndex][i] = 0
-	}
-	for my := 0; my < cellsH; my++ {
-		screenCellY := originY + my*8
-		// Keep the cell exactly on the right/bottom boundary as a guard.
-		// A one-pixel pan changes only hardware scroll (not the cached tile
-		// placement), so that cell can become visible without rematerializing.
-		if screenCellY+8 <= c.clipY0 || screenCellY > c.clipY1 {
-			continue
-		}
-		mapY := cellY + my
-		if mapY < 0 || mapY >= c.cart.MapH {
-			continue
-		}
-		for mx := 0; mx < cellsW; mx++ {
-			screenCellX := originX + mx*8
-			if screenCellX+8 <= c.clipX0 || screenCellX > c.clipX1 {
-				continue
-			}
-			mapX := cellX + mx
-			if mapX < 0 || mapX >= c.cart.MapW {
-				continue
-			}
-			id := c.mapGetLayer(sourceBG, mapX, mapY)
-			if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit {
-				continue
-			}
-			if mask != 0 && c.cart.Flags[id]&mask != mask {
-				continue
-			}
-			entry := mode0ScreenEntry(tileX+mx, tileY+my) * 2
-			c.mode0Screen[mapIndex][entry] = byte(id)
-			c.mode0Screen[mapIndex][entry+1] = byte(id >> 8)
-		}
-	}
-	c.mode0MapCellX[mapIndex], c.mode0MapCellY[mapIndex] = cellX, cellY
-	c.mode0MapTileX[mapIndex], c.mode0MapTileY[mapIndex] = tileX, tileY
-	c.mode0MapCellsW[mapIndex], c.mode0MapCellsH[mapIndex] = cellsW, cellsH
-	c.mode0MapLayer[mapIndex] = mask
-	c.mode0MapSource[mapIndex] = uint8(sourceBG)
-	c.mode0MapSigSet[mapIndex] = true
-	c.mode0MapReady[mapIndex] = true
-	c.mode0MapDirty[mapIndex] = true
 }
 
 func (c *Context) BeginRenderFrame() {
@@ -297,43 +118,11 @@ func (c *Context) BeginRenderFrame() {
 	c.beginMode0Objects()
 }
 
-// PrepareRender is intentionally empty: Mode 0 has no software framebuffer
-// to copy during VDraw.
-func (c *Context) PrepareRender() {}
-
-func (c *Context) uploadMode0DirtyTiles() (uint32, uint32) {
-	if mode0SheetImmutable {
-		return 0, 0
-	}
-	if c == nil || c.cart == nil {
-		return 0, 0
-	}
-	var bgUploaded, objUploaded uint32
-	limit := c.cart.SpriteN
-	if limit > mode0TileLimit {
-		limit = mode0TileLimit
-	}
-	for id := 0; id < limit; id++ {
-		mask := byte(1 << uint(id&7))
-		if c.mode0TileDirty[id>>3]&mask == 0 {
-			continue
-		}
-		c.mode0TileDirty[id>>3] &^= mask
-		staged := c.stageMode0Tile(id)
-		if !staged {
-			for i := range c.mode0TileStage {
-				c.mode0TileStage[i] = 0
-			}
-		}
-		if id == 0 {
-			objUploaded += c.uploadMode0ObjectTile(id, c.mode0TileStage[:])
-			continue
-		}
-		hw.CopyToVRAM32DMA(c.mode0TileStage[:], hw.VRAM+uintptr(id*64), 16)
-		objUploaded += c.uploadMode0ObjectTile(id, c.mode0TileStage[:])
-		bgUploaded += 64
-	}
-	return bgUploaded, objUploaded
+// PrepareRender stages CPU-only upload work before waiting for VBlank. The
+// visible commit then transfers the already prepared tiles and map shadows.
+func (c *Context) PrepareRender() {
+	c.prepareMode0TileUploads()
+	c.prepareMode0PackedObjects()
 }
 
 func (c *Context) PresentRender() {
@@ -351,6 +140,17 @@ func (c *Context) PresentRender() {
 			return
 		}
 	}
+	// The outer frame pacer may return late in an already running VBlank.
+	// Starting visible map/OAM writes there lets the next scan observe only
+	// part of a frame. Retain the previous complete frame until a window with
+	// enough complete scanlines for the pending commit is available. The host
+	// waits are inert; native first-scan fixtures verify the work bounds too.
+	reserve := c.mode0RequiredCommitCycles()
+	if !mode0PresentWindowFits(hw.GetReg16(hw.VCOUNT), reserve) {
+		hw.WaitVDraw()
+		hw.WaitForPresentWindow()
+	}
+	c.lastBlitStart = hw.GetReg16(hw.VCOUNT)
 	commitStart := hw.ReadFrameCycleCounter()
 	// Commit scroll first. A frame that changes several 4 KiB screen blocks
 	// can consume most of VBlank; leaving BGxHOFS/BGxVOFS until after those
@@ -362,7 +162,7 @@ func (c *Context) PresentRender() {
 		hw.SetReg16(hw.BG0HOFS+uintptr(layer*4), c.mode0ScrollX[layer])
 		hw.SetReg16(hw.BG0VOFS+uintptr(layer*4), c.mode0ScrollY[layer])
 	}
-	c.ApplyDisplayPalette()
+	c.applyMode0Palettes()
 	hw.SetPaletteRAM16(0, c.palette[c.displayPal[c.mode0Clear]])
 	coldCycles := c.mode0ColdCycles
 	c.mode0ColdCycles = 0
@@ -382,6 +182,7 @@ func (c *Context) PresentRender() {
 	}
 	c.mode0UploadStats.LastOAMBytes = c.presentMode0Objects()
 	hw.SetReg16(hw.DISPCNT, mode0LayerDisplay(c.mode0MapSeen))
+	c.lastBlitEnd = hw.GetReg16(hw.VCOUNT)
 	commitEnd := hw.ReadFrameCycleCounter()
 	commitCycles := commitEnd - commitStart
 	c.lastBlitCycles = coldCycles + commitCycles

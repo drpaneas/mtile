@@ -34,13 +34,19 @@ func TestGenericNumericArguments(t *testing.T) {
  }
 }
 `
-	for _, generic := range []bool{false, true} {
-		generated, err := Transpile("numeric-builtin-result.lua", source, Options{DisableMonomorphicNumbers: generic})
+	for _, opts := range []Options{{}, {DisableCoercedNumberParams: true}, {DisableMonomorphicNumbers: true}} {
+		generated, err := Transpile("numeric-builtin-result.lua", source, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !generic && !strings.Contains(generated, "narrowed(c *rt.Context, a0 rt.Value) rt.Number") {
-			t.Fatalf("generic argument must preserve a native numeric result:\n%s", generated)
+		if !opts.DisableMonomorphicNumbers {
+			parameter := "rt.Number"
+			if opts.DisableCoercedNumberParams {
+				parameter = "rt.Value"
+			}
+			if !strings.Contains(generated, "narrowed(c *rt.Context, a0 "+parameter+") rt.Number") {
+				t.Fatalf("generic argument must preserve a native numeric result:\n%s", generated)
+			}
 		}
 		runGeneratedHarness(t, generated, harness, "TestGenericNumericArguments")
 	}
@@ -83,4 +89,32 @@ func TestEvaluationOrder(t *testing.T){
 		}
 		runGeneratedHarness(t, generated, adjusted, "TestEvaluationOrder")
 	}
+}
+
+func TestNumericBuiltinNumberArgsAvoidValueTemps(t *testing.T) {
+	source := `
+result = 0
+function roll()
+  result = rnd(8) + min(1, 4)
+end
+`
+	got, err := Transpile("numeric-builtin-temps.lua", source, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := generatedSection(got, "func (g *Game) roll(")
+	if strings.Contains(body, "glu_arg_") {
+		t.Fatalf("numeric builtin arguments still used Value sequencing temps:\n%s", body)
+	}
+	if !strings.Contains(body, "c.Rnd(") || !strings.Contains(body, "rt.Min(") {
+		t.Fatalf("numeric builtins were not lowered:\n%s", body)
+	}
+	runGeneratedHarness(t, got, `package main
+import("testing";rt "github.com/drpaneas/mtile/runtime")
+func TestRoll(t *testing.T) {
+ var g Game;var c,random rt.Context;g.Init(&c)
+ c.Srand(rt.FromInt(2));random.Srand(rt.FromInt(2));g.roll(&c)
+ if g.result!=random.Rnd(rt.FromInt(8))+rt.Min(rt.FromInt(1),rt.FromInt(4)) {t.Fatal(g.result)}
+}
+`, "TestRoll")
 }

@@ -7,6 +7,48 @@ import (
 	"github.com/drpaneas/mtile/runtime/hw"
 )
 
+func editorSongAndGameplaySFXLibrary() audio.Library {
+	envelope := hw.HardwareEnvelope{Initial: 15, Direction: hw.EnvelopeDown}
+	pulse := hw.Pulse1Config{Pulse: hw.PulseConfig{Duty: hw.PulseDuty50, Envelope: envelope, Route: hw.SoundRouteBoth}}
+	return audio.Library{
+		Sounds: []audio.Sound{{ID: 10, Kind: audio.SoundCH1, Pulse1: pulse}},
+		Clips: []audio.Clip{
+			{ID: 1, Kind: audio.SoundCH1, LengthTicks: 8, NoteEvents: []audio.NoteEvent{
+				{Tick: 0, DurationTicks: 8, Note: 60, SoundID: 10, Priority: audio.NativeEditorNotePriority},
+			}},
+			{ID: 2, Kind: audio.SoundCH1, LengthTicks: 4, NoteEvents: []audio.NoteEvent{
+				{Tick: 0, DurationTicks: 2, Note: 72, SoundID: 10, Priority: 100},
+			}},
+		},
+		Parts: []audio.Part{{ID: 30, LengthTicks: 8, PSGClips: [4]int16{1, -1, -1, -1}}},
+		Songs: []audio.Song{{ID: 40, Tempo: 120, Sequence: []uint8{30}, LoopStart: -1}},
+	}
+}
+
+func TestContextOmittedSFXPriorityStealsEditorSongNote(t *testing.T) {
+	hw.ResetForTest()
+	var controller audio.Controller
+	if !controller.Init(audio.ProfilePSG) {
+		t.Fatal("controller init failed")
+	}
+	if !controller.Bind(editorSongAndGameplaySFXLibrary()) {
+		t.Fatal("controller bind failed")
+	}
+	var context Context
+	context.AttachNativeAudio(&controller)
+	context.MusicV(IntVal(40), Value{})
+	controller.Service()
+	if got := controller.Stats(); got.Channels[0].Owner != audio.OwnerSong || got.Channels[0].Note != 60 {
+		t.Fatalf("song setup = %+v", got.Channels[0])
+	}
+	context.SFXV(IntVal(2), Value{}, Value{}, Value{})
+	controller.Service()
+	got := controller.Stats()
+	if got.PriorityRejects != 0 || got.Channels[0].Owner != audio.OwnerSFX || got.Channels[0].Note != 72 {
+		t.Fatalf("omitted sfx() priority lost to editor music: %+v", got)
+	}
+}
+
 func TestContextSFXValueDefaultsAndStop(t *testing.T) {
 	var mixer audio.Mixer
 	if !mixer.Init(4) {

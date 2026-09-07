@@ -154,7 +154,7 @@ placement of one tile is less direct today: 64 `sset()` calls would replace an
 
 ## Current object order
 
-An unconditional direct `spr()` or supported `sspr()` may appear after any
+A `spr()` or supported `sspr()` reachable from `_draw` may appear after any
 materialized explicit map. Mode 4 preserves normal statement-order painting;
 Mode 0 derives Attribute-2 priority from the number of dense BGs still to be
 drawn. With four non-empty planes, calls after BG0/BG1/BG2/BG3 receive
@@ -315,13 +315,14 @@ in the same change.
 
 ### Stage 4 compatibility boundary
 
-`spr(id, ...)` now accepts a scalar ID variable when it has an unconditional
-top-level or direct `_init` initializer and every write is an integer literal
-or immutable top-level integer constant. The compiler enumerates all
-non-contiguous candidates, validates every candidate rectangle and text/OBJ
-limit, and leaves runtime selection to the existing `SprV`/OAM path. It does
-not infer `id + 1`, `base + frame`, table/field values, function returns, or
-other arithmetic ranges. The `dynamic_sprite_frames` paired renderer workload
+`spr(id, ...)` accepts a source ID whose complete integer set the analyzer can
+close: a literal, a scalar with an explicit finite integer set, a
+helper/local/parameter/field expression, public numeric builtins, arithmetic
+including `%` ranges, numeric array-literal indexes, and parameters narrowed by
+a returning comparison guard. The compiler enumerates the candidates, validates
+every candidate rectangle and text/OBJ limit, and leaves runtime selection to
+the existing `SprV`/OAM path. Unbounded or unknown ids still fail. The
+`dynamic_sprite_frames` paired renderer workload
 cycles sixteen draw slots through `{1,32,35}` and is the permanent parity and
 throughput fixture. Dynamic source IDs currently disable the optional packed
 16x16/32x32 cache and use the deterministic ordinary metasprite budget.

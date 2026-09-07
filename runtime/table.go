@@ -1,9 +1,21 @@
 package runtime
 
+import (
+	goruntime "runtime"
+	"unsafe"
+)
+
 const (
 	defaultTableArrayCap = 16
 	defaultTableHashCap  = 8
 	numberArrayHeader    = 4
+	// Numeric payloads retain their existing little-endian byte layout. The
+	// GBA and usual host targets can access aligned words directly; other
+	// architectures compile only the portable bytewise path.
+	littleEndianNumberWords = goruntime.GOARCH == "386" || goruntime.GOARCH == "amd64" ||
+		goruntime.GOARCH == "arm" || goruntime.GOARCH == "arm64" || goruntime.GOARCH == "loong64" ||
+		goruntime.GOARCH == "mipsle" || goruntime.GOARCH == "mips64le" || goruntime.GOARCH == "ppc64le" ||
+		goruntime.GOARCH == "riscv64" || goruntime.GOARCH == "wasm"
 )
 
 // NewNumberArray allocates a fixed-length, number-only Lua array. It retains
@@ -24,12 +36,8 @@ func (c *Context) NewNumberArray(length int) (Value, HeapError) {
 	if err != HeapOK {
 		return NilVal(), err
 	}
-	data, err := c.objectBytes(ref)
-	if err != HeapOK {
-		return NilVal(), err
-	}
+	data := c.freshObjectBytes(ref)
 	writeU16(data, 0, uint16(length))
-	writeU16(data, 2, 0)
 	return Value{Kind: KindTable, Ref: ref}, HeapOK
 }
 
@@ -53,18 +61,32 @@ func (c *Context) numberArrayData(array Value) ([]byte, int, HeapError) {
 
 // NumberArrayGet returns zero for an invalid object or out-of-range index.
 // Indices are one-based to preserve Lua's array convention.
+//
+//go:noinline
+//go:section .iwram
 func (c *Context) NumberArrayGet(array Value, index int) Number {
 	data, length, err := c.numberArrayData(array)
 	if err != HeapOK || index < 1 || index > length {
 		return 0
 	}
 	offset := numberArrayHeader + (index-1)*4
+	// numberArrayData validated the whole payload, and the index check above
+	// proves that all four bytes exist. Real heap objects are aligned; one
+	// native word avoids four EWRAM byte reads and repeated bounds checks.
+	// Preserve the bytewise path for unusual in-bounds, unaligned headers.
+	pointer := unsafe.Pointer(&data[offset])
+	if littleEndianNumberWords && uintptr(pointer)&3 == 0 {
+		return Number(*(*int32)(pointer))
+	}
 	raw := uint32(data[offset]) | uint32(data[offset+1])<<8 | uint32(data[offset+2])<<16 | uint32(data[offset+3])<<24
 	return Number(int32(raw))
 }
 
 // NumberArraySet stores a native Number and ignores out-of-range indices,
 // matching the experiment's fixed-capacity contract without risking a panic.
+//
+//go:noinline
+//go:section .iwram
 func (c *Context) NumberArraySet(array Value, index int, number Number) HeapError {
 	data, length, err := c.numberArrayData(array)
 	if err != HeapOK {
@@ -74,6 +96,11 @@ func (c *Context) NumberArraySet(array Value, index int, number Number) HeapErro
 		return HeapOK
 	}
 	offset := numberArrayHeader + (index-1)*4
+	pointer := unsafe.Pointer(&data[offset])
+	if littleEndianNumberWords && uintptr(pointer)&3 == 0 {
+		*(*int32)(pointer) = int32(number)
+		return HeapOK
+	}
 	raw := uint32(number)
 	data[offset] = byte(raw)
 	data[offset+1] = byte(raw >> 8)
@@ -134,13 +161,8 @@ func (c *Context) NewTableWithCaps(arrayCap, hashCap int) (Value, HeapError) {
 	if err != HeapOK {
 		return NilVal(), err
 	}
-	data, err := c.objectBytes(ref)
-	if err != HeapOK {
-		return NilVal(), err
-	}
-	writeU16(data, 0, 0)
+	data := c.freshObjectBytes(ref)
 	writeU16(data, 2, arrayCap16)
-	writeU16(data, 4, 0)
 	writeU16(data, 6, hashCap16)
 	return Value{Kind: KindTable, Ref: ref}, HeapOK
 }
@@ -154,20 +176,42 @@ func (c *Context) tableData(t Value) ([]byte, HeapError) {
 	if t.Kind != KindTable {
 		return nil, HeapCorruptRef
 	}
-	data, err := c.objectBytes(t.Ref)
-	if err != HeapOK {
-		return nil, err
+	// Keep objectBytes' validation order, but retain the checked handle here.
+	// Calling it and then looking up Kind again makes ARM validate and address
+	// the same handle twice on every uncached table access.
+	if c.heap.terminal != HeapOK {
+		return nil, c.heap.terminal
 	}
-	if c.heap.handles[t.Ref].Kind() != ObjTable {
+	if t.Ref >= maxHandles || t.Ref == invalidRef {
+		return nil, HeapCorruptRef
+	}
+	header := &c.heap.handles[t.Ref]
+	if header.State() == HandleFree {
+		return nil, HeapCorruptRef
+	}
+	offset, size := header.Offset, uint32(header.Size)
+	if offset > uint32(heapSize) || size > uint32(heapSize)-offset {
+		return nil, HeapCorrupt
+	}
+	data := c.activeSpace()[offset : offset+size]
+	if header.Kind() != ObjTable {
 		return nil, HeapCorruptRef
 	}
 	if len(data) < 8 {
 		return nil, HeapCorrupt
 	}
-	arrayCap := readU16(data, 2)
-	hashCap := readU16(data, 6)
+	var arrayLen, arrayCap, hashLen, hashCap uint16
+	if littleEndianNumberWords && uintptr(unsafe.Pointer(&data[0]))&1 == 0 {
+		// One alignment check covers the complete, already bounds-checked
+		// header. Halfword reads fit the GBA's 16-bit EWRAM bus directly.
+		words := (*[4]uint16)(unsafe.Pointer(&data[0]))
+		arrayLen, arrayCap, hashLen, hashCap = words[0], words[1], words[2], words[3]
+	} else {
+		arrayLen, arrayCap = readU16(data, 0), readU16(data, 2)
+		hashLen, hashCap = readU16(data, 4), readU16(data, 6)
+	}
 	need, _, ok := tableLayoutSize(arrayCap, hashCap)
-	if !ok || uint32(len(data)) < need || readU16(data, 0) > arrayCap || readU16(data, 4) > hashCap {
+	if !ok || uint32(len(data)) < need || arrayLen > arrayCap || hashLen > hashCap {
 		return nil, HeapCorrupt
 	}
 	return data, HeapOK
@@ -205,14 +249,18 @@ func (c *Context) TableLen(t Value) int {
 	if err != HeapOK {
 		return 0
 	}
-	arrayCap := int(readU16(data, 2))
+	return tableArrayLen(data, int(readU16(data, 2)))
+}
+
+// tableArrayLen takes a slice and capacity already checked by tableData.
+// Only the Kind byte of each slot determines the first nil boundary. A byte
+// stride avoids rechecking a slice bound for every slot of every list call;
+// keep the pointer at the object base so no one-past-end pointer is formed.
+func tableArrayLen(data []byte, arrayCap int) int {
+	base := unsafe.Pointer(&data[0])
 	n := 0
-	for i := 0; i < arrayCap; i++ {
-		// Value's Kind field is its first byte, so the border scan only needs
-		// one byte per slot instead of copying the full 12-byte Value. On the
-		// GBA's 16-bit EWRAM bus that is the difference between one read and
-		// three word reads per slot, and add()/deli()/#t all pay this scan.
-		if Kind(data[arraySlotOff(i)]) == KindNil {
+	for n < arrayCap {
+		if Kind(*(*byte)(unsafe.Add(base, arraySlotOff(n)))) == KindNil {
 			break
 		}
 		n++
@@ -246,6 +294,7 @@ func (c *Context) TableGet(t, key Value) Value {
 // reads the cached byte offset without repeating type, handle-kind, capacity,
 // hash, or key-equality checks. The table may move during GC because its stable
 // handle is resolved on every access; its type and layout must not change.
+//
 //go:noinline
 //go:section .iwram
 func (c *Context) TableGetStable(t, key Value, cache *TableFieldCache) Value {
@@ -257,6 +306,7 @@ func (c *Context) TableGetStable(t, key Value, cache *TableFieldCache) Value {
 }
 
 // Keep first-use validation in ROM; warm field access is the IWRAM hot path.
+//
 //go:noinline
 func (c *Context) tableGetStableFirst(t, key Value, cache *TableFieldCache) Value {
 	data, err := c.tableData(t)
@@ -273,11 +323,13 @@ func (c *Context) tableGetStableFirst(t, key Value, cache *TableFieldCache) Valu
 
 // TableGetStableNumber is the numeric monomorphic field path. Its first read
 // validates both the table slot and the field's number kind. Warm reads load
-// the fixed-point payload directly and deliberately assume both stay stable.
+// the fixed-point payload only while the base is still KindTable; nil and
+// other kinds take the cold path instead of indexing handle 0.
+//
 //go:noinline
 //go:section .iwram
 func (c *Context) TableGetStableNumber(t, key Value, cache *TableFieldCache) Number {
-	if *cache == 0 {
+	if *cache == 0 || t.Kind != KindTable {
 		return c.tableGetStableNumberFirst(t, key, cache)
 	}
 	hdr := &c.heap.handles[t.Ref]
@@ -363,11 +415,12 @@ func (c *Context) TableSet(t, key, val Value) HeapError {
 
 // TableSetStable is the write counterpart to TableGetStable. The first write
 // uses normal table semantics and caches the resulting field offset. Later
-// writes assume the same table type and layout and update that slot directly.
+// writes update that slot only while the base is still KindTable.
+//
 //go:noinline
 //go:section .iwram
 func (c *Context) TableSetStable(t, key, val Value, cache *TableFieldCache) HeapError {
-	if *cache == 0 {
+	if *cache == 0 || t.Kind != KindTable {
 		return c.tableSetStableFirst(t, key, val, cache)
 	}
 	hdr := &c.heap.handles[t.Ref]
@@ -395,6 +448,25 @@ func (c *Context) tableSetStableFirst(t, key, val Value, cache *TableFieldCache)
 // while preserving the table's Value storage for GC and generic Lua access.
 func (c *Context) TableSetStableNumber(t, key Value, number Number, cache *TableFieldCache) HeapError {
 	return c.TableSetStable(t, key, NumVal(number), cache)
+}
+
+// TableSetCached and TableSetCachedNumber are compiler-only warm stores. The
+// caller has checked a nonzero stable offset and KindTable, retaining the same
+// table-layout proof as TableSetStable. Neither can allocate or collect. Compact
+// arguments avoid passing the unused key and table Value payload over the ARM stack.
+//
+//go:noinline
+//go:section .iwram
+func (c *Context) TableSetCached(ref Ref, cache TableFieldCache, value Value) {
+	hdr := &c.heap.handles[ref]
+	writeValue(c.activeSpace(), hdr.Offset+uint32(cache)-1, value)
+}
+
+//go:noinline
+//go:section .iwram
+func (c *Context) TableSetCachedNumber(ref Ref, cache TableFieldCache, number Number) {
+	hdr := &c.heap.handles[ref]
+	writeValue(c.activeSpace(), hdr.Offset+uint32(cache)-1, NumVal(number))
 }
 
 func (c *Context) tableFieldOffset(data []byte, key Value) (uint32, bool) {
@@ -431,6 +503,17 @@ func (c *Context) hashFind(data []byte, key Value) (int, bool) {
 		return 0, false
 	}
 	arrayCap := readU16(data, 2)
+	var hint *StaticString
+	if key.Kind == KindStaticString && key.SRef < c.staticN {
+		hint = &c.staticTab[key.SRef]
+		slot := int(hint.slotHint)
+		if hint.hintSet && slot < hashCap {
+			candidate := readValue(data, hashKeyOff(arrayCap, slot))
+			if candidate.Kind == KindStaticString && candidate.SRef == key.SRef {
+				return slot, true
+			}
+		}
+	}
 	start := hashBucket(c.hashValue(key), uint16(hashCap))
 	i := start
 	for {
@@ -443,6 +526,9 @@ func (c *Context) hashFind(data []byte, key Value) (int, bool) {
 				return 0, false
 			}
 		} else if c.ValuesEqual(k, key) {
+			if hint != nil {
+				hint.slotHint, hint.hintSet = uint8(i), true
+			}
 			return i, true
 		}
 		i++
@@ -496,7 +582,12 @@ func (c *Context) hashInsertSlot(data []byte, key Value) (int, bool) {
 }
 
 func (c *Context) TableAdd(t, val, index Value) HeapError {
-	n := c.TableLen(t)
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return err
+	}
+	arrayCap := int(readU16(data, 2))
+	n := tableArrayLen(data, arrayCap)
 	at := n + 1
 	if index.Kind == KindNumber {
 		i := index.Int()
@@ -504,13 +595,11 @@ func (c *Context) TableAdd(t, val, index Value) HeapError {
 			at = i
 		}
 	}
-	data, err := c.tableData(t)
-	if err != HeapOK {
-		return err
-	}
-	arrayCap := int(readU16(data, 2))
-	if at > arrayCap {
-		newArray, ok := growCap(arrayCap, at, maxArrayCap)
+	for n >= arrayCap {
+		// Indexed insertion needs space for the shifted last element too.
+		// Growth can promote integer hash keys and extend the dense prefix,
+		// so recheck after rebuilding before writing any shifted elements.
+		newArray, ok := growCap(arrayCap, n+1, maxArrayCap)
 		if !ok {
 			return HeapOOM
 		}
@@ -522,7 +611,8 @@ func (c *Context) TableAdd(t, val, index Value) HeapError {
 		if err != HeapOK {
 			return err
 		}
-		n = c.TableLen(t)
+		arrayCap = int(readU16(data, 2))
+		n = tableArrayLen(data, arrayCap)
 	}
 	for i := n; i >= at; i-- {
 		writeValue(data, arraySlotOff(i), readValue(data, arraySlotOff(i-1)))
@@ -678,7 +768,7 @@ func (c *Context) TableDel(t, val Value) Value {
 		return NilVal()
 	}
 	arrayCap := int(readU16(data, 2))
-	n := c.TableLen(t)
+	n := tableArrayLen(data, arrayCap)
 	for i := 0; i < n; i++ {
 		got := readValue(data, arraySlotOff(i))
 		if c.ValuesEqual(got, val) {
@@ -714,16 +804,16 @@ func (c *Context) TableDel(t, val Value) Value {
 }
 
 func (c *Context) TableDeli(t, index Value) Value {
-	n := c.TableLen(t)
+	data, err := c.tableData(t)
+	if err != HeapOK {
+		return NilVal()
+	}
+	n := tableArrayLen(data, int(readU16(data, 2)))
 	at := n
 	if index.Kind == KindNumber {
 		at = index.Int()
 	}
 	if at < 1 || at > n {
-		return NilVal()
-	}
-	data, err := c.tableData(t)
-	if err != HeapOK {
 		return NilVal()
 	}
 	got := readValue(data, arraySlotOff(at-1))

@@ -13,6 +13,12 @@ const (
 	NativeMaxCommandQueue  = 32
 	NativeMaxSequenceParts = 128
 	NativeMaxMacroSteps    = 64
+	// NativeEditorNotePriority is the priority Music Lab writes for new notes.
+	NativeEditorNotePriority = 128
+	// NativeDefaultSFXPriority is used when Lua calls sfx(id) without a second
+	// argument. It sits above NativeEditorNotePriority so a gameplay effect
+	// replaces an active Music Lab song note on that channel.
+	NativeDefaultSFXPriority = 160
 	// NativeMaxPartBars keeps one continuous performance in one reusable part
 	// while bounding authored tick positions and note durations to target-safe
 	// integer ranges. At 120 BPM this is more than four minutes of recording.
@@ -21,6 +27,12 @@ const (
 	// stock GB Studio player calls hUGEDriver once per frame, so instrument
 	// subpatterns advance at 4,194,304 / 70,224 ~= 59.73 Hz.
 	NativeMacroClockCycles = 280896
+	// NativeServicePeriodCycles is one 256 Hz Timer 0 slot at the GBA CPU
+	// clock: 16,777,216 / 256 = 65,536. NativeServiceCycleBudget is the
+	// documented per-IRQ CPU bound; docs/audio/performance.md records a
+	// 11,439-cycle measured maximum under this 16,384-cycle budget.
+	NativeServicePeriodCycles = 65536
+	NativeServiceCycleBudget  = 16384
 )
 
 // Profile is one measured native GBA playback configuration.

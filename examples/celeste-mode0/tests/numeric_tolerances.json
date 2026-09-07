@@ -1,0 +1,205 @@
+{
+  "description": "Maximum explicitly accepted raw16.16 drift from readable constants. Missing case/field means exact. Timers, booleans and phases have no tolerance. Native PICO-8 reference remains unchanged.",
+  "physics": {
+    "walk_release_reverse": {
+      "vx": 3,
+      "x_remainder": 5
+    },
+    "ice_walk_release_reverse": {
+      "vx": 19,
+      "x": 131072,
+      "x_remainder": 65526
+    },
+    "jump_hold_and_release": {
+      "vy": 17,
+      "y_remainder": 180
+    },
+    "ceiling_jump": {
+      "vy": 17,
+      "y_remainder": 180
+    },
+    "coyote_jump": {
+      "vx": 1,
+      "vy": 17,
+      "x_remainder": 1,
+      "y_remainder": 180
+    },
+    "coyote_expired": {
+      "vx": 1,
+      "vy": 8,
+      "x_remainder": 1,
+      "y_remainder": 36
+    },
+    "jump_buffer": {
+      "vy": 17,
+      "y_remainder": 180
+    },
+    "wall_slide_left": {
+      "vx": 1,
+      "vy": 17,
+      "y_remainder": 180
+    },
+    "wall_slide_right": {
+      "vy": 17,
+      "y_remainder": 152
+    },
+    "ice_wall_no_slide": {
+      "vy": 17,
+      "y_remainder": 163
+    },
+    "wall_jump_three_pixel_probe": {
+      "vy": 17,
+      "y_remainder": 163
+    },
+    "dash_right": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "dash_left": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "dash_up": {
+      "vy": 11,
+      "y_remainder": 69
+    },
+    "dash_up_right": {
+      "vy": 11,
+      "y_remainder": 69
+    },
+    "dash_up_left": {
+      "vy": 11,
+      "y_remainder": 69
+    },
+    "dash_no_direction": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "dash_opposed": {
+      "vy": 11,
+      "y_remainder": 69
+    },
+    "dash_no_direction_left": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "dash_ground_recharge_held": {
+      "vx": 1,
+      "x_remainder": 1
+    },
+    "dash_inputs_during_freeze": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "dash_into_ceiling": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "land_during_dash": {
+      "vy": 4,
+      "y_remainder": 6
+    },
+    "left_screen_clamp": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "right_screen_clamp": {
+      "vy": 8,
+      "y_remainder": 36
+    },
+    "spike_up_moving_away": {
+      "vy": 6,
+      "y_remainder": 15
+    },
+    "spike_down": {
+      "vy": 3,
+      "y_remainder": 3
+    },
+    "spike_left_moving_away": {
+      "vy": 4,
+      "y_remainder": 6
+    },
+    "spike_right": {
+      "vy": 8,
+      "y_remainder": 28
+    },
+    "spike_right_moving_away": {
+      "vy": 4,
+      "y_remainder": 6
+    },
+    "top_exit": {
+      "vy": 1
+    },
+    "local_walk_to_spikes": {
+      "vx": 1,
+      "x_remainder": 1
+    },
+    "local_jump_dash": {
+      "vy": 15,
+      "y_remainder": 144
+    },
+    "local_wall_jump": {
+      "vx": 1,
+      "vy": 9,
+      "x_remainder": 1,
+      "y_remainder": 57
+    },
+    "local_complete_level": {
+      "vx": 1,
+      "vy": 15,
+      "x_remainder": 12,
+      "y_remainder": 392
+    }
+  },
+  "lifecycle": {
+    "spawn_held_jump": {
+      "vy": 17,
+      "y_remainder": 180
+    },
+    "spawn_held_dash": {
+      "vx": 1
+    },
+    "death_and_respawn": {
+      "vx": 1,
+      "x_remainder": 1
+    },
+    "respawn_held_jump": {
+      "vx": 1,
+      "vy": 17,
+      "x_remainder": 1,
+      "y_remainder": 180
+    },
+    "respawn_held_dash": {
+      "vx": 1,
+      "vy": 5,
+      "x_remainder": 1,
+      "y_remainder": 10
+    }
+  },
+  "entities": {
+    "balloon_refill_reappear": {
+      "22.y": 24
+    },
+    "balloon_full_dash": {
+      "22.y": 28
+    },
+    "fruit_float": {
+      "26.y": 35
+    },
+    "flying_fruit_flee": {
+      "28.off": 14,
+      "28.ry": 65274,
+      "28.vy": 32,
+      "28.y": 65536
+    },
+    "fake_wall_dash": {
+      "26.y": 35
+    },
+    "key_opens_chest": {
+      "26.y": 35
+    },
+    "key_idle_animation": {
+      "8.spr": 11
+    }
+  }
+}

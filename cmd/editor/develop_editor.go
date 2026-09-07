@@ -88,7 +88,7 @@ func newDevelopLayout() developLayout {
 	codeArea := editor.Rect{X: resolvedSidebarW + padding, Y: bodyY, W: codeW, H: mainH}
 	tabs := editor.Rect{X: codeArea.X, Y: codeArea.Y, W: codeArea.W, H: 34}
 	codeRect := editor.Rect{X: codeArea.X, Y: tabs.Y + tabs.H, W: codeArea.W, H: codeArea.H - tabs.H}
-	gutter, textRect, horizontal := codeViewportLayout(codeRect)
+	gutter, textRect, horizontal, vertical := codeViewportLayout(codeRect)
 	previewX := codeArea.X + codeArea.W + padding
 	stage := editor.Rect{X: previewX, Y: bodyY, W: previewW, H: stageH}
 	telemetry := editor.Rect{X: previewX, Y: stage.Y + stage.H + padding, W: previewW, H: telemetryH}
@@ -117,7 +117,7 @@ func newDevelopLayout() developLayout {
 	diagnostics := editor.Rect{X: codeRect.X, Y: mainBottom + padding, W: screenWidth - codeRect.X - padding, H: statusBarRect.Y - mainBottom - padding}
 	code := codeLayout{
 		Header: header, Sidebar: sidebar, File: fileRect,
-		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal,
+		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Vertical: vertical, Format: codeFormatRect(tabs),
 		Diagnostics: diagnostics, Search: search,
 	}
 	play := playLayout{

@@ -1,4 +1,4 @@
-//go:build !mtile_mode0
+//go:build !mtile_mode0 && !mtile_tilecanvas
 
 package runtime
 

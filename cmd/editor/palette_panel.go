@@ -229,3 +229,10 @@ func (g *Game) drawColorPicker(screen *ebiten.Image) {
 const colorZeroHint = "id 0 is transparent (eraser)"
 const spriteZeroHint = "sprite 0 is reserved (transparent eraser)"
 const spriteZeroLockedMessage = "sprite 0 is locked: it is the transparent map eraser"
+
+func reservedSpriteLockedMessage(id int) string {
+	if id == editor.ReservedSpriteID {
+		return spriteZeroLockedMessage
+	}
+	return fmt.Sprintf("sprite %d is locked: Mode 0 print owns OBJ tiles 480-511", id)
+}

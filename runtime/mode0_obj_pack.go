@@ -2,7 +2,11 @@
 
 package runtime
 
-import "github.com/drpaneas/mtile/runtime/hw"
+import (
+	"unsafe"
+
+	"github.com/drpaneas/mtile/runtime/hw"
+)
 
 const (
 	mode0PackedObjectTileBase     = 448
@@ -12,12 +16,19 @@ const (
 )
 
 type mode0ObjectPackState struct {
-	mode0PackedObjectSources [mode0PackedObjectEntries]uint16
-	mode0PackedObjectCells   [mode0PackedObjectEntries]uint8
-	mode0PackedObjectCount   uint8
-	mode0PackedObjectTiles   uint8
-	mode0PackedObjectDirty   uint8
+	// Only objpack builds reserve this 2 KiB aligned staging buffer. The
+	// thirty-two cell cache is rearranged before VBlank, then each dirty
+	// rectangle transfers as one contiguous DMA block.
+	mode0PackedObjectStage    [mode0PackedObjectTileCapacity * 16]uint32
+	mode0PackedObjectSources  [mode0PackedObjectEntries]uint16
+	mode0PackedObjectCells    [mode0PackedObjectEntries]uint8
+	mode0PackedObjectCount    uint8
+	mode0PackedObjectTiles    uint8
+	mode0PackedObjectDirty    uint8
+	mode0PackedObjectPrepared uint8
 }
+
+func (c *Context) hasMode0PackedUploads() bool { return c.mode0PackedObjectDirty != 0 }
 
 func mode0PackedObjectReservedSource(id int) bool {
 	return id >= mode0PackedObjectTileBase && id < mode0PackedObjectTileEnd
@@ -51,6 +62,7 @@ func (c *Context) mode0PackedObjectTile(id, cells int) (int, bool) {
 	c.mode0PackedObjectCount++
 	c.mode0PackedObjectTiles += uint8(tiles)
 	c.mode0PackedObjectDirty |= 1 << uint(slot)
+	c.mode0PackedObjectPrepared &^= 1 << uint(slot)
 	return mode0PackedObjectTileBase + tileOffset, true
 }
 
@@ -66,9 +78,40 @@ func (c *Context) dirtyMode0PackedObject(id int) {
 			rowStart := source + row*cols
 			if id >= rowStart && id < rowStart+cells {
 				c.mode0PackedObjectDirty |= 1 << uint(slot)
+				c.mode0PackedObjectPrepared &^= 1 << uint(slot)
 				break
 			}
 		}
+	}
+}
+
+func (c *Context) packedMode0StageTile(index int) []byte {
+	return unsafe.Slice((*byte)(unsafe.Pointer(&c.mode0PackedObjectStage[index*16])), 64)
+}
+
+func (c *Context) prepareMode0PackedObjects() {
+	if c == nil || c.cart == nil || c.mode0PackedObjectDirty == 0 {
+		return
+	}
+	cols, tileOffset := c.cart.SpriteCols, 0
+	for slot := 0; slot < int(c.mode0PackedObjectCount); slot++ {
+		cells := int(c.mode0PackedObjectCells[slot])
+		mask := uint8(1 << uint(slot))
+		if c.mode0PackedObjectDirty&mask != 0 {
+			source := int(c.mode0PackedObjectSources[slot])
+			for row := 0; row < cells; row++ {
+				for col := 0; col < cells; col++ {
+					tile := c.packedMode0StageTile(tileOffset + row*cells + col)
+					if c.stageMode0Tile(source + row*cols + col) {
+						copy(tile, c.mode0TileStage[:])
+					} else {
+						clear(tile)
+					}
+				}
+			}
+			c.mode0PackedObjectPrepared |= mask
+		}
+		tileOffset += cells * cells
 	}
 }
 
@@ -83,6 +126,18 @@ func (c *Context) presentMode0PackedObjects() uint32 {
 		cells := int(c.mode0PackedObjectCells[slot])
 		mask := uint8(1 << uint(slot))
 		if c.mode0PackedObjectDirty&mask != 0 {
+			if c.mode0PackedObjectPrepared&mask != 0 {
+				start, words := tileOffset*16, cells*cells*16
+				hw.CopyWordsToVRAM32DMA(c.mode0PackedObjectStage[start:start+words],
+					hw.OBJVRAM+uintptr((mode0PackedObjectTileBase+tileOffset)*64), words)
+				uploaded += uint32(words * 4)
+				c.mode0PackedObjectDirty &^= mask
+				c.mode0PackedObjectPrepared &^= mask
+				tileOffset += cells * cells
+				continue
+			}
+			// Direct calls without PrepareRender, or source mutations after
+			// preparation, retain the exact original per-cell upload path.
 			source := int(c.mode0PackedObjectSources[slot])
 			for row := 0; row < cells; row++ {
 				for col := 0; col < cells; col++ {

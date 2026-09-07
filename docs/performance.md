@@ -64,7 +64,7 @@ forced-Mode-0-only in AUTO until its widest 16-write shape is measured.
 
 ### Compile-time OBJ glyph interning
 
-Mode 0 `print()` admits only static printable-ASCII strings and literal colors,
+Mode 0 `print()` admits static printable-ASCII strings, decimal numbers, and literal colors,
 so the linker now stores one 64-byte OBJ tile per unique `(glyph,color)` pair.
 The sorted atlas is uploaded once during force blank; repeated occurrences and
 later frames reuse the resident tile. OAM and scanline accounting remain per

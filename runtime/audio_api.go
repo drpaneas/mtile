@@ -73,7 +73,7 @@ func (c *Context) SFXV(id, channel, offset, length Value) {
 			c.nativeAudio.StopSFX()
 			return
 		}
-		priority := channel.IntOr(100)
+		priority := channel.IntOr(int(audio.NativeDefaultSFXPriority))
 		if nativeID < 0 || nativeID > 255 || priority < 0 || priority > 255 {
 			return
 		}

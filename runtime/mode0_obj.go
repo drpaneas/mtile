@@ -2,10 +2,14 @@
 
 package runtime
 
-import "github.com/drpaneas/mtile/runtime/hw"
+import (
+	"unsafe"
+
+	"github.com/drpaneas/mtile/runtime/hw"
+)
 
 const (
-	mode0ObjectTileLimit = 512
+	mode0ObjectTileLimit = Mode0ObjectTileLimit
 	mode0ObjectLimit     = 128 // physical OAM entry count; scanline cycles are proven statically
 	mode0ObjectDisable   = 0x0200
 )
@@ -31,10 +35,49 @@ func mode0PutOAM16(data *[hw.OAMBytes]byte, offset int, value uint16) {
 	data[offset+1] = byte(value >> 8)
 }
 
+// OAM entries are eight bytes in the EWRAM shadow. Store the complete entry
+// as two aligned words instead of eight byte stores. The fourth attribute
+// remains zero: these are regular objects, without affine parameter slots.
+func mode0PutOAMEntry(data *[hw.OAMBytes]byte, slot int, attr0, attr1, attr2 uint16) {
+	if uint(slot) >= mode0ObjectLimit {
+		return
+	}
+	offset := slot * 8
+	pointer := unsafe.Pointer(&data[offset])
+	if littleEndianNumberWords && uintptr(pointer)&3 == 0 {
+		*(*uint32)(pointer) = uint32(attr0) | uint32(attr1)<<16
+		*(*uint32)(unsafe.Add(pointer, 4)) = uint32(attr2)
+		return
+	}
+	mode0PutOAM16(data, offset, attr0)
+	mode0PutOAM16(data, offset+2, attr1)
+	mode0PutOAM16(data, offset+4, attr2)
+	mode0PutOAM16(data, offset+6, 0)
+}
+
 func (c *Context) applyMode0ObjectPalette() {
 	for index := 0; index < 256; index++ {
 		hw.SetPaletteRAM16(256+index, c.palette[c.rendererPaletteIndex(index)])
 	}
+}
+
+// Both banks use the same draw/display remaps. Consume the shared dirty flag
+// only after copying both, so OAM movement alone never rewrites 256 colors.
+// Palette changes are committed even on a frame with no visible objects.
+func (c *Context) applyMode0Palettes() {
+	c.ensurePaletteState()
+	if !c.paletteDirty {
+		return
+	}
+	// Both banks have the same mapping. Resolve each color once and write
+	// paired halfwords to each bank, avoiding a second 256-color remap pass.
+	for index := 0; index < 256; index += 2 {
+		lo := c.palette[c.rendererPaletteIndex(index)]
+		hi := c.palette[c.rendererPaletteIndex(index+1)]
+		hw.SetPaletteRAM32(index, lo, hi)
+		hw.SetPaletteRAM32(256+index, lo, hi)
+	}
+	c.paletteDirty = false
 }
 
 func (c *Context) renderSSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) bool {
@@ -152,14 +195,16 @@ func (c *Context) beginMode0Objects() {
 // the documented maximum per-scanline rendering capacity.
 func (c *Context) compactMode0OAM() {
 	count := c.mode0ObjectCount
-	if count < 0 {
-		count = 0
-	}
-	if count > mode0ObjectLimit {
-		count = mode0ObjectLimit
+	if count <= 0 || count >= mode0ObjectLimit {
+		// No live entries need moving at zero; a full OAM already begins at
+		// entry zero and has no disabled tail. Avoid copying it onto itself.
+		return
 	}
 	sourceOffset := (mode0ObjectLimit - count) * 8
-	copy(c.mode0OAM[:count*8], c.mode0OAM[sourceOffset:sourceOffset+count*8])
+	// The shared ARM memmove copies aligned blocks in register bursts and
+	// preserves overlap when more than half of OAM is occupied. Host copy
+	// retains the same semantics, including unusual alignment.
+	copy(c.mode0OAM[:count*8], c.mode0OAM[sourceOffset:])
 	inactiveStart := count
 	if sourceStart := mode0ObjectLimit - count; sourceStart > inactiveStart {
 		inactiveStart = sourceStart
@@ -180,11 +225,39 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 	if id == 0 && w == 1 && h == 1 && !c.mode0ObjectZeroVisible {
 		return
 	}
-	baseCellX, baseCellY := id%cols, id/cols
-	if baseCellX+w > cols || baseCellY+h > c.cart.SpriteRows {
-		return
+	if w == 1 && h == 1 {
+		// A single cell cannot cross a source row. Validated sheet dimensions
+		// fit in an int, so its linear bound needs only one multiplication.
+		// Avoid the software id/cols division on every ordinary 8x8 OBJ.
+		if id >= cols*c.cart.SpriteRows {
+			return
+		}
+	} else {
+		baseCellX, baseCellY := id%cols, id/cols
+		if baseCellX+w > cols || baseCellY+h > c.cart.SpriteRows {
+			return
+		}
 	}
 	baseX, baseY := x-c.camX, y-c.camY
+	if w == 1 && h == 1 {
+		if id >= c.cart.SpriteN || id >= mode0ObjectTileLimit ||
+			c.mode0ObjectCount >= mode0ObjectLimit || !c.mode0ObjectIntersectsClip(baseX, baseY, 8, 8) {
+			return
+		}
+		attr0 := uint16(baseY&0xff) | 0x2000
+		attr1 := uint16(baseX & 0x1ff)
+		if flipX {
+			attr1 |= 1 << 12
+		}
+		if flipY {
+			attr1 |= 1 << 13
+		}
+		mode0PutOAMEntry(&c.mode0OAM, 127-c.mode0ObjectCount, attr0, attr1,
+			uint16(id*2)|c.mode0ObjectPriorityBits())
+		c.mode0ObjectCount++
+		c.mode0OAMDirty = true
+		return
+	}
 	packedCells := 0
 	if w == h && (w == 2 || w == 4) {
 		packedCells = w
@@ -198,7 +271,6 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 				return
 			}
 			slot := 127 - c.mode0ObjectCount
-			offset := slot * 8
 			attr0 := uint16(baseY&0xff) | 0x2000 // 8bpp, square
 			attr1 := uint16(baseX&0x1ff) | uint16(packedCells/2)<<14
 			if flipX {
@@ -207,10 +279,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 			if flipY {
 				attr1 |= 1 << 13
 			}
-			mode0PutOAM16(&c.mode0OAM, offset, attr0)
-			mode0PutOAM16(&c.mode0OAM, offset+2, attr1)
-			mode0PutOAM16(&c.mode0OAM, offset+4, uint16(tile*2)|c.mode0ObjectPriorityBits())
-			mode0PutOAM16(&c.mode0OAM, offset+6, 0)
+			mode0PutOAMEntry(&c.mode0OAM, slot, attr0, attr1, uint16(tile*2)|c.mode0ObjectPriorityBits())
 			c.mode0ObjectCount++
 			c.mode0OAMDirty = true
 			return
@@ -244,7 +313,6 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 				continue
 			}
 			slot := 127 - c.mode0ObjectCount
-			offset := slot * 8
 			attr0 := uint16(objectY&0xff) | 0x2000 // 8bpp, square 8x8
 			attr1 := uint16(objectX & 0x1ff)
 			if flipX {
@@ -254,10 +322,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 				attr1 |= 1 << 13
 			}
 			attr2 := uint16(sourceID*2) | c.mode0ObjectPriorityBits() // 8bpp uses two 32-byte tile-number units
-			mode0PutOAM16(&c.mode0OAM, offset, attr0)
-			mode0PutOAM16(&c.mode0OAM, offset+2, attr1)
-			mode0PutOAM16(&c.mode0OAM, offset+4, attr2)
-			mode0PutOAM16(&c.mode0OAM, offset+6, 0)
+			mode0PutOAMEntry(&c.mode0OAM, slot, attr0, attr1, attr2)
 			c.mode0ObjectCount++
 			wroteObject = true
 		}
@@ -276,6 +341,5 @@ func (c *Context) presentMode0Objects() uint32 {
 	hw.CopyToVRAM32DMA(c.mode0OAM[:], hw.OAM, len(c.mode0OAM)/4)
 	c.mode0PreviousObjs = c.mode0ObjectCount
 	c.mode0OAMDirty = false
-	c.applyMode0ObjectPalette()
 	return uint32(len(c.mode0OAM))
 }

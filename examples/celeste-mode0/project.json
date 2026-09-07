@@ -1,0 +1,10 @@
+{
+  "activePalette": "aurora",
+  "renderer": "mode0",
+  "iwramFunctions": [
+    "update_ambient_particles",
+    "draw_ambient_particles",
+    "update_hair",
+    "draw_hair"
+  ]
+}

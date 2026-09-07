@@ -107,6 +107,12 @@ type Waveform struct {
 }
 
 func (w Waveform) Valid() bool {
+	return validWaveform(&w)
+}
+
+// Scheduler calls already own a stable config pointer. Validate through that
+// pointer rather than copying the waveform's 64 sample bytes into receivers.
+func validWaveform(w *Waveform) bool {
 	if w.Length != 32 && w.Length != 64 {
 		return false
 	}
@@ -129,7 +135,11 @@ type WaveConfig struct {
 }
 
 func (w WaveConfig) Valid() bool {
-	return w.Wave.Valid() && w.Level <= Wave75 && w.StartBank <= 1 && w.Route <= SoundRouteBoth
+	return validWaveConfig(&w)
+}
+
+func validWaveConfig(w *WaveConfig) bool {
+	return validWaveform(&w.Wave) && w.Level <= Wave75 && w.StartBank <= 1 && w.Route <= SoundRouteBoth
 }
 
 // NoiseWidth selects CH4's 15-bit or 7-bit LFSR mode.
@@ -237,13 +247,15 @@ func SetPulse2Period(period uint16, useLength bool) bool {
 func packWaveBank(samples *[64]uint8, offset int) [4]uint32 {
 	var words [4]uint32
 	for word := 0; word < 4; word++ {
-		var value uint32
-		for pair := 0; pair < 4; pair++ {
-			i := offset + word*8 + pair*2
-			packed := samples[i]<<4 | samples[i+1]
-			value |= uint32(packed) << (pair * 8)
-		}
-		words[word] = value
+		i := offset + word*8
+		// Four fixed shifts expose the hardware word directly. Preserve the
+		// original byte truncation even for direct internal calls with samples
+		// outside the validated four-bit range.
+		a := samples[i]<<4 | samples[i+1]
+		b := samples[i+2]<<4 | samples[i+3]
+		c := samples[i+4]<<4 | samples[i+5]
+		d := samples[i+6]<<4 | samples[i+7]
+		words[word] = uint32(a) | uint32(b)<<8 | uint32(c)<<16 | uint32(d)<<24
 	}
 	return words
 }
@@ -275,7 +287,7 @@ func TriggerWave(period uint16, config WaveConfig) bool {
 // TriggerWave remains the source-compatible value form for callers that do
 // not already own a stable WaveConfig pointer.
 func TriggerWaveRef(period uint16, config *WaveConfig) bool {
-	if config == nil || !validTonePeriod(period) || !config.Valid() {
+	if config == nil || !validTonePeriod(period) || !validWaveConfig(config) {
 		return false
 	}
 	initializeSoundRegisters()

@@ -36,7 +36,7 @@ end
 		report.Mode0OAMEntries != 1 || report.Mode0OBJLineCycles != 8 {
 		t.Fatalf("report = %+v, want one ordinary Mode 0 OBJ", report)
 	}
-	if !strings.Contains(generated, "SprV") || !strings.Contains(generated, "player_sprite") {
+	if !strings.Contains(generated, "c.Spr(") || !strings.Contains(generated, "player_sprite") {
 		t.Fatalf("generated code does not retain the runtime sprite selection:\n%s", generated)
 	}
 }
@@ -113,6 +113,27 @@ end
 	}
 	if report.Selected != RendererMode0 || !report.Mode0Objects {
 		t.Fatalf("report = %+v, want Mode 0 objects", report)
+	}
+}
+
+func TestMode0AcceptsDrawLocalLiteralSprite(t *testing.T) {
+	source := `
+function _draw()
+  local player_sprite = 1
+  cls()
+  spr(player_sprite, 0, 0)
+end
+`
+	_, report, err := TranspileWithReport("draw-local-literal.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || !report.Mode0Objects {
+		t.Fatalf("report = %+v, want Mode 0 objects from a literal _draw local", report)
 	}
 }
 
@@ -199,11 +220,13 @@ end`,
 		{
 			name: "draw-local",
 			source: `function _draw()
-  local player_sprite = 1
+  local player_sprite = foo()
   cls()
   spr(player_sprite, 0, 0)
+end
+function foo()
 end`,
-			want: "is shadowed",
+			want: "finite integer set",
 		},
 		{
 			name: "mutable-frame-constant",

@@ -684,6 +684,30 @@ func TestSetSpritePixelRejectsReservedTransparentEraser(t *testing.T) {
 	}
 }
 
+func TestSetSpritePixelRejectsReservedMode0TextBank(t *testing.T) {
+	dir := editorFixture(t)
+	m, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := 480
+	if !SpriteIsReserved(id) {
+		t.Fatal("sprite 480 must be reserved for Mode 0 print")
+	}
+	if err := m.SetSpritePixel(id, 0, 0, 9); err == nil || !strings.Contains(err.Error(), "reserved") {
+		t.Fatalf("reserved text-tile edit error = %v", err)
+	}
+	preview, err := m.Preview()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cols := m.Sheet.Width / 8
+	origin := (id/cols)*8*m.Sheet.Width + (id%cols)*8
+	if got := preview.Pixels[origin]; got != 0 {
+		t.Fatalf("reserved text-tile pixel = %d, want unchanged 0", got)
+	}
+}
+
 func TestSetSpriteFlagCreatesRecordAndPreservesPixels(t *testing.T) {
 	dir := editorFixture(t)
 	m, err := Open(dir)

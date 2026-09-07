@@ -26,10 +26,11 @@ type nativeCommand struct {
 // called at the profile's documented commit boundary and is the only method
 // that commits queued public commands to hardware.
 type Controller struct {
-	profile Profile
-	library Library
-	bound   bool
-	running bool
+	profile    Profile
+	library    Library
+	soundIndex nativeSoundIndex
+	bound      bool
+	running    bool
 
 	commands    [NativeMaxCommandQueue]nativeCommand
 	commandHead uint8
@@ -116,15 +117,27 @@ func (c *Controller) Init(profile Profile) bool {
 	return true
 }
 
+// TinyGo -gc=none heap-allocates locals above its stack threshold via
+// runtime.alloc, which that GC mode does not link. nativeSoundIndex is 288
+// bytes, so Bind/ValidateLibrary fill this scratch instead of a local.
+// The GBA is single-threaded; host tests must not call these concurrently.
+var nativeSoundIndexScratch nativeSoundIndex
+
 // Bind validates and installs generated static v2 data.
 func (c *Controller) Bind(library Library) bool {
-	if c == nil || c.running || !validateNativeLibrary(library) {
+	if c == nil || c.running {
 		if c != nil {
 			c.invalidAssets++
 		}
 		return false
 	}
+	nativeSoundIndexScratch = nativeSoundIndex{}
+	if !validateNativeLibraryIndexed(library, &nativeSoundIndexScratch) {
+		c.invalidAssets++
+		return false
+	}
 	c.library = library
+	c.soundIndex = nativeSoundIndexScratch
 	c.bound = true
 	return true
 }
@@ -139,6 +152,11 @@ func (c *Controller) ConfigureOutput(leftLevel, rightLevel uint8, ratio hw.PSGMi
 }
 
 func validateNativeLibrary(l Library) bool {
+	nativeSoundIndexScratch = nativeSoundIndex{}
+	return validateNativeLibraryIndexed(l, &nativeSoundIndexScratch)
+}
+
+func validateNativeLibraryIndexed(l Library, sounds *nativeSoundIndex) bool {
 	if len(l.Sounds) > NativeMaxSounds || len(l.Clips) > NativeMaxClips || len(l.Parts) > NativeMaxParts || len(l.Songs) > NativeMaxSongs {
 		return false
 	}
@@ -178,10 +196,8 @@ func validateNativeLibrary(l Library) bool {
 				return false
 			}
 		}
-		for j := 0; j < i; j++ {
-			if l.Sounds[i].ID == l.Sounds[j].ID {
-				return false
-			}
+		if !sounds.insert(sound.ID, i) {
+			return false
 		}
 	}
 	for i := range l.Clips {
@@ -200,7 +216,7 @@ func validateNativeLibrary(l Library) bool {
 				(j > 0 && event.Tick < previousEnd) {
 				return false
 			}
-			sound := findSoundIn(l.Sounds, event.SoundID)
+			sound := sounds.find(l.Sounds, event.SoundID)
 			if sound == nil || sound.Kind != clip.Kind || !nativeNoteValid(sound, event.Note) {
 				return false
 			}
@@ -446,7 +462,7 @@ func (c *Controller) advanceSoundMacros() {
 			continue
 		}
 		playback.cycleRemainder -= NativeMacroClockCycles
-		sound := findSoundIn(c.library.Sounds, c.channels[channel].SoundID)
+		sound := c.soundIndex.find(c.library.Sounds, c.channels[channel].SoundID)
 		if sound == nil || !c.applySoundMacroStep(channel, sound, playback) {
 			playback.active = false
 		}
@@ -791,7 +807,7 @@ func (c *Controller) playNote(channel, note, soundID uint8, duration uint16, own
 		c.commandsRejected++
 		return false
 	}
-	sound := findSoundIn(c.library.Sounds, soundID)
+	sound := c.soundIndex.find(c.library.Sounds, soundID)
 	kind := SoundKind(channel - 1)
 	if sound == nil || sound.Kind != kind || !nativeNoteValid(sound, note) {
 		c.commandsRejected++

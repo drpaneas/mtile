@@ -227,6 +227,40 @@ func TestMode0TextAtlasRejectsMalformedStaticData(t *testing.T) {
 	}
 }
 
+func TestMode0PrintVFormatsDecimalNumbersWithoutHeapStrings(t *testing.T) {
+	hw.ResetForTest()
+	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))
+	loadMode0TextTestAtlas(t, c,
+		mode0TextTestGlyph{'-', 7},
+		mode0TextTestGlyph{'.', 7},
+		mode0TextTestGlyph{'0', 7},
+		mode0TextTestGlyph{'1', 7},
+		mode0TextTestGlyph{'2', 7},
+		mode0TextTestGlyph{'3', 7},
+		mode0TextTestGlyph{'4', 7},
+		mode0TextTestGlyph{'5', 7},
+		mode0TextTestGlyph{'6', 7},
+		mode0TextTestGlyph{'7', 7},
+		mode0TextTestGlyph{'8', 7},
+		mode0TextTestGlyph{'9', 7},
+	)
+	c.BeginRenderFrame()
+	c.Cls(0)
+	if got := c.PrintV(IntVal(42), IntVal(8), IntVal(0), IntVal(7)); got != 8+2*glyphW {
+		t.Fatalf("print(42) return = %d, want %d", got, 8+2*glyphW)
+	}
+	if c.mode0ObjectCount != 2 {
+		t.Fatalf("print(42) objects = %d, want 2 glyphs", c.mode0ObjectCount)
+	}
+	c.PresentRender()
+	if got := hw.GetReg16(hw.OAM + 2); got != uint16(8+glyphW) {
+		t.Fatalf("front digit x = %d, want %d", got, 8+glyphW)
+	}
+	if got := hw.GetReg16(hw.OAM + 8 + 2); got != 8 {
+		t.Fatalf("back digit x = %d, want 8", got)
+	}
+}
+
 func TestMode0TextAtlasTilesStayReservedFromSpriteUploads(t *testing.T) {
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))

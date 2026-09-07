@@ -75,46 +75,59 @@ func mode0ObjectBudgetForChunk(chunk *luaparser.Chunk, opts Options) mode0Object
 }
 
 func mode0ObjectBudgetForDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, opts Options) mode0ObjectBudget {
+	if draw == nil {
+		return mode0ObjectBudget{}
+	}
+	cols, rows := opts.SheetW/8, opts.SheetH/8
+	ops, unbounded, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), cols, rows)
+	if err != nil {
+		return mode0ObjectBudget{}
+	}
+	return mode0ObjectBudgetFromOps(chunk, draw, ops, unbounded, opts)
+}
+
+func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, ops []mode0DrawOp, unbounded bool, opts Options) mode0ObjectBudget {
 	packing := mode0ObjectPackingEligible(chunk, opts)
 	budget := mode0ObjectBudget{PackingEnabled: packing}
 	planner := mode0PackingBudgetPlanner{enabled: packing}
 	var staticCycles [mode0OBJCoordinatePeriod]int
 	dynamicCycles := 0
 	cols := opts.SheetW / 8
-	cameraRebase := mode0DrawRebasesCameraBetweenObjects(draw, newMode0CallGraph(chunk))
+	cameraRebase := mode0DrawOpsRebaseCameraBetweenObjects(ops)
 	textXDynamic := chunkCallsBuiltin(chunk, "camera")
 
-	for _, stmt := range draw.Body.Body {
-		callStmt, ok := stmt.(*luaparser.CallStmt)
-		if !ok {
+	for _, op := range ops {
+		call := op.call
+		if op.atlasOnly {
 			continue
 		}
-		call := callStmt.Call
-		name, ok := callKey(call)
-		if !ok {
-			continue
+		copies := op.copies
+		if copies < 1 {
+			copies = 1
 		}
-		switch name {
+		switch op.name {
 		case "spr":
 			id := mode0LiteralInt(call.Args[0])
-			w, h := 1, 1
-			if len(call.Args) > 3 {
-				w = mode0LiteralInt(call.Args[3])
+			w, h := op.sprW, op.sprH
+			if w < 1 {
+				w = 1
 			}
-			if len(call.Args) > 4 {
-				h = mode0LiteralInt(call.Args[4])
+			if h < 1 {
+				h = 1
 			}
 			packed := planner.use(id, mode0SprCallPackedCells(call))
+			entries := w * h
 			if packed {
-				budget.OAMEntries++
-			} else {
-				budget.OAMEntries += w * h
+				entries = 1
 			}
+			budget.OAMEntries += entries * copies
 			yExpr := call.Args[2]
 			if cameraRebase {
 				yExpr = nil
 			}
-			addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
+			for i := 0; i < copies; i++ {
+				addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
+			}
 		case "sspr":
 			sx := mode0LiteralInt(call.Args[0])
 			sy := mode0LiteralInt(call.Args[1])
@@ -122,59 +135,52 @@ func mode0ObjectBudgetForDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 			h := mode0LiteralInt(call.Args[3]) / 8
 			id := (sy/8)*cols + sx/8
 			packed := planner.use(id, mode0SSprCallPackedCells(call))
+			entries := w * h
 			if packed {
-				budget.OAMEntries++
-			} else {
-				budget.OAMEntries += w * h
+				entries = 1
 			}
+			budget.OAMEntries += entries * copies
 			yExpr := call.Args[5]
 			if cameraRebase {
 				yExpr = nil
 			}
-			addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
+			for i := 0; i < copies; i++ {
+				addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
+			}
 		case "print":
-			text, ok := unparenExpr(call.Args[0]).(*luaparser.StringExpr)
+			entries, ok := mode0PrintOAMEntries(call, op.printKind)
 			if !ok {
 				continue
 			}
-			entries := len(text.Value)
-			budget.OAMEntries += entries
-			budget.TextEntries += entries
-			addMode0TextLineProfile(&staticCycles, &dynamicCycles, call.Args[1], call.Args[2], entries, textXDynamic || cameraRebase)
+			budget.OAMEntries += entries * copies
+			budget.TextEntries += entries * copies
+			for i := 0; i < copies; i++ {
+				addMode0TextLineProfile(&staticCycles, &dynamicCycles, call.Args[1], call.Args[2], entries, textXDynamic || cameraRebase)
+			}
 		}
 	}
 
+	_ = unbounded
 	for _, cycles := range staticCycles {
 		if total := cycles + dynamicCycles; total > budget.MaxLineCycles {
 			budget.MaxLineCycles = total
 		}
 	}
-	budget.TextTiles = len(mode0TextAtlasKeysForDraw(draw))
+	budget.TextTiles = len(mode0TextAtlasKeysForOps(ops))
+	if budget.TextTiles == 0 {
+		budget.TextTiles = len(mode0TextAtlasKeysForDraw(draw))
+	}
 	return budget
 }
 
-// mode0DrawRebasesCameraBetweenObjects reports the draw shape that breaks the
-// shared-camera translation proof. A camera change before every object is a
-// common translation and preserves relative scanline bands; a change between
-// objects lets previously separated bands coincide and needs a conservative
-// independent-placement proof.
-func mode0DrawRebasesCameraBetweenObjects(draw *luaparser.FunctionDeclStmt, graph *mode0CallGraph) bool {
-	if draw == nil {
-		return false
-	}
+func mode0DrawOpsRebaseCameraBetweenObjects(ops []mode0DrawOp) bool {
 	seenObject := false
 	cameraAfterObject := false
-	for _, stmt := range draw.Body.Body {
-		containsCamera := graph.firstBuiltinFromStmt(stmt, "camera") != nil
-		if containsCamera && seenObject {
+	for _, op := range ops {
+		if op.name == "camera" && seenObject {
 			cameraAfterObject = true
 		}
-		callStmt, ok := stmt.(*luaparser.CallStmt)
-		if !ok {
-			continue
-		}
-		name, ok := callKey(callStmt.Call)
-		if !ok || name != "spr" && name != "sspr" && name != "print" {
+		if op.name != "spr" && op.name != "sspr" && op.name != "print" {
 			continue
 		}
 		if cameraAfterObject {
@@ -217,6 +223,24 @@ func addMode0TextLineProfile(staticCycles *[mode0OBJCoordinatePeriod]int, dynami
 func mode0LiteralInt(expr luaparser.Expr) int {
 	value, _ := staticNumberLiteral(expr)
 	return int(value)
+}
+
+func mode0SprCallCells(call *luaparser.CallExpr) (int, int) {
+	w, h := 1, 1
+	if call == nil {
+		return w, h
+	}
+	if len(call.Args) > 3 {
+		if n := mode0LiteralInt(call.Args[3]); n >= 1 {
+			w = n
+		}
+	}
+	if len(call.Args) > 4 {
+		if n := mode0LiteralInt(call.Args[4]); n >= 1 {
+			h = n
+		}
+	}
+	return w, h
 }
 
 func addMode0SpriteLineProfile(staticCycles *[mode0OBJCoordinatePeriod]int, dynamicCycles *int,

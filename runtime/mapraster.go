@@ -118,6 +118,11 @@ func (c *Context) drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1,
 		copyMapRasterFull(src, dst, unsafe.Pointer(&cart.MapRasterSpans[0]), c.mapRasterSpanCount)
 		return true
 	}
+	if w == ScreenWidth && uintptr(dst)&3 == 0 {
+		copyMapRasterShifted(src, dst, unsafe.Pointer(&cart.MapRasterSpans[0]), c.mapRasterSpanCount,
+			originY*ScreenWidth+originX, x0, x1, y0, y1)
+		return true
+	}
 	for i := 0; i < c.mapRasterSpanCount; i++ {
 		span := cart.MapRasterSpans[i]
 		y := int(span.Y)

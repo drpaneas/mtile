@@ -152,3 +152,61 @@ end
 	}
 	runGeneratedHarness(t, generated, monomorphicFieldStringHarness, "TestFieldStringValue")
 }
+
+func TestMonomorphicFieldsRejectMixedNumericAndStringParameterStores(t *testing.T) {
+	generated, err := Transpile("mixed-param-field.lua", `
+local box = {}
+local observed = ""
+function make_box(width)
+  return {size = width}
+end
+function _init()
+  box = {size = 4}
+  box = make_box("wide")
+end
+function _update()
+  observed = box.size
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := generatedSection(generated, "func (g *Game) gluUpdate(")
+	if strings.Contains(update, "c.TableGetStableNumber(") || !strings.Contains(update, "c.TableGetStable(") {
+		t.Fatalf("string parameter store did not poison a numeric constructor of the same field:\n%s", update)
+	}
+	runGeneratedHarness(t, generated, monomorphicFieldStringHarness, "TestFieldStringValue")
+}
+
+func TestMonomorphicFieldsKeepNumericNameWhenCopiedFromAnotherRecord(t *testing.T) {
+	generated, err := Transpile("copied-numeric-field.lua", `
+local player = {x = 16, y = 8}
+local hair = {}
+local observed = 0
+function _init()
+  hair = {x = player.x, y = player.y}
+end
+function _update()
+  observed = hair.x + player.x
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := generatedSection(generated, "func (g *Game) gluUpdate(")
+	if !strings.Contains(update, "c.TableGetStableNumber(") || strings.Contains(update, "c.TableGetStable(") {
+		t.Fatalf("copying a numeric field through another record lost native reads:\n%s", update)
+	}
+	runGeneratedHarness(t, generated, `package main
+import("testing";rt "github.com/drpaneas/mtile/runtime")
+func TestCopiedNumericField(t *testing.T) {
+ var g Game
+ var c rt.Context
+ g.Init(&c)
+ g.Update(&c)
+ if g.observed != rt.FromInt(32) {
+  t.Fatalf("copied numeric field sum = %#v, want 32", g.observed)
+ }
+}
+`, "TestCopiedNumericField")
+}

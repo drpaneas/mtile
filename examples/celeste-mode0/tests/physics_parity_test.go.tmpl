@@ -1,0 +1,274 @@
+package main
+
+import (
+	"encoding/json"
+	rt "github.com/drpaneas/mtile/runtime"
+	"github.com/drpaneas/mtile/runtime/hw"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+type parityCase struct {
+	Name    string
+	Map     string
+	Initial map[string]interface{}
+	Inputs  []uint16
+}
+type parityInput struct {
+	Maps  map[string][]uint16
+	Cases []parityCase
+}
+type parityRow struct {
+	Case  string
+	Tick  int
+	State map[string]interface{}
+}
+
+type parityHarness struct {
+	c      *rt.Context
+	g      *Game
+	memory *rt.AssetMemory
+}
+
+func newParityHarness(t *testing.T) *parityHarness {
+	t.Helper()
+	image := rt.AssetImage{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:], SheetIndex: sheetIndexROM[:]}
+	memory := &rt.AssetMemory{SheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN, MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: make([]byte, len(sheetRAM)), SheetIndex: make([]uint16, len(sheetIndexRAM)), Map: make([]uint16, len(mapRAM)), Flags: make([]byte, len(flagRAM))}
+	c := new(rt.Context)
+	if !c.Init(&image, memory) {
+		t.Fatal("asset init")
+	}
+	hw.SetReg16(hw.KEYINPUT, 0x03ff)
+	c.PollInput()
+	g := new(Game)
+	g.Init(c)
+	return &parityHarness{c, g, memory}
+}
+func (h *parityHarness) put(t *testing.T, name string, v interface{}) {
+	t.Helper()
+	value := rt.NilVal()
+	switch x := v.(type) {
+	case float64:
+		value = rt.NumVal(rt.FromFloat(x))
+	case bool:
+		value = rt.BoolVal(x)
+	case int:
+		value = rt.IntVal(x)
+	}
+	if err := h.c.TableSet(h.g.player, h.c.InternStatic(name), value); err != rt.HeapOK {
+		t.Fatalf("set %s: %v", name, err)
+	}
+}
+func (h *parityHarness) tick(keys uint16) {
+	var gba uint16
+	for i, mask := range []uint16{0x20, 0x10, 0x40, 0x80, 2, 1, 8} {
+		if keys&(1<<i) != 0 {
+			gba |= mask
+		}
+	}
+	hw.SetReg16(hw.KEYINPUT, 0x03ff&^gba)
+	h.c.PollInput()
+	h.c.AdvanceTick()
+	h.g.Update(h.c)
+	h.g.Draw(h.c)
+}
+func (h *parityHarness) val(name string) rt.Value {
+	return h.c.TableGet(h.g.player, h.c.InternStatic(name))
+}
+
+// Numeric drift is opt-in per case/field. PICO-8 traces are never rewritten.
+func physicsTolerances(t *testing.T, dir, suite string) map[string]map[string]int64 {
+	t.Helper()
+	var data map[string]json.RawMessage
+	b, err := os.ReadFile(filepath.Join(dir, "numeric_tolerances.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal(b, &data); err != nil {
+		t.Fatal(err)
+	}
+	var limits map[string]map[string]int64
+	if err = json.Unmarshal(data[suite], &limits); err != nil {
+		t.Fatal(err)
+	}
+	for name, fields := range limits {
+		for field, limit := range fields {
+			switch field {
+			case "vx", "vy", "x_remainder", "y_remainder":
+				if limit < 0 || limit > 65536 {
+					t.Fatalf("invalid numerical limit %s/%s", name, field)
+				}
+			case "x":
+				if name != "ice_walk_release_reverse" || limit != 2*65536 {
+					t.Fatal("only the documented ice rounding case permits pixel drift")
+				}
+			default:
+				t.Fatalf("discrete field %s must remain exact", field)
+			}
+		}
+	}
+	return limits
+}
+func physicsDelta(a, b int32) int64 {
+	d := int64(a) - int64(b)
+	if d < 0 {
+		return -d
+	}
+	return d
+}
+func TestNativePico8PhysicsParity(t *testing.T) {
+	dir := os.Getenv("CELESTE_PARITY_DIR")
+	if dir == "" {
+		t.Fatal("CELESTE_PARITY_DIR not set")
+	}
+	var input parityInput
+	var rows []parityRow
+	for file, target := range map[string]interface{}{"cases.json": &input, "reference-traces.json": &rows} {
+		b, err := os.ReadFile(filepath.Join(dir, file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(b, target); err != nil {
+			t.Fatal(err)
+		}
+	}
+	byCase := map[string][]parityRow{}
+	for _, row := range rows {
+		byCase[row.Case] = append(byCase[row.Case], row)
+	}
+	if len(byCase) != len(input.Cases) {
+		t.Fatalf("oracle missing cases: %d vs %d", len(byCase), len(input.Cases))
+	}
+	limits := physicsTolerances(t, dir, "physics")
+	checked := 0
+	drifted := 0
+	for _, test := range input.Cases {
+		t.Run(test.Name, func(t *testing.T) {
+			h := newParityHarness(t)
+			h.g.reset_player(h.c)
+			h.g.spawning = rt.BoolVal(false)
+			for i, tile := range input.Maps[test.Map] {
+				switch tile {
+				case 200:
+					tile = 26
+				case 201:
+					tile = 43
+				case 17:
+					tile = 22
+				case 27:
+					tile = 23
+				case 43:
+					tile = 24
+				case 59:
+					tile = 25
+				}
+				h.c.MsetLayer(3, i%30, i/30, int(tile))
+			}
+			h.memory.Flags[26] = 1
+			h.memory.Flags[43] = 19
+			for k, v := range test.Initial {
+				h.put(t, k, v)
+			}
+			for i, row := range byCase[test.Name] {
+				if row.Tick != i+1 {
+					t.Fatal("oracle tick mismatch")
+				}
+				h.tick(test.Inputs[i])
+				checked++
+				for key, want := range row.State {
+					value := h.val(key)
+					if key == "freeze" {
+						value = rt.NumVal(h.g.freeze)
+					}
+					if key == "exited" {
+						value = h.g.level_complete
+					}
+					if wantNum, ok := want.(float64); ok && int32(value.Num) != int32(wantNum) {
+						drifted++
+					}
+					switch w := want.(type) {
+					case bool:
+						if value.Truthy() != w {
+							t.Fatalf("tick %d %s = %v want %v", row.Tick, key, value, w)
+						}
+					case float64:
+						if value.Kind != rt.KindNumber || physicsDelta(int32(value.Num), int32(w)) > limits[test.Name][key] {
+							t.Fatalf("tick %d %s raw=%d (%g), want raw=%d (%g)", row.Tick, key, value.Num, float64(value.Num)/65536, int32(w), w/65536)
+						}
+					}
+				}
+			}
+		})
+	}
+	t.Logf("Compared %d states in %d native scenarios: timers/booleans exact; %d numeric fields within explicit case limits (see numeric_tolerances.json)", checked, len(input.Cases), drifted)
+}
+
+type lifeCase struct {
+	Name   string
+	Inputs []uint16
+}
+type lifeRow struct {
+	Case   string
+	Tick   int
+	Phase  int
+	Values []int32
+}
+
+func TestNativePico8LifecycleParity(t *testing.T) {
+	dir := os.Getenv("CELESTE_PARITY_DIR")
+	var cases []lifeCase
+	var rows []lifeRow
+	for file, target := range map[string]interface{}{"lifecycle-cases.json": &cases, "lifecycle-traces.json": &rows} {
+		b, err := os.ReadFile(filepath.Join(dir, file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(b, target); err != nil {
+			t.Fatal(err)
+		}
+	}
+	byCase := map[string][]lifeRow{}
+	for _, row := range rows {
+		byCase[row.Case] = append(byCase[row.Case], row)
+	}
+	if len(byCase) != len(cases) {
+		t.Fatalf("oracle missing lifecycle cases: %d vs %d", len(byCase), len(cases))
+	}
+	limits := physicsTolerances(t, dir, "lifecycle")
+	checked := 0
+	drifted := 0
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			h := newParityHarness(t)
+			for i, row := range byCase[tc.Name] {
+				h.tick(tc.Inputs[i])
+				checked++
+				phase := 2
+				if h.val("dead").Truthy() {
+					phase = 0
+				} else if h.g.spawning.Truthy() {
+					phase = 1
+				}
+				if phase != row.Phase {
+					t.Fatalf("tick %d phase %d want %d", row.Tick, phase, row.Phase)
+				}
+				actual := []int32{int32(h.val("x").Num), int32(h.val("y").Num), int32(h.val("vx").Num), int32(h.val("vy").Num), int32(h.val("x_remainder").Num), int32(h.val("y_remainder").Num), int32(h.val("respawn_ticks").Num), int32(h.g.freeze), 0, 0}
+				if phase == 1 {
+					actual[8] = int32(h.g.spawn_state)
+					actual[9] = int32(h.g.spawn_delay)
+				}
+				fields := []string{"x", "y", "vx", "vy", "x_remainder", "y_remainder", "respawn_ticks", "freeze", "spawn_state", "spawn_delay"}
+				for k, want := range row.Values {
+					if actual[k] != want {
+						drifted++
+					}
+					if physicsDelta(actual[k], want) > limits[tc.Name][fields[k]] {
+						t.Fatalf("tick %d field %d raw=%d want %d; phase%d", row.Tick, k, actual[k], want, phase)
+					}
+				}
+			}
+		})
+	}
+	t.Logf("Compared %d lifecycle states in %d native scenarios: positions/phases/timers exact; %d numerical fields within explicit limits", checked, len(cases), drifted)
+}

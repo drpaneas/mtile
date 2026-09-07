@@ -177,6 +177,9 @@ func (g *Game) activateCodeDocument(path string) {
 	g.codeActiveTab = slices.Index(g.codeTabs, path)
 	g.codeDragging = false
 	g.codeHorizontalDragging = false
+	g.codeVerticalDragging = false
+	g.codeWheelX, g.codeWheelY = 0, 0
+	g.codePointer = codePointerState{}
 	g.codeSearchOpen = false
 	g.codeCompletionOpen = false
 	g.codeClosePending = ""
