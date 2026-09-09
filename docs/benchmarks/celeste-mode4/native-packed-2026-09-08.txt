@@ -1,0 +1,1 @@
+18754 native cases PASS; copy/fill mixtures, all uniform colours, clipping, all alignments, lengths0..260/32767, random sorted batches, >255 coordinates, byte guards, source/span immutability, register/stack ABI, ARM/Thumb return; every load within source span or span record/stack. Mean cycles885.38

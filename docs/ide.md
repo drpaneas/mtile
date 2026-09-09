@@ -96,6 +96,17 @@ Problems, Output, Build, Runtime, and Generated Go are real bounded views.
 Generated Go is the exact build artifact and receives Go syntax color rather
 than pretending to be editable Lua.
 
+The Runtime view receives live mGBA diagnostics, preview startup messages,
+and mTile runtime failure messages. Lua memory failures also appear in
+Problems with a suggested next step. Messages are bounded and belong to one
+preview session, so stopped cartridges cannot write into a newer build's log.
+Resetting or rebuilding allows the same failure to be reported again.
+
+Logging is enabled only in editor preview ROMs. It covers mTile's explicit
+runtime checks and startup failures; arbitrary TinyGo panics are not captured.
+TinyGo 0.42's `mgbadebug` tag is currently incomplete for GBA, so mTile writes
+directly to the emulator's debug registers while keeping its normal startup.
+
 Building is asynchronous, so the UI remains responsive. A newer build or Stop
 invalidates any older pending result; a late build can never replace the
 cartridge the user most recently requested. Build + Reload selects the Build

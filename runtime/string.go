@@ -299,14 +299,14 @@ func (c *Context) Tonum(v Value) Value {
 		return NilVal()
 	}
 	b := c.stringBytes(v)
-	n, ok := parsePicoNumber(b)
+	n, ok := parseNumberLiteral(b)
 	if !ok {
 		return NilVal()
 	}
 	return NumVal(n)
 }
 
-func parsePicoNumber(b []byte) (Number, bool) {
+func parseNumberLiteral(b []byte) (Number, bool) {
 	i := 0
 	for i < len(b) && (b[i] == ' ' || b[i] == '\t') {
 		i++

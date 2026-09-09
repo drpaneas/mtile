@@ -214,7 +214,7 @@ func (m *Manager) send(messages [][]byte) error {
 	}
 	for _, message := range messages {
 		if err := m.output.Send(message); err != nil {
-			return fmt.Errorf("Launchkey feedback failed: %w", err)
+			return fmt.Errorf("send Launchkey feedback: %w", err)
 		}
 	}
 	return nil

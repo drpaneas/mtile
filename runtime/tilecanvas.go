@@ -23,10 +23,10 @@ const (
 func (c *Context) InitHardware() {
 	hw.SetReg16(hw.DISPCNT, forceBlank)
 	if c.cart == nil || !(sheetStorageReadOnly || c.cart.SheetReadOnly) {
-		panic("tile canvas requires an immutable spritesheet; use Mode 4")
+		runtimePanic("tile canvas requires an immutable spritesheet; use Mode 4")
 	}
 	if c.cart.SpriteN > mode0TileLimit {
-		panic("tile canvas background tiles exceed VRAM; use Mode 4")
+		runtimePanic("tile canvas background tiles exceed VRAM; use Mode 4")
 	}
 	for offset := 0; offset < 65536; offset += 4 {
 		hw.SetVRAM32(hw.VRAM+uintptr(offset), 0)
@@ -70,7 +70,7 @@ func (c *Context) BeginRenderFrame() {
 
 func (c *Context) clearRender(color int) {
 	if c.canvasDrawn {
-		panic("tile canvas requires one frame-initial cls; use Mode 4")
+		runtimePanic("tile canvas requires one frame-initial cls; use Mode 4")
 	}
 	c.ensureDrawState()
 	c.canvasDrawn = true
@@ -87,11 +87,11 @@ func (c *Context) clearRender(color int) {
 
 func (c *Context) checkCanvasMap(slot, bg int) {
 	if !c.canvasDrawn || c.canvasHasPixels || slot != bg || bg <= c.canvasLastBG || bg < 0 || bg >= 4 {
-		panic("tile canvas requires ordered backgrounds before foreground raster calls; use Mode 4")
+		runtimePanic("tile canvas requires ordered backgrounds before foreground raster calls; use Mode 4")
 	}
 	c.ensureDrawState()
 	if !c.drawPalIdentity || !c.transpKey0 || c.clipX0 != 0 || c.clipY0 != 0 || c.clipX1 != ScreenWidth || c.clipY1 != ScreenHeight {
-		panic("tile canvas maps require identity draw palette, key-zero transparency and full clip; use Mode 4")
+		runtimePanic("tile canvas maps require identity draw palette, key-zero transparency and full clip; use Mode 4")
 	}
 	c.canvasLastBG = bg
 }
@@ -100,7 +100,7 @@ func (c *Context) PrepareRender() {
 	c.lastBlitCycles = 0
 	if !c.canvasDrawn {
 		if c.canvasHasPixels {
-			panic("tile canvas foreground requires frame-initial cls; use Mode 4")
+			runtimePanic("tile canvas foreground requires frame-initial cls; use Mode 4")
 		}
 		// An empty draw is intentional during hit-stop: keep the complete
 		// prior hardware image, including its scroll, palette and OAM.
@@ -215,7 +215,7 @@ func canvasDiagnosticFailure(message string, value uint32) {
 	}
 	hw.SetReg16(0x04fff600+uintptr(pos+10), 0)
 	hw.SetReg16(0x04fff700, 0x101)
-	panic("tile canvas presentation rejected; inspect emulator log or use Mode 4")
+	runtimePanic("tile canvas presentation rejected; inspect emulator log or use Mode 4")
 }
 
 func (c *Context) SetBlitKind(kind BlitKind) { c.blitKind = kind }

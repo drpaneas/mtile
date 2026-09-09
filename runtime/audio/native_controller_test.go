@@ -2,6 +2,7 @@ package audio
 
 import (
 	"math"
+	"reflect"
 	"testing"
 	"unsafe"
 
@@ -52,6 +53,61 @@ func initNativeTestController(t *testing.T) *Controller {
 		t.Fatal("controller bind failed")
 	}
 	return &controller
+}
+
+func TestNativeControllerReinitClearsPlaybackAndQueuedCommands(t *testing.T) {
+	c := initNativeTestController(t)
+	c.PlaySong(40)
+	c.Service()
+	c.NoteOn(1, 69, 10, 0)
+	if !c.Init(ProfilePSG) {
+		t.Fatal("reinitialization failed")
+	}
+	var fresh Controller
+	if !fresh.Init(ProfilePSG) || !reflect.DeepEqual(*c, fresh) {
+		t.Fatal("reinitialization did not restore the complete initial state")
+	}
+}
+
+func TestNativeControllerCriticalSectionsRestoreInterruptState(t *testing.T) {
+	for _, enabled := range []uint16{0, 1} {
+		c := initNativeTestController(t)
+		var second Controller
+		if !second.Init(ProfilePSG) || !second.Bind(nativeTestLibrary()) {
+			t.Fatal("second controller setup failed")
+		}
+		check := func(name string, call func()) {
+			t.Helper()
+			hw.SetReg16(hw.INTERRUPT_IME, enabled)
+			call()
+			if got := hw.GetReg16(hw.INTERRUPT_IME); got != enabled {
+				t.Fatalf("%s: interrupt state = %d, want %d", name, got, enabled)
+			}
+		}
+		check("enqueue", func() { c.PlaySong(40) })
+		for i := 0; i < NativeMaxCommandQueue; i++ {
+			check("enqueue full", func() { c.PlaySong(40) })
+		}
+		check("start", func() {
+			if !c.Start() {
+				t.Fatal("start failed")
+			}
+		})
+		check("claim rejected", func() {
+			if second.Start() {
+				t.Fatal("second controller claimed active timer")
+			}
+		})
+		check("stop non-owner", second.Stop)
+		check("stats", func() { c.Stats() })
+		check("preview", func() {
+			var preview NativePreview
+			if !c.PreviewInto(&preview) {
+				t.Fatal("preview failed")
+			}
+		})
+		check("stop", c.Stop)
+	}
 }
 
 func TestNativeControllerRunsTypedSongAtRationalClock(t *testing.T) {
@@ -484,22 +540,6 @@ func TestNativeControllerOwnsExact256HzTimerAndStopsCleanly(t *testing.T) {
 	if got := c.Stats(); got.ClockRunning || got.RunningSong {
 		t.Fatalf("controller still running after Stop: %+v", got)
 	}
-}
-
-func TestNativeControllerAndLegacyStreamCannotShareTimers(t *testing.T) {
-	c := initNativeTestController(t)
-	activeMonoStream = &MonoStream{}
-	if c.Start() {
-		t.Fatal("native controller stole Timer 0 from legacy stream")
-	}
-	activeMonoStream = nil
-	if !c.Start() {
-		t.Fatal("native controller failed to claim free timer")
-	}
-	if claimMonoStream(&MonoStream{}) || claimStereoStream(&StereoStream{}) {
-		t.Fatal("legacy stream stole timers from native controller")
-	}
-	c.Stop()
 }
 
 func TestSecondNativeControllerCannotReinitializeOrStopActiveHardware(t *testing.T) {

@@ -2,9 +2,7 @@
 
 This tree is reserved for evidence produced by the four direct-register Game
 Boy PSG reference ROMs and the production v2 engine. The authoritative active
-set is the CH1–CH4 list in `mgba/reference-captures.json`. Any unlisted FIFO or
-combined reference files retained from the earlier hardware investigation are
-research artifacts, not v2 release evidence.
+set is the CH1–CH4 list in `mgba/reference-captures.json`. Superseded FIFO and combined-reference captures have been removed.
 
 `mgba/` contains deterministic internal mGBA 0.10.3 callback captures. Physical
 hardware recordings must use a separate directory named for the tested GBA

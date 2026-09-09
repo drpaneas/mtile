@@ -1206,12 +1206,19 @@ func TestTinySheetHonorsComfortableZoomCeiling(t *testing.T) {
 }
 
 // TestGraphicsAndAudioExamplesKeepTheSameNativeSheetLayout guards the exact
-// regression reported against mapdemo and audio-sfx: adding audio assets must
+// regression in graphics and audio projects: adding audio assets must
 // not collapse an otherwise empty 240x160 spritesheet to one giant tile.
 func TestGraphicsAndAudioExamplesKeepTheSameNativeSheetLayout(t *testing.T) {
-	for _, example := range []string{"mapdemo", "audio-sfx"} {
+	for _, example := range []string{"mapdemo", "native-audio"} {
 		t.Run(example, func(t *testing.T) {
-			g, err := newGame(filepath.Join("..", "..", "examples", example))
+			dir := filepath.Join("..", "..", "examples", example)
+			if example == "native-audio" {
+				dir = newNativeMusicTestGame(t).model.Dir
+				if err := assetsync.SaveSpritesheet(dir, &assetsync.Spritesheet{Width: 240, Height: 160}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			g, err := newGame(dir)
 			if err != nil {
 				t.Fatal(err)
 			}

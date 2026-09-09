@@ -1,11 +1,22 @@
+# Generated TinyGo targets (machine-local paths)
 runtime/target-gba.json
-celeste
-BPCore-Engine
- .agents/
-gb-studio
-hint:
 runtime/target-gba-smoke.json
 runtime/crt0/gba-smoke.s
+
+# Local research checkouts (not part of the published tree)
+/celeste
+/BPCore-Engine
+/gb-studio
+/Pico-8
+/examples/celeste
+
+# Locally built binaries
+/mtile
+/mtile-editor
+/editor
+/editor.test
+
+# Build artifacts
 *.gba
 *.elf
 *.map
@@ -13,6 +24,7 @@ runtime/crt0/gba-smoke.s
 *.allocs
 *.tmp
 /build/
+/dist/
 __pycache__/
 *.pyc
 .DS_Store
@@ -20,3 +32,10 @@ __pycache__/
 # Local editor/tool state
 .idea/
 .vscode/
+.qodo/
+.superpowers/
+.agents/
+
+# Static guide build and local Python environment
+/website/_site/
+/website/.venv/

@@ -510,3 +510,34 @@ func TestStreamingMapRandomizedAccessMatchesReference(t *testing.T) {
 		}
 	}
 }
+
+func TestU32DivModMatchesHardware(t *testing.T) {
+	check := func(n, d uint32) {
+		t.Helper()
+		if d == 0 {
+			return
+		}
+		gotQ, gotR := u32DivMod(n, d)
+		if gotQ != n/d || gotR != n%d {
+			t.Fatalf("%d/%d got %d r %d want %d r %d", n, d, gotQ, gotR, n/d, n%d)
+		}
+	}
+	for _, d := range []uint32{1, 2, 3, 4, 7, 8, 30, 32, 60, 128, 240, 1200, 4096} {
+		for _, n := range []uint32{0, 1, 7, 29, 31, 127, 128, 1199, 1200, 4095, 0xFFFFFFFF} {
+			check(n, d)
+		}
+	}
+	seed := uint32(0x87654321)
+	for i := 0; i < 100000; i++ {
+		seed = seed*1664525 + 1013904223
+		n := seed
+		seed = seed*1664525 + 1013904223
+		d := seed
+		if d == 0 {
+			d = 1
+		}
+		check(n, d)
+		check(n, 128)
+		check(n, 30)
+	}
+}

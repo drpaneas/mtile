@@ -55,7 +55,7 @@ Direct Sound/PCM is deferred and is not part of this audit.
   display-independent editor behavior is covered under `internal/editor`.
 - A fresh `audio-gb-editor` cartridge build succeeds at 57,620 bytes, with
   74,168 bytes of EWRAM free and 2,794 bytes of PSG assets. Native PSG desktop
-  monitoring is host-rate 48 kHz; legacy v1 PCM evidence remains 16,384 Hz.
+  monitoring renders directly at the host rate of 48 kHz.
 - Fresh builds of all three v2 examples pass, and the six-ROM PSG hardware
   bundle passes hash/manifest validation; its 59 physical-GBA listening checks
   remain intentionally unsigned until run on the device.

@@ -15,6 +15,7 @@ import (
 
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/transpiler"
+	"github.com/drpaneas/mtile/runtime/audio"
 )
 
 func TestGenerateTargetRemovesInheritanceAndUsesProjectStartup(t *testing.T) {
@@ -313,6 +314,9 @@ func TestRuntimeBuildTagsSpecializeMapStorageForBothRenderers(t *testing.T) {
 		want   string
 	}{
 		{name: "mode4-compact", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, HeapLinked: true}, want: "mtile_map_compact,mtile_static_strings_1"},
+		{name: "mode4-raster-disabled", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, MapRasterDisabled: true, HeapLinked: true}, want: "mtile_map_compact,mtile_no_map_raster,mtile_static_strings_1"},
+		{name: "mode4-streaming-raster-disabled", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, MapStreaming: true, MapRasterDisabled: true, HeapLinked: true}, want: "mtile_no_map_raster,mtile_static_strings_1"},
+		{name: "mode0-raster-disabled", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, MapRasterDisabled: true, HeapLinked: true}, want: "mtile_mode0,mtile_map_compact,mtile_static_strings_1"},
 		{name: "mode4-streaming", report: transpiler.RendererReport{Selected: transpiler.RendererMode4, MapStreaming: true, HeapLinked: true}, want: "mtile_static_strings_1"},
 		{name: "mode0-compact", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, HeapLinked: true}, want: "mtile_mode0,mtile_map_compact,mtile_static_strings_1"},
 		{name: "mode0-streaming", report: transpiler.RendererReport{Selected: transpiler.RendererMode0, Mode0Layers: 1, MapStreaming: true, HeapLinked: true}, want: "mtile_mode0,mtile_map_streaming,mtile_static_strings_1"},
@@ -605,18 +609,19 @@ func TestCreateProjectUsesNativeDefaults(t *testing.T) {
 	}
 }
 
-func TestCompiledAssetFootprintReportsAudioROMRecordsAndPCM(t *testing.T) {
+func TestCompiledAssetFootprintReportsNativeAudioROMRecords(t *testing.T) {
 	assets := &assetsync.Assets{
 		SheetROM: make([]byte, 64), MapROM: make([]uint16, 2), FlagROM: make([]byte, 1),
-		SFXROM: make([]assetsync.TargetSFX, 1), SFXStepROM: make([]assetsync.TargetSFXStep, 2),
-		MusicROM: make([]assetsync.TargetMusicPattern, 1), SampleROM: make([]assetsync.TargetSample, 2),
-		SamplePCMROM: make([]int8, 100),
+		NativeAudio: &assetsync.NativeAudioAssets{Library: audio.Library{
+			Sounds: make([]audio.Sound, 1), Clips: []audio.Clip{{NoteEvents: make([]audio.NoteEvent, 2)}},
+			Parts: make([]audio.Part, 1), Songs: []audio.Song{{Sequence: []uint8{0}}},
+		}},
 	}
 	got, err := validateCompiledAssetFootprint(assets)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := 8 + 2*8 + 12 + 2*24 + 100; got != want {
+	if want := 100 + 16 + 2*12 + 16 + 16 + 1; got != want {
 		t.Fatalf("audio ROM bytes = %d, want %d", got, want)
 	}
 }
@@ -941,7 +946,7 @@ end
 		t.Fatal(err)
 	}
 	if result.ROMSize != len(rom) || result.EWRAMFree < EWRAMReserve ||
-		result.AudioMasterVolume != 0 || result.AudioVoices != 4 ||
+		result.AudioVoices != 4 ||
 		result.AudioProfile != assetsync.NativeAudioProfile || result.AudioPSGRatio != 100 || result.AudioROMBytes == 0 {
 		t.Fatalf("audio build result = %+v file bytes=%d", result, len(rom))
 	}
@@ -975,7 +980,7 @@ func TestBuildEndToEndElidesAuthoredButUnusedNativeAudio(t *testing.T) {
 	if err != nil {
 		t.Fatalf("silent native-audio Build: %v", err)
 	}
-	defer os.RemoveAll(result.WorkDir)
+	defer func() { _ = os.RemoveAll(result.WorkDir) }()
 	if result.AudioROMBytes != 0 || result.AudioVoices != 0 || result.AudioProfile != "" || result.AudioPSGRatio != 0 {
 		t.Fatalf("unused audio was reported as linked: %+v", result)
 	}
@@ -1046,7 +1051,7 @@ end
 	if err != nil {
 		t.Fatalf("Build large streaming map: %v", err)
 	}
-	defer os.RemoveAll(result.WorkDir)
+	defer func() { _ = os.RemoveAll(result.WorkDir) }()
 	rom, err := os.ReadFile(romPath)
 	if err != nil {
 		t.Fatal(err)
@@ -1103,7 +1108,7 @@ end
 	if err != nil {
 		t.Fatalf("Build compact map: %v", err)
 	}
-	defer os.RemoveAll(result.WorkDir)
+	defer func() { _ = os.RemoveAll(result.WorkDir) }()
 	linkMap, err := os.ReadFile(result.MapPath)
 	if err != nil {
 		t.Fatal(err)
@@ -1150,7 +1155,7 @@ end
 	if err != nil {
 		t.Fatalf("Build heapless cartridge: %v", err)
 	}
-	defer os.RemoveAll(result.WorkDir)
+	defer func() { _ = os.RemoveAll(result.WorkDir) }()
 	if result.HeapLinked {
 		t.Fatal("heapless build reported the Lua heap as linked")
 	}
@@ -1200,7 +1205,7 @@ end
 	if err != nil {
 		t.Fatalf("Build allocating cartridge: %v", err)
 	}
-	defer os.RemoveAll(result.WorkDir)
+	defer func() { _ = os.RemoveAll(result.WorkDir) }()
 	if !result.HeapLinked {
 		t.Fatal("allocating build reported the Lua heap as elided")
 	}
@@ -1316,23 +1321,21 @@ func TestBuildExamplesHelloEndToEnd(t *testing.T) {
 // that can be authored or placed even though the audio-only ROM still builds.
 func TestAudioExamplesUseEditableProjectAssets(t *testing.T) {
 	for _, name := range []string{
-		"audio-sfx", "audio-music", "audio-samples",
-		"audio-zelda-fortune-teller", "audio-zelda-underworld",
+		"audio-gb-melody", "audio-gb-song", "audio-gb-editor",
 	} {
 		t.Run(name, func(t *testing.T) {
 			assets, err := assetsync.Load(examplesProjectDir(t, name))
 			if err != nil {
 				t.Fatalf("load example: %v", err)
 			}
-			if assets.SheetW != 240 || assets.SheetH != 160 || assets.SpriteCols != 30 || assets.SpriteRows != 20 {
-				t.Fatalf("sheet = %dx%d pixels (%dx%d sprites), want native 240x160 (30x20 sprites)",
-					assets.SheetW, assets.SheetH, assets.SpriteCols, assets.SpriteRows)
+			if assets.SheetW < 8 || assets.SheetH < 8 || assets.SheetW%8 != 0 || assets.SheetH%8 != 0 {
+				t.Fatalf("audio example has a non-editable sheet: %dx%d", assets.SheetW, assets.SheetH)
 			}
 			if assets.SpriteN <= 1 {
 				t.Fatalf("SpriteN = %d, want at least one editable ID after reserved sprite 0", assets.SpriteN)
 			}
-			if assets.MapW != 30 || assets.MapH != 20 {
-				t.Fatalf("map = %dx%d, want native 30x20", assets.MapW, assets.MapH)
+			if assets.MapW < 1 || assets.MapH < 1 {
+				t.Fatalf("map = %dx%d, want positive dimensions", assets.MapW, assets.MapH)
 			}
 		})
 	}
@@ -1483,10 +1486,8 @@ func TestNativeAudioExamplesUseOnlyFourChannelV2Assets(t *testing.T) {
 			if assets.AudioVersion != assetsync.NativeAudioSchemaVersion || assets.NativeAudio == nil {
 				t.Fatalf("audio version/native assets = %d/%v", assets.AudioVersion, assets.NativeAudio)
 			}
-			if assets.NativeAudio.Settings.Profile != assetsync.NativeAudioProfile ||
-				len(assets.SFXROM) != 0 || len(assets.MusicROM) != 0 || len(assets.SampleROM) != 0 || len(assets.SamplePCMROM) != 0 {
-				t.Fatalf("example leaked legacy audio: profile=%q sfx=%d music=%d sample=%d pcm=%d",
-					assets.NativeAudio.Settings.Profile, len(assets.SFXROM), len(assets.MusicROM), len(assets.SampleROM), len(assets.SamplePCMROM))
+			if assets.NativeAudio.Settings.Profile != assetsync.NativeAudioProfile {
+				t.Fatalf("example audio profile = %q", assets.NativeAudio.Settings.Profile)
 			}
 			for _, relative := range []string{"sfx.json", "samples/manifest.json"} {
 				if _, err := os.Stat(filepath.Join(dir, "assets", "audio", relative)); !errors.Is(err, os.ErrNotExist) {

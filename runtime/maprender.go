@@ -2,6 +2,8 @@
 
 package runtime
 
+import "unsafe"
+
 // Map draws map cells as 8x8 sprite cells from the native uint16 map and
 // 8bpp sheet. layer is a flag bitmask: 0 draws every sprite, a nonzero
 // value draws a cell only when all bits in layer are present in its flags.
@@ -30,6 +32,9 @@ func (c *Context) MapBG(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, laye
 // MapBGAt is shared with generated code for both renderers. Mode 4 uses
 // painter order, so the densely allocated hardware slot is intentionally
 // ignored here.
+//
+//go:noinline
+//go:section .iwram
 func (c *Context) MapBGAt(_ int, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	c.mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
 }
@@ -124,7 +129,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 		return
 	}
 	if mask == 0 && c.drawPalIdentity && c.transpKey0 &&
-		c.drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin) {
+		(c.drawMapPacked(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin) || c.drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin)) {
 		return
 	}
 	// Hoist the id -> cell divide out of the 600-cell loop: one reciprocal
@@ -205,6 +210,39 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 					blitSheetW = 8
 					srcY0 = 0
 				} else {
+					// Immutable compact cells can describe an exact solid source
+					// color. Merge equal adjacent IDs before filling their rows;
+					// flags and transparency therefore stay identical throughout
+					// the run. Read the live map so Mset immediately splits runs.
+					if int(slot) <= len(c.cart.SheetSolid) {
+						encoded := c.cart.SheetSolid[int(slot)-1]
+						if encoded != 0 {
+							color := byte(encoded - 1)
+							if transp[color] {
+								continue
+							}
+							end := mx + 1
+							if !mapStreaming {
+								for end < mx1 && mapData[mapRowBase+cellX+end] == id {
+									end++
+								}
+							}
+							x0, x1 := baseX, baseXOrigin+end*8
+							if x0 < clipX0 {
+								x0 = clipX0
+							}
+							if x1 > clipX1 {
+								x1 = clipX1
+							}
+							color = pal[color]
+							word := uint32(color) * 0x01010101
+							for y := baseY + rowY0; y < baseY+rowY1; y++ {
+								c.fillRowWord(y, x0, x1-1, color, word)
+							}
+							mx = end - 1
+							continue
+						}
+					}
 					blitSheetW = 8
 					srcY0 = (int(slot) - 1) * 8
 				}
@@ -222,6 +260,16 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 			}
 			if baseX+8 > clipX1 {
 				colX1 = clipX1 - baseX
+			}
+			if identity && key0 && (sheetStorageReadOnly || c.cart.SheetReadOnly) &&
+				rowY0 == 0 && rowY1 == 8 && colX0 == 0 && colX1 == 8 {
+				// The native cell compositor accepts any framebuffer alignment,
+				// but its source word loads require an aligned compact cell.
+				src := unsafe.Pointer(&blitSheet[srcY0*8])
+				if uintptr(src)&3 == 0 {
+					copyMapCell8Key0(src, unsafe.Pointer(&fb[baseY*ScreenWidth+baseX]))
+					continue
+				}
 			}
 			packed := canPack && colX0 == 0 && colX1 == 8
 			blitUnflippedCell8(blitSheet, fb, pal, transp, blitSheetW, srcX0, srcY0, baseX, baseY,

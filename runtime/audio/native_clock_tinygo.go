@@ -20,8 +20,7 @@ var (
 )
 
 func claimNativeController(controller *Controller) bool {
-	if activeMonoStream != nil || activeStereoStream != nil ||
-		activeNativeController != nil && activeNativeController != controller {
+	if activeNativeController != nil && activeNativeController != controller {
 		return false
 	}
 	activeNativeController = controller
@@ -54,3 +53,8 @@ func handleNativeTimer0(interrupt.Interrupt) {
 		activeNativeController.serviceCommit()
 	}
 }
+
+type audioInterruptState = interrupt.State
+
+func disableAudioInterrupts() audioInterruptState      { return interrupt.Disable() }
+func restoreAudioInterrupts(state audioInterruptState) { interrupt.Restore(state) }

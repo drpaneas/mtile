@@ -104,10 +104,15 @@ func (c *Controller) Init(profile Profile) bool {
 	if c == nil || c.running || activeNativeController != nil && activeNativeController != c || !profile.Valid() {
 		return false
 	}
-	*c = Controller{
-		profile: profile, commitCycles: profileCommitCycles(profile), tempo: NativeDefaultTempo,
-		songIndex: -1, partIndex: -1,
-	}
+	// Zero in place before assigning defaults. A nonzero Controller literal
+	// creates a 1024-byte temporary in TinyGo 0.42, exceeding its 256-byte
+	// stack allocation limit and breaking our -gc=none builds.
+	*c = Controller{}
+	c.profile = profile
+	c.commitCycles = profileCommitCycles(profile)
+	c.tempo = NativeDefaultTempo
+	c.songIndex = -1
+	c.partIndex = -1
 	for i := range c.clipIndex {
 		c.clipIndex[i] = -1
 		c.sfx[i].clipIndex = -1
@@ -334,17 +339,20 @@ func (c *Controller) enqueue(command nativeCommand) bool {
 	if c == nil {
 		return false
 	}
-	state := disableStreamInterrupts()
-	defer restoreStreamInterrupts(state)
+	state := disableAudioInterrupts()
+	// Restore explicitly on every exit: defer pulls in TinyGo 0.42's
+	// allocating panic-recovery path, which cannot link with -gc=none.
 	if c.commandLen == NativeMaxCommandQueue {
 		if c != nil {
 			c.queueOverflows++
 		}
+		restoreAudioInterrupts(state)
 		return false
 	}
 	index := (int(c.commandHead) + int(c.commandLen)) & (NativeMaxCommandQueue - 1)
 	c.commands[index] = command
 	c.commandLen++
+	restoreAudioInterrupts(state)
 	return true
 }
 
@@ -398,13 +406,14 @@ func (c *Controller) Start() bool {
 	if c == nil || !c.bound || c.running {
 		return false
 	}
-	state := disableStreamInterrupts()
-	defer restoreStreamInterrupts(state)
+	state := disableAudioInterrupts()
 	if !claimNativeController(c) {
+		restoreAudioInterrupts(state)
 		return false
 	}
 	c.running = true
 	startNativeClock()
+	restoreAudioInterrupts(state)
 	return true
 }
 
@@ -414,9 +423,9 @@ func (c *Controller) Stop() {
 	if c == nil {
 		return
 	}
-	state := disableStreamInterrupts()
-	defer restoreStreamInterrupts(state)
+	state := disableAudioInterrupts()
 	if activeNativeController != nil && activeNativeController != c {
+		restoreAudioInterrupts(state)
 		return
 	}
 	if activeNativeController == c {
@@ -430,6 +439,7 @@ func (c *Controller) Stop() {
 	c.stopSFXNow()
 	c.stopOwner(OwnerDirect)
 	hw.StopAllPSG()
+	restoreAudioInterrupts(state)
 }
 
 func (c *Controller) serviceCommit() {
@@ -915,9 +925,10 @@ func (c *Controller) Stats() NativeStats {
 	if c == nil {
 		return NativeStats{}
 	}
-	state := disableStreamInterrupts()
-	defer restoreStreamInterrupts(state)
-	return c.statsLocked()
+	state := disableAudioInterrupts()
+	stats := c.statsLocked()
+	restoreAudioInterrupts(state)
+	return stats
 }
 
 func (c *Controller) statsLocked() NativeStats {
@@ -958,11 +969,11 @@ func (c *Controller) PreviewInto(preview *NativePreview) bool {
 	if c == nil || preview == nil {
 		return false
 	}
-	state := disableStreamInterrupts()
-	defer restoreStreamInterrupts(state)
+	state := disableAudioInterrupts()
 	c.statsIntoLocked(&preview.Stats)
 	preview.PSG = hw.ManagedPSGSnapshot()
 	preview.Control = hw.ManagedSoundControlSnapshot()
+	restoreAudioInterrupts(state)
 	return true
 }
 

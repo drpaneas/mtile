@@ -1,0 +1,15 @@
+name: Question / help
+description: Get help installing Mtile or making a game.
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: What do you need help with?
+      description: Explain your goal and what you have tried. Link relevant documentation or existing issues.
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup and example
+      description: Include the Mtile revision/bundle, OS, Go/TinyGo versions, command, and any relevant Lua or error output. Remove private information.

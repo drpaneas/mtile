@@ -141,7 +141,7 @@ func TestManagerReportsDegradedConnectionInsteadOfSilentlyFailing(t *testing.T) 
 	if err := manager.Start(); err != nil {
 		t.Fatal(err)
 	}
-	defer manager.Close()
+	defer func() { _ = manager.Close() }()
 	deadline := time.After(time.Second)
 	for {
 		select {

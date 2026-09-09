@@ -11,9 +11,8 @@ Advance. Direct Sound A/B, FIFO streaming, PCM samples, and software mixing are
 explicitly deferred. They are neither hidden advanced features nor release
 gates for this version.
 
-The old PICO-compatible software mixer is archived under
-[`legacy/v1`](legacy/v1/README.md). Its captures remain engineering evidence,
-but production Audio v2 does not call it.
+The superseded software mixer and its PICO conformance tooling have been
+removed. Audio v1 assets are rejected before compilation or editor writes.
 
 ### Implementation checkpoint — 2026-08-28
 
@@ -265,7 +264,7 @@ mode boundaries.
 ### 0 — PSG-only contract
 
 - Active docs, schema, APIs, and UI expose only CH1–CH4.
-- PCM/Direct Sound remains separately archived research and fails closed in v2.
+- PCM/Direct Sound assets are unsupported and fail closed in v2.
 
 ### 1 — Hardware truth
 

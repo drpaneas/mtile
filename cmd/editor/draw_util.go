@@ -319,10 +319,6 @@ func drawTextCentered(screen *ebiten.Image, value string, rect editor.Rect, clr 
 	drawText(screen, value, rect.X+(rect.W-uiTextWidth(value))/2, rect.Y+(rect.H-uiTextHeight)/2, clr)
 }
 
-func drawCodeTextCentered(screen *ebiten.Image, value string, rect editor.Rect, clr color.Color) {
-	drawCodeText(screen, value, rect.X+(rect.W-codeTextWidth(value))/2, rect.Y+(rect.H-codeTextHeight)/2, clr)
-}
-
 func drawDevelopTextCentered(screen *ebiten.Image, value string, rect editor.Rect, clr color.Color) {
 	drawDevelopText(screen, value, rect.X+(rect.W-developTextWidth(value))/2, rect.Y+(rect.H-developTextHeight)/2, clr)
 }
@@ -345,10 +341,6 @@ func truncateCodeText(value string, width int) string {
 
 func truncateDevelopText(value string, width int) string {
 	return truncateTextToWidth(value, width, developFace)
-}
-
-func truncateDevelopSmallText(value string, width int) string {
-	return truncateTextToWidth(value, width, developSmallFace)
 }
 
 func truncateTextToWidth(value string, width int, face text.Face) string {
@@ -518,13 +510,6 @@ func drawEraserSwatch(screen *ebiten.Image, r editor.Rect) {
 	}
 	drawLine(screen, r.X+1, r.Y+1, r.X+r.W-2, r.Y+r.H-2, colorDim)
 	drawLine(screen, r.X+r.W-2, r.Y+1, r.X+1, r.Y+r.H-2, colorDim)
-}
-
-func drawEraserBadge(screen *ebiten.Image, r editor.Rect) {
-	s := max(4, min(r.W, r.H)/4)
-	badge := editor.Rect{X: r.X, Y: r.Y, W: s, H: s}
-	drawEraserSwatch(screen, badge)
-	strokeRect(screen, badge, colorHighlight)
 }
 
 // swatchColor converts a stored RGB15 (0..31 per channel) into a displayable

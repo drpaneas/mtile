@@ -38,29 +38,18 @@ func reservedSpriteEditError(id int) error {
 // Model is one editable native project. Sheet and map dimensions are project
 // data, not a fixed display or cartridge size.
 type Model struct {
-	Dir           string
-	Project       assetsync.Project
-	Sheet         assetsync.Spritesheet
-	Map           assetsync.Map
-	SFX           assetsync.SFXLibrary
-	Music         assetsync.MusicLibrary
-	Samples       assetsync.SampleLibrary
-	AudioSettings assetsync.AudioSettings
-	AudioVersion  int
-	NativeAudio   assetsync.NativeAudioAssets
+	Dir     string
+	Project assetsync.Project
+	Sheet   assetsync.Spritesheet
+	Map     assetsync.Map
+
+	AudioVersion int
+	NativeAudio  assetsync.NativeAudioAssets
 	// NativeSongIndex is editor session state. It selects which song the
 	// one-screen Music Lab operates on and is never serialized into assets.
 	NativeSongIndex int
 	ActivePalette   assetsync.Palette
 	PaletteNames    []string
-
-	// Optional audio files stay absent in legacy graphics-only projects until
-	// the user actually authors that asset type. This avoids turning a normal
-	// editor save or quit into an unrelated project-layout migration.
-	sfxFilePresent    bool
-	musicFilePresent  bool
-	sampleFilePresent bool
-	settingsPresent   bool
 }
 
 func optionalAudioFilePresent(path string) bool {
@@ -100,20 +89,12 @@ func Open(dir string) (*Model, error) {
 		return nil, err
 	}
 	model := &Model{
-		Dir:               dir,
-		Project:           project,
-		Sheet:             *sheet,
-		Map:               *mapData,
-		SFX:               assetsync.SFXLibrary{Version: assetsync.SFXSchemaVersion},
-		Music:             assetsync.MusicLibrary{Version: assetsync.MusicSchemaVersion},
-		Samples:           assetsync.SampleLibrary{Version: assetsync.SampleSchemaVersion},
-		AudioSettings:     assetsync.DefaultAudioSettings(),
-		ActivePalette:     *palette,
-		PaletteNames:      names,
-		sfxFilePresent:    sfxFilePresent,
-		musicFilePresent:  musicFilePresent,
-		sampleFilePresent: sampleFilePresent,
-		settingsPresent:   settingsPresent,
+		Dir:           dir,
+		Project:       project,
+		Sheet:         *sheet,
+		Map:           *mapData,
+		ActivePalette: *palette,
+		PaletteNames:  names,
 	}
 	version, err := assetsync.DetectAudioVersion(dir)
 	if err != nil {
@@ -123,7 +104,7 @@ func Open(dir string) (*Model, error) {
 	// in the editor. New projects explicitly contain v2 settings/sounds/music,
 	// so this compatibility case cannot silently downgrade a new cartridge.
 	if !settingsPresent && !nativeSoundsPresent && !musicFilePresent && !sfxFilePresent && !sampleFilePresent {
-		version = assetsync.AudioSettingsSchemaVersion
+		version = 0
 	}
 	model.AudioVersion = version
 	if version == assetsync.NativeAudioSchemaVersion {
@@ -134,32 +115,21 @@ func Open(dir string) (*Model, error) {
 		model.NativeAudio = *native
 		return model, nil
 	}
-	settings, err := assetsync.LoadAudioSettings(dir)
-	if err != nil {
-		return nil, err
+	if version != 0 {
+		return nil, fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", version)
 	}
-	sfx, err := assetsync.LoadSFX(dir)
-	if err != nil {
-		return nil, err
-	}
-	music, err := assetsync.LoadMusic(dir, *sfx)
-	if err != nil {
-		return nil, err
-	}
-	samples, err := assetsync.LoadSamples(dir)
-	if err != nil {
-		return nil, err
-	}
-	model.SFX, model.Music, model.Samples, model.AudioSettings = *sfx, *music, *samples, *settings
 	return model, nil
 }
 
 // Save validates and persists the current project, active palette, sheet, map,
-// SFX, music, and sample libraries. Keeping writes here makes editor undo transactional:
+// four-channel audio assets. Keeping writes here makes editor undo transactional:
 // restoring an in-memory snapshot and then saving cannot leave a file stale.
 func (m *Model) Save() error {
 	if m == nil {
 		return fmt.Errorf("editor model is required")
+	}
+	if m.AudioVersion != 0 && m.AudioVersion != assetsync.NativeAudioSchemaVersion {
+		return fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", m.AudioVersion)
 	}
 	if m.Project.ActivePalette != m.ActivePalette.Name {
 		return fmt.Errorf("active palette mismatch: project selects %q, model holds %q", m.Project.ActivePalette, m.ActivePalette.Name)
@@ -173,19 +143,7 @@ func (m *Model) Save() error {
 			return err
 		}
 		m.NativeAudio.Library = library
-	} else {
-		if _, _, err := assetsync.CompileSFX(m.SFX); err != nil {
-			return err
-		}
-		if _, err := assetsync.CompileMusic(m.Music, m.SFX); err != nil {
-			return err
-		}
-		if _, _, err := assetsync.CompileSamples(m.Dir, m.Samples); err != nil {
-			return err
-		}
-		if err := assetsync.ValidateAudioSettings(m.AudioSettings); err != nil {
-			return err
-		}
+
 	}
 	if err := assetsync.SavePalette(m.Dir, &m.ActivePalette); err != nil {
 		return err
@@ -209,32 +167,6 @@ func (m *Model) Save() error {
 		if err := assetsync.SaveNativeMusic(m.Dir, m.NativeAudio.Sounds, &m.NativeAudio.Music); err != nil {
 			return err
 		}
-		m.settingsPresent, m.musicFilePresent = true, true
-		return nil
-	}
-	if m.sfxFilePresent || len(m.SFX.SFX) != 0 {
-		if err := assetsync.SaveSFX(m.Dir, &m.SFX); err != nil {
-			return err
-		}
-		m.sfxFilePresent = true
-	}
-	if m.musicFilePresent || len(m.Music.Patterns) != 0 {
-		if err := assetsync.SaveMusic(m.Dir, &m.Music, m.SFX); err != nil {
-			return err
-		}
-		m.musicFilePresent = true
-	}
-	if m.sampleFilePresent || len(m.Samples.Samples) != 0 {
-		if err := assetsync.SaveSamples(m.Dir, &m.Samples); err != nil {
-			return err
-		}
-		m.sampleFilePresent = true
-	}
-	if m.settingsPresent || m.AudioSettings != assetsync.DefaultAudioSettings() {
-		if err := assetsync.SaveAudioSettings(m.Dir, &m.AudioSettings); err != nil {
-			return err
-		}
-		m.settingsPresent = true
 	}
 	return nil
 }
@@ -248,12 +180,11 @@ func (m *Model) EnableNativeAudioV2() error {
 	if m == nil {
 		return fmt.Errorf("editor model is required")
 	}
+	if m.AudioVersion != 0 && m.AudioVersion != assetsync.NativeAudioSchemaVersion {
+		return fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", m.AudioVersion)
+	}
 	if m.AudioVersion == assetsync.NativeAudioSchemaVersion {
 		return nil
-	}
-	if m.settingsPresent || m.sfxFilePresent || m.musicFilePresent || m.sampleFilePresent ||
-		len(m.SFX.SFX) != 0 || len(m.Music.Patterns) != 0 || len(m.Samples.Samples) != 0 {
-		return fmt.Errorf("legacy PICO/PCM audio is unsupported; convert explicitly to four-channel Game Boy audio v2")
 	}
 	settings := assetsync.DefaultNativeAudioSettings()
 	sounds := assetsync.DefaultNativeSoundLibrary()
@@ -269,21 +200,6 @@ func (m *Model) EnableNativeAudioV2() error {
 		Library:  library,
 	}
 	m.AudioVersion = assetsync.NativeAudioSchemaVersion
-	return nil
-}
-
-// SetAudioMasterVolume changes the one editable measured-profile setting in
-// memory. Save persists it atomically with the other editor documents.
-func (m *Model) SetAudioMasterVolume(volume int) error {
-	if m == nil {
-		return fmt.Errorf("editor model is required")
-	}
-	settings := m.AudioSettings
-	settings.MasterVolume = volume
-	if err := assetsync.ValidateAudioSettings(settings); err != nil {
-		return err
-	}
-	m.AudioSettings = settings
 	return nil
 }
 

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "sounds": [
+    {
+      "id": 0,
+      "name": "Coin sparkle",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 10,
+          "direction": "down",
+          "pace": 1
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "up",
+          "shift": 0
+        }
+      }
+    }
+  ]
+}

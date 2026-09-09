@@ -17,12 +17,9 @@ const (
 // diffs and are the right trade-off for a tool that is not performance
 // sensitive and where undo depth is capped at 50 anyway.
 type undoSnapshot struct {
-	Sheet              assetsync.Spritesheet       `json:"sheet"`
-	Map                assetsync.Map               `json:"map"`
-	SFX                assetsync.SFXLibrary        `json:"sfx"`
-	Music              assetsync.MusicLibrary      `json:"music"`
-	Samples            assetsync.SampleLibrary     `json:"samples"`
-	AudioSettings      assetsync.AudioSettings     `json:"audioSettings"`
+	Sheet assetsync.Spritesheet `json:"sheet"`
+	Map   assetsync.Map         `json:"map"`
+
 	NativeAudio        assetsync.NativeAudioAssets `json:"nativeAudio"`
 	Project            assetsync.Project           `json:"project"`
 	Palette            assetsync.Palette           `json:"palette"`

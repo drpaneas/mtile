@@ -22,6 +22,15 @@ Start here:
 - [`conformance.md`](conformance.md): emulator and hardware verification.
 - [`completion.md`](completion.md): current audit.
 
-Direct Sound/PCM is deferred. Earlier FIFO and software-mixer work remains as
-engineering research and under [`legacy/v1`](legacy/v1/README.md), but is not
-part of the v2 product or completion gate.
+Direct Sound/PCM is unsupported. The superseded software mixer, PICO audio
+import/conformance tools, and audio-v1 fixtures have been removed. Existing v1
+assets are rejected explicitly; they are never silently converted or overwritten.
+
+Hand-written Go cartridges should bind an `audio.Controller` and attach it
+with `Context.AttachNativeAudio`. The old `AttachSFX`, `AttachAudioStream`,
+software-player helpers, and compiler audio-v1 options no longer exist.
+The supported Lua PSG API is unchanged; see [API v2](api-v2.md).
+
+Celeste's source-decoding helper remains with that port's conversion tests.
+It converts source material into PSG arrangements and is not part of the
+compiler, editor, or embedded runtime.

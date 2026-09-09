@@ -1,0 +1,4 @@
+built /private/tmp/mtile-celeste-parallax-231w16pk/celeste-parallax.gba (362096 bytes, 6624 bytes EWRAM free)
+renderer requested mode4 -> selected mode0 (Explicit generic tilemap and sparse OBJ canvas experiment), 4 BG layer(s), OBJ true, text false, OAM 0/128, OBJ line 0/1226 cycles
+renderer auto profile: experimental-tilecanvas
+audio: Game Boy PSG CH1-CH4, hardware mix 100%, 113,059-byte assets

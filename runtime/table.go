@@ -525,7 +525,11 @@ func (c *Context) hashFind(data []byte, key Value) (int, bool) {
 			if !isTombstone(k, v) {
 				return 0, false
 			}
-		} else if c.ValuesEqual(k, key) {
+		} else if (key.Kind == KindNumber && k.Kind == KindNumber && k.Num == key.Num) ||
+			(key.Kind != KindNumber && c.ValuesEqual(k, key)) {
+			// Numeric keys need only their exact fixed-point payload. Keep
+			// this common comparison inside the IWRAM probe loop instead of
+			// copying two Values into the generic ROM string/table decoder.
 			if hint != nil {
 				hint.slotHint, hint.hintSet = uint8(i), true
 			}

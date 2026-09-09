@@ -11,9 +11,8 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / 'scripts/audio'))
-from pico8_cart import load_cart
-from import_pico8_audio import authored_music, sfx_length
+sys.path.insert(0, str(ROOT / 'examples/celeste-mode0/tests'))
+from pico_source import load_cart, authored_music, sfx_length
 
 PROJECT = ROOT / 'examples/celeste'
 SOURCE = ROOT / 'celeste/smalleste.p8'

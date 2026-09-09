@@ -1,10 +1,8 @@
 package assetsync
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -197,79 +195,58 @@ func nativeMusicPath(projectDir string) string {
 	return filepath.Join(projectDir, "assets", "audio", "music.json")
 }
 
-func decodeStrictNativeFile(path, label string, target any) (bool, error) {
-	file, err := os.Open(path)
+func decodeNativeFile(path, label string, target any, rejectUnknown bool) (bool, error) {
+	raw, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	}
 	if err != nil {
 		return false, fmt.Errorf("read %s: %w", label, err)
 	}
-	defer func() { _ = file.Close() }()
-	decoder := json.NewDecoder(file)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(target); err != nil {
+	if err := decodeAuthoredJSON(raw, target, rejectUnknown); err != nil {
 		return true, fmt.Errorf("decode %s: %w", label, err)
-	}
-	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-		if err == nil {
-			err = errors.New("multiple JSON values")
-		}
-		return true, fmt.Errorf("decode %s: trailing data: %w", label, err)
 	}
 	return true, nil
 }
 
-// DetectAudioVersion selects the project-level audio contract before either
-// strict decoder runs. Projects with no authored audio start on v2.
+// DetectAudioVersion selects the project-level audio contract before the
+// strict v2 decoder runs. Projects with no authored audio start on v2.
 func DetectAudioVersion(projectDir string) (int, error) {
 	versionFrom := func(path, label string) (int, bool, error) {
-		file, err := os.Open(path)
-		if errors.Is(err, os.ErrNotExist) {
-			return 0, false, nil
-		}
-		if err != nil {
-			return 0, false, fmt.Errorf("read %s: %w", label, err)
-		}
-		defer func() { _ = file.Close() }()
 		var header struct {
 			Version int `json:"version"`
 		}
-		decoder := json.NewDecoder(file)
-		if err := decoder.Decode(&header); err != nil {
-			return 0, true, fmt.Errorf("decode %s: %w", label, err)
-		}
-		if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-			return 0, true, fmt.Errorf("decode %s: trailing data", label)
-		}
-		return header.Version, true, nil
+		present, err := decodeNativeFile(path, label, &header, false)
+		return header.Version, present, err
 	}
 	if version, present, err := versionFrom(audioSettingsPath(projectDir), "audio settings.json version"); err != nil {
 		return 0, err
 	} else if present {
-		if version != AudioSettingsSchemaVersion && version != NativeAudioSchemaVersion {
+		if version != 1 && version != NativeAudioSchemaVersion {
 			return 0, fmt.Errorf("audio settings version %d is unsupported", version)
 		}
 		return version, nil
 	}
-	if _, err := os.Stat(nativeSoundsPath(projectDir)); err == nil {
+	if _, present, err := versionFrom(nativeSoundsPath(projectDir), "sounds.json version"); err != nil {
+		return 0, err
+	} else if present {
+		// The sounds.json filename identifies v2. Validate the complete JSON
+		// before selecting it; LoadNativeAudio checks the schema version.
 		return NativeAudioSchemaVersion, nil
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return 0, fmt.Errorf("inspect sounds.json: %w", err)
 	}
 	if version, present, err := versionFrom(nativeMusicPath(projectDir), "music.json version"); err != nil {
 		return 0, err
 	} else if present {
-		if version != MusicSchemaVersion && version != NativeAudioSchemaVersion {
+		if version != 1 && version != NativeAudioSchemaVersion {
 			return 0, fmt.Errorf("music version %d is unsupported", version)
 		}
 		return version, nil
 	}
 	for _, legacy := range []string{
-		sfxPath(projectDir), filepath.Join(projectDir, "assets", "audio", "samples", "manifest.json"),
+		filepath.Join(projectDir, "assets", "audio", "sfx.json"), filepath.Join(projectDir, "assets", "audio", "samples", "manifest.json"),
 	} {
 		if _, err := os.Stat(legacy); err == nil {
-			return AudioSettingsSchemaVersion, nil
+			return 1, nil
 		} else if !errors.Is(err, os.ErrNotExist) {
 			return 0, fmt.Errorf("inspect legacy audio: %w", err)
 		}
@@ -290,15 +267,15 @@ func LoadNativeAudio(projectDir string) (*NativeAudioAssets, error) {
 	}
 
 	settings := DefaultNativeAudioSettings()
-	if _, err := decodeStrictNativeFile(audioSettingsPath(projectDir), "audio settings.json", &settings); err != nil {
+	if _, err := decodeNativeFile(audioSettingsPath(projectDir), "audio settings.json", &settings, true); err != nil {
 		return nil, err
 	}
 	sounds := DefaultNativeSoundLibrary()
-	if _, err := decodeStrictNativeFile(nativeSoundsPath(projectDir), "sounds.json", &sounds); err != nil {
+	if _, err := decodeNativeFile(nativeSoundsPath(projectDir), "sounds.json", &sounds, true); err != nil {
 		return nil, err
 	}
 	music := DefaultNativeMusicLibrary()
-	if _, err := decodeStrictNativeFile(nativeMusicPath(projectDir), "music.json", &music); err != nil {
+	if _, err := decodeNativeFile(nativeMusicPath(projectDir), "music.json", &music, true); err != nil {
 		return nil, err
 	}
 	library, err := CompileNativeAudio(settings, sounds, music)
@@ -824,4 +801,8 @@ func validateNativeTakes(takes []NativeTakeAsset, partIDs [audio.NativeMaxParts]
 		}
 	}
 	return nil
+}
+
+func audioSettingsPath(projectDir string) string {
+	return filepath.Join(projectDir, "assets", "audio", "settings.json")
 }

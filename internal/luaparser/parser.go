@@ -268,7 +268,7 @@ func (p *Parser) parseAssignmentOrCall() ([]Stmt, error) {
 	return nil, p.errorAt(p.peek(0), "expected assignment or function call")
 }
 
-// lowerForeach turns PICO-8's foreach(table, callback) statement into the
+// lowerForeach turns the foreach(table, callback) statement into the
 // existing all(table) generic-for AST. The callback must be a static name:
 // Mtile deliberately has no first-class function values or closures. The
 // generic-for generator evaluates the table expression once and roots it for
@@ -325,7 +325,7 @@ func (p *Parser) parseFunctionDeclaration(local bool, pos Position) ([]Stmt, err
 		return nil, p.errorAt(p.previous(), "local function cannot be a field or method")
 	}
 	if hasUpdate60(name, method) {
-		return nil, p.errorAt(p.previous(), "_update60 is unsupported; Mtile runs _update at 30 Hz (PICO-8 default rate)")
+		return nil, p.errorAt(p.previous(), "_update60 is unsupported; Mtile runs _update at 30 Hz")
 	}
 	if _, err := p.expect("("); err != nil {
 		return nil, err
@@ -795,7 +795,7 @@ func (p *Parser) parsePostfix() (Expr, error) {
 				return nil, err
 			}
 			if name.Text == "_update60" {
-				return nil, p.errorAt(name, "_update60 is unsupported; Mtile runs _update at 30 Hz (PICO-8 default rate)")
+				return nil, p.errorAt(name, "_update60 is unsupported; Mtile runs _update at 30 Hz")
 			}
 			expr = &FieldExpr{NodeBase: NodeBase{At: expr.Pos(), Last: name.Pos}, Base: expr, Name: name.Text}
 		case token.Kind == TokenSymbol && token.Text == ":":
@@ -805,7 +805,7 @@ func (p *Parser) parsePostfix() (Expr, error) {
 				return nil, err
 			}
 			if method.Text == "_update60" {
-				return nil, p.errorAt(method, "_update60 is unsupported; Mtile runs _update at 30 Hz (PICO-8 default rate)")
+				return nil, p.errorAt(method, "_update60 is unsupported; Mtile runs _update at 30 Hz")
 			}
 			args, err := p.parseCallArguments()
 			if err != nil {
@@ -894,7 +894,7 @@ func (p *Parser) parsePrimary() (Expr, error) {
 	case TokenIdentifier:
 		p.take()
 		if token.Text == "_update60" {
-			return nil, p.errorAt(token, "_update60 is unsupported; Mtile runs _update at 30 Hz (PICO-8 default rate)")
+			return nil, p.errorAt(token, "_update60 is unsupported; Mtile runs _update at 30 Hz")
 		}
 		return &VarExpr{NodeBase: NodeBase{At: token.Pos}, Name: token.Text}, nil
 	case TokenKeyword:

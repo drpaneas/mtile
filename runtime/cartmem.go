@@ -35,12 +35,36 @@ type AssetMemory struct {
 	SheetIndex             []uint16
 	Map                    []uint16
 	Flags                  []byte
-	MapChunks              []MapChunk
-	MapEdits               []MapEdit
+	// Optional immutable-sheet metadata indexed by compact slot, not sprite
+	// ID. Zero means mixed/unknown; 1..256 encode a solid source color + 1.
+	// Init validates it against the source pixels before rendering trusts it.
+	SheetSolid []uint16
+	MapChunks  []MapChunk
+	MapEdits   []MapEdit
 	// Optional Mode 4 raster storage. The generator supplies it only when a
 	// small, fixed, single-plane map and the target's EWRAM budget permit it.
 	MapRasterPixels []byte
 	MapRasterSpans  []MapRasterSpan
+	// Optional fixed-map cache, partitioned by logical background plane.
+	// Each span stores only nonzero source pixels, before palette remapping.
+	// Uniform spans store a color directly; only mixed runs need pixel storage.
+	MapPackedPixels []byte
+	MapPackedSpans  []MapPackedSpan
+	MapPackedLayers [4]MapPackedLayer
+}
+
+// MapPackedSpan describes an opaque source run. X/Y retain map coordinates;
+// the low 15 Length bits hold its length. With the high Length bit clear,
+// Offset addresses packed pixels. With it set, Offset stores a source color
+// and the run has no pixel payload.
+type MapPackedSpan struct {
+	X, Y, Length, Offset uint16
+}
+
+// MapPackedLayer bounds one plane's independent cache storage. Ends are
+// exclusive. An all-zero descriptor disables caching for that plane.
+type MapPackedLayer struct {
+	PixelStart, PixelEnd, SpanStart, SpanEnd uint16
 }
 
 // MapRasterSpan is one opaque horizontal run in a cached small map.
@@ -101,7 +125,8 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	if image.MapStreaming != ram.MapStreaming {
 		return false
 	}
-	if mapStorageFixed && image.MapStreaming != mapStorageStreaming {
+	// Keep both operands: mapStorageStreaming differs between generated build tags.
+	if mapStorageFixed && image.MapStreaming != mapStorageStreaming { //nolint:staticcheck // S1002: simplifying against the host constant breaks streamed builds.
 		return false
 	}
 	readOnlySheet := sheetStorageReadOnly || image.SheetReadOnly || ram.SheetReadOnly || len(ram.Sheet) == 0
@@ -141,16 +166,69 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 				return false
 			}
 		}
+		if len(ram.SheetSolid) != 0 {
+			if len(ram.SheetSolid) != len(image.Sheet)/64 {
+				return false
+			}
+			for slot, encoded := range ram.SheetSolid {
+				if encoded == 0 {
+					continue
+				}
+				if encoded > 256 {
+					return false
+				}
+				for _, pixel := range image.Sheet[slot*64 : (slot+1)*64] {
+					if pixel != byte(encoded-1) {
+						return false
+					}
+				}
+			}
+		}
 	} else if len(image.Sheet) != sheetN || len(ram.Sheet) != sheetN ||
-		len(image.SheetIndex) != 0 || len(ram.SheetIndex) != 0 {
+		len(image.SheetIndex) != 0 || len(ram.SheetIndex) != 0 || len(ram.SheetSolid) != 0 {
 		return false
 	}
-	if !(mapStorageStreaming || !mapStorageFixed && image.MapStreaming) {
+	if !packedMapStorageValid(image, ram, readOnlySheet, uint8(imageMask)) {
+		return false
+	}
+	if !mapStorageStreaming && (mapStorageFixed || !image.MapStreaming) {
 		return len(ram.Map) == mapN && len(ram.MapChunks) == 0 && len(ram.MapEdits) == 0
 	}
 	return len(ram.Map) == MapCacheCells &&
 		len(ram.MapChunks) == MapCacheSlots &&
 		len(ram.MapEdits) == MapEditCapacity
+}
+
+func packedMapStorageValid(image *AssetImage, ram *AssetMemory, readOnlySheet bool, planeMask uint8) bool {
+	if len(ram.MapPackedPixels) == 0 && len(ram.MapPackedSpans) == 0 {
+		return ram.MapPackedLayers == [4]MapPackedLayer{}
+	}
+	if !readOnlySheet || image.MapStreaming || len(ram.MapPackedPixels) == 0 ||
+		len(ram.MapPackedPixels) >= 65536 || len(ram.MapPackedSpans) == 0 || len(ram.MapPackedSpans) >= 65536 {
+		return false
+	}
+	enabled := false
+	for bg, layer := range ram.MapPackedLayers {
+		if layer == (MapPackedLayer{}) {
+			continue
+		}
+		if planeMask&(1<<uint(bg)) == 0 || layer.PixelStart >= layer.PixelEnd ||
+			layer.SpanStart >= layer.SpanEnd || layer.PixelStart&3 != 0 || layer.PixelEnd&3 != 0 ||
+			int(layer.PixelEnd) > len(ram.MapPackedPixels) || int(layer.SpanEnd) > len(ram.MapPackedSpans) {
+			return false
+		}
+		for _, previous := range ram.MapPackedLayers[:bg] {
+			if previous == (MapPackedLayer{}) {
+				continue
+			}
+			if layer.PixelStart < previous.PixelEnd && previous.PixelStart < layer.PixelEnd ||
+				layer.SpanStart < previous.SpanEnd && previous.SpanStart < layer.SpanEnd {
+				return false
+			}
+		}
+		enabled = true
+	}
+	return enabled
 }
 
 func normalizedMapLayers(layers int) int {

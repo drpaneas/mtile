@@ -1,0 +1,8 @@
+{
+  "template": "coin-quest",
+  "rom_sha256": "9dbdcb63b1d7ebd89a3a9df8d5c6b1cccaa13379ae34d1056b38eb611f6f2bcc",
+  "lcd_frames": 145,
+  "input": "right on zero-based LCD frames 30 through 117",
+  "scale": "3x nearest neighbour",
+  "audio": "not included in still image"
+}

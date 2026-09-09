@@ -16,19 +16,19 @@ const (
 )
 
 const (
-	StatAudioUnderruns = 80 + iota
-	StatAudioQueuedBlocks
-	StatAudioActiveVoices
-	StatAudioPeakVoices
-	StatAudioVoiceSteals
-	StatAudioFailedStarts
-	StatAudioRewinds
-	StatAudioFallbacks
-	StatAudioDroppedCommands
-	StatAudioMaxLateSamples
-	StatAudioMaxServiceCyclesPerSample
-	StatAudioMaxServicePattern
-	StatAudioLastUnderrunPattern
+	StatAudioServiceCalls = 80 + iota
+	StatAudioEventsApplied
+	StatAudioActiveChannels
+	StatAudioChannelReplaces
+	StatAudioPriorityRejects
+	StatAudioCommandsRejected
+	StatAudioQueueOverflows
+	StatAudioMaxServiceCycles
+	StatAudioAbsoluteTick
+	StatAudioCompletedSongs
+	StatAudioMinServiceCycles
+	StatAudioMeanServiceCycles
+	StatAudioMeasuredServices
 )
 
 // PerformanceStats is a snapshot of the most recent measured frame and its
@@ -95,8 +95,8 @@ func (c *Context) ProfilingEnabled() bool {
 	return c != nil && c.profileEnabled
 }
 
-// BeginFrameProfile and EndFrameProfile bracket one generated 60 Hz loop
-// iteration. The frame deadline is one complete 228-line GBA frame.
+// BeginFrameProfile and EndFrameProfile measure one hardware frame in
+// diagnostic cartridges. Generated games use the two-frame pace methods.
 func (c *Context) BeginFrameProfile() {
 	if c != nil && c.profileEnabled {
 		hw.StartFrameCycleCounter()
@@ -182,7 +182,7 @@ func (c *Context) accountPostPaceWork(work, elapsed uint32) {
 func (c *Context) EndFramePace30() {
 }
 
-// Stat is the PICO-8-style stat() builtin. stat(1) is CPU load for the
+// Stat implements the stat() builtin. stat(1) is CPU load for the
 // last tick, where 1.0 means the whole 30 Hz tick (two display frames)
 // was consumed by update+draw+blit; stat(2) is the maximum since boot.
 // stat(80)..stat(92) expose bounded audio counters; unknown ids return 0.
@@ -190,10 +190,8 @@ func (c *Context) Stat(n int) Number {
 	if c == nil {
 		return 0
 	}
-	// Audio v2 owns only the four Game Boy PSG channels. Keep the bounded
-	// stat(80)..stat(92) surface, but report its hardware scheduler instead of
-	// the archived v1 Direct Sound stream whenever a native controller exists.
-	if c.nativeAudio != nil && n >= StatAudioUnderruns && n <= StatAudioLastUnderrunPattern {
+	// stat(80)..stat(92) report the four-channel PSG scheduler.
+	if c.nativeAudio != nil && n >= StatAudioServiceCalls && n <= StatAudioMeasuredServices {
 		return nativeAudioStatValue(n, c.nativeAudio.Stats())
 	}
 	switch n {
@@ -201,12 +199,7 @@ func (c *Context) Stat(n int) Number {
 		return cyclesToTickFraction(c.lastFrameCycles)
 	case 2:
 		return cyclesToTickFraction(c.maxFrameCycles)
-	case StatAudioUnderruns, StatAudioQueuedBlocks, StatAudioActiveVoices,
-		StatAudioPeakVoices, StatAudioVoiceSteals, StatAudioFailedStarts,
-		StatAudioRewinds, StatAudioFallbacks, StatAudioDroppedCommands,
-		StatAudioMaxLateSamples, StatAudioMaxServiceCyclesPerSample,
-		StatAudioMaxServicePattern, StatAudioLastUnderrunPattern:
-		return legacyAudioStatValue(n, c)
+
 	}
 	return 0
 }
@@ -250,112 +243,12 @@ func nativeAudioStatValue(n int, stats audio.NativeStats) Number {
 	return boundedStatCounter(value)
 }
 
-// legacyAudioStatValue keeps archived v1 diagnostics out of the PSG-only
-// generated path. In particular it avoids constructing the old aggregate
-// AudioStats value from stat(), which is large enough to escape under
-// TinyGo -gc=none even when no Direct Sound engine is attached.
-func legacyAudioStatValue(n int, c *Context) Number {
-	var value uint32
-	switch n {
-	case StatAudioUnderruns:
-		if c.audioStream != nil {
-			value = c.audioStream.Stats().Underruns
-		}
-	case StatAudioQueuedBlocks:
-		if c.audioStream != nil {
-			value = uint32(c.audioStream.Stats().QueuedBlocks)
-		}
-	case StatAudioActiveVoices:
-		if c.sfxPlayer != nil {
-			value = uint32(c.sfxPlayer.MixerStats().ActiveVoices)
-		}
-	case StatAudioPeakVoices:
-		if c.sfxPlayer != nil {
-			value = uint32(c.sfxPlayer.MixerStats().PeakActiveVoices)
-		}
-	case StatAudioVoiceSteals:
-		if c.sfxPlayer != nil {
-			value = c.sfxPlayer.MixerStats().VoiceSteals
-		}
-	case StatAudioFailedStarts:
-		if c.sfxPlayer != nil {
-			value = c.sfxPlayer.MixerStats().FailedStarts
-		}
-	case StatAudioRewinds:
-		if c.sfxPlayer != nil {
-			value = c.sfxPlayer.Stats().Rewinds
-		}
-	case StatAudioFallbacks:
-		if c.sfxPlayer != nil {
-			value = c.sfxPlayer.Stats().FallbackCommands
-		}
-	case StatAudioDroppedCommands:
-		if c.sfxPlayer != nil {
-			value = c.sfxPlayer.Stats().DroppedCommands
-		}
-	case StatAudioMaxLateSamples:
-		if c.audioStream != nil {
-			value = uint32(c.audioStream.Stats().MaxLateSamples)
-		}
-	case StatAudioMaxServiceCyclesPerSample:
-		if c.audioStream != nil {
-			value = c.audioStream.Stats().MaxServiceCycles / 256
-		}
-	case StatAudioMaxServicePattern:
-		if c.audioStream != nil {
-			value = uint32(c.audioStream.Stats().MaxServicePattern)
-		}
-	case StatAudioLastUnderrunPattern:
-		if c.audioStream != nil {
-			value = uint32(c.audioStream.Stats().LastUnderrunPattern)
-		}
-	default:
-		return 0
-	}
-	return boundedStatCounter(value)
-}
-
 func boundedStatCounter(value uint32) Number {
 	const maxStatInteger = uint32(0x7fff)
 	if value > maxStatInteger {
 		value = maxStatInteger
 	}
 	return FromInt(int(value))
-}
-
-func audioStatValue(n int, stats AudioStats) Number {
-	var value uint32
-	switch n {
-	case StatAudioUnderruns:
-		value = stats.Stream.Underruns
-	case StatAudioQueuedBlocks:
-		value = uint32(stats.Stream.QueuedBlocks)
-	case StatAudioActiveVoices:
-		value = uint32(stats.Mixer.ActiveVoices)
-	case StatAudioPeakVoices:
-		value = uint32(stats.Mixer.PeakActiveVoices)
-	case StatAudioVoiceSteals:
-		value = stats.Mixer.VoiceSteals
-	case StatAudioFailedStarts:
-		value = stats.Mixer.FailedStarts
-	case StatAudioRewinds:
-		value = stats.SFX.Rewinds
-	case StatAudioFallbacks:
-		value = stats.SFX.FallbackCommands
-	case StatAudioDroppedCommands:
-		value = stats.SFX.DroppedCommands
-	case StatAudioMaxLateSamples:
-		value = uint32(stats.Stream.MaxLateSamples)
-	case StatAudioMaxServiceCyclesPerSample:
-		value = stats.Stream.MaxServiceCycles / 256
-	case StatAudioMaxServicePattern:
-		value = uint32(stats.Stream.MaxServicePattern)
-	case StatAudioLastUnderrunPattern:
-		value = uint32(stats.Stream.LastUnderrunPattern)
-	default:
-		return 0
-	}
-	return boundedStatCounter(value)
 }
 
 // cyclesToTickFraction converts cycles to a 16:16 fraction of the 561,792

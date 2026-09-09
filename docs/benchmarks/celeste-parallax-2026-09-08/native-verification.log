@@ -1,0 +1,64 @@
+=== RUN   TestCelesteParallaxCompareDiagnostic
+    celeste_parallax_compare_diagnostic_test.go:63: evidence: /private/tmp/mtile-celeste-parallax-231w16pk/native-run
+    celeste_parallax_compare_diagnostic_test.go:141: building tilecanvas-baseline
+    celeste_parallax_compare_diagnostic_test.go:141: tilecanvas-baseline ROM=382212 IWRAM=29164/32672 EWRAM=255152 free=6480 work=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3194989358
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline spawn samples=28 frame p50/p95/max=350019/534990/535718 update=7150/163537 draw=220684/367598 prepare+commit=116273/138343 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline spawn displayed cadence: 28 closed ticks/56 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline spawn observed DMA fixed-overhead upper bound=16144 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline route samples=162 frame p50/p95/max=477534/600448/1002364 update=67262/152696 draw=294749/438610 prepare+commit=117382/505817 over_budget=22 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline route displayed cadence: 162 closed ticks/360 LCD scans = 26.88 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline route observed DMA fixed-overhead upper bound=16080 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline complete samples=7 frame p50/p95/max=914399/919019/919019 update=9539/10164 draw=416933/425344 prepare+commit=483733/493205 over_budget=7 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline complete displayed cadence: 7 closed ticks/27 LCD scans = 15.48 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline complete observed DMA fixed-overhead upper bound=9760 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline restart samples=29 frame p50/p95/max=340666/453948/643241 update=7124/352352 draw=219987/249391 prepare+commit=106875/122470 over_budget=1 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline restart displayed cadence: 29 closed ticks/58 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline restart observed DMA fixed-overhead upper bound=10928 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline death samples=14 frame p50/p95/max=315514/426492/426492 update=10795/98315 draw=182096/215527 prepare+commit=119049/137908 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline death displayed cadence: 14 closed ticks/28 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline death observed DMA fixed-overhead upper bound=10832 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-baseline respawn samples=39 frame p50/p95/max=346501/402075/450418 update=9320/99016 draw=223076/253666 prepare+commit=111529/119577 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-baseline respawn displayed cadence: 39 closed ticks/78 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-baseline respawn observed DMA fixed-overhead upper bound=14624 cycles
+    celeste_parallax_compare_diagnostic_test.go:141: tilecanvas-baseline native objects: frames=280 max=58
+    celeste_parallax_compare_diagnostic_test.go:141: building tilecanvas-candidate
+    celeste_parallax_compare_diagnostic_test.go:141: tilecanvas-candidate ROM=379792 IWRAM=29164/32672 EWRAM=255128 free=6504 work=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3089380821
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate spawn samples=28 frame p50/p95/max=351758/540284/542494 update=7126/164104 draw=230584/371003 prepare+commit=112661/142412 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate spawn displayed cadence: 28 closed ticks/57 LCD scans = 29.34 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate spawn observed DMA fixed-overhead upper bound=15552 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate route samples=162 frame p50/p95/max=488908/607805/1021458 update=66535/152074 draw=301376/446729 prepare+commit=116768/514061 over_budget=28 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate route displayed cadence: 162 closed ticks/362 LCD scans = 26.73 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate route observed DMA fixed-overhead upper bound=16576 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate complete samples=7 frame p50/p95/max=928177/943934/943934 update=9537/10960 draw=425422/439719 prepare+commit=492815/503379 over_budget=7 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate complete displayed cadence: 7 closed ticks/27 LCD scans = 15.48 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate complete observed DMA fixed-overhead upper bound=10608 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate restart samples=29 frame p50/p95/max=343552/458918/560186 update=7126/264386 draw=226801/257673 prepare+commit=107681/119494 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate restart displayed cadence: 29 closed ticks/58 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate restart observed DMA fixed-overhead upper bound=10416 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate death samples=14 frame p50/p95/max=315630/411592/411592 update=10801/99081 draw=173732/202929 prepare+commit=135214/147266 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate death displayed cadence: 14 closed ticks/28 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate death observed DMA fixed-overhead upper bound=11968 cycles
+    tilecanvas_diagnostic_test.go:227: tilecanvas-candidate respawn samples=39 frame p50/p95/max=359249/412651/456276 update=9330/99754 draw=233798/263046 prepare+commit=110472/122621 over_budget=0 commit_end_outside_VBlank=0
+    tilecanvas_diagnostic_test.go:230: tilecanvas-candidate respawn displayed cadence: 39 closed ticks/78 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:233: tilecanvas-candidate respawn observed DMA fixed-overhead upper bound=14624 cycles
+    celeste_parallax_compare_diagnostic_test.go:141: tilecanvas-candidate native objects: frames=280 max=61
+    celeste_parallax_compare_diagnostic_test.go:141: building mode4-candidate
+    celeste_parallax_compare_diagnostic_test.go:141: mode4-candidate ROM=376428 IWRAM=30572/32672 EWRAM=235608 free=26024 work=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3022967249
+    tilecanvas_diagnostic_test.go:227: mode4-candidate spawn samples=28 frame p50/p95/max=479255/550894/639525 update=7158/165260 draw=391959/452098 prepare+commit=78300/84267 over_budget=1 commit_end_outside_VBlank=14
+    tilecanvas_diagnostic_test.go:230: mode4-candidate spawn displayed cadence: 28 closed ticks/58 LCD scans = 28.83 updates/s
+    tilecanvas_diagnostic_test.go:227: mode4-candidate route samples=162 frame p50/p95/max=560517/651945/664197 update=66287/155627 draw=414687/509025 prepare+commit=78370/83801 over_budget=79 commit_end_outside_VBlank=95
+    tilecanvas_diagnostic_test.go:230: mode4-candidate route displayed cadence: 162 closed ticks/406 LCD scans = 23.83 updates/s
+    tilecanvas_diagnostic_test.go:227: mode4-candidate complete samples=7 frame p50/p95/max=591339/596524/596524 update=9539/10962 draw=503788/508201 prepare+commit=78395/78395 over_budget=7 commit_end_outside_VBlank=7
+    tilecanvas_diagnostic_test.go:230: mode4-candidate complete displayed cadence: 7 closed ticks/21 LCD scans = 19.91 updates/s
+    tilecanvas_diagnostic_test.go:227: mode4-candidate restart samples=29 frame p50/p95/max=475742/563954/730895 update=7128/264413 draw=390395/454854 prepare+commit=78300/83642 over_budget=2 commit_end_outside_VBlank=21
+    tilecanvas_diagnostic_test.go:230: mode4-candidate restart displayed cadence: 29 closed ticks/60 LCD scans = 28.87 updates/s
+    tilecanvas_diagnostic_test.go:227: mode4-candidate death samples=14 frame p50/p95/max=488031/601071/601071 update=10803/100250 draw=395886/420545 prepare+commit=78337/79861 over_budget=1 commit_end_outside_VBlank=7
+    tilecanvas_diagnostic_test.go:230: mode4-candidate death displayed cadence: 14 closed ticks/28 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:227: mode4-candidate respawn samples=39 frame p50/p95/max=482504/560931/561327 update=8397/99575 draw=395032/453579 prepare+commit=78300/83480 over_budget=0 commit_end_outside_VBlank=5
+    tilecanvas_diagnostic_test.go:230: mode4-candidate respawn displayed cadence: 39 closed ticks/78 LCD scans = 29.86 updates/s
+    celeste_parallax_compare_diagnostic_test.go:141: mode4-candidate native objects: frames=0 max=0
+    celeste_parallax_compare_diagnostic_test.go:146: mode4-candidate/tilecanvas-candidate exact native RGB: updates=280 different_frames=0 pixels=0
+    celeste_parallax_compare_diagnostic_test.go:157: cross-source: core watch mismatches=0 cosmetic watch differences=55 RGB-different frames=280/280; candidate Mode4/hybrid exact=true
+--- PASS: TestCelesteParallaxCompareDiagnostic (30.54s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	30.884s

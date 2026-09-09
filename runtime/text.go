@@ -389,7 +389,7 @@ func (c *Context) printGlyph(ch byte, sx, sy *int, left int, value, background b
 //go:section .iwram
 func (c *Context) drawGlyph(ch byte, sx, sy int, value byte) {
 	columns := glyphColumns(ch)
-	// Fast path: when the whole 4x5 PICO-8 wide glyph box is inside the clip rectangle
+	// Fast path: when the whole 4x5 glyph box is inside the clip rectangle
 	// (the overwhelmingly common case for HUD text), skip the per-pixel clip
 	// test and write straight into the framebuffer. The bits loop also exits
 	// as soon as a column has no remaining set pixels.

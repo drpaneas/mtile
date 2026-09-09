@@ -285,7 +285,7 @@ func writeGeneratedPackage(t *testing.T, got string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mod := fmt.Sprintf("module generated\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
+	mod := fmt.Sprintf("module generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(mod), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -1633,292 +1633,6 @@ func TestDiscardedBuiltinArgsRunSideEffects(t *testing.T) {
 	runGeneratedHarness(t, got, harness, "TestDiscardedBuiltinArgsRunSideEffects")
 }
 
-func TestSFXBuiltinLowersToRuntimeAndGeneratedAudioShell(t *testing.T) {
-	options := Options{
-		SFX: []assetsync.TargetSFX{{
-			ID: 7, Speed: 8, StepCount: 7, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop,
-		}},
-		SFXStep: []assetsync.TargetSFXStep{
-			{PhaseStep: 115343360, Volume: 256, Waveform: "triangle", Effect: "vibrato"},
-			{PhaseStep: 122188000, Volume: 224, Waveform: "tilted-saw", Effect: "none"},
-			{PhaseStep: 137167144, Volume: 128, Waveform: "square", Effect: "drop"},
-			{PhaseStep: 163120000, Volume: 96, Waveform: "saw", Effect: "fade-in"},
-			{PhaseStep: 183120000, Volume: 64, Waveform: "pulse", Effect: "fade-out"},
-			{PhaseStep: 205520000, Volume: 48, Waveform: "organ", Effect: "arpeggio-fast"},
-			{PhaseStep: 230686720, Volume: 32, Waveform: "phaser", Effect: "arpeggio-slow"},
-		},
-	}
-	got, err := Transpile("sfx.lua", `
-function _init()
-  sfx(7, 2)
-end
-`, options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, want := range []string{
-		`"github.com/drpaneas/mtile/runtime/audio"`,
-		"var sfxROM",
-		"var sfxStepROM",
-		"Kind:audio.SourceTiltedSaw",
-		"Kind:audio.SourceOrgan",
-		"Kind:audio.SourcePhaser",
-		"Effect:audio.SFXEffectVibrato",
-		"Effect:audio.SFXEffectDrop",
-		"Effect:audio.SFXEffectFadeIn",
-		"Effect:audio.SFXEffectFadeOut",
-		"Effect:audio.SFXEffectArpeggioFast",
-		"Effect:audio.SFXEffectArpeggioSlow",
-		"var sfxStream audio.MonoStream",
-		"var sfxPlayer audio.SFXPlayer",
-		"var sfxMixer audio.Mixer",
-		"sfxPlayer.SetMasterVolume(256)",
-		"c.SFXV(",
-		"ctx.AttachAudioStream(&sfxStream)",
-		"sfxStream.StartSFX",
-		"sfxStream.Service(audio.StreamPageCount)",
-	} {
-		if !strings.Contains(got, want) {
-			t.Errorf("generated SFX source missing %q", want)
-		}
-	}
-	if got, want := strings.Count(got, "sfxStream.Service(audio.StreamPageCount)"), 4; got != want {
-		t.Errorf("generated SFX service-point count = %d, want %d (frame start, post-update, post-draw, post-copy)", got, want)
-	}
-	harness := `package main
-
-import (
-	rt "github.com/drpaneas/mtile/runtime"
-	"testing"
-)
-
-func TestGeneratedSFXInitCall(t *testing.T) {
-	var c rt.Context
-	if !sfxMixer.Init(8) || !sfxPlayer.Init(&sfxMixer, sfxROM[:], sfxStepROM[:]) {
-		t.Fatal("generated audio data failed runtime validation")
-	}
-	c.AttachSFX(&sfxPlayer)
-	var g Game
-	g.Init(&c)
-	stats := c.SFXStats()
-	if stats.ActiveChannels != 1 || stats.Starts != 1 {
-		t.Fatalf("SFX stats = %+v", stats)
-	}
-	state, ok := sfxPlayer.Channel(2)
-	if !ok || !state.Active || state.SFXID != 7 {
-		t.Fatalf("channel 2 = %+v ok=%t", state, ok)
-	}
-}
-`
-	runGeneratedHarness(t, got, harness, "TestGeneratedSFXInitCall")
-}
-
-func TestMusicBuiltinLowersPatternROMAndRuntimeCall(t *testing.T) {
-	options := Options{
-		SFX: []assetsync.TargetSFX{{
-			ID: 7, Speed: 8, StepCount: 1, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop,
-		}},
-		SFXStep: []assetsync.TargetSFXStep{{PhaseStep: 115343360, Volume: 256, Waveform: "triangle", Effect: "none"}},
-		Music: []assetsync.TargetMusicPattern{{
-			ID: 3, Channels: [assetsync.MusicChannels]int8{7, -1, -1, -1}, Next: 3, DurationSamples: 1024,
-		}},
-	}
-	got, err := Transpile("music.lua", `function _init() music(3, 250) end`, options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, want := range []string{
-		"var musicROM", "audio.MusicPattern", "sfxPlayer.InitMusic(musicROM[:])", "c.MusicV(",
-	} {
-		if !strings.Contains(got, want) {
-			t.Errorf("generated music source missing %q", want)
-		}
-	}
-	harness := `package main
-
-import (
-	rt "github.com/drpaneas/mtile/runtime"
-	"testing"
-)
-
-func TestGeneratedMusicInitCall(t *testing.T) {
-	var c rt.Context
-	if !sfxMixer.Init(8) || !sfxPlayer.Init(&sfxMixer, sfxROM[:], sfxStepROM[:]) || !sfxPlayer.InitMusic(musicROM[:]) {
-		t.Fatal("generated audio data failed runtime validation")
-	}
-	c.AttachSFX(&sfxPlayer)
-	var g Game
-	g.Init(&c)
-	state := sfxPlayer.MusicState()
-	if !state.Active || state.PatternID != 3 || state.SamplesRemaining != 1024 || state.FadeSamplesRemaining != 4096 {
-		t.Fatalf("music state = %+v", state)
-	}
-}
-`
-	runGeneratedHarness(t, got, harness, "TestGeneratedMusicInitCall")
-}
-
-func TestSampleBuiltinLowersPCMROMAndRuntimeCall(t *testing.T) {
-	options := Options{
-		Samples: []assetsync.TargetSample{{
-			ID: 9, DataLength: 4, LoopStart: 1, LoopEnd: 3, Loop: true, Volume: 128, Priority: 44,
-		}},
-		SamplePCM:         []int8{-128, -32, 32, 127},
-		AudioMasterVolume: 96, AudioSettingsPresent: true,
-	}
-	got, err := Transpile("sample.lua", `function _init() sample(9) end`, options)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, want := range []string{
-		"var samplePCMROM", "var sampleROM", "audio.SampleDefinition",
-		"sfxMixer.Init(12)", "sfxPlayer.SetMasterVolume(96)", "sfxPlayer.InitSamples(sampleROM[:], samplePCMROM[:])", "c.SampleV(",
-	} {
-		if !strings.Contains(got, want) {
-			t.Errorf("generated sample source missing %q", want)
-		}
-	}
-	harness := `package main
-
-import (
-	rt "github.com/drpaneas/mtile/runtime"
-	"testing"
-)
-
-func TestGeneratedSampleInitCall(t *testing.T) {
-	var c rt.Context
-	if !sfxMixer.Init(12) || !sfxPlayer.Init(&sfxMixer, sfxROM[:], sfxStepROM[:]) || !sfxPlayer.InitSamples(sampleROM[:], samplePCMROM[:]) {
-		t.Fatal("generated sample data failed runtime validation")
-	}
-	c.AttachSFX(&sfxPlayer)
-	var g Game
-	g.Init(&c)
-	stats := c.SFXStats()
-	if stats.ActiveSampleVoices != 1 || stats.SampleStarts != 1 {
-		t.Fatalf("sample stats = %+v", stats)
-	}
-}
-`
-	runGeneratedHarness(t, got, harness, "TestGeneratedSampleInitCall")
-}
-
-func TestStaticAudioIDsValidateAgainstCompiledProjectAssets(t *testing.T) {
-	options := Options{
-		SFX: []assetsync.TargetSFX{{
-			ID: 7, Speed: 8, StepCount: 1, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop,
-		}},
-		SFXStep: []assetsync.TargetSFXStep{{PhaseStep: 1, Volume: 1, Waveform: "triangle", Effect: "none"}},
-		Music: []assetsync.TargetMusicPattern{{
-			ID: 3, Channels: [assetsync.MusicChannels]int8{7, -1, -1, -1}, Next: 3, DurationSamples: 128,
-		}},
-		Samples:   []assetsync.TargetSample{{ID: 9, DataLength: 2, Volume: 256}},
-		SamplePCM: []int8{-1, 1},
-	}
-	valid := `
-function _init()
-  sfx(7)
-  music(3)
-  sample(9)
-  sfx(-1)
-  music(-1)
-  sample(-1)
-end
-`
-	if _, err := Transpile("valid-audio-ids.lua", valid, options); err != nil {
-		t.Fatalf("valid static audio IDs failed: %v", err)
-	}
-
-	tests := []struct {
-		name string
-		call string
-		want string
-	}{
-		{name: "sfx", call: "sfx(6)", want: "sfx ID 6 is not present in assets/audio/sfx.json"},
-		{name: "music", call: "music(2)", want: "music ID 2 is not present in assets/audio/music.json"},
-		{name: "sample", call: "sample(8)", want: "sample ID 8 is not present in assets/audio/samples/manifest.json"},
-		{name: "negative", call: "sfx(-2)", want: "sfx ID -2 is not present"},
-		{name: "fractional", call: "sample(9.5)", want: "sample ID must be an integer, got 9.5"},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			source := "function _init()\n  " + test.call + "\nend\n"
-			_, err := Transpile("static-audio-id.lua", source, options)
-			if err == nil || !strings.Contains(err.Error(), "static-audio-id.lua:2:3") || !strings.Contains(err.Error(), test.want) {
-				t.Fatalf("Transpile(%q) error = %v, want position and %q", test.call, err, test.want)
-			}
-		})
-	}
-}
-
-func TestDynamicAndAudioLessIDsRemainRuntimeChecked(t *testing.T) {
-	options := Options{
-		SFX:     []assetsync.TargetSFX{{ID: 0, Speed: 1, StepCount: 1, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop}},
-		SFXStep: []assetsync.TargetSFXStep{{PhaseStep: 1, Volume: 1, Waveform: "square", Effect: "none"}},
-	}
-	dynamic := `
-function _init()
-  local id = 99
-  sfx(id)
-  music(id)
-  sample(id)
-  sfx(98 + 1)
-end
-`
-	if _, err := Transpile("dynamic-audio-id.lua", dynamic, options); err != nil {
-		t.Fatalf("dynamic IDs must remain runtime checked: %v", err)
-	}
-	audioLess := `function _init() sfx(99) music(99) sample(99) end`
-	if got, err := Transpile("audio-less.lua", audioLess, Options{}); err != nil {
-		t.Fatalf("audio-less compatibility calls must fail closed at runtime: %v", err)
-	} else if strings.Contains(got, "var sfxStream") {
-		t.Fatal("audio-less compatibility calls unexpectedly linked the audio shell")
-	}
-}
-
-func TestSFXBuiltinRequiresIDAndRejectsMalformedTargetData(t *testing.T) {
-	if _, err := Transpile("sfx.lua", `function _init() sfx() end`, Options{}); err == nil || !strings.Contains(err.Error(), "sfx expects 1..4") {
-		t.Fatalf("zero-argument sfx error = %v", err)
-	}
-	_, err := Transpile("sfx.lua", `function _init() sfx(0) end`, Options{
-		SFX:     []assetsync.TargetSFX{{ID: 0, Speed: 1, StepCount: 1, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop}},
-		SFXStep: []assetsync.TargetSFXStep{{PhaseStep: 1, Volume: 1, Waveform: "custom", Effect: "none"}},
-	})
-	if err == nil || !strings.Contains(err.Error(), "malformed SFX step") {
-		t.Fatalf("malformed target error = %v", err)
-	}
-}
-
-func TestMusicBuiltinRejectsMalformedTargetData(t *testing.T) {
-	options := Options{
-		SFX: []assetsync.TargetSFX{{
-			ID: 0, Speed: 1, StepCount: 1, LoopStart: assetsync.SFXNoLoop, LoopEnd: assetsync.SFXNoLoop,
-		}},
-		SFXStep: []assetsync.TargetSFXStep{{PhaseStep: 1, Volume: 1, Waveform: "square", Effect: "none"}},
-		Music: []assetsync.TargetMusicPattern{{
-			ID: 0, Channels: [assetsync.MusicChannels]int8{0, -1, -1, -1}, Next: 1, DurationSamples: 128,
-		}},
-	}
-	if _, err := Transpile("music.lua", `function _init() music(0) end`, options); err == nil || !strings.Contains(err.Error(), "missing pattern") {
-		t.Fatalf("malformed music target error = %v", err)
-	}
-}
-
-func TestSampleBuiltinRequiresIDAndRejectsMalformedTargetData(t *testing.T) {
-	if _, err := Transpile("sample.lua", `function _init() sample() end`, Options{}); err == nil || !strings.Contains(err.Error(), "sample expects 1..3") {
-		t.Fatalf("zero-argument sample error = %v", err)
-	}
-	if _, err := Transpile("sample.lua", `function _init() sample(0) end`, Options{SamplePCM: []int8{1}}); err == nil || !strings.Contains(err.Error(), "requires definitions") {
-		t.Fatalf("orphan PCM error = %v", err)
-	}
-	options := Options{
-		Samples:   []assetsync.TargetSample{{ID: 0, DataLength: 2, Loop: true, LoopStart: 1, LoopEnd: 1, Volume: 256}},
-		SamplePCM: []int8{-1, 1},
-	}
-	if _, err := Transpile("sample.lua", `function _init() sample(0) end`, options); err == nil || !strings.Contains(err.Error(), "sample loop") {
-		t.Fatalf("malformed sample target error = %v", err)
-	}
-}
-
 // TestTrailingMultiReturnExpandsInTableLiteral verifies that a multi-return
 // call as the last field of a table constructor expands into all of its
 // results (Lua semantics: `{1, pair()}` with `pair() = 10, 20` builds a
@@ -2134,7 +1848,7 @@ func buildGeneratedWithTinyGo(t *testing.T, got string) {
 		t.Fatal(err)
 	}
 	outROM := filepath.Join(dir, "generated.gba")
-	cmd := exec.Command("tinygo", "build", "-target", target, "-gc=none", "-opt=2", "-print-allocs=.", "-o", outROM, ".")
+	cmd := exec.Command("tinygo", "build", "-target", target, "-gc=none", "-opt=2", "-print-allocs-cover=.", "-o", outROM, ".")
 	cmd.Dir = dir
 	cmd.Env = generatedGoCacheEnv()
 	var out bytes.Buffer
@@ -2144,6 +1858,9 @@ func buildGeneratedWithTinyGo(t *testing.T, got string) {
 			t.Skipf("TinyGo compiler cache is outside the writable test sandbox: %s", out.String())
 		}
 		t.Fatalf("generated package does not compile with TinyGo: %v\n%s", err, out.String())
+	}
+	if !strings.Contains(out.String(), "mode: set\n") {
+		t.Fatalf("TinyGo did not emit an allocation coverage report:\n%s", out.String())
 	}
 	if allocs := nonZeroTinyGoAllocations(out.String()); len(allocs) != 0 {
 		t.Fatalf("generated TinyGo package has target heap allocations:\n%s", strings.Join(allocs, "\n"))

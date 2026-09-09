@@ -1,0 +1,24 @@
+=== RUN   TestToolchain042RuntimeDiagnostic
+=== RUN   TestToolchain042RuntimeDiagnostic/hash-mode0
+    toolchain_042_diagnostic_test.go:89: baseline median=197967 p95=197967 max=197967 rom=27632 iwram=11220 ewram_free=108572 heap=3188 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=174031 p95=174031 max=174031 rom=27616 iwram=11160 ewram_free=108572 heap=3188 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=12.09% differing_pixels=0
+=== RUN   TestToolchain042RuntimeDiagnostic/hash-mode4
+    toolchain_042_diagnostic_test.go:89: baseline median=339705 p95=339705 max=339705 rom=28816 iwram=13784 ewram_free=71452 heap=3188 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=315769 p95=315769 max=315769 rom=28800 iwram=13724 ewram_free=71452 heap=3188 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=7.05% differing_pixels=0
+=== RUN   TestToolchain042RuntimeDiagnostic/strings-mode0
+    toolchain_042_diagnostic_test.go:89: baseline median=61309 p95=61309 max=61309 rom=35504 iwram=11676 ewram_free=107748 heap=1068 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=61661 p95=61661 max=61661 rom=35556 iwram=11728 ewram_free=107748 heap=1068 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=-0.57% differing_pixels=0
+=== RUN   TestToolchain042RuntimeDiagnostic/strings-mode4
+    toolchain_042_diagnostic_test.go:89: baseline median=197281 p95=197281 max=197281 rom=36848 iwram=14240 ewram_free=70628 heap=1068 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=197633 p95=197633 max=197633 rom=36900 iwram=14292 ewram_free=70628 heap=1068 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=-0.18% differing_pixels=0
+--- PASS: TestToolchain042RuntimeDiagnostic (18.71s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/hash-mode0 (4.59s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/hash-mode4 (4.50s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/strings-mode0 (4.66s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/strings-mode4 (4.72s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	19.070s

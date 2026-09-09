@@ -1,0 +1,48 @@
+=== RUN   TestToolchain042RuntimeDiagnostic
+=== RUN   TestToolchain042RuntimeDiagnostic/camera-mode0
+    toolchain_042_diagnostic_test.go:89: baseline median=1242 p95=1242 max=1242 rom=25416 iwram=10208 ewram_free=241672 heap=0 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=1242 p95=1242 max=1242 rom=25416 iwram=10208 ewram_free=241672 heap=0 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=0.00% differing_pixels=0
+=== RUN   TestToolchain042RuntimeDiagnostic/camera-mode4
+    toolchain_042_diagnostic_test.go:89: baseline median=187039 p95=189539 max=189539 rom=27844 iwram=15128 ewram_free=185692 heap=0 missed=0
+    toolchain_042_diagnostic_test.go:89: candidate median=187039 p95=189539 max=189539 rom=27844 iwram=15128 ewram_free=185692 heap=0 missed=0
+    toolchain_042_diagnostic_test.go:92: saving=0.00% differing_pixels=0
+=== RUN   TestToolchain042RuntimeDiagnostic/celeste
+    toolchain_042_diagnostic_test.go:115: evidence: /private/tmp/mtile-llvm22-perf/key-kind/paired-3049479464
+    toolchain_042_diagnostic_test.go:116: building baseline
+    toolchain_042_diagnostic_test.go:116: baseline ROM=362100 IWRAM=29680/32672 EWRAM=235624 free=26008 work=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-487583535
+    tilecanvas_diagnostic_test.go:227: baseline spawn samples=28 frame p50/p95/max=467297/544228/624685 update=7019/158520 draw=381150/443201 prepare+commit=78280/83614 over_budget=1 commit_end_outside_VBlank=23
+    tilecanvas_diagnostic_test.go:230: baseline spawn displayed cadence: 28 closed ticks/58 LCD scans = 28.83 updates/s
+    tilecanvas_diagnostic_test.go:227: baseline route samples=162 frame p50/p95/max=550243/643580/668750 update=66431/146678 draw=404199/498046 prepare+commit=78352/85257 over_budget=59 commit_end_outside_VBlank=78
+    tilecanvas_diagnostic_test.go:230: baseline route displayed cadence: 162 closed ticks/390 LCD scans = 24.81 updates/s
+    tilecanvas_diagnostic_test.go:227: baseline complete samples=7 frame p50/p95/max=579986/588279/588279 update=9423/10040 draw=491820/499626 prepare+commit=78383/78810 over_budget=7 commit_end_outside_VBlank=7
+    tilecanvas_diagnostic_test.go:230: baseline complete displayed cadence: 7 closed ticks/21 LCD scans = 19.91 updates/s
+    tilecanvas_diagnostic_test.go:227: baseline restart samples=29 frame p50/p95/max=468555/553697/794080 update=7019/342017 draw=383137/442506 prepare+commit=78285/83480 over_budget=1 commit_end_outside_VBlank=22
+    tilecanvas_diagnostic_test.go:230: baseline restart displayed cadence: 29 closed ticks/59 LCD scans = 29.36 updates/s
+    tilecanvas_diagnostic_test.go:227: baseline death samples=14 frame p50/p95/max=450284/602641/602641 update=10698/96757 draw=362322/427116 prepare+commit=78357/79859 over_budget=1 commit_end_outside_VBlank=8
+    tilecanvas_diagnostic_test.go:230: baseline death displayed cadence: 14 closed ticks/28 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:227: baseline respawn samples=39 frame p50/p95/max=473002/549862/554962 update=8349/98340 draw=384525/440077 prepare+commit=78279/83910 over_budget=0 commit_end_outside_VBlank=21
+    tilecanvas_diagnostic_test.go:230: baseline respawn displayed cadence: 39 closed ticks/78 LCD scans = 29.86 updates/s
+    toolchain_042_diagnostic_test.go:116: baseline native objects: frames=0 max=0
+    toolchain_042_diagnostic_test.go:117: building candidate
+    toolchain_042_diagnostic_test.go:117: candidate ROM=362140 IWRAM=29720/32672 EWRAM=235624 free=26008 work=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2022128128
+    tilecanvas_diagnostic_test.go:227: candidate spawn samples=28 frame p50/p95/max=467281/544924/625346 update=7019/159189 draw=381150/443201 prepare+commit=78280/83614 over_budget=1 commit_end_outside_VBlank=23
+    tilecanvas_diagnostic_test.go:230: candidate spawn displayed cadence: 28 closed ticks/58 LCD scans = 28.83 updates/s
+    tilecanvas_diagnostic_test.go:227: candidate route samples=162 frame p50/p95/max=550283/643580/665746 update=66461/147257 draw=404207/498038 prepare+commit=78352/85257 over_budget=61 commit_end_outside_VBlank=79
+    tilecanvas_diagnostic_test.go:230: candidate route displayed cadence: 162 closed ticks/390 LCD scans = 24.81 updates/s
+    tilecanvas_diagnostic_test.go:227: candidate complete samples=7 frame p50/p95/max=580004/588281/588281 update=9425/10836 draw=492257/499626 prepare+commit=78383/79000 over_budget=7 commit_end_outside_VBlank=7
+    tilecanvas_diagnostic_test.go:230: candidate complete displayed cadence: 7 closed ticks/21 LCD scans = 19.91 updates/s
+    tilecanvas_diagnostic_test.go:227: candidate restart samples=29 frame p50/p95/max=469528/553705/794098 update=7019/342035 draw=383841/441810 prepare+commit=78285/83480 over_budget=1 commit_end_outside_VBlank=22
+    tilecanvas_diagnostic_test.go:230: candidate restart displayed cadence: 29 closed ticks/59 LCD scans = 29.36 updates/s
+    tilecanvas_diagnostic_test.go:227: candidate death samples=14 frame p50/p95/max=452522/602324/602324 update=10698/97071 draw=362367/427253 prepare+commit=78327/79859 over_budget=1 commit_end_outside_VBlank=8
+    tilecanvas_diagnostic_test.go:230: candidate death displayed cadence: 14 closed ticks/28 LCD scans = 29.86 updates/s
+    tilecanvas_diagnostic_test.go:227: candidate respawn samples=39 frame p50/p95/max=472573/549870/550361 update=8349/98340 draw=385171/440806 prepare+commit=78279/83457 over_budget=0 commit_end_outside_VBlank=21
+    tilecanvas_diagnostic_test.go:230: candidate respawn displayed cadence: 39 closed ticks/78 LCD scans = 29.86 updates/s
+    toolchain_042_diagnostic_test.go:117: candidate native objects: frames=0 max=0
+    toolchain_042_diagnostic_test.go:118: baseline/candidate exact native RGB: updates=280 different_frames=0 pixels=0
+--- PASS: TestToolchain042RuntimeDiagnostic (23.56s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/camera-mode0 (4.16s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/camera-mode4 (4.31s)
+    --- PASS: TestToolchain042RuntimeDiagnostic/celeste (14.95s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	23.910s

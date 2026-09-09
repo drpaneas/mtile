@@ -62,3 +62,16 @@ func TestLegacyObjectsOptInDoesNotAddSceneSpecificRuntime(t *testing.T) {
 		}
 	}
 }
+
+func TestPreviewRuntimeLoggingIsOptIn(t *testing.T) {
+	for _, renderer := range []transpiler.Renderer{transpiler.RendererMode0, transpiler.RendererMode4} {
+		report := transpiler.RendererReport{Selected: renderer}
+		for _, debug := range []bool{false, true} {
+			service := Service{Debug: debug}
+			tags := service.runtimeBuildTags(report)
+			if strings.Contains(tags, "mtile_preview_log") != debug || strings.Contains(tags, "mgbadebug") {
+				t.Fatalf("debug=%v renderer=%v: unexpected tags %q", debug, renderer, tags)
+			}
+		}
+	}
+}

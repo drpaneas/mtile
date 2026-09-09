@@ -12,8 +12,7 @@ const (
 var activeNativeController *Controller
 
 func claimNativeController(controller *Controller) bool {
-	if activeMonoStream != nil || activeStereoStream != nil ||
-		activeNativeController != nil && activeNativeController != controller {
+	if activeNativeController != nil && activeNativeController != controller {
 		return false
 	}
 	activeNativeController = controller
@@ -43,4 +42,18 @@ func serviceNativeTimerForTest() {
 	if activeNativeController != nil {
 		activeNativeController.serviceCommit()
 	}
+}
+
+type audioInterruptState uint8
+
+// Mirror the GBA interrupt master-enable register so host tests can verify
+// that every critical-section exit preserves the caller's interrupt state.
+func disableAudioInterrupts() audioInterruptState {
+	state := audioInterruptState(hw.GetReg16(hw.INTERRUPT_IME))
+	hw.SetReg16(hw.INTERRUPT_IME, 0)
+	return state
+}
+
+func restoreAudioInterrupts(state audioInterruptState) {
+	hw.SetReg16(hw.INTERRUPT_IME, uint16(state))
 }

@@ -243,17 +243,6 @@ func RenderNativeSFXPreview(library audio.Library, clipID, tempo int, muteMask u
 	return preview, nil
 }
 
-func nativePreviewTerminalSample(value int16, level, ratio int) int8 {
-	level = min(max(level, 0), 7)
-	switch ratio {
-	case 25, 50, 100:
-	default:
-		ratio = 100
-	}
-	scaled := int(value) * (level + 1) * ratio / (4 * 8 * 100)
-	return int8(min(max(scaled, -127), 127))
-}
-
 // nativePreviewHighPass models the AC-coupled output used by Game Boy
 // emulators and hardware. The 511/512 coefficient is the same bass-shift=9
 // integrator leak used by binjgb/mGBA's blip buffer and removes the large DC

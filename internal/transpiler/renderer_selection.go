@@ -85,6 +85,10 @@ type RendererReport struct {
 	// planes have been removed. Build uses it to select one specialized runtime
 	// path instead of retaining a per-access compact/streaming branch.
 	MapStreaming bool
+	// MapRasterDisabled proves that generation emitted no small-map raster
+	// storage. Build can omit that optional cache while retaining cell and
+	// packed-map rendering. A zero-valued report preserves the generic path.
+	MapRasterDisabled bool
 	// NativeAudioLinked reports whether reachable source uses a native audio
 	// builtin and the generated cartridge therefore contains the PSG runtime
 	// and authored audio records. Merely authoring assets does not link them.

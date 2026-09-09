@@ -40,7 +40,7 @@ sfx(54) -- play dash recharge
 
 ## 2. Η μετατροπή των αρχικών δεδομένων είναι αναπαραγώγιμη
 
-Το `tests/import_audio.py` χρησιμοποιεί τον υπάρχοντα parser του repository
+Το `tests/import_audio.py` χρησιμοποιεί τον τοπικό parser `tests/pico_source.py`
 για τα sections `__sfx__` και `__music__`. Κρατά το πλήρες αρχικό υλικό
 στο `assets/audio/source-pico8.json`: 2.016 note cells, 42 patterns και
 checksum του αρχικού audio section. Κάθε παραγόμενο event κρατά και την

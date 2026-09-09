@@ -18,7 +18,6 @@ import (
 	"github.com/drpaneas/mtile/internal/sourcebundle"
 	"github.com/drpaneas/mtile/internal/transpiler"
 	runtimebundle "github.com/drpaneas/mtile/runtime"
-	"github.com/drpaneas/mtile/runtime/audio"
 )
 
 const GameFileName = "game.lua"
@@ -103,17 +102,17 @@ type Event struct {
 }
 
 type Result struct {
-	ROMPath            string
-	ROMSize            int
-	MapPath            string
-	EWRAMUsed          uint64
-	EWRAMFree          uint64
-	IWRAMUsed          uint64
-	HeapLinked         bool
-	WorkDir            string
-	AudioROMBytes      int
-	AudioVoices        int
-	AudioMasterVolume  int
+	ROMPath       string
+	ROMSize       int
+	MapPath       string
+	EWRAMUsed     uint64
+	EWRAMFree     uint64
+	IWRAMUsed     uint64
+	HeapLinked    bool
+	WorkDir       string
+	AudioROMBytes int
+	AudioVoices   int
+
 	AudioProfile       string
 	AudioPSGRatio      int
 	Entry              string
@@ -256,16 +255,9 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
-		Palette:              assets.PaletteROM[:],
-		SFX:                  assets.SFXROM,
-		SFXStep:              assets.SFXStepROM,
-		Music:                assets.MusicROM,
-		Samples:              assets.SampleROM,
-		SamplePCM:            assets.SamplePCMROM,
-		AudioMasterVolume:    uint16(assets.AudioSettings.MasterVolume),
-		AudioSettingsPresent: assets.AudioVersion == assetsync.AudioSettingsSchemaVersion,
-		NativeAudio:          assets.NativeAudio,
-		Debug:                s.Debug,
+		Palette:     assets.PaletteROM[:],
+		NativeAudio: assets.NativeAudio,
+		Debug:       s.Debug,
 	})
 	if err != nil {
 		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
@@ -373,24 +365,17 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	audioVoices := 0
 	audioProfile := ""
 	audioPSGRatio := 0
-	audioMasterVolume := assets.AudioSettings.MasterVolume
-	if len(assets.SFXROM) != 0 || len(assets.MusicROM) != 0 || len(assets.SampleROM) != 0 {
-		audioVoices = audio.SFXMixerVoices
-		if len(assets.SampleROM) != 0 {
-			audioVoices = audio.SFXSampleMixerVoices
-		}
-	}
+
 	if rendererReport.NativeAudioLinked {
 		audioVoices = 4
 		audioProfile = assets.NativeAudio.Settings.Profile
 		audioPSGRatio = assets.NativeAudio.Settings.PSGRatio
-		audioMasterVolume = 0
 	}
 	result = Result{
 		ROMPath: outputPath, ROMSize: len(rom),
 		EWRAMUsed: ewramUsed, EWRAMFree: ewramFree, IWRAMUsed: iwramUsed,
 		HeapLinked:    rendererReport.HeapLinked,
-		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices, AudioMasterVolume: audioMasterVolume,
+		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices,
 		AudioProfile: audioProfile, AudioPSGRatio: audioPSGRatio,
 		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals, GeneratedGo: generated,
 		RendererRequested: rendererReport.Requested,
@@ -516,9 +501,7 @@ func validateLinkedAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMas
 	if mapPlaneMask&^validMask != 0 {
 		return 0, fmt.Errorf("map plane mask %#02x exceeds %d logical layers", mapPlaneMask, layers)
 	}
-	audioBytes := uint64(assetsync.CompiledAudioROMBytes(
-		assets.SFXROM, assets.SFXStepROM, assets.MusicROM, assets.SampleROM, assets.SamplePCMROM,
-	))
+	var audioBytes uint64
 	if includeNativeAudio && assets.NativeAudio != nil {
 		audioBytes += uint64(assetsync.CompiledNativeAudioROMBytes(assets.NativeAudio.Library))
 	}
@@ -567,7 +550,7 @@ func checkedAssetProduct(a, b int, name string) (uint64, error) {
 }
 
 func (s Service) writeWorkspace(workDir string, generated string) error {
-	module := "module mtile-generated\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => " + filepath.ToSlash(s.RuntimeDir) + "\n"
+	module := "module mtile-generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => " + filepath.ToSlash(s.RuntimeDir) + "\n"
 	if err := os.WriteFile(filepath.Join(workDir, "go.mod"), []byte(module), 0o644); err != nil {
 		return fmt.Errorf("write generated go.mod: %w", err)
 	}
@@ -616,6 +599,12 @@ func runtimeBuildTags(report transpiler.RendererReport) string {
 		tags = mode0BuildTags(report) + "," + mapTag
 	} else if !report.MapStreaming {
 		tags = "mtile_map_compact"
+	}
+	if report.Selected != transpiler.RendererMode0 && report.MapRasterDisabled {
+		if tags != "" {
+			tags += ","
+		}
+		tags += "mtile_no_map_raster"
 	}
 	if !report.HeapLinked {
 		if tags != "" {

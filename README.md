@@ -1,514 +1,137 @@
 # Mtile
 
-[![CI](https://github.com/drpaneas/mtile/actions/workflows/ci.yml/badge.svg)](https://github.com/drpaneas/mtile/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/drpaneas/mtile.svg)](https://pkg.go.dev/github.com/drpaneas/mtile)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+**Make Game Boy Advance games in Lua.**
 
-Mtile is a Lua-to-Game Boy Advance toolchain. You write a game in a small
-Lua dialect, paint sprites and maps, author sound and music in the bundled
-editor, and build a native GBA ROM. Mode 4 is the compatibility default; a
-compile-time Mode 0 backend is available for statically proven tile/BG/OBJ
-projects, and `auto` safely falls back to Mode 4. Fresh projects request
-`auto`; older projects without a renderer setting retain Mode 4.
+Write your game, draw its sprites and maps, compose hardware sound, and build
+an actual `.gba` cartridge—all from one desktop editor.
 
-The screen is the GBA's real **240x160** bitmap. Sprites are 8x8 cells on an
-8 bits-per-pixel sheet. Maps are a grid of 16-bit sprite IDs. The default
-palette is **aurora**, a built-in 256-color table taken from
-[Aurora on Lospec](https://lospec.com/palette-list/aurora).
+[Get started](#quick-start) · [Documentation](docs/README.md) · [Examples](examples/README.md) · [Contribute](CONTRIBUTING.md)
 
-The Lua API (`cls`, `spr`, `map`, `btn`, `print`, ...) is heavily inspired by
-[PIGO8](https://drpaneas.com/pigo8/), a PICO-8-flavored game API for Go, here
-retargeted from a fantasy console to real GBA hardware.
+**New to game development?** [Make your first game with Coin Quest](docs/first-game.md):
+a playable starter with sprites, sound, and four guided lessons.
 
-```
-game.lua + assets  →  generated Go  →  TinyGo  →  game.gba
-```
+![Four independently scrolling backgrounds and a foreground sprite from Mtile's background-layers example, running in mGBA.](docs/media/background-layers.gif)
 
-## Requirements
+*An actual ROM built from [background-layers](examples/background-layers).
+[Still image](docs/media/background-layers.png) · [Capture details](docs/media/README.md)*
 
-The desktop release bundle requires only [Go](https://go.dev/dl/) 1.25 or
-newer as a language/toolchain dependency. It includes the pinned TinyGo
-toolchain, the Mtile runtime, the Lua frontend, and a headless mGBA player.
-TinyGo, Lua, mGBA, CMake, SDL, and Qt do not need to be installed separately.
-Normal desktop graphics and audio libraries still come from the operating
-system.
+## Why Mtile?
 
-A source checkout additionally needs TinyGo 0.41.1 on `PATH` for ROM builds
-and CMake plus a C compiler to build the in-editor player.
+- **Lua to native code.** A small, PICO-8-inspired Lua dialect compiles through
+  Go and TinyGo. Your cartridge does not run a Lua interpreter.
+- **A complete editing loop.** Sprite, map, audio, and code workspaces share
+  one project, with build diagnostics and a playable mGBA preview.
+- **Real GBA graphics and sound.** A 240×160 display, indexed sprites, layered
+  maps, and the four Game Boy hardware sound channels available on the GBA.
+- **Inspectable output.** Keep the generated Go, inspect memory and cycle
+  budgets, and run the resulting ROM in an emulator or on GBA hardware.
 
-On Linux the editor uses [Ebitengine](https://ebitengine.org/), which needs
-the X11/GL development headers. On Debian/Ubuntu:
-
-```sh
-sudo apt install libc6-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev \
-  libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
+```text
+game.lua + assets → generated Go → TinyGo → game.gba
 ```
 
-macOS and Windows need no extra packages.
+**Status: early development.** APIs and asset formats can change. Games target
+about 30 updates per second; actual performance depends on the workload.
+Mode 4 provides software rendering, while Mode 0 uses hardware tiles and
+sprites for supported projects. `auto` selects Mode 0 only when its compatibility
+and cost checks pass. See [renderer support](docs/render-modes.md) and
+[measured limits](docs/performance.md). Physical-GBA audio validation is
+[still pending](docs/audio/hardware-signoff.md).
 
-## Installation
+## Quick start
 
-For the simplest installation, unpack the matching Mtile release bundle and
-put its `bin/` directory on `PATH`. The bundle is relocatable; keep its
-`toolchains/` directory beside `bin/`.
-
-To build from source instead:
+The source workflow requires **Go 1.27.1+** and **TinyGo 0.42.0**. The editor also
+needs **CMake**, a **C compiler**, and platform graphics/audio dependencies.
+Follow [installation](docs/getting-started.md#requirements) for your system.
 
 ```sh
 git clone --recurse-submodules https://github.com/drpaneas/mtile.git
 cd mtile
-go build -o mtile ./cmd/mtile
-go build -o mtile-editor ./cmd/editor
-```
-
-Put both binaries on `PATH`, or keep them next to each other. `mtile edit`
-looks for a sibling named `mtile-editor` or `editor`, then the
-`MTILE_EDITOR` environment variable, then `go run ./cmd/editor` from a
-source checkout.
-
-You can also run everything with `go run` from the checkout and skip the
-install entirely (that is what the examples below do).
-
-Source builds find this checkout's `runtime/` automatically. Installed
-binaries materialize their embedded runtime into a private versioned cache;
-`mtile build -runtime /path/to/runtime` remains available for development.
-
-## Quick start
-
-From this repository:
-
-```sh
+go run ./cmd/mtile doctor
 go run ./cmd/mtile new mygame
-go run ./cmd/mtile edit mygame
 go run ./cmd/mtile build mygame
 ```
 
-That creates `mygame/` and opens one IDE with Sprite, Map, Audio Studio, and
-Develop workspaces. Develop keeps Lua source and the live cartridge side by
-side: edit `game.lua`, then press **Build + Reload**. The IDE writes
-`mygame/game.gba` and runs it in the same window. A build automatically opens
-the Build log while a compact state banner above the GBA screen reports
-progress, failure, or the running preview.
-
-You can still run the ROM externally or copy it to real hardware:
+Your first ROM is `mygame/game.gba`. Open the project in the editor:
 
 ```sh
-mgba mygame/game.gba        # or mgba-qt, or drag the file onto mGBA
+go run ./cmd/mtile edit mygame
 ```
 
-Click the embedded GBA screen so it receives input. Arrow keys are the D-pad;
-GBA A/B map to Z/X. Press Escape to return keyboard focus to source code.
+Choose **Develop**, edit `game.lua`, and press **Build + Reload**. Click the
+GBA preview to play: arrow keys move, Z/X are A/B, and Escape returns focus to
+code. The first source-checkout preview builds the bundled emulator helper.
 
-## Commands
+Prefer an existing project? Try `go run ./cmd/mtile edit examples/hello`.
+For a guided game, use `go run ./cmd/mtile new -template coin-quest mygame`
+instead of the blank-project command above; choose an unused directory name.
+The [getting-started guide](docs/getting-started.md) also covers installed
+bundles, command-line builds, and troubleshooting.
 
-```
-mtile new   [options] project-dir
-mtile build [options] project-dir
-mtile edit  [options] project-dir
-mtile render-audio [options] project-dir
-```
+## A small game fits in a small file
 
-`new` writes a native project and refuses to overwrite an existing directory.
-
-| Flag | Default | Meaning |
-| --- | --- | --- |
-| `-width` | 240 | Sprite-sheet width in pixels |
-| `-height` | 160 | Sprite-sheet height in pixels |
-| `-map-width` | 30 | Map width in 8x8 cells |
-| `-map-height` | 20 | Map height in 8x8 cells |
-
-`build` transpiles `game.lua`, embeds the assets, and links a ROM.
-
-| Flag | Default | Meaning |
-| --- | --- | --- |
-| `-o` | `project-dir/game.gba` | Output ROM path |
-| `-tinygo` | managed bundle, then `PATH` | TinyGo executable |
-| `-runtime` | checkout or embedded runtime | Runtime module directory |
-| `-keep-work` | off | Keep the temporary generated Go workspace |
-| `-renderer` | project setting | One-build override: `mode4`, `mode0`, or `auto` |
-
-`edit` opens the Ebitengine IDE. Audio Studio is one native four-channel Music
-Lab: its piano/drum editor, CH1–CH4 hardware inspector, live-performance
-controls, retained takes, and named song order remain visible together.
-Develop is a multi-file Lua workstation with a real project tree, document
-tabs, quick-open, selection, undo/redo, search, completion, syntax color, live
-parser diagnostics, generated-Go inspection, structured build output, and a
-persistent interactive mGBA preview. Its inspector reads the real PSG
-registers, CPU cycles, linker-measured EWRAM/IWRAM use, and bounded debug
-mailbox from the running cartridge; it does not invent CPU, memory, channel,
-or watch values. Host audio buffering is labelled separately from cartridge
-audio so a PSG-only game is never presented as using Direct Sound PCM.
-
-Click the tabs, press `1` through `4`, or use Tab to switch workspaces. Saves
-go to disk on mode switch, Ctrl/Cmd+S, normal quit, and—when enabled—before a
-build. The shared GBA-inspired shell offers CLEAN, SOFT, and FULL visual effect
-levels (`F6`). **Settings** persists that choice together with LCD treatment,
-preview volume, autosave-before-build, and compact/comfort/large interface
-text. See the [IDE guide](docs/ide.md) for controls and architecture.
-
-| Flag | Default | Meaning |
-| --- | --- | --- |
-| `-editor` | auto | Editor executable |
-
-`render-audio` runs the same four-channel software PSG renderer used by the
-Music Lab Play button and writes a deterministic 16-bit WAV. It is useful for
-checking a song without a GBA, comparing editor output, or attaching an audio
-preview to a review.
-
-| Flag | Default | Meaning |
-| --- | --- | --- |
-| `-o` | `project-dir/music-preview.wav` | Output WAV path |
-| `-song` | 0 | Song ID to render |
-
-## Project layout
-
-```
-mygame/
-├── game.lua
-├── src/                         # optional required Lua modules
-│   └── player.lua
-├── project.json                 # palette, renderer policy, optional Lua entry
-└── assets/
-    ├── spritesheet.json         # 8bpp pixels, 8x8 sprite cells, flags
-    ├── map.json                 # legacy BG0 grid or versioned BG0-BG3 planes
-    ├── palettes/
-    │   └── aurora.json          # 16 or 256 RGB15 colors
-    └── audio/
-        ├── settings.json        # Game Boy PSG output settings
-        ├── sounds.json          # typed CH1–CH4 hardware sounds
-        └── music.json           # clips, sections, and songs
-```
-
-Sheet and map sizes are project data. There is no shared sheet/map address
-space: `sset` never writes map cells, and `mset` never writes sheet pixels.
-Projects contain one shared sheet and either a legacy BG0 map or four versioned
-BG0-BG3 planes. The Map Editor selects and hides planes like a layer stack;
-`map()` draws every non-empty authored plane, while every non-empty
-`map(bg, ...)` call uses its first argument as the selected plane. Old
-positional calls migrate by prefixing the intended BG number. Map data access
-similarly accepts `mget(bg,x,y)` and `mset(bg,x,y,id)`, while the legacy shorter
-forms remain exact BG0 aliases.
-See the [graphics model](docs/graphics-model.md) and
-[map asset schema](docs/map-assets.md) for ordering, migration, masks,
-parallax, mutation, and Mode 0 BG/OBJ behavior.
-
-Generated games whose Lua source never calls `sset` compact the sprite sheet
-by 8x8 cell: only non-empty cells are copied into EWRAM, and a two-byte index
-preserves every declared sprite ID. Empty or unused capacity therefore costs
-two bytes per ID instead of 64 pixel bytes. If any function calls `sset`, the
-build automatically emits the traditional complete mutable EWRAM sheet;
-`sget` and `fset` do not require that copy. This selection is exact because
-the dialect has no first-class functions or dynamic builtin lookup.
-
-A compact sheet can contain at most 65,535 non-empty cells (the existing map
-ID limit is 65,536 cells including empty ID 0). `spr`, `sspr`, `map`, and
-`sget` preserve logical sheet coordinates; the compact representation is an
-internal build/runtime detail.
-
-## Game loop
-
-`game.lua` may define:
+Replace the generated `game.lua` with this complete example. Move the circle
+with the left and right arrow keys:
 
 ```lua
-function _init()
-end
+x = 120
 
 function _update()
+  if btn(0) then x -= 2 end
+  if btn(1) then x += 2 end
+  x = mid(4, x, 235)
 end
 
 function _draw()
   cls(0)
-  print("hello gba", 8, 8, 7)
+  circfill(x, 80, 4, 7)
+  print("hello, gba", 8, 8, 7)
 end
 ```
 
-`_update` and `_draw` run once every two display frames (30 Hz), matching
-PICO-8's native `_update` rate: each rendered image is shown for exactly two
-scans of the GBA's 59.73 Hz panel, paced by a hardware timer so the cadence
-never wavers. `_init` runs once at startup. `_update60` is rejected; the
-Mode 4 software framebuffer cannot honestly sustain it (see
-[docs/performance.md](docs/performance.md)).
+Mtile uses 16:16 fixed-point numbers and statically bound calls. It supports
+a deliberate subset of Lua; it is not a drop-in Lua 5.x or PICO-8 cartridge
+runner. Read the [language reference](docs/reference.md#lua-dialect) before
+porting a larger game.
 
-Numbers are 16:16 fixed point. `sin(0.25)` is `-1` because Y grows downward.
+## Explore the examples
 
-## Input
+| Start with | What you will learn |
+| --- | --- |
+| [Hello](examples/hello) | Input, sprites, and a mapped background |
+| [Multiple files](examples/multi-file) | Organizing a game with `require()` |
+| [Background layers](examples/background-layers) | Four map planes and parallax |
+| [Coin block](examples/coin-block) | Animation and changing a map cell |
+| [Hardware melody](examples/audio-gb-melody) | Four-channel sound and music |
 
-`btn(i)` and `btnp(i)` expose all ten GBA controls. Indices 0..5 retain
-the original Mtile mapping for compatibility; the remaining native buttons
-are appended:
+The [example index](examples/README.md) separates learning projects from
+benchmarks and research projects.
 
-| Index | GBA | `runtime` Go constant |
-| ---: | --- | --- |
-| 0 | Left | `ButtonLeft` |
-| 1 | Right | `ButtonRight` |
-| 2 | Up | `ButtonUp` |
-| 3 | Down | `ButtonDown` |
-| 4 | B | `ButtonB` |
-| 5 | A | `ButtonA` |
-| 6 | Start | `ButtonStart` |
-| 7 | Select | `ButtonSelect` |
-| 8 | L | `ButtonL` |
-| 9 | R | `ButtonR` |
+## Documentation and contributions
 
-Held-button repeat for `btnp`: first extra fire at 15 update ticks, then
-every 4 - PICO-8's native schedule at the same 30 Hz rate.
+The [static guide website](website/README.md) brings the tutorials and API
+reference together with category browsing and search. Build it locally or host
+the generated files on any static host.
 
-## Drawing
+- [Getting started](docs/getting-started.md): installation, first ROM, and editor preview.
+- [IDE guide](docs/ide.md): sprite, map, audio, and code controls.
+- [Reference](docs/reference.md): commands, project structure, input, and Lua builtins.
+- [Audio guide](docs/audio/README.md): hardware sounds and music.
+- [Performance](docs/performance.md): frame budgets, memory limits, and benchmark evidence.
+- [Contributing](CONTRIBUTING.md): repository map, checks, and focused ways to help.
 
-The compatibility renderer draws into a 240x160 Mode 4 software framebuffer:
+Bug reports with a small reproducer, clearer examples, documentation fixes,
+and measured runtime improvements are welcome. For help, see
+[Support](SUPPORT.md). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+If Mtile is useful to you, a star helps other game developers discover it.
 
-- Color 0 is transparent for `spr` / `sspr` / `map` until `palt` changes it
-- `cls` does not change the current draw color
-- `print` uses a 6x8 cell font (40 columns by 20 rows)
-- `print(str, color)` vs `print(str, x, y [, color])`
+## Credits and license
 
-The exhaustive [render-mode compatibility matrix](docs/render-modes.md)
-classifies every builtin as renderer-independent, compatible with both
-backends, conditionally compatible with Mode 0, or Mode 4 only. Mode 0 supports
-statically proven map layers, camera/streaming/mutations, bounded sprites and
-text, palette remaps, full clip reset, and aligned unscaled `sspr`; unsupported
-forms fail before TinyGo. `auto` combines that semantic proof with the
-benchmark-backed `tile-v1` cost profile: bounded `sset`/`mset` remain eligible,
-including literal-layer `mset(bg,...)`, while runtime `fset`, dynamic-layer
-mutation, and unbounded mutation fall back exactly to Mode 4 with a diagnostic.
-The corresponding
-[engineering and benchmark plan](docs/render-mode-plan.md) defines the semantic
-and performance gates.
+Mtile is [MIT licensed](LICENSE). Its API is inspired by
+[PIGO8](https://drpaneas.com/pigo8/) and PICO-8. The default palette is
+[DawnBringer's Aurora](https://lospec.com/palette-list/aurora).
+[TinyGo](docs/third-party/tinygo.md) compiles the cartridge, and
+[mGBA](docs/third-party/mgba.md) powers the preview. Bundled components retain
+their own licenses; see [third-party notices](docs/third-party/README.md).
 
-## Audio
-
-Audio v2 is the active runtime, compiler, asset format, and editor contract.
-Legacy PICO-compatible or PCM assets are rejected with an unsupported-format
-diagnostic rather than silently converted. The historical software-mixer
-prototype and its evidence remain archived in
-[`docs/audio/legacy/v1/`](docs/audio/legacy/v1/).
-
-Opening Audio Studio in an older graphics-only project initializes empty v2
-PSG assets. Projects with actual legacy audio remain unchanged and require an
-explicit conversion.
-
-Audio v2 is a deliberate hard reset around the four Game Boy PSG channels in
-the Game Boy Advance: CH1 pulse with sweep, CH2 pulse, CH3 programmable wave,
-and CH4 noise. The GBA hardware generates the sound; Mtile only schedules
-bounded register updates at 256 Hz. Direct Sound, FIFO streaming, PCM samples,
-software mixing, and audio DMA are explicitly deferred so this version stays
-small, predictable, and inexpensive on the ARM7 CPU.
-
-One runtime controller owns the shared sound registers, Timer 0, and CH1–CH4.
-The v2 asset model contains `sounds.json`, `music.json`, and `settings.json`
-only. It does not contain a sample library or PCM API.
-
-The implemented design is documented in the [audio overview](docs/audio/README.md),
-[engineering plan](docs/audio/plan.md), [hardware model](docs/audio/gba-hardware.md),
-and [editor specification](docs/audio/editor.md). Physical-GBA listening and
-capture is the remaining release sign-off gate.
-
-## Lua dialect
-
-Mtile Lua is a small language, not full Lua 5.x. Supported extras:
-
-- `?expr` print shorthand at the start of a line
-- `!=` alongside `~=`
-- compound assignment (`+=`, `<<=`, ...), including table fields
-- binary literals (`0b1010`) and integer division (`\`)
-- bitwise operators `& | ^^ ~ << >> >>> <<> >><`
-- single-line `if (condition) statement`
-
-Mtile treats the first statically observed numeric type of a global, local,
-numeric-for counter, arithmetic expression, or record field as permanent and
-lowers it to native 16:16 storage. Static field access (`object.x`) likewise
-assumes a stable table layout after its first checked lookup. Code that changes
-those types or record shapes is outside the optimized language contract; use a
-separate binding or bracket indexing (`object["x"]`) for dynamic values.
-Fixed global array literals containing only numbers also use compact 4-byte
-numeric elements when they are accessed only through direct indexing or
-`#array`, never escape, and are not shadowed or explicitly assigned a
-non-number. Such arrays retain Lua's one-based indexing but their element type
-is permanent; escaping, mixed, or otherwise unproven arrays keep ordinary
-12-byte `rt.Value` table slots.
-User-function parameters and return positions also lower to native numbers
-when every static call site supplies numbers, every path returns a number in
-that position, and the function cannot fall through. Multi-return functions
-are analyzed slot by slot, so `(number, string, number)` becomes
-`(rt.Number, rt.Value, rt.Number)`. Mixed, missing, recursive-unknown, or
-otherwise unproven positions retain general Lua values. A specialized
-parameter or result position must remain numeric for the duration of the call.
-Lua expression-list adjustment is preserved at assignments, returns, table
-constructors, and calls: only a bare final call expands to its declared result
-count; parentheses collapse it to one value; a zero-result final call supplies
-no value but still executes; missing destinations are nil-filled and excess
-results are discarded. Builtin arity checks use that effective list rather
-than the number of written argument expressions.
-Calls to transitively proven non-allocating user functions bypass the temporary
-GC-root wrapper. Functions that may create/grow tables or strings, contain an
-unknown allocation effect, or participate in an unproven recursive cycle keep
-the protected call path. The transpiler proves the complete transitive root
-budget and rejects an over-capacity call chain or a recursive cycle whose live
-roots can grow without bound; it never defers that case to a silent runtime
-nil/OOM fallback. This changes call cost, not Lua-visible semantics.
-
-Arithmetic uses the runtime's signed 16:16 domain. `%` follows Lua floor-modulo
-sign rules, string ordering is bytewise lexicographic for both static and heap
-strings, and `^` currently requires an integer literal exponent (including a
-parenthesized or negated literal) so the fixed-point result is exact and
-bounded. Dynamic or fractional exponents fail at their source position.
-Table literals, static strings, and their generated registries are checked
-against runtime capacities before Go generation.
-
-Calls are statically bound. Function/builtin values, dynamic calls, local
-function declarations, namespace aliases/escapes, and later mutation of a
-statically lowered function or namespace are rejected explicitly. Every
-explicitly initialized table that backs such a namespace must use a fresh table
-constructor, including nested namespace fields; this prevents an older table
-alias from mutating statically lowered dispatch. An implicit method `self` may
-access and mutate ordinary data fields, but it cannot escape, be rebound, or be
-shadowed. A genuinely local data table may shadow a namespace for ordinary
-field/index access, but calling through that shadow is still dynamic and
-unsupported. Top-level locals have declaration-order
-visibility and become persistent Game fields; nested block locals remain
-lexical, including compiler-generated temporaries for compound assignment.
-
-Rejected at parse time: closures, `goto` / labels, variadic functions, and
-`string.format`. PICO-8-style `foreach(table, function_name)` is supported as
-statement syntax and lowers to an `all(table)` loop; the callback must be a
-static user-function or builtin name, not a closure or dynamic expression.
-See the dedicated [`foreach` guide](docs/loops/foreach.md) for semantics,
-examples, performance guidance, and mutation pitfalls.
-
-## Built-in functions
-
-The function set and calling conventions follow
-[PIGO8](https://drpaneas.com/pigo8/)'s PICO-8-style API.
-Renderer compatibility and the exact Mode 0 restrictions for every function
-are documented in [docs/render-modes.md](docs/render-modes.md).
-
-Graphics: `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
-`circfill`, `spr`, `sspr`, `map`, `camera`, `clip`, `pal`, `palt`, `color`,
-`cursor`, `print`
-
-Assets: `sget`, `sset`, `fget`, `fset`, `mget`, `mset`
-
-Input: `btn`, `btnp`
-
-Math: `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`,
-`atan2`, `sqrt`, `rnd`, `srand`, `band`, `bor`, `bxor`, `bnot`, `shl`,
-`shr`, `lshr`, `rotl`, `rotr`
-
-Tables: `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach`
-
-Strings: `sub`, `tostr`, `tonum`, `chr`, `ord`
-
-Time: `t`, `time`, `stat`
-
-`stat(n)` reports runtime telemetry: `stat(1)` is last tick's CPU load and
-`stat(2)` is the worst since boot, each as a 0..1 fraction of the 30 Hz
-budget (1.0 = the whole tick consumed by update, draw, and blit).
-
-Native Audio v2 games expose these bounded integer counters:
-
-| ID | Audio value |
-| ---: | --- |
-| `80` | 256 Hz scheduler service calls |
-| `81` | Applied hardware events |
-| `82` | Active PSG channels |
-| `83` | Channel ownership replacements |
-| `84` | Priority rejections |
-| `85` | Rejected commands |
-| `86` | Command-queue overflows |
-| `87` | Maximum scheduler service cycles |
-| `88` | Absolute 96-PPQN song tick |
-| `89` | Completed songs |
-| `90` | Minimum measured scheduler cycles |
-| `91` | Mean measured scheduler cycles |
-| `92` | Measured scheduler services |
-
-Missing audio returns zero. Cumulative values saturate at 32,767 so they stay
-representable as 16:16 integers instead of wrapping negative.
-
-## Examples
-
-From the repository root:
-
-```sh
-go run ./cmd/mtile build examples/hello/
-```
-
-- [`examples/hello`](examples/hello) - D-pad moves an 8x8 sprite on a mapped
-  background. In mGBA, click the window and use the arrow keys.
-- [`examples/multi-file`](examples/multi-file) - explicit `require()` across
-  `game.lua`, `src/player.lua`, and `src/hud.lua`, with two persistent global
-  state tables visible in Develop's `GLOBALS n / 256` budget.
-- [`examples/mapdemo`](examples/mapdemo) - maximum-width continuous 16:16
-  single-BG world (4095x20 cells; 136 full screens plus 15 tiles), using the
-  legacy map asset as BG0 and the short `map(0,x,y)` API, with a full-screen redraw
-  every tick and live CPU readout (~62% measured).
-- [`examples/background-layers`](examples/background-layers) - four authored
-  BG0-BG3 planes with an editor isolation walkthrough, independent camera
-  speeds, parallax, and a foreground hardware object.
-- [`examples/coin-block`](examples/coin-block) - one animated background map
-  cell which awards one coin and becomes a stable used tile, using only the
-  current `mset()`, `map()`, and `spr()` APIs.
-- [`examples/color`](examples/color) - `print` smoke project from `mtile new`
-- [`examples/audio-gb-melody`](examples/audio-gb-melody) - compact native
-  CH1–CH4 looping melody.
-- [`examples/audio-gb-song`](examples/audio-gb-song) - multi-section native
-  Game Boy song using all four hardware channels.
-- [`examples/audio-gb-editor`](examples/audio-gb-editor) - Music Lab
-  save/build/run round-trip fixture.
-- [`examples/audio-sfx`](examples/audio-sfx) - legacy v1 interactive SFX fixture
-- [`examples/audio-music`](examples/audio-music) - legacy v1 pattern fixture
-- [`examples/audio-samples`](examples/audio-samples) - legacy v1 WAV/PCM fixture
-- [`examples/audio-arpeggio-conformance`](examples/audio-arpeggio-conformance)
-  is a legacy v1 deterministic capture fixture.
-- [`examples/audio-zelda-fortune-teller`](examples/audio-zelda-fortune-teller)
-  is a legacy v1 PICO-8 compatibility fixture.
-- [`examples/audio-zelda-underworld`](examples/audio-zelda-underworld)
-  is a legacy v1 PICO-8 compatibility fixture.
-
-The PICO/PCM examples are archived migration fixtures. The active v2 compiler
-intentionally rejects their legacy audio assets.
-
-## Performance
-
-The frame budget, measured cycle costs for every drawing operation on real
-ARM7TDMI timing, hard limits (heap, tables, strings, map edits), and
-good/bad practice for hitting 60 Hz are documented in
-[docs/performance.md](docs/performance.md). The approved native-GBA audio
-architecture, single-screen editor, hardware-resource plan, reference ROMs,
-benchmarks, and staged release gates are in the
-[audio engineering plan](docs/audio/plan.md). Host regression benchmarks run
-with `go test -bench=. -benchmem` in `runtime/`; on-target cycle
-measurements build with `make benchspike-gba`.
-
-## Development
-
-The CLI module is `github.com/drpaneas/mtile`. The GBA runtime is a second
-module at `github.com/drpaneas/mtile/runtime` with no editor or TinyGo
-host-tool dependencies. Hardware access goes through `runtime/hw/`.
-
-```sh
-go test ./...                  # CLI module
-go test ./...                  # runtime module (run inside runtime/)
-golangci-lint run ./...
-```
-
-TinyGo ROM tests skip when `tinygo` is not on `PATH`. CI runs tests and lint
-on Linux and macOS, and builds the example ROMs with a pinned TinyGo; see
-[.github/workflows/ci.yml](.github/workflows/ci.yml).
-
-`runtime/target-gba.json` and `runtime/target-gba-smoke.json` are generated
-by `make generate` in `runtime/` and contain machine-local paths; they are
-gitignored and regenerated on demand.
-
-## Acknowledgements
-
-- The game API is heavily inspired by
-  [PIGO8](https://drpaneas.com/pigo8/), which brings PICO-8-style functions
-  (`cls`, `spr`, `map`, `btn`, `print`, ...) to Go.
-- The default 256-color palette is
-  [Aurora](https://lospec.com/palette-list/aurora), created by DawnBringer
-  as part of the GrafX2 Toolbox, from the Lospec palette list.
-
-## License
-
-[MIT](LICENSE)
+Mtile is an independent homebrew project, unaffiliated with Nintendo.

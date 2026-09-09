@@ -220,6 +220,40 @@ func TestReadOnlySheetRejectsWrongOptionalRAMLength(t *testing.T) {
 	}
 }
 
+func TestReadOnlySheetValidatesSolidMetadata(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		metadata []uint16
+		mixed    bool
+		want     bool
+	}{
+		{"absent", nil, true, true},
+		{"unknown", []uint16{0}, true, true},
+		{"solid-255", []uint16{256}, false, true},
+		{"wrong-color", []uint16{255}, false, false},
+		{"mixed", []uint16{256}, true, false},
+		{"out-of-range", []uint16{257}, false, false},
+		{"wrong-length", []uint16{0, 0}, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			image, memory := fixtureAssets()
+			image.SheetReadOnly, memory.SheetReadOnly = true, true
+			image.SheetIndex, memory.SheetIndex = []uint16{1}, make([]uint16, 1)
+			memory.SheetSolid = tc.metadata
+			for i := range image.Sheet {
+				image.Sheet[i] = 255
+			}
+			if tc.mixed {
+				image.Sheet[len(image.Sheet)-1] = 254
+			}
+			var c Context
+			if got := c.Init(image, memory); got != tc.want {
+				t.Fatalf("metadata accepted=%v want=%v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestSsetEightBitGoldenAnd255(t *testing.T) {
 	t.Parallel()
 	img, ram := fixtureAssets()

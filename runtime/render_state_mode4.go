@@ -6,6 +6,9 @@ package runtime
 // build tag makes renderer selection a link-time memory decision, not a hot
 // runtime branch.
 type renderState struct {
+	mapPackedReady     [4]bool
+	mapPackedFailed    [4]bool
+	mapPackedSpanCount [4]int
 	framebuffer        [FramebufferSize]byte
 	mapRasterReady     bool
 	mapRasterFailed    bool
@@ -13,12 +16,15 @@ type renderState struct {
 	mapRasterSpanCount int
 }
 
-func (c *Context) resetRendererState()                        { c.invalidateMapRaster() }
-func (c *Context) sheetMutated(x, y int)                      { c.invalidateMapRaster() }
-func (c *Context) mapMutated(x, y int, id uint16)             { c.invalidateMapRaster() }
-func (c *Context) mapLayerMutated(layer, x, y int, id uint16) { c.invalidateMapRaster() }
-func (c *Context) flagsMutated(id int)                        {}
-func (c *Context) drawPaletteMutated()                        {}
+func (c *Context) resetRendererState()            { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
+func (c *Context) sheetMutated(x, y int)          { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
+func (c *Context) mapMutated(x, y int, id uint16) { c.invalidateMapRaster(); c.invalidateMapPacked(0) }
+func (c *Context) mapLayerMutated(layer, x, y int, id uint16) {
+	c.invalidateMapRaster()
+	c.invalidateMapPacked(layer)
+}
+func (c *Context) flagsMutated(id int) {}
+func (c *Context) drawPaletteMutated() {}
 
 func (c *Context) rendererPaletteIndex(index int) byte {
 	return c.displayPal[index]

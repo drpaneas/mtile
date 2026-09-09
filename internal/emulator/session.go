@@ -103,7 +103,7 @@ type Session struct {
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
-	stderr bytes.Buffer
+	stderr diagnosticLog
 	mu     sync.Mutex
 	closed bool
 }

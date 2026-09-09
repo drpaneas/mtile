@@ -4,8 +4,7 @@ package runtime
 
 import "github.com/drpaneas/mtile/runtime/hw"
 
-// Mode 4 is the only shipping renderer. The public API's future Mode 0
-// compatibility contract lives in internal/transpiler/render_modes.go and
+// The public API's Mode 0/Mode 4 compatibility contract lives in internal/transpiler/render_modes.go and
 // docs/render-modes.md; CPU telemetry must never switch this hardware state
 // adaptively because tile and bitmap VRAM do not preserve equivalent state.
 

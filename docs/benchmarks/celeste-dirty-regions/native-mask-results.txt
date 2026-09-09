@@ -1,0 +1,1 @@
+1779 cases PASS: raw-frame masks, full VRAM guards, framebuffer guards, source/mask immutability, ARM/Thumb ABI. Full native fill61831cycles; full DMA bus floor76800cycles.

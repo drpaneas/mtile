@@ -71,7 +71,7 @@ func TestStageProjectWithSourceOverridesGameAndSkipsRunOutputs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(staged)
+	defer func() { _ = os.RemoveAll(staged) }()
 	game, err := os.ReadFile(filepath.Join(staged, "game.lua"))
 	if err != nil || string(game) != "new" {
 		t.Fatalf("staged game = %q, %v", game, err)

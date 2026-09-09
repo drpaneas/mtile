@@ -37,7 +37,7 @@ func TestStaticHashHintDoesNotGrowMetadata(t *testing.T) {
 	type previousStaticString struct {
 		Ptr  unsafe.Pointer
 		Len  uint16
-		hash uint32
+		Hash uint32
 	}
 	if unsafe.Sizeof(StaticString{}) != unsafe.Sizeof(previousStaticString{}) {
 		t.Fatal("slot hint grew static string metadata")
@@ -111,13 +111,14 @@ func TestStaticHashHintFixtureReference(t *testing.T) {
 						}
 					}
 				}
-				if pass == 0 {
+				switch pass {
+				case 0:
 					for i := 0; i < capacity; i += 3 {
 						if err = c.TableSet(table, keys[i], NilVal()); err != HeapOK {
 							t.Fatal(err)
 						}
 					}
-				} else if pass == 1 {
+				case 1:
 					for i := capacity - 1; i >= 0; i-- {
 						if err = c.TableSet(table, keys[i], IntVal(i+1)); err != HeapOK {
 							t.Fatal(err)

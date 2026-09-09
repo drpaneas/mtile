@@ -58,8 +58,12 @@ func TestMode0CommitBudgetAddsBoundedNativeAudioIRQReserve(t *testing.T) {
 		t.Fatal("warm native-audio commit must still fit one line into VBlank")
 	}
 	c := &Context{paletteReady: true, nativeAudio: new(audio.Controller)}
-	if got := c.mode0RequiredCommitCycles(); got != warmIRQ {
-		t.Fatalf("clean native-audio reserve %d want %d", got, warmIRQ)
+	want := warmIRQ
+	if !mode0SheetImmutable {
+		want = mode0CommitReserve
+	}
+	if got := c.mode0RequiredCommitCycles(); got != want {
+		t.Fatalf("clean native-audio reserve %d want %d", got, want)
 	}
 	warm := uint32(22000)
 	for layer := 0; layer < mode0LayerCount; layer++ {
@@ -67,7 +71,11 @@ func TestMode0CommitBudgetAddsBoundedNativeAudioIRQReserve(t *testing.T) {
 		c.mode0MapDirty[layer] = true
 		warm += 9000
 	}
-	if got, want := c.mode0RequiredCommitCycles(), mode0CommitWithNativeAudio(warm); got != want {
+	want = mode0CommitWithNativeAudio(warm)
+	if !mode0SheetImmutable {
+		want = mode0CommitReserve
+	}
+	if got := c.mode0RequiredCommitCycles(); got != want {
 		t.Fatalf("dirty maps plus native audio: reserve %d want %d", got, want)
 	}
 }

@@ -120,6 +120,9 @@ type Options struct {
 	// DisableNumericLengths retains boxed lengths of ordinary tables/strings.
 	// The runtime's # result is always numeric, even for unsupported operands.
 	DisableNumericLengths bool
+	// DisableIteratorLengthHoisting rescans the array prefix on every all()
+	// iteration, including loops proven not to mutate any array slots.
+	DisableIteratorLengthHoisting bool
 	// DisableStaticTableLiterals retains generic hash insertion for all
 	// constructor fields. It is the rollback/A-B path for literal slot plans.
 	DisableStaticTableLiterals bool
@@ -172,18 +175,9 @@ type Options struct {
 	// Palette is the expanded 256-entry BGR555 palette for native projects.
 	// An omitted palette preserves the runtime's built-in palette behavior for
 	// the earlier transpiler tests and small hand-written cartridges.
-	Palette   []uint16
-	SFX       []assetsync.TargetSFX
-	SFXStep   []assetsync.TargetSFXStep
-	Music     []assetsync.TargetMusicPattern
-	Samples   []assetsync.TargetSample
-	SamplePCM []int8
-	// Audio settings are explicit only on native project builds. Tests and
-	// hand-written Options values retain unity through the zero-value fallback.
-	AudioMasterVolume    uint16
-	AudioSettingsPresent bool
-	// NativeAudio selects the strict PSG-only v2 contract. It is mutually
-	// exclusive with every legacy SFX/music/sample field above.
+	Palette []uint16
+
+	// NativeAudio supplies the four-channel PSG asset contract.
 	NativeAudio *assetsync.NativeAudioAssets
 	// Debug emits the fixed preview mailbox and runtime instrumentation. It is
 	// off for normal CLI/release cartridge builds.
@@ -278,6 +272,7 @@ func TranspileWithReport(sourceName, source string, opts Options) (string, Rende
 	generated, metadata, err := generateWithMetadata(chunk, opts)
 	report.HeapLinked = metadata.heapLinked
 	report.SheetReadOnly = metadata.sheetReadOnly
+	report.MapRasterDisabled = metadata.mapRasterDisabled
 	report.StaticStrings = metadata.staticStrings
 	report.Mode0TextKeys = metadata.mode0TextKeys
 	return generated, report, err
@@ -327,10 +322,11 @@ func Generate(chunk *luaparser.Chunk, opts Options) (string, error) {
 }
 
 type generationMetadata struct {
-	heapLinked    bool
-	sheetReadOnly bool
-	staticStrings int
-	mode0TextKeys []uint16
+	heapLinked        bool
+	sheetReadOnly     bool
+	mapRasterDisabled bool
+	staticStrings     int
+	mode0TextKeys     []uint16
 }
 
 func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
@@ -376,7 +372,7 @@ func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generat
 	if err := g.validateTransitiveRootBudget(); err != nil {
 		return "", generationMetadata{}, err
 	}
-	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, staticStrings: len(g.statics), mode0TextKeys: g.mode0TextKeys}, nil
+	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, mapRasterDisabled: !g.mapRasterEligible(), staticStrings: len(g.statics), mode0TextKeys: g.mode0TextKeys}, nil
 }
 
 func newGenerator(chunk *luaparser.Chunk, opts Options) *generator {
@@ -503,26 +499,27 @@ type generator struct {
 	numericRecordKeys    map[*luaparser.StringExpr]bool
 	numericConstants     map[string]*numericConstantInfo
 
-	current            *functionInfo
-	seq                int
-	localSeq           int
-	scopes             []*localScope
-	err                error
-	extraRoots         []string
-	activeRootCounts   []string
-	activeRootSlots    int
-	topRootPeak        int
-	rootCalls          []rootCallEdge
-	pending            []string
-	spriteN            int
-	sheetMutable       bool
-	sheetCompact       []byte
-	sheetIndex         []uint16
-	mapCompact         []uint16
-	mode0TextKeys      []uint16
-	mode0TextTiles     []uint32
-	audioEnabled       bool
-	legacyAudioEnabled bool
+	current          *functionInfo
+	seq              int
+	localSeq         int
+	scopes           []*localScope
+	err              error
+	extraRoots       []string
+	activeRootCounts []string
+	activeRootSlots  int
+	topRootPeak      int
+	rootCalls        []rootCallEdge
+	pending          []string
+	spriteN          int
+	sheetMutable     bool
+	sheetCompact     []byte
+	sheetIndex       []uint16
+	sheetSolid       []uint16
+	packedMap        [4]packedMapPlane
+	mapCompact       []uint16
+	mode0TextKeys    []uint16
+	mode0TextTiles   []uint32
+
 	nativeAudioEnabled bool
 	nativeAudioDecl    string
 	tableImages        []generatedTableImage
@@ -637,15 +634,6 @@ func (g *generator) prepare() error {
 	if len(g.opts.Palette) != 0 && len(g.opts.Palette) != 256 {
 		return fmt.Errorf("transpiler: palette has %d entries, want 256", len(g.opts.Palette))
 	}
-	if err := validateTargetSFX(g.opts.SFX, g.opts.SFXStep); err != nil {
-		return err
-	}
-	if err := validateTargetMusic(g.opts.Music, g.opts.SFX); err != nil {
-		return err
-	}
-	if err := validateTargetSamples(g.opts.Samples, g.opts.SamplePCM); err != nil {
-		return err
-	}
 	if err := g.discoverFunctions(); err != nil {
 		return err
 	}
@@ -664,10 +652,7 @@ func (g *generator) prepare() error {
 	if err := g.validateTableLiteralLimits(); err != nil {
 		return err
 	}
-	g.legacyAudioEnabled = len(g.opts.SFX) != 0 || len(g.opts.Music) != 0 || len(g.opts.Samples) != 0
-	if g.opts.NativeAudio != nil && g.legacyAudioEnabled {
-		return errors.New("transpiler: audio v2 cannot be combined with legacy SFX/music/sample records")
-	}
+
 	if g.opts.NativeAudio != nil {
 		library, err := assetsync.CompileNativeAudio(g.opts.NativeAudio.Settings, g.opts.NativeAudio.Sounds, g.opts.NativeAudio.Music)
 		if err != nil {
@@ -682,7 +667,6 @@ func (g *generator) prepare() error {
 			}
 		}
 	}
-	g.audioEnabled = g.legacyAudioEnabled || g.nativeAudioEnabled
 	g.inputEnabled = chunkCallsBuiltin(g.chunk, "btn") || chunkCallsBuiltin(g.chunk, "btnp")
 	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time")
 	if len(g.opts.Palette) == 256 {
@@ -708,6 +692,9 @@ func (g *generator) prepare() error {
 	}
 	if !g.sheetMutable {
 		g.compactSheet()
+		if g.opts.Renderer != RendererMode0 && g.opts.MapDrawMask != 0 {
+			g.sheetSolid = solidSheetColors(g.sheetCompact)
+		}
 	}
 	for _, info := range g.funcList {
 		if (info.key == "_init" || info.key == "_update" || info.key == "_draw") && len(info.params) != 0 {
@@ -1413,12 +1400,6 @@ func (g *generator) analyzeMonomorphicNumbers(poisonUnknown bool) {
 	if g.opts.DisableMonomorphicNumbers {
 		return
 	}
-	if poisonUnknown {
-		// Confirmation must not keep optimistic field types while poisoning
-		// remaining unknown initializers: a local alias of box.size would
-		// otherwise stay numeric after a later string constructor of size.
-		g.numericFields = make(map[string]bool)
-	}
 	// Top-level declarations own Game fields. Their first source assignment is
 	// the type observation used by the monomorphic contract.
 	seenGlobal := make(map[string]bool)
@@ -1536,13 +1517,28 @@ func (g *generator) refineMonomorphicFieldSignatures() {
 			break
 		}
 	}
-	before := cloneNumericFields(g.numericFields)
-	g.analyzeMonomorphicNumbers(true)
-	if numericFieldsEqual(before, g.numericFields) {
-		return
+	// Confirm the provisional facts without discarding numeric read/write
+	// aliases. Confirmation can only remove candidates: each retry removes at
+	// least one numeric field, so N candidates require at most N+1 passes.
+	// Recompute signatures after each removal so a function cannot carry a
+	// stale numeric field type into another field through a parameter or return.
+	candidates := cloneNumericFields(g.numericFields)
+	for {
+		g.analyzeMonomorphicNumbers(true)
+		changed := false
+		for name, isNumber := range candidates {
+			if isNumber && !g.numericFields[name] {
+				candidates[name] = false
+				changed = true
+			}
+		}
+		g.numericFields = cloneNumericFields(candidates)
+		if !changed {
+			return
+		}
+		g.resetMonomorphicSignatures()
+		g.analyzeMonomorphicFunctions()
 	}
-	g.resetMonomorphicSignatures()
-	g.analyzeMonomorphicFunctions()
 }
 
 func (g *generator) numericInitializerIntent(expr luaparser.Expr) bool {
@@ -2256,7 +2252,7 @@ func builtinNoAlloc(name string) bool {
 // the runtime's bounded fail-closed behavior, and audio-less ports may keep
 // compatibility calls without pulling in the audio runtime.
 func (g *generator) validateStaticAudioCalls() error {
-	if !g.audioEnabled && g.opts.NativeAudio == nil &&
+	if !g.nativeAudioEnabled && g.opts.NativeAudio == nil &&
 		!chunkCallsBuiltin(g.chunk, "gba_note") && !chunkCallsBuiltin(g.chunk, "gba_stop") {
 		return nil
 	}
@@ -2443,26 +2439,6 @@ func (g *generator) hasAudioID(name string, id int) bool {
 		}
 		return false
 	}
-	switch name {
-	case "sfx":
-		for _, definition := range g.opts.SFX {
-			if int(definition.ID) == id {
-				return true
-			}
-		}
-	case "music":
-		for _, pattern := range g.opts.Music {
-			if int(pattern.ID) == id {
-				return true
-			}
-		}
-	case "sample":
-		for _, sample := range g.opts.Samples {
-			if int(sample.ID) == id {
-				return true
-			}
-		}
-	}
 	return false
 }
 
@@ -2473,14 +2449,7 @@ func (g *generator) audioAssetPath(name string) string {
 		}
 		return "four-channel audio v2"
 	}
-	switch name {
-	case "sfx":
-		return "assets/audio/sfx.json"
-	case "music":
-		return "assets/audio/music.json"
-	default:
-		return "assets/audio/samples/manifest.json"
-	}
+	return "four-channel audio v2"
 }
 
 // chunkCallsBuiltin reports whether the source directly calls a builtin.
@@ -3802,22 +3771,23 @@ func collectStmtExprs(stmt luaparser.Stmt, add func(luaparser.Expr)) {
 }
 
 func (g *generator) mapRasterEligible() bool {
-	return !g.opts.DisableMapRasterCache && !g.legacyAudioEnabled && g.opts.Renderer != RendererMode0 && !g.sheetMutable &&
+	return !g.opts.DisableMapRasterCache && g.opts.Renderer != RendererMode0 && !g.sheetMutable &&
 		!g.opts.MapStreaming && g.opts.MapDrawMask != 0 && g.opts.MapW > 0 && g.opts.MapW <= 30 &&
 		g.opts.MapH > 0 && g.opts.MapH <= 20 && len(g.mapCompact) == g.opts.MapW*g.opts.MapH
 }
 
 func (g *generator) render() string {
+	g.packedMap = g.planPackedMap()
 	var b sourceBuilder
 	b.line("package " + g.opts.PackageName)
 	b.line("")
 	b.line("import (")
 	b.line("\trt \"github.com/drpaneas/mtile/runtime\"")
-	if g.audioEnabled {
+	if g.nativeAudioEnabled {
 		b.line("\t\"github.com/drpaneas/mtile/runtime/audio\"")
 		b.line("\t\"github.com/drpaneas/mtile/runtime/hw\"")
 	}
-	if g.mapRasterEligible() {
+	if g.mapRasterEligible() || g.hasPackedMap() {
 		b.line("\t\"unsafe\"")
 	} else {
 		b.line("\t_ \"unsafe\"")
@@ -3860,7 +3830,7 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
 	b.line("\tswitch op { case \"<\": return cmp < 0; case \"<=\": return cmp <= 0; case \">\": return cmp > 0; case \">=\": return cmp >= 0 }; return false")
 	b.line("}")
 	b.line("func gluLen(c *rt.Context, v rt.Value) rt.Value { if v.Kind == rt.KindString || v.Kind == rt.KindStaticString { return rt.IntVal(c.StrLen(v)) }; if v.Kind == rt.KindTable { return rt.IntVal(c.TableLen(v)) }; return rt.IntVal(0) }")
-	b.line("func gluNumberMod(a, z rt.Number) rt.Number { if z == 0 { return 0 }; r := a % z; if r != 0 && ((r < 0) != (z < 0)) { r += z }; return r }")
+	b.line("func gluNumberMod(a, z rt.Number) rt.Number { return a.Mod(z) }")
 	b.line("func gluMod(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberMod(a.Num,z.Num)) }")
 	b.line("func gluNumberPow(a, z rt.Number) rt.Number { n := z.Int(); if n == 0 { return rt.One }; neg := n < 0; if neg { n = -n }; out := rt.One; for n > 0 { if n&1 != 0 { out = out.Mul(a) }; a = a.Mul(a); n >>= 1 }; if neg { out = rt.One.Div(out) }; return out }")
 	b.line("func gluPow(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberPow(a.Num,z.Num)) }")
@@ -3893,6 +3863,10 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line(fmt.Sprintf("var sheetROM = [ %d ]byte{%s}", len(g.sheetCompact), byteLiteral(g.sheetCompact, len(g.sheetCompact))))
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var sheetIndexROM = [ %d ]uint16{%s}", g.spriteN, u16Literal(g.sheetIndex, g.spriteN)))
+		if len(g.sheetSolid) != 0 {
+			b.line("//go:section .rodata")
+			b.line(fmt.Sprintf("var sheetSolidROM = [ %d ]uint16{%s}", len(g.sheetSolid), u16Literal(g.sheetSolid, len(g.sheetSolid))))
+		}
 	}
 	b.line("//go:section .rodata")
 	mapCells := len(g.mapCompact)
@@ -3909,22 +3883,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var paletteROM = [256]uint16{%s}", u16Literal(g.opts.Palette, 256)))
 	}
-	if g.legacyAudioEnabled {
-		b.line("//go:section .rodata")
-		b.line(fmt.Sprintf("var sfxROM = [%d]audio.SFXDefinition{%s}", len(g.opts.SFX), sfxDefinitionLiteral(g.opts.SFX)))
-		b.line("//go:section .rodata")
-		b.line(fmt.Sprintf("var sfxStepROM = [%d]audio.SFXStep{%s}", len(g.opts.SFXStep), sfxStepLiteral(g.opts.SFXStep)))
-		if len(g.opts.Music) != 0 {
-			b.line("//go:section .rodata")
-			b.line(fmt.Sprintf("var musicROM = [%d]audio.MusicPattern{%s}", len(g.opts.Music), musicPatternLiteral(g.opts.Music)))
-		}
-		if len(g.opts.Samples) != 0 {
-			b.line("//go:section .rodata")
-			b.line(fmt.Sprintf("var samplePCMROM = [%d]int8{%s}", len(g.opts.SamplePCM), int8Literal(g.opts.SamplePCM)))
-			b.line("//go:section .rodata")
-			b.line(fmt.Sprintf("var sampleROM = [%d]audio.SampleDefinition{%s}", len(g.opts.Samples), sampleDefinitionLiteral(g.opts.Samples)))
-		}
-	}
+
 	if g.nativeAudioEnabled {
 		b.line(g.nativeAudioDecl)
 	}
@@ -3960,14 +3919,11 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("//go:section .ewram\nvar mapRasterPixelsRAM [mapRasterEnabled*MapW*8*MapH*8]byte")
 		b.line("//go:section .ewram\nvar mapRasterSpansRAM [mapRasterEnabled*rt.MapRasterMaxSpans]rt.MapRasterSpan")
 	}
+	g.renderPackedMapStorage(b)
 	if g.opts.Debug {
 		b.line("//go:section .debug_mailbox\nvar debugMailbox rt.DebugMailbox")
 	}
-	if g.legacyAudioEnabled {
-		b.line("//go:section .ewram\nvar sfxStream audio.MonoStream")
-		b.line("//go:section .ewram\nvar sfxPlayer audio.SFXPlayer")
-		b.line("//go:section .iwram\nvar sfxMixer audio.Mixer")
-	}
+
 	if g.nativeAudioEnabled {
 		b.line("//go:section .ewram\nvar nativeAudioController audio.Controller")
 	}
@@ -4045,8 +4001,18 @@ func (g *generator) renderFunctions(b *sourceBuilder) {
 	g.current = nil
 }
 
+func (g *generator) haltStatement(reason string) string {
+	if g.opts.Debug {
+		return "rt.DebugLog(" + strconv.Quote(reason) + "); for {}"
+	}
+	return "for {}"
+}
+
 func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("func main() {")
+	if g.opts.Debug {
+		b.line("\trt.DebugLog(\"Cartridge preview started\")")
+	}
 	b.line("\tcartImage := rt.AssetImage{")
 	b.line("\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,")
 	b.line("\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],")
@@ -4062,20 +4028,24 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	if !g.sheetMutable {
 		b.line("\tcartData.SheetIndex = sheetIndexRAM[:]")
 	}
+	if len(g.sheetSolid) != 0 {
+		b.line("\tcartData.SheetSolid = sheetSolidROM[:]")
+	}
 	b.line("\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]")
 	if g.mapRasterEligible() {
 		b.line("\tcartData.MapRasterPixels, cartData.MapRasterSpans = mapRasterPixelsRAM[:], mapRasterSpansRAM[:]")
 	}
+	g.renderPackedMapBindings(b)
 	if g.opts.MapStreaming {
 		b.line("\tcartData.MapChunks, cartData.MapEdits = mapChunksRAM[:], mapEditsRAM[:]")
 	}
-	b.line("\tif !ctx.Init(&cartImage, &cartData) { for {} }")
+	b.line("\tif !ctx.Init(&cartImage, &cartData) { " + g.haltStatement("Cartridge assets could not be initialized. Rebuild the project.") + " }")
 	if len(g.opts.Palette) == 256 && !g.paletteIsDefault {
 		b.line("\tctx.LoadPalette(&paletteROM)")
 	}
 	b.line("\tctx.InitHardware()")
 	if len(g.mode0TextKeys) != 0 {
-		b.line("\tif !ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:]) { for {} }")
+		b.line("\tif !ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:]) { " + g.haltStatement("Text tiles could not be initialized. Rebuild the project or select Mode 4.") + " }")
 	}
 	if g.timeEnabled {
 		b.line("\tctx.SetTickRate(30)")
@@ -4083,59 +4053,39 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	if g.opts.Debug {
 		b.line("\tctx.SetProfiling(true)")
 	}
-	if g.legacyAudioEnabled {
-		voiceCount := audio.SFXMixerVoices
-		if len(g.opts.Samples) != 0 {
-			voiceCount = audio.SFXSampleMixerVoices
-		}
-		b.line(fmt.Sprintf("\tif !sfxMixer.Init(%d) || !sfxPlayer.Init(&sfxMixer, sfxROM[:], sfxStepROM[:]) { for {} }", voiceCount))
-		masterVolume := uint16(assetsync.AudioMasterVolumeMax)
-		if g.opts.AudioSettingsPresent {
-			masterVolume = g.opts.AudioMasterVolume
-		}
-		b.line(fmt.Sprintf("\tif !sfxPlayer.SetMasterVolume(%d) { for {} }", masterVolume))
-		if len(g.opts.Music) != 0 {
-			b.line("\tif !sfxPlayer.InitMusic(musicROM[:]) { for {} }")
-		}
-		if len(g.opts.Samples) != 0 {
-			b.line("\tif !sfxPlayer.InitSamples(sampleROM[:], samplePCMROM[:]) { for {} }")
-		}
-		b.line("\tctx.AttachSFX(&sfxPlayer)")
-		b.line("\tctx.AttachAudioStream(&sfxStream)")
-	}
+
 	if g.nativeAudioEnabled {
 		settings := g.opts.NativeAudio.Settings
-		b.line("\tif !nativeAudioController.Init(audio.ProfilePSG) { for {} }")
-		b.line(fmt.Sprintf("\tif !nativeAudioController.ConfigureOutput(%d, %d, %s) { for {} }", settings.LeftLevel, settings.RightLevel, transpilerPSGRatioGoName(settings.PSGRatio)))
-		b.line("\tif !nativeAudioController.Bind(audio.Library{Sounds: nativeSoundROM[:], Clips: nativeClipROM[:], Parts: nativePartROM[:], Songs: nativeSongROM[:]}) { for {} }")
+		b.line("\tif !nativeAudioController.Init(audio.ProfilePSG) { " + g.haltStatement("Sound could not be initialized. Stop and reload the preview.") + " }")
+		b.line(fmt.Sprintf("\tif !nativeAudioController.ConfigureOutput(%d, %d, %s) { %s }", settings.LeftLevel, settings.RightLevel, transpilerPSGRatioGoName(settings.PSGRatio), g.haltStatement("Sound output settings were rejected. Check the project's audio settings.")))
+		b.line("\tif !nativeAudioController.Bind(audio.Library{Sounds: nativeSoundROM[:], Clips: nativeClipROM[:], Parts: nativePartROM[:], Songs: nativeSongROM[:]}) { " + g.haltStatement("Sound assets were rejected. Check sounds.json and music.json, then rebuild.") + " }")
 		b.line("\tctx.AttachNativeAudio(&nativeAudioController)")
 	}
 	b.line("\tgame.Init(&ctx)")
 	if g.mapRasterEligible() {
 		b.line("\tctx.PrepareMapRaster()")
 	}
+	if g.hasPackedMap() {
+		b.line("\tctx.PrepareMapPacked()")
+	}
 	if g.opts.Renderer == RendererMode0 {
 		b.line("\t// _init runs while Mode 0 is force-blanked; commit its")
 		b.line("\t// spritesheet mutations before the first visible frame.")
 		b.line("\tctx.FinalizeInitHardware()")
 	}
-	if g.legacyAudioEnabled {
-		b.line("\tif !sfxStream.StartSFX(&sfxPlayer, hw.DirectSoundRate16384) { for {} }")
-	}
+
 	if g.nativeAudioEnabled {
-		b.line("\tif !nativeAudioController.Start() { for {} }")
+		b.line("\tif !nativeAudioController.Start() { " + g.haltStatement("The sound timer could not start. Stop and reload the preview.") + " }")
 	}
 	b.line("\tfor {")
-	b.line("\t\t// One iteration = exactly two display frames (30 Hz), the same")
-	b.line("\t\t// cadence PICO-8 uses natively. The LCD always scans at 59.73 Hz;")
+	b.line("\t\t// One iteration = exactly two display frames (about 30 Hz).")
+	b.line("\t\t// The LCD always scans at 59.73 Hz;")
 	b.line("\t\t// each rendered image is shown for two whole scans. PaceFrame30")
 	b.line("\t\t// burns whatever time update/draw left over in the first frame, so")
 	b.line("\t\t// the flip always lands in the second frame's VBlank - a fast")
 	b.line("\t\t// iteration can never flip one frame early and alternate cadence.")
 	b.line("\t\tctx.BeginFramePace()")
-	if g.legacyAudioEnabled {
-		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
-	}
+
 	b.line("\t\tctx.BeginProfilePhase(rt.ProfileUpdate)")
 	if g.inputEnabled {
 		b.line("\t\tctx.PollInput()")
@@ -4145,23 +4095,17 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	}
 	b.line("\t\tgame.Update(&ctx)")
 	b.line("\t\tctx.EndProfilePhase(rt.ProfileUpdate)")
-	if g.legacyAudioEnabled {
-		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
-	}
+
 	b.line("\t\tctx.BeginProfilePhase(rt.ProfileDraw)")
 	b.line("\t\tctx.BeginRenderFrame()")
 	b.line("\t\tgame.Draw(&ctx)")
 	b.line("\t\tctx.EndProfilePhase(rt.ProfileDraw)")
-	if g.legacyAudioEnabled {
-		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
-	}
+
 	b.line("\t\t// Copy to the hidden page immediately - it is never on screen, so")
 	b.line("\t\t// this cannot tear, and update+draw+copy own the full two-frame")
 	b.line("\t\t// window (~562k cycles) minus only the flip itself.")
 	b.line("\t\tctx.PrepareRender()")
-	if g.legacyAudioEnabled {
-		b.line("\t\tsfxStream.Service(audio.StreamPageCount)")
-	}
+
 	if g.heapEnabled {
 		b.line("\t\tctx.CollectIfNeeded()")
 	}
@@ -4597,7 +4541,9 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 			}
 			if info := g.numericRecords[variable.Name]; info != nil && info.declaration == s {
 				for _, field := range info.fieldOrder {
-					b.line(pad + "g." + numericRecordMember(info, field) + " = " + g.emitNumberExpr(field.value))
+					value := g.emitNumberExpr(field.value)
+					g.writePending(b, indent)
+					b.line(pad + "g." + numericRecordMember(info, field) + " = " + value)
 				}
 				return
 			}
@@ -4718,7 +4664,9 @@ func (g *generator) emitLocalAssign(b *sourceBuilder, s *luaparser.LocalAssignSt
 		}
 		if info := g.numericRecords[s.Names[0]]; info != nil && info.declaration == s {
 			for _, field := range info.fieldOrder {
-				b.line(pad + "g." + numericRecordMember(info, field) + " = " + g.emitNumberExpr(field.value))
+				value := g.emitNumberExpr(field.value)
+				g.writePending(b, indent)
+				b.line(pad + "g." + numericRecordMember(info, field) + " = " + value)
 			}
 			return
 		}
@@ -5057,7 +5005,12 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 	switch name {
 	case "all":
 		idx := g.next("i")
-		b.line(pad + "\tfor " + idx + " := 1; " + idx + " <= c.TableLen(" + table + "); " + idx + "++ {")
+		limit := "c.TableLen(" + table + ")"
+		if g.iteratorLengthStable(s.Body) {
+			limit = g.next("iterLen")
+			b.line(pad + "\t" + limit + " := c.TableLen(" + table + ")")
+		}
+		b.line(pad + "\tfor " + idx + " := 1; " + idx + " <= " + limit + "; " + idx + "++ {")
 		if len(loopVars) > 0 {
 			b.line(pad + "\t\t" + loopVars[0] + " := c.TableGetInt(" + table + ", " + idx + ")")
 			b.line(pad + "\t\t_ = " + loopVars[0])
@@ -5317,6 +5270,9 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		if specialized, ok := g.emitConstantNumberDivision(x); ok {
 			return specialized
 		}
+		if specialized, ok := g.emitConstantNumberModulo(x); ok {
+			return specialized
+		}
 		parts := g.sequenceNumberExprs([]luaparser.Expr{x.Left, x.Right})
 		left, right := parts[0], parts[1]
 		switch x.Op {
@@ -5362,9 +5318,7 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		if name == "mget" {
 			return "(" + g.emitBuiltin("mget", x.Args, true) + ").Num"
 		}
-		arg := func(i int, fallback string) string {
-			return fallback
-		}
+		var arg func(int, string) string
 		if g.numberBuiltinArgs(x.Args) {
 			args := g.sequenceNumberExprs(x.Args)
 			arg = func(i int, fallback string) string {
@@ -5499,6 +5453,9 @@ func (g *generator) emitBinary(x *luaparser.BinaryExpr) string {
 	if x.Op == luaparser.OpConcat {
 		names := g.sequenceExprs([]luaparser.Expr{x.Left, x.Right})
 		return "gluConcat(c," + names[0] + "," + names[1] + g.rootArgsFor(2, x.Pos()) + ")"
+	}
+	if specialized, ok := g.emitConstantValueArithmetic(x); ok {
+		return specialized
 	}
 	if g.exprNumber(x.Left) && g.exprNumber(x.Right) {
 		parts := g.sequenceNumberExprs([]luaparser.Expr{x.Left, x.Right})
@@ -6150,208 +6107,6 @@ func (g *generator) staticRuntimeInt(expr luaparser.Expr) (int, bool) {
 	return int(constant.value >> 16), true
 }
 
-func validateTargetSFX(definitions []assetsync.TargetSFX, steps []assetsync.TargetSFXStep) error {
-	if len(definitions) == 0 {
-		if len(steps) != 0 {
-			return errors.New("transpiler: SFX steps require definitions")
-		}
-		return nil
-	}
-	if len(definitions) > assetsync.MaxSFXAssets {
-		return fmt.Errorf("transpiler: %d SFX definitions exceed %d", len(definitions), assetsync.MaxSFXAssets)
-	}
-	previousID := -1
-	for _, definition := range definitions {
-		if definition.ID >= assetsync.MaxSFXAssets || int(definition.ID) <= previousID || definition.Speed == 0 || definition.StepCount == 0 || definition.StepCount > assetsync.MaxSFXSteps ||
-			int(definition.StepOffset)+int(definition.StepCount) > len(steps) || definition.Filters&1 != 0 || definition.Filters > 214 {
-			return errors.New("transpiler: malformed SFX definition data")
-		}
-		if definition.LoopStart == assetsync.SFXNoLoop || definition.LoopEnd == assetsync.SFXNoLoop {
-			if definition.LoopStart != assetsync.SFXNoLoop || definition.LoopEnd != assetsync.SFXNoLoop {
-				return errors.New("transpiler: malformed SFX loop data")
-			}
-		} else if definition.LoopStart >= definition.LoopEnd || definition.LoopEnd > definition.StepCount {
-			return errors.New("transpiler: malformed SFX loop data")
-		}
-		previousID = int(definition.ID)
-	}
-	for _, step := range steps {
-		if step.PhaseStep == 0 || step.Volume > 256 || waveformGoName(step.Waveform) == "" || effectGoName(step.Effect) == "" {
-			return errors.New("transpiler: malformed SFX step data")
-		}
-	}
-	return nil
-}
-
-func validateTargetMusic(patterns []assetsync.TargetMusicPattern, definitions []assetsync.TargetSFX) error {
-	if len(patterns) == 0 {
-		return nil
-	}
-	if len(patterns) > assetsync.MaxMusicPatterns || len(definitions) == 0 {
-		return errors.New("transpiler: music patterns require valid SFX definitions")
-	}
-	patternIDs := make(map[uint8]struct{}, len(patterns))
-	sfxIDs := make(map[uint8]struct{}, len(definitions))
-	for _, definition := range definitions {
-		sfxIDs[definition.ID] = struct{}{}
-	}
-	previousID := -1
-	for _, pattern := range patterns {
-		if pattern.DurationSamples == 0 || pattern.ID >= assetsync.MaxMusicPatterns || int(pattern.ID) <= previousID {
-			return errors.New("transpiler: malformed music pattern data")
-		}
-		patternIDs[pattern.ID] = struct{}{}
-		previousID = int(pattern.ID)
-		for _, id := range pattern.Channels {
-			if id < -1 {
-				return errors.New("transpiler: malformed music channel data")
-			}
-			if id >= 0 {
-				if _, exists := sfxIDs[uint8(id)]; !exists {
-					return errors.New("transpiler: music channel references missing SFX")
-				}
-			}
-		}
-	}
-	for _, pattern := range patterns {
-		if pattern.Next < -1 {
-			return errors.New("transpiler: malformed music transition data")
-		}
-		if pattern.Next >= 0 {
-			if _, exists := patternIDs[uint8(pattern.Next)]; !exists {
-				return errors.New("transpiler: music transition references missing pattern")
-			}
-		}
-	}
-	return nil
-}
-
-func validateTargetSamples(definitions []assetsync.TargetSample, pcm []int8) error {
-	if len(definitions) == 0 {
-		if len(pcm) != 0 {
-			return errors.New("transpiler: sample PCM requires definitions")
-		}
-		return nil
-	}
-	if len(definitions) > assetsync.MaxSampleAssets || len(pcm) > assetsync.MaxSampleROMBytes {
-		return errors.New("transpiler: sample asset data exceeds target limits")
-	}
-	previousID := -1
-	for _, definition := range definitions {
-		end := uint64(definition.DataOffset) + uint64(definition.DataLength)
-		if definition.ID >= assetsync.MaxSampleAssets || int(definition.ID) <= previousID || definition.DataLength == 0 ||
-			end > uint64(len(pcm)) || definition.Volume > 256 {
-			return errors.New("transpiler: malformed sample definition data")
-		}
-		if definition.Loop {
-			if definition.LoopStart >= definition.LoopEnd || definition.LoopEnd > definition.DataLength ||
-				definition.LoopEnd-definition.LoopStart < 2 {
-				return errors.New("transpiler: malformed sample loop data")
-			}
-		} else if definition.LoopStart != 0 || definition.LoopEnd != 0 {
-			return errors.New("transpiler: malformed sample loop data")
-		}
-		previousID = int(definition.ID)
-	}
-	return nil
-}
-
-func waveformGoName(waveform string) string {
-	switch waveform {
-	case "triangle":
-		return "audio.SourceTriangle"
-	case "tilted-saw":
-		return "audio.SourceTiltedSaw"
-	case "saw":
-		return "audio.SourceSaw"
-	case "square":
-		return "audio.SourceSquare"
-	case "pulse":
-		return "audio.SourcePulse"
-	case "organ":
-		return "audio.SourceOrgan"
-	case "noise":
-		return "audio.SourceNoise"
-	case "phaser":
-		return "audio.SourcePhaser"
-	case "custom-0":
-		return "audio.SourceCustom0"
-	case "custom-1":
-		return "audio.SourceCustom1"
-	case "custom-2":
-		return "audio.SourceCustom2"
-	case "custom-3":
-		return "audio.SourceCustom3"
-	case "custom-4":
-		return "audio.SourceCustom4"
-	case "custom-5":
-		return "audio.SourceCustom5"
-	case "custom-6":
-		return "audio.SourceCustom6"
-	case "custom-7":
-		return "audio.SourceCustom7"
-	default:
-		return ""
-	}
-}
-
-func effectGoName(effect string) string {
-	switch effect {
-	case "none":
-		return "audio.SFXEffectNone"
-	case "slide":
-		return "audio.SFXEffectSlide"
-	case "vibrato":
-		return "audio.SFXEffectVibrato"
-	case "drop":
-		return "audio.SFXEffectDrop"
-	case "fade-in":
-		return "audio.SFXEffectFadeIn"
-	case "fade-out":
-		return "audio.SFXEffectFadeOut"
-	case "arpeggio-fast":
-		return "audio.SFXEffectArpeggioFast"
-	case "arpeggio-slow":
-		return "audio.SFXEffectArpeggioSlow"
-	default:
-		return ""
-	}
-}
-
-func sfxDefinitionLiteral(definitions []assetsync.TargetSFX) string {
-	var builder strings.Builder
-	for _, definition := range definitions {
-		fmt.Fprintf(&builder, "{ID:%d, Speed:%d, StepOffset:%d, StepCount:%d, LoopStart:%d, LoopEnd:%d, Filters:%d},", definition.ID, definition.Speed, definition.StepOffset, definition.StepCount, definition.LoopStart, definition.LoopEnd, definition.Filters)
-	}
-	return builder.String()
-}
-
-func sfxStepLiteral(steps []assetsync.TargetSFXStep) string {
-	var builder strings.Builder
-	for _, step := range steps {
-		fmt.Fprintf(&builder, "{PhaseStep:%d, Volume:%d, Kind:%s, Effect:%s},", step.PhaseStep, step.Volume, waveformGoName(step.Waveform), effectGoName(step.Effect))
-	}
-	return builder.String()
-}
-
-func musicPatternLiteral(patterns []assetsync.TargetMusicPattern) string {
-	var builder strings.Builder
-	for _, pattern := range patterns {
-		fmt.Fprintf(&builder, "{ID:%d,Channels:[audio.SFXChannels]int8{%d,%d,%d,%d},Next:%d,DurationSamples:%d},",
-			pattern.ID, pattern.Channels[0], pattern.Channels[1], pattern.Channels[2], pattern.Channels[3], pattern.Next, pattern.DurationSamples)
-	}
-	return builder.String()
-}
-
-func sampleDefinitionLiteral(definitions []assetsync.TargetSample) string {
-	var builder strings.Builder
-	for _, definition := range definitions {
-		fmt.Fprintf(&builder, "{ID:%d,DataOffset:%d,DataLength:%d,LoopStart:%d,LoopEnd:%d,Volume:%d,Priority:%d,Loop:%t},",
-			definition.ID, definition.DataOffset, definition.DataLength, definition.LoopStart, definition.LoopEnd, definition.Volume, definition.Priority, definition.Loop)
-	}
-	return builder.String()
-}
-
 func calleePath(e luaparser.Expr) (string, bool) {
 	switch x := e.(type) {
 	case *luaparser.VarExpr:
@@ -6863,14 +6618,6 @@ func byteLiteral(data []byte, n int) string {
 			v = data[i]
 		}
 		parts[i] = fmt.Sprintf("0x%02x", v)
-	}
-	return strings.Join(parts, ",")
-}
-
-func int8Literal(data []int8) string {
-	parts := make([]string, len(data))
-	for i, value := range data {
-		parts[i] = strconv.Itoa(int(value))
 	}
 	return strings.Join(parts, ",")
 }

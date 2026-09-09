@@ -35,12 +35,12 @@ type liveCommand struct {
 }
 
 type liveVoice struct {
-	active         bool
-	note           uint8
-	sound          runtimeaudio.Sound
-	phase          float64
-	frequency      float64
-	noisePhase     float64
+	active bool
+	note   uint8
+	sound  runtimeaudio.Sound
+
+	frequency float64
+
 	lfsr           uint16
 	elapsed        uint64
 	sweepEvery     uint64
@@ -446,169 +446,10 @@ func liveHardwareLengthSamples(sound runtimeaudio.Sound, sampleRate int) uint64 
 	return 0
 }
 
-func livePulseDutyFraction(duty hw.PulseDuty) float64 {
-	fraction := .75
-	switch duty {
-	case hw.PulseDuty12_5:
-		fraction = .125
-	case hw.PulseDuty25:
-		fraction = .25
-	case hw.PulseDuty50:
-		fraction = .5
-	}
-	return fraction
-}
-
-func livePulseAverage(phase, advance, duty float64) float64 {
-	if advance <= 0 {
-		if phase < duty {
-			return 1
-		}
-		return -1
-	}
-	positive := livePeriodicIntervalCoverage(phase, advance, duty)
-	return positive*2/advance - 1
-}
-
-func livePeriodicIntervalCoverage(phase, advance, positiveEnd float64) float64 {
-	phase = math.Mod(phase, 1)
-	if phase < 0 {
-		phase++
-	}
-	remaining := advance
-	covered := 0.0
-	for remaining > 0 {
-		span := math.Min(remaining, 1-phase)
-		if phase < positiveEnd {
-			covered += math.Min(span, positiveEnd-phase)
-		}
-		remaining -= span
-		phase += span
-		if phase >= 1-1e-12 {
-			phase = 0
-		}
-	}
-	return covered
-}
-
-func liveWaveAverage(phase, advance float64, wave hw.Waveform) float64 {
-	if wave.Length == 0 {
-		return 0
-	}
-	if advance <= 0 {
-		index := int(math.Mod(phase, 1)*float64(wave.Length)) % int(wave.Length)
-		return (float64(wave.Samples[index]) - 7.5) / 7.5
-	}
-	remaining := advance
-	position := math.Mod(phase, 1) * float64(wave.Length)
-	weighted := 0.0
-	for remaining > 0 {
-		index := int(position) % int(wave.Length)
-		toBoundary := (float64(index+1) - position) / float64(wave.Length)
-		if toBoundary <= 1e-12 {
-			toBoundary = 1 / float64(wave.Length)
-		}
-		span := math.Min(remaining, toBoundary)
-		weighted += ((float64(wave.Samples[index]) - 7.5) / 7.5) * span
-		remaining -= span
-		position += span * float64(wave.Length)
-		if position >= float64(wave.Length)-1e-12 {
-			position = 0
-		}
-	}
-	return weighted / advance
-}
-
-func liveNoiseValue(lfsr uint16) float64 {
-	if lfsr&1 == 0 {
-		return 1
-	}
-	return -1
-}
-
-func liveNoiseShift(voice *liveVoice, width hw.NoiseWidth) {
-	bit := (voice.lfsr ^ (voice.lfsr >> 1)) & 1
-	voice.lfsr = (voice.lfsr >> 1) | (bit << 14)
-	if width == hw.Noise7Bit {
-		voice.lfsr = (voice.lfsr &^ (1 << 6)) | (bit << 6)
-	}
-}
-
-func liveNoiseAverage(voice *liveVoice, advance float64, width hw.NoiseWidth) float64 {
-	if voice == nil || advance <= 0 {
-		if voice == nil {
-			return 0
-		}
-		return liveNoiseValue(voice.lfsr)
-	}
-	remaining := 1.0
-	weighted := 0.0
-	for remaining > 0 {
-		toShift := (1 - voice.noisePhase) / advance
-		if toShift >= remaining {
-			weighted += liveNoiseValue(voice.lfsr) * remaining
-			voice.noisePhase += advance * remaining
-			break
-		}
-		weighted += liveNoiseValue(voice.lfsr) * toShift
-		remaining -= toShift
-		voice.noisePhase = 0
-		liveNoiseShift(voice, width)
-	}
-	if voice.noisePhase >= 1-1e-12 {
-		voice.noisePhase = 0
-		liveNoiseShift(voice, width)
-	}
-	return weighted
-}
-
-func liveEnvelope(sample uint64, sampleRate int, envelope hw.HardwareEnvelope) float64 {
-	level := int(envelope.Initial)
-	if envelope.Pace != 0 {
-		steps := int(sample / uint64(max(1, sampleRate*int(envelope.Pace)/64)))
-		if envelope.Direction == hw.EnvelopeUp {
-			level = min(15, level+steps)
-		} else {
-			level = max(0, level-steps)
-		}
-	}
-	return float64(level) / 15
-}
-
-func liveWaveLevel(level hw.WaveLevel) float64 {
-	switch level {
-	case hw.Wave100:
-		return 1
-	case hw.Wave50:
-		return .5
-	case hw.Wave25:
-		return .25
-	case hw.Wave75:
-		return .75
-	default:
-		return 0
-	}
-}
-
 func liveNoiseFrequency(divisor, shift uint8) float64 {
 	ratio := .5
 	if divisor != 0 {
 		ratio = float64(divisor)
 	}
 	return 262144 / (ratio * math.Pow(2, float64(shift)))
-}
-
-func liveSoundRoute(sound runtimeaudio.Sound) hw.SoundRoute {
-	switch sound.Kind {
-	case runtimeaudio.SoundCH1:
-		return sound.Pulse1.Pulse.Route
-	case runtimeaudio.SoundCH2:
-		return sound.Pulse2.Route
-	case runtimeaudio.SoundCH3:
-		return sound.Wave.Route
-	case runtimeaudio.SoundCH4:
-		return sound.Noise.Route
-	default:
-		return hw.SoundRouteNone
-	}
 }

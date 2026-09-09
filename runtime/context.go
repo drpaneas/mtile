@@ -75,8 +75,6 @@ type Context struct {
 	staticHold  [staticStringSlots]string
 	staticN     uint16
 
-	sfxPlayer   *audio.SFXPlayer
-	audioStream *audio.MonoStream
 	nativeAudio *audio.Controller
 }
 

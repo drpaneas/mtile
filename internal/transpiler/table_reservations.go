@@ -135,7 +135,7 @@ func integerNumericForBounds(loop *luaparser.NumericForStmt) (init, limit, step 
 	init, initOK := integerLoopExpr(loop.Init)
 	limit, limitOK := integerLoopExpr(loop.Limit)
 	step, stepOK := integerLoopExpr(loop.Step)
-	ok = initOK && limitOK && stepOK && step != 0 && !((step > 0 && init > limit) || (step < 0 && init < limit))
+	ok = initOK && limitOK && stepOK && step != 0 && (step <= 0 || init <= limit) && (step >= 0 || init >= limit)
 	return init, limit, step, ok
 }
 

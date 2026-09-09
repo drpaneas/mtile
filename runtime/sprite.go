@@ -149,7 +149,9 @@ func writeSpritePixel(fb []byte, pal *[256]byte, transp *[256]bool, dst int, sou
 // the framebuffer at screen (baseX,baseY). rowY0/rowY1 and colX0/colX1 are
 // half-open cell-local ranges already clipped to [0,8). packed is ignored
 // unless the full 8-wide row is written; callers must only set it when
-// source and destination X are 4-byte aligned.
+// source and destination X are 4-byte aligned. The slice bases are checked
+// here too: an AssetMemory sheet may be a subslice, and ARM7 word loads from
+// an unaligned address rotate bytes instead of reading the requested word.
 //
 // This is the pixel workhorse for both spr() and map(). It executes from
 // IWRAM: TinyGo emits 32-bit ARM opcodes, and fetching those through the
@@ -163,7 +165,8 @@ func writeSpritePixel(fb []byte, pal *[256]byte, transp *[256]bool, dst int, sou
 //go:section .iwram
 func blitUnflippedCell8(sheet, fb []byte, pal *[256]byte, transp *[256]bool, sheetW, srcX0, srcY0, baseX, baseY, rowY0, rowY1, colX0, colX1 int, identity, key0, packed bool) {
 	fullX := colX0 == 0 && colX1 == 8
-	usePacked := packed && fullX
+	usePacked := packed && fullX &&
+		(uintptr(unsafe.Pointer(unsafe.SliceData(sheet)))|uintptr(unsafe.Pointer(unsafe.SliceData(fb))))&3 == 0
 	for row := rowY0; row < rowY1; row++ {
 		src := (srcY0+row)*sheetW + srcX0
 		dst := (baseY+row)*ScreenWidth + baseX

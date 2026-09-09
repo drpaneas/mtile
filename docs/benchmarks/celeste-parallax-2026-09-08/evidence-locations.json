@@ -1,0 +1,7 @@
+{
+  "originalRun": "/private/tmp/mtile-celeste-parallax-231w16pk",
+  "retainedRun": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/experiments/celeste-parallax-2026-09-08",
+  "playableROM": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/celeste-parallax/game.gba",
+  "compilerSnapshot": "build/experiments/celeste-parallax-2026-09-08/checkout",
+  "note": "Absolute paths in original logs and summary identify the run locations; complete artifacts are retained under retainedRun."
+}

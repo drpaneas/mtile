@@ -29,6 +29,19 @@ func TestCheckAllocs_ignoresLinkerNoise(t *testing.T) {
 	}
 }
 
+func TestCheckAllocs_rejectsMissingCoverageReport(t *testing.T) {
+	t.Parallel()
+	for _, output := range []string{
+		"",
+		"ld.lld --gc-sections -o /tmp/main\n",
+		"/tmp/foo.go:1:2: object allocated on the heap: escapes at line 3\n",
+	} {
+		if err := checkAllocs(strings.NewReader(output)); err == nil || !strings.Contains(err.Error(), "-print-allocs-cover") {
+			t.Fatalf("checkAllocs(%q) = %v, want report-format error", output, err)
+		}
+	}
+}
+
 func TestAllocCount(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

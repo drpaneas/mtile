@@ -133,7 +133,7 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 	}
 	if cellsW <= 0 || cellsH <= 0 || cellsW > 64 || cellsH > 32 {
 		if tileCanvasExperiment && (cellsW > 64 || cellsH > 32) {
-			panic("tile canvas map rectangle exceeds 64x32 cells; use Mode 4")
+			runtimePanic("tile canvas map rectangle exceeds 64x32 cells; use Mode 4")
 		}
 		return
 	}

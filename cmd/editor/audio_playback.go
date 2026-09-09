@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/ebitengine/oto/v3"
 	ebitaudio "github.com/hajimehoshi/ebiten/v2/audio"
 )
@@ -26,10 +25,8 @@ const editorPlaybackBufferSize = 500 * time.Millisecond
 // completely unchanged.
 const editorDeviceBufferSize = 40 * time.Millisecond
 
-// Desktop playback uses a conventional host-device rate. Legacy PCM previews
-// stay at their target FIFO rate; native PSG previews render directly at the
-// host rate so their hardware edges can be filtered without a 16 kHz aliasing
-// bottleneck.
+// Desktop PSG previews render at the host-device rate to preserve pulse
+// edges and high-frequency noise.
 const editorPlaybackSampleRate = 48_000
 
 const editorAudioBytesPerFrame = 4 // signed 16-bit stereo
@@ -152,7 +149,10 @@ func (p *editorAudioPlayer) Close() error {
 	if p == nil || p.player == nil || p.closed.Swap(true) {
 		return nil
 	}
-	return p.player.Close()
+	// Oto releases resources when the player becomes unreachable. Pause first
+	// so closing this adapter also stops playback immediately.
+	p.player.Pause()
+	return nil
 }
 
 func editorAudioBufferBytes(bufferSize time.Duration, sampleRate int) int {
@@ -169,13 +169,9 @@ func editorAudioDuration(byteCount int64, sampleRate int) time.Duration {
 	return time.Duration(frames) * time.Second / time.Duration(sampleRate)
 }
 
-func resampleEditorPCM(pcm []byte) io.Reader {
-	return resampleEditorPCMAtRate(pcm, editor.SFXPreviewSampleRate)
-}
-
 func resampleEditorPCMAtRate(pcm []byte, sourceRate int) io.Reader {
 	if sourceRate <= 0 {
-		sourceRate = editor.SFXPreviewSampleRate
+		sourceRate = editorPlaybackSampleRate
 	}
 	resampled := ebitaudio.ResampleReader(
 		bytes.NewReader(pcm), int64(len(pcm)),
@@ -184,10 +180,6 @@ func resampleEditorPCMAtRate(pcm []byte, sourceRate int) io.Reader {
 	hostBytes := int64(len(pcm)) * editorPlaybackSampleRate / int64(sourceRate)
 	hostBytes -= hostBytes % 4
 	return io.LimitReader(resampled, hostBytes)
-}
-
-func newEditorAudioPlayer(context *editorHostAudioContext, pcm []byte) (*editorAudioPlayer, error) {
-	return newEditorAudioPlayerAtRate(context, pcm, editor.SFXPreviewSampleRate)
 }
 
 func newEditorAudioPlayerAtRate(context *editorHostAudioContext, pcm []byte, sourceRate int) (*editorAudioPlayer, error) {

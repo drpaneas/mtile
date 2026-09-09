@@ -10,6 +10,7 @@ import (
 )
 
 type NewProjectOptions struct {
+	Template    string
 	SheetWidth  int
 	SheetHeight int
 	MapWidth    int
@@ -59,6 +60,12 @@ func validateNewProjectFootprint(sheetWidth, sheetHeight, mapWidth, mapHeight, s
 // `new` command cannot silently overwrite artwork.
 func CreateProject(projectDir string, options NewProjectOptions) error {
 	options = options.withDefaults()
+	if options.Template != "" && options.Template != "blank" && options.Template != "coin-quest" {
+		return fmt.Errorf("unknown template %q; choose blank or coin-quest", options.Template)
+	}
+	if options.Template == "coin-quest" && (options.SheetWidth < 24 || options.SheetHeight < 8) {
+		return errors.New("coin-quest needs a sprite sheet at least 24 by 8 pixels")
+	}
 	if options.SheetWidth < 1 || options.SheetHeight < 1 {
 		return errors.New("project dimensions must be positive")
 	}
@@ -151,6 +158,11 @@ end
 `
 	if err := os.WriteFile(filepath.Join(tmp, GameFileName), []byte(game), 0o644); err != nil {
 		return fmt.Errorf("write %s: %w", GameFileName, err)
+	}
+	if options.Template == "coin-quest" {
+		if err := writeCoinQuest(tmp, sheet); err != nil {
+			return fmt.Errorf("create coin-quest template: %w", err)
+		}
 	}
 	if err := os.Rename(tmp, projectDir); err != nil {
 		return fmt.Errorf("finalize project: %w", err)

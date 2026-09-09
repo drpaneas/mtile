@@ -35,6 +35,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return errMissingCommand
 	}
 	switch args[0] {
+	case "doctor":
+		return runDoctor(args[1:], stdout)
 	case "new":
 		return runNew(args[1:], stdout)
 	case "build":
@@ -51,9 +53,10 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 }
 
-const usageText = `usage: mtile <new|build|edit|render-audio> [options] project-dir
+const usageText = `usage: mtile <command> [options] [project-dir]
 
 Commands:
+  doctor check the ROM build toolchain and show setup fixes (no project needed)
   new    create a native GBA project
   build  transpile Lua and assets, link a .gba ROM
   edit   open the Sprites, Map, Audio, Code, and Play IDE
@@ -120,6 +123,7 @@ func parseFlags(flags *flag.FlagSet, args []string, out io.Writer) (help bool, e
 
 func runNew(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("new", flag.ContinueOnError)
+	template := flags.String("template", "blank", "starting project: blank or coin-quest")
 	width := flags.Int("width", 240, "sprite-sheet width in pixels")
 	height := flags.Int("height", 160, "sprite-sheet height in pixels")
 	mapWidth := flags.Int("map-width", 0, "map width in 8x8 cells (default 30, or none when the sheet has no complete 8x8 sprite)")
@@ -135,7 +139,7 @@ func runNew(args []string, out io.Writer) error {
 		return errors.New("new requires exactly one project directory")
 	}
 	dir := flags.Arg(0)
-	if err := build.CreateProject(dir, build.NewProjectOptions{SheetWidth: *width, SheetHeight: *height, MapWidth: *mapWidth, MapHeight: *mapHeight}); err != nil {
+	if err := build.CreateProject(dir, build.NewProjectOptions{Template: *template, SheetWidth: *width, SheetHeight: *height, MapWidth: *mapWidth, MapHeight: *mapHeight}); err != nil {
 		return err
 	}
 	abs, err := filepath.Abs(dir)
@@ -143,6 +147,9 @@ func runNew(args []string, out io.Writer) error {
 		return err
 	}
 	_, _ = fmt.Fprintf(out, "created %s\n", abs)
+	if *template == "coin-quest" {
+		_, _ = fmt.Fprintf(out, "next: mtile edit %q\nwalkthrough: %s\n", abs, filepath.Join(abs, "README.md"))
+	}
 	return nil
 }
 
@@ -199,9 +206,7 @@ func runBuild(args []string, out io.Writer) error {
 		if result.AudioProfile == assetsync.NativeAudioProfile {
 			_, _ = fmt.Fprintf(out, "audio: Game Boy PSG CH1-CH4, hardware mix %d%%, %s-byte assets\n",
 				result.AudioPSGRatio, formatInteger(result.AudioROMBytes))
-		} else {
-			_, _ = fmt.Fprintf(out, "audio: %s Hz mono, %d voices, master %d/256, %s-byte assets\n",
-				formatInteger(assetsync.SampleTargetRate), result.AudioVoices, result.AudioMasterVolume, formatInteger(result.AudioROMBytes))
+
 		}
 	}
 	if result.WorkDir != "" {

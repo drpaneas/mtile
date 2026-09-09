@@ -48,7 +48,7 @@ func (c *Context) Pset(x, y, color int) {
 // Camera applies; clip does not.
 func (c *Context) Pget(x, y int) byte {
 	if tileCanvasExperiment {
-		panic("tile canvas composed pixel readback is unsupported; use Mode 4")
+		runtimePanic("tile canvas composed pixel readback is unsupported; use Mode 4")
 	}
 	return c.pixelRaw(x-c.camX, y-c.camY)
 }
@@ -56,8 +56,8 @@ func (c *Context) Pget(x, y int) byte {
 // Cls explicitly clears the persistent framebuffer, restores the default
 // clip rectangle, and resets the print cursor to (0,0). It deliberately
 // preserves the current draw colour. There is no implicit clear during
-// presentation. Hardware uses DMA3 with a fixed source so a 60 Hz cls() is
-// one fill, not 9,600 ROM-resident word stores.
+// presentation. Hardware clears the aligned framebuffer with an IWRAM
+// store-multiple fill.
 // A future Mode 0 backend may preserve this only for a proven frame-initial
 // clear; later or persistent-framebuffer clears require Mode 4.
 func (c *Context) Cls(color int) {
@@ -114,9 +114,9 @@ func (c *Context) hlineSpan(x0, x1, y0, y1 int, value byte) {
 		return
 	}
 	word := uint32(value) | uint32(value)<<8 | uint32(value)<<16 | uint32(value)<<24
-	// Full-width spans are one contiguous framebuffer run, so a single DMA3
+	// Full-width spans are one contiguous framebuffer run, so a single native
 	// fill replaces the per-row word loop. This makes a full-screen rectfill
-	// cost the same as cls (~67k cycles) instead of ~183k. ScreenWidth is a
+	// cost the same as cls (~62k cycles) instead of ~183k. ScreenWidth is a
 	// multiple of 4, so the run is always word-sized, and the largest
 	// possible run (38,400 bytes = 9,600 words) fits DMA3's 16-bit count.
 	if sx0 == 0 && sx1 == ScreenWidth-1 {

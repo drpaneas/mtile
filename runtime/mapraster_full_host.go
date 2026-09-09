@@ -1,4 +1,4 @@
-//go:build !tinygo && !mtile_mode0
+//go:build !tinygo && !mtile_mode0 && !mtile_no_map_raster
 
 package runtime
 

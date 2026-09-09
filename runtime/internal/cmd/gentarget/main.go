@@ -1,9 +1,8 @@
 // Generates TinyGo target JSON and gba-smoke.s from TinyGo's GBA target
 // plus this repo's gba.ld / gba.s.
 //
-// extra-files must be TINYGOROOT-relative (filepath.Rel). TinyGo 0.41.1 joins
-// every extra-file as filepath.Join(TINYGOROOT, path). An absolute extra-files
-// path is wrong: Join would ignore TINYGOROOT. Rel paths that walk out of
+// extra-files must be TINYGOROOT-relative (filepath.Rel): TinyGo resolves
+// each entry against its install root. Rel paths that walk out of
 // the TinyGo install (../../../../home/...) are still relative, but
 // machine-local; the JSON is generated and gitignored. linkerscript is
 // absolute by design.

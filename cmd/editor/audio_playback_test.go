@@ -50,11 +50,11 @@ func TestEditorAudioByteTimeConversions(t *testing.T) {
 func TestEditorPlaybackResamplesTargetPCMToHostRate(t *testing.T) {
 	const targetFrames = 256
 	pcm := targetMonoToHostStereo(make([]int8, targetFrames))
-	host, err := io.ReadAll(resampleEditorPCM(pcm))
+	host, err := io.ReadAll(resampleEditorPCMAtRate(pcm, 32_768))
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := targetFrames * editorPlaybackSampleRate / 16_384 * 4
+	want := targetFrames * editorPlaybackSampleRate / 32_768 * 4
 	if len(host) != want {
 		t.Fatalf("resampled host bytes = %d, want %d", len(host), want)
 	}

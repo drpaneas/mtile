@@ -270,8 +270,8 @@ func (c *Context) Time() Number {
 }
 
 // SetTickRate tells Time() how many update ticks are one second. The
-// generated 30 Hz loop calls SetTickRate(30); the 60 Hz loop leaves the
-// zero value, which Time() treats as 60.
+// generated game loop calls SetTickRate(30). A zero rate retains the
+// 60 Hz default for manually driven runtime contexts.
 func (c *Context) SetTickRate(rate int) {
 	if c != nil && (rate == 30 || rate == 60) {
 		c.tickRate = rate

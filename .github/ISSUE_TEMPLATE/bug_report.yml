@@ -1,0 +1,57 @@
+name: Bug report
+description: Report a reproducible problem with the compiler, editor, or runtime.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. For vulnerabilities, follow SECURITY.md instead of posting details here.
+  - type: input
+    id: revision
+    attributes:
+      label: Mtile revision or bundle
+      description: Paste `git rev-parse --short HEAD`, or the bundle filename/source.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and architecture, Go/TinyGo versions, and emulator or GBA hardware used.
+      placeholder: "macOS arm64; go version ...; tinygo version ...; bundled preview"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Installation or build
+        - Lua compiler
+        - Sprite or map editor
+        - Code editor or preview
+        - Graphics runtime
+        - Audio
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps and minimal example
+      description: Include the command or editor actions, selected renderer, and a small Lua/project example. Only attach assets you may share.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Explain what should happen and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Build output or diagnostics
+      description: Paste full relevant output. For performance bugs, include frame cycles or stat(1), renderer selection, and reproduction inputs.
+      render: text

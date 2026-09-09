@@ -27,7 +27,8 @@ func plainLuaFunctionName(name string) bool {
 		return false
 	}
 	for i, ch := range name {
-		if ch != '_' && !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') && !(i > 0 && ch >= '0' && ch <= '9') {
+		valid := ch == '_' || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || i > 0 && ch >= '0' && ch <= '9'
+		if !valid {
 			return false
 		}
 	}

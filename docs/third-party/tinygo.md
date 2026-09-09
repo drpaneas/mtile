@@ -1,10 +1,10 @@
 # TinyGo component
 
-Mtile release bundles contain a pinned TinyGo 0.41.1 compiler so users do
+Mtile release bundles contain a pinned TinyGo 0.42.0 compiler so users do
 not install TinyGo separately. The host Go distribution remains an end-user
 requirement because TinyGo uses its standard library and build metadata.
 
-The release builder downloads the official platform archive, optionally
+The release builder downloads the official platform archive, requires and
 checks the maintainer-provided SHA-256 digest, verifies the executable's
 reported version, and retains only the files needed by Mtile's custom GBA
 target:

@@ -9,9 +9,9 @@ import (
 
 func TestMapLayerViewMode4HasNoRendererCacheStorage(t *testing.T) {
 	type originalView struct {
-		context                       *Context
-		data                          *uint16
-		layer, width, height, spriteN int
+		Context                       *Context
+		Data                          *uint16
+		Layer, Width, Height, SpriteN int
 	}
 	if unsafe.Sizeof(MapLayerView{}) != unsafe.Sizeof(originalView{}) {
 		t.Fatal("Mode0 cache metadata enlarged Mode4 views")

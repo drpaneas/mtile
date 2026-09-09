@@ -46,44 +46,7 @@ func Load(projectDir string) (*Assets, error) {
 		assets.NativeAudio = native
 		return assets, nil
 	}
-	settings, err := LoadAudioSettings(projectDir)
-	if err != nil {
-		return nil, err
-	}
-	assets.AudioSettings = *settings
-	library, err := LoadSFX(projectDir)
-	if err != nil {
-		return nil, err
-	}
-	definitions, steps, err := CompileSFX(*library)
-	if err != nil {
-		return nil, err
-	}
-	assets.SFXLibrary = *library
-	assets.SFXROM = definitions
-	assets.SFXStepROM = steps
-	music, err := LoadMusic(projectDir, *library)
-	if err != nil {
-		return nil, err
-	}
-	patterns, err := CompileMusic(*music, *library)
-	if err != nil {
-		return nil, err
-	}
-	assets.MusicLibrary = *music
-	assets.MusicROM = patterns
-	samples, err := LoadSamples(projectDir)
-	if err != nil {
-		return nil, err
-	}
-	sampleDefinitions, samplePCM, err := CompileSamples(projectDir, *samples)
-	if err != nil {
-		return nil, err
-	}
-	assets.SampleLibrary = *samples
-	assets.SampleROM = sampleDefinitions
-	assets.SamplePCMROM = samplePCM
-	return assets, nil
+	return nil, fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", audioVersion)
 }
 
 // Flatten validates native project assets and returns the ROM-ready flattened
@@ -608,7 +571,7 @@ func readJSON(path string, dst any) error {
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(raw, dst); err != nil {
+	if err := decodeAuthoredJSON(raw, dst, false); err != nil {
 		return fmt.Errorf("decode %s: %w", filepath.Base(path), err)
 	}
 	return nil

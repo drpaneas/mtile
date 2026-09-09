@@ -27,6 +27,12 @@ func (s *Service) configureTileCanvasExperiment(projectDir string) {
 
 func (s Service) runtimeBuildTags(report transpiler.RendererReport) string {
 	tags := runtimeBuildTags(report)
+	if s.Debug {
+		if tags != "" {
+			tags += ","
+		}
+		tags += "mtile_preview_log"
+	}
 	if s.tileCanvasExperiment {
 		if tags != "" {
 			tags += ","

@@ -1,0 +1,254 @@
+{
+  "date": "2026-09-08",
+  "baseline": "Reviewed uncommitted working tree before this optimization pass; already contains fixed-step IWRAM division helpers, not HEAD.",
+  "toolchain": {
+    "go": "1.26.4 darwin/arm64",
+    "tinygo": "0.41.1",
+    "llvm": "20.1.1",
+    "mgba": "1c61b54208ca6266129d0f2394c04bd8c44f98c5"
+  },
+  "sourceHashes": {
+    "runtime/crt0/gba.s": {
+      "before": "bd9104b9a36728a766eb8a15782a314c2de82ec33a890acf95fce6b9f5295dee",
+      "after": "2413b1c8e74b6910958348167edd2e51c4a6d450938fe83196c749b5626fabd7"
+    },
+    "runtime/map_layer_view.go": {
+      "before": "eb9fd62e508dfa7f973c3b909f6d40bb5f8ddb805c9d4664928e7f9e1f901b27",
+      "after": "edab33e127f40e0332993463a7db70bfcec2caac432e002bcecafaa67117881d"
+    },
+    "internal/transpiler/constant_division.go": {
+      "before": "85471a92c4ed35b65e89faaea3dd9e8032440064685ce9852ffa8f2c6fad0571",
+      "after": "802fe3da5055df7fe336c22b59f9b49c046583bce3a21b56ed6c64f6b501ed39"
+    }
+  },
+  "arithmetic": {
+    "warmup": 10,
+    "samples": 120,
+    "operationsPerTick": 16,
+    "baseline": [
+      {
+        "workload": "dynamic",
+        "renderer": "mode0",
+        "median": 30327,
+        "p95": 30365,
+        "maximum": 30375,
+        "steadyMissed": 0,
+        "romBytes": 5668,
+        "iwramBytes": 10168
+      },
+      {
+        "workload": "dynamic",
+        "renderer": "mode4",
+        "median": 174600,
+        "p95": 174638,
+        "maximum": 174648,
+        "steadyMissed": 0,
+        "romBytes": 6144,
+        "iwramBytes": 10172
+      },
+      {
+        "workload": "literal_large",
+        "renderer": "mode0",
+        "median": 24011,
+        "p95": 24029,
+        "maximum": 24041,
+        "steadyMissed": 0,
+        "romBytes": 5616,
+        "iwramBytes": 10112
+      },
+      {
+        "workload": "literal_large",
+        "renderer": "mode4",
+        "median": 167936,
+        "p95": 167954,
+        "maximum": 167966,
+        "steadyMissed": 0,
+        "romBytes": 6072,
+        "iwramBytes": 10116
+      },
+      {
+        "workload": "literal_small",
+        "renderer": "mode0",
+        "median": 23967,
+        "p95": 24009,
+        "maximum": 24017,
+        "steadyMissed": 0,
+        "romBytes": 5624,
+        "iwramBytes": 10112
+      },
+      {
+        "workload": "literal_small",
+        "renderer": "mode4",
+        "median": 167972,
+        "p95": 168014,
+        "maximum": 168022,
+        "steadyMissed": 0,
+        "romBytes": 6072,
+        "iwramBytes": 10116
+      }
+    ],
+    "candidate": [
+      {
+        "workload": "dynamic",
+        "renderer": "mode0",
+        "median": 10981,
+        "p95": 11161,
+        "maximum": 11161,
+        "steadyMissed": 0,
+        "romBytes": 6004,
+        "iwramBytes": 10504
+      },
+      {
+        "workload": "dynamic",
+        "renderer": "mode4",
+        "median": 155254,
+        "p95": 155434,
+        "maximum": 155434,
+        "steadyMissed": 0,
+        "romBytes": 6480,
+        "iwramBytes": 10508
+      },
+      {
+        "workload": "literal_large",
+        "renderer": "mode0",
+        "median": 2995,
+        "p95": 2995,
+        "maximum": 2995,
+        "steadyMissed": 0,
+        "romBytes": 5096,
+        "iwramBytes": 9636
+      },
+      {
+        "workload": "literal_large",
+        "renderer": "mode4",
+        "median": 146955,
+        "p95": 146955,
+        "maximum": 146955,
+        "steadyMissed": 0,
+        "romBytes": 5656,
+        "iwramBytes": 9640
+      },
+      {
+        "workload": "literal_small",
+        "renderer": "mode0",
+        "median": 3367,
+        "p95": 3367,
+        "maximum": 3367,
+        "steadyMissed": 0,
+        "romBytes": 5108,
+        "iwramBytes": 9636
+      },
+      {
+        "workload": "literal_small",
+        "renderer": "mode4",
+        "median": 147339,
+        "p95": 147339,
+        "maximum": 147339,
+        "steadyMissed": 0,
+        "romBytes": 5668,
+        "iwramBytes": 9640
+      }
+    ]
+  },
+  "celesteMode0": {
+    "ticks": 239,
+    "parityErrors": [],
+    "beforeMissed": 1,
+    "afterMissed": 1,
+    "beforeUnstablePixels": 0,
+    "afterUnstablePixels": 0,
+    "cycles": {
+      "lastframe": {
+        "before": {
+          "sum": 50312322,
+          "mean": 210511.80753138076,
+          "median": 202675,
+          "p95": 359441,
+          "maximum": 514493
+        },
+        "after": {
+          "sum": 49008546,
+          "mean": 205056.67782426777,
+          "median": 195120,
+          "p95": 347023,
+          "maximum": 494948
+        },
+        "sumReductionPercent": 2.5913651928050547
+      },
+      "update": {
+        "before": {
+          "sum": 26060836,
+          "mean": 109041.15481171547,
+          "median": 116853,
+          "p95": 205857,
+          "maximum": 358523
+        },
+        "after": {
+          "sum": 24782791,
+          "mean": 103693.68619246862,
+          "median": 108923,
+          "p95": 197738,
+          "maximum": 342162
+        },
+        "sumReductionPercent": 4.904082892812801
+      },
+      "draw": {
+        "before": {
+          "sum": 22929857,
+          "mean": 95940.82426778243,
+          "median": 103618,
+          "p95": 115296,
+          "maximum": 243361
+        },
+        "after": {
+          "sum": 22903578,
+          "mean": 95830.87029288703,
+          "median": 103656,
+          "p95": 115296,
+          "maximum": 242612
+        },
+        "sumReductionPercent": 0.11460603526659587
+      },
+      "blit": {
+        "before": {
+          "sum": 2593734,
+          "mean": 10852.443514644352,
+          "median": 4962,
+          "p95": 6419,
+          "maximum": 1373167
+        },
+        "after": {
+          "sum": 2592814,
+          "mean": 10848.594142259415,
+          "median": 4962,
+          "p95": 6291,
+          "maximum": 1373165
+        },
+        "sumReductionPercent": 0.035470098321570366
+      }
+    },
+    "baselineBuild": {
+      "ROM": 308248,
+      "IWRAM": 28012,
+      "EWRAMFree": 74656
+    },
+    "candidateBuild": {
+      "ROM": 308532,
+      "IWRAM": 28348,
+      "EWRAMFree": 74656
+    },
+    "sourceHashes": {
+      "game.lua": "50dd3031824535ee6dba1aeb99ff6cfcc97379a6df8680c8860512a808515a7b",
+      "src/draw.lua": "070c7d40b9a61244a7eb87bbeaab5b96fdf9fb4dae9c47d0e211523498f11a69",
+      "src/effects.lua": "8117f4fc5d81c2a52b6e610aaf17d42bf9850ab789a7e25e11ce6aa747610726",
+      "src/player.lua": "2a00a6914c239f88bcd390a94aeaac2563b75c91bea8449d510a598451c9647d",
+      "src/tilecanvas_probe.lua": "5d60af244749fbc2d9dbf057220348f0751ad3707b938cce8a2745d8c21c8e52",
+      "tests/tile_effect_placement_parity.lua": "01506c84463776e21ea1a1de18f31159f2e65ae7697e9a376c46f6c145fd30e5",
+      "tests/tile_helper_state_parity.lua": "a1f36b13bdcb6439b3ea01b093571fb8248585b487eec64be06a77233c031df0"
+    },
+    "romHashes": {
+      "before": "410f4222642ece437576d374681ca9f188093564d58c6d6a042521cb266595c7",
+      "after": "a403f24264d37eec554c027c6bdacb64e2c3f36274db1fc4bafdf6084c65095b"
+    }
+  }
+}

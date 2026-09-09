@@ -55,12 +55,13 @@ func lexLuaIndentLine(line string, state *luaLexState) []string {
 			continue
 		}
 		if state.quote != 0 {
-			if text[at] == '\\' {
+			switch text[at] {
+			case '\\':
 				at += 2
-			} else if text[at] == state.quote {
+			case state.quote:
 				state.quote = 0
 				at++
-			} else {
+			default:
 				at++
 			}
 			continue

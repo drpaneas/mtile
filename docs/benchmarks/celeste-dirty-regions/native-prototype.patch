@@ -1,0 +1,753 @@
+--- a/runtime/camera.go
++++ b/runtime/camera.go
+@@ -111,6 +111,7 @@
+ 	if tileCanvasExperiment {
+ 		c.markCanvasPixel(sx, sy)
+ 	}
++	c.markClearRect(sx, sy, sx, sy)
+ 	c.framebuffer[sy*ScreenWidth+sx] = color
+ }
+ 
+--- a/runtime/crt0/gba.s
++++ b/runtime/crt0/gba.s
+@@ -1075,3 +1075,160 @@
+     ldmia   sp!, {r4-r9}
+     bx      lr
+ .size mtile_fill_words, .-mtile_fill_words
++
++// Ideal supplied 20-row tile mask, low30 bits per row. No tracking cost.
++// r0 framebuffer, r1 clear word or hidden VRAM, r2 mask pointer.
++.section .iwram.mask_clear,"ax",%progbits
++.syntax unified
++.align 2
++.arm
++.global mtile_mask_clear
++.type mtile_mask_clear,%function
++mtile_mask_clear:
++    stmdb sp!, {r4-r11, lr}
++    sub sp, sp, #4
++    mov r4, r0
++    mov r5, r1
++    mov r6, r2
++    mov r7, #20
++.Lmask_clear_band:
++    ldr r8, [r6], #4
++    mov r9, #0
++    mvn r3, #0xc0000000
++    cmp r8, r3
++    moveq r8, #0
++    moveq r10, #1920
++    moveq r11, #1
++    beq .Lmask_clear_copy
++.Lmask_clear_next:
++    cmp r8, #0
++    beq .Lmask_clear_advance
++.Lmask_clear_zero:
++    tst r8, #1
++    bne .Lmask_clear_start
++    mov r8, r8, lsr #1
++    add r9, r9, #8
++    b .Lmask_clear_zero
++.Lmask_clear_start:
++    mov r10, #0
++.Lmask_clear_ones:
++    mov r8, r8, lsr #1
++    add r10, r10, #8
++    tst r8, #1
++    bne .Lmask_clear_ones
++    mov r11, #8
++.Lmask_clear_copy:
++    str r10, [sp]
++    mov r2, r10
++    add r0, r4, r9
++    mov r3, r5
++    mov r10, r5
++    mov r12, r5
++    mov lr, r5
++.Lmask_clear_row:
++    cmp r2, #16
++    blo .Lmask_clear_tail
++.Lmask_clear_words:
++    stmia r0!, {r3, r10, r12, lr}
++    sub r2, r2, #16
++    cmp r2, #16
++    bhs .Lmask_clear_words
++.Lmask_clear_tail:
++    cmp r2, #0
++    stmiane r0!, {r3, r10}
++    ldr r2, [sp]
++    add r0, r0, #240
++    sub r0, r0, r2
++    subs r11, r11, #1
++    bne .Lmask_clear_row
++    ldr r10, [sp]
++    add r9, r9, r10
++    b .Lmask_clear_next
++.Lmask_clear_advance:
++    add r4, r4, #1920
++    subs r7, r7, #1
++    bne .Lmask_clear_band
++    add sp, sp, #4
++    ldmia sp!, {r4-r11, lr}
++    bx lr
++.size mtile_mask_clear, .-mtile_mask_clear
++
++// Ideal supplied 20-row tile mask, low30 bits per row. No tracking cost.
++// r0 framebuffer, r1 clear word or hidden VRAM, r2 mask pointer.
++.section .iwram.mask_upload,"ax",%progbits
++.syntax unified
++.align 2
++.arm
++.global mtile_mask_upload
++.type mtile_mask_upload,%function
++mtile_mask_upload:
++    stmdb sp!, {r4-r11, lr}
++    sub sp, sp, #4
++    mov r4, r0
++    mov r5, r1
++    mov r6, r2
++    mov r7, #20
++.Lmask_upload_band:
++    ldr r8, [r6], #4
++    mov r9, #0
++    mvn r3, #0xc0000000
++    cmp r8, r3
++    moveq r8, #0
++    moveq r10, #1920
++    moveq r11, #1
++    beq .Lmask_upload_copy
++.Lmask_upload_next:
++    cmp r8, #0
++    beq .Lmask_upload_advance
++.Lmask_upload_zero:
++    tst r8, #1
++    bne .Lmask_upload_start
++    mov r8, r8, lsr #1
++    add r9, r9, #8
++    b .Lmask_upload_zero
++.Lmask_upload_start:
++    mov r10, #0
++.Lmask_upload_ones:
++    mov r8, r8, lsr #1
++    add r10, r10, #8
++    tst r8, #1
++    bne .Lmask_upload_ones
++    mov r11, #8
++.Lmask_upload_copy:
++    str r10, [sp]
++    mov r2, r10
++    add r0, r4, r9
++    add r1, r5, r9
++.Lmask_upload_row:
++    cmp r2, #16
++    blo .Lmask_upload_tail
++.Lmask_upload_words:
++    ldmia r0!, {r3, r10, r12, lr}
++    stmia r1!, {r3, r10, r12, lr}
++    sub r2, r2, #16
++    cmp r2, #16
++    bhs .Lmask_upload_words
++.Lmask_upload_tail:
++    cmp r2, #0
++    ldmiane r0!, {r3, r10}
++    stmiane r1!, {r3, r10}
++    ldr r2, [sp]
++    add r0, r0, #240
++    sub r0, r0, r2
++    add r1, r1, #240
++    sub r1, r1, r2
++    subs r11, r11, #1
++    bne .Lmask_upload_row
++    ldr r10, [sp]
++    add r9, r9, r10
++    b .Lmask_upload_next
++.Lmask_upload_advance:
++    add r4, r4, #1920
++    add r5, r5, #1920
++    subs r7, r7, #1
++    bne .Lmask_upload_band
++    add sp, sp, #4
++    ldmia sp!, {r4-r11, lr}
++    bx lr
++.size mtile_mask_upload, .-mtile_mask_upload
++
+--- a/runtime/dirty_clear_full.go
++++ b/runtime/dirty_clear_full.go
+@@ -0,0 +1,5 @@
++//go:build mtile_clear_full
++
++package runtime
++
++const dirtyClearForceFull = true
+--- a/runtime/dirty_clear_mode4.go
++++ b/runtime/dirty_clear_mode4.go
+@@ -0,0 +1,47 @@
++//go:build !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import ("github.com/drpaneas/mtile/runtime/hw"; "unsafe")
++
++// markClearRect conservatively includes every written pixel in a clipped
++// screen-space rectangle. Extra pixels are safe: they already contain the
++// remembered clear index or will be cleared along with actual writes.
++//
++//go:noinline
++//go:section .iwram
++func (c *Context) markClearRect(x0, y0, x1, y1 int) {
++	x0 = max(0, x0)
++	y0 = max(0, y0)
++	x1 = min(ScreenWidth-1, x1)
++	y1 = min(ScreenHeight-1, y1)
++	if x0 > x1 || y0 > y1 {
++		return
++	}
++	tx0, tx1 := uint(x0>>3), uint(x1>>3)
++	mask := ((uint32(1) << (tx1 + 1)) - 1) &^ ((uint32(1) << tx0) - 1)
++	for ty := y0 >> 3; ty <= y1>>3; ty++ {
++		c.clearCoverage[ty] |= mask
++	}
++}
++
++//go:noinline
++func (c *Context) clearTrackedFramebuffer(value byte) {
++	word := uint32(value) * 0x01010101
++	full := !c.clearKnown || value != c.clearIndex
++	for row, mask := range c.clearCoverage {
++		if full {
++			c.dirtyClearPending[row] = 0x3fffffff
++		} else {
++			c.dirtyClearPending[row] |= mask
++		}
++	}
++	if full || dirtyClearForceFull {
++		hw.Fill32(c.framebuffer[:], word, FramebufferSize/4)
++	} else {
++		clearMaskedTiles(unsafe.Pointer(&c.framebuffer[0]), word, unsafe.Pointer(&c.clearCoverage[0]))
++	}
++	c.clearKnown = true
++	c.clearIndex = value
++	c.clearCoverage = [20]uint32{}
++}
+--- a/runtime/dirty_clear_native_host.go
++++ b/runtime/dirty_clear_native_host.go
+@@ -0,0 +1,15 @@
++//go:build !tinygo && !mtile_mode0 && !mtile_tilecanvas
++package runtime
++import "unsafe"
++func clearMaskedTiles(dst unsafe.Pointer, word uint32, mask unsafe.Pointer) {
++ rows := (*[20]uint32)(mask)
++ pixels := (*[FramebufferSize]byte)(dst)
++ for ty, row := range rows {
++  for tx:=0;tx<30;tx++ {
++   if row & (1<<uint(tx)) == 0 {continue}
++   for y:=ty*8;y<ty*8+8;y++ {
++    for x:=tx*8;x<tx*8+8;x++ {pixels[y*ScreenWidth+x] = byte(word)}
++   }
++  }
++ }
++}
+--- a/runtime/dirty_clear_native_tinygo.go
++++ b/runtime/dirty_clear_native_tinygo.go
+@@ -0,0 +1,5 @@
++//go:build tinygo && !mtile_mode0 && !mtile_tilecanvas
++package runtime
++import "unsafe"
++//export mtile_mask_clear
++func clearMaskedTiles(dst unsafe.Pointer, word uint32, mask unsafe.Pointer)
+--- a/runtime/dirty_clear_other.go
++++ b/runtime/dirty_clear_other.go
+@@ -0,0 +1,10 @@
++//go:build mtile_mode0 || mtile_tilecanvas
++
++package runtime
++
++import "github.com/drpaneas/mtile/runtime/hw"
++
++func (c *Context) markClearRect(x0, y0, x1, y1 int) {}
++func (c *Context) clearTrackedFramebuffer(value byte) {
++	hw.Fill32(c.framebuffer[:], uint32(value)*0x01010101, FramebufferSize/4)
++}
+--- a/runtime/dirty_clear_partial.go
++++ b/runtime/dirty_clear_partial.go
+@@ -0,0 +1,5 @@
++//go:build !mtile_clear_full
++
++package runtime
++
++const dirtyClearForceFull = false
+--- a/runtime/dirty_clear_probe_test.go
++++ b/runtime/dirty_clear_probe_test.go
+@@ -0,0 +1,65 @@
++//go:build !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import "testing"
++
++func TestDirtyClearWriterCoverage(t *testing.T) {
++	for _, tc := range []struct {
++		name string
++		make func(*testing.T) *Context
++		draw func(*Context)
++	}{
++		{"primitives", func(t *testing.T) *Context { return solidMapFixture(t, false, false) }, func(c *Context) {
++			c.Camera(3, -2)
++			c.Clip(1, 2, 230, 151)
++			c.Pset(9, 9, 14)
++			c.Line(-2, 1, 237, 155, 44)
++			c.Line(4, 2, 4, 33, 10)
++			c.Rect(17, 21, 60, 55, 43)
++			c.Rectfill(3, 4, 68, 91, 55)
++			c.Circ(125, 84, 23, 12)
++			c.Circfill(178, 80, 12, 16)
++			c.Print("hello\nworld", 200, 2, 65)
++		}},
++		{"full-width", func(t *testing.T) *Context { return solidMapFixture(t, false, false) }, func(c *Context) { c.Rectfill(0, 9, 239, 20, 14) }},
++		{"sprites", func(t *testing.T) *Context { return solidMapFixture(t, false, false) }, func(c *Context) {
++			c.Spr(1, 3, 2, 2, 2, true, true)
++			c.SSpr(0, 0, 15, 8, 23, 19, 41, 23, false, true)
++			c.Clip(7, 7, 199, 102)
++			c.Spr(3, 4, 2, 4, 4, false, false)
++		}},
++		{"compact", func(t *testing.T) *Context { return solidMapFixture(t, true, false) }, func(c *Context) { c.Spr(1, 3, 2, 2, 2, true, true); c.SSpr(0, 0, 15, 8, 23, 19, 41, 23, false, true) }},
++		{"native-and-solid-map", func(t *testing.T) *Context { return solidMapFixture(t, true, false) }, func(c *Context) { c.Camera(3, 2); c.MapBGAt(0, 0, 0, 0, 0, 0, 40, 20, 0) }},
++		{"fallback-map", func(t *testing.T) *Context { return solidMapFixture(t, false, false) }, func(c *Context) { c.Camera(3, 2); c.PaltColor(0, false); c.MapBGAt(0, 0, 0, 0, 0, 0, 40, 20, 0) }},
++		{"packed-map", func(t *testing.T) *Context { c := packedFixture(t, true); c.PrepareMapPacked(); return c }, func(c *Context) { c.Camera(3, 2); c.MapBGAt(0, 0, 0, 0, 0, 0, 40, 20, 0) }},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			c := tc.make(t)
++			c.Cls(91)
++			tc.draw(c)
++			for i, p := range c.framebuffer {
++				if p != 91 && c.clearCoverage[i/ScreenWidth/8]&(1<<uint(i%ScreenWidth/8)) == 0 {
++					t.Fatalf("untracked pixel %d,%d=%d", i%ScreenWidth, i/ScreenWidth, p)
++				}
++			}
++			c.Cls(91)
++			for i, p := range c.framebuffer {
++				if p != 91 {
++					t.Fatalf("stale pixel %d,%d=%d", i%ScreenWidth, i/ScreenWidth, p)
++				}
++			}
++			x, y, w, h := c.ClipRect()
++			if x != 0 || y != 0 || w != 240 || h != 160 || c.cursor.x != 0 || c.cursor.y != 0 {
++				t.Fatal("cls state")
++			}
++			c.Pal(91, 0, 0)
++			c.Cls(91)
++			for _, p := range c.framebuffer {
++				if p != 0 {
++					t.Fatal("resolved color")
++				}
++			}
++		})
++	}
++}
+--- a/runtime/dirty_packed_coverage.go
++++ b/runtime/dirty_packed_coverage.go
+@@ -0,0 +1,62 @@
++//go:build !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++// Experimental conservative map coverage. Build once with the packed cache;
++// each bit covers a complete source tile, including any transparent holes.
++func (c *Context) preparePackedClearCoverage(bg int) {
++	c.packedClearCoverage[bg] = [32]uint64{}
++	if c.cart.MapW > 64 || c.cart.MapH > 32 {
++		return
++	}
++	start := int(c.cart.MapPackedLayers[bg].SpanStart)
++	for _, span := range c.cart.MapPackedSpans[start:start+c.mapPackedSpanCount[bg]] {
++		first := uint(span.X) >> 3
++		last := (uint(span.X)+uint(span.Length&0x7fff)-1) >> 3
++		mask := (^uint64(0) << first) & (^uint64(0) >> (63-last))
++		c.packedClearCoverage[bg][span.Y>>3] |= mask
++	}
++}
++
++func translatedClearBits(bits uint64, shift int) uint32 {
++	if shift < 0 {
++		return uint32(bits >> uint(-shift))
++	}
++	return uint32(bits << uint(shift))
++}
++
++// Bounds are clipped source coordinates, with exclusive upper endpoints.
++// Translate the source tiles and include their neighbouring destination tiles
++// for pixel offsets that are not multiples of eight.
++//go:noinline
++//go:section .iwram
++func (c *Context) markClearPackedCoverage(bg, originX, originY, x0, x1, y0, y1 int) {
++	if x0 >= x1 || y0 >= y1 {
++		return
++	}
++	if c.cart.MapW > 64 || c.cart.MapH > 32 {
++		c.markClearRect(x0+originX, y0+originY, x1+originX-1, y1+originY-1)
++		return
++	}
++	first := uint(x0 >> 3)
++	last := uint((x1-1) >> 3)
++	visible := (^uint64(0) << first) & (^uint64(0) >> (63-last))
++	left := uint((x0+originX) >> 3)
++	right := uint((x1+originX-1) >> 3)
++	destMask := (^uint32(0) << left) & (^uint32(0) >> (31-right))
++	shift := originX >> 3
++	for sy := y0 >> 3; sy <= (y1-1)>>3; sy++ {
++		bits := c.packedClearCoverage[bg][sy] & visible
++		mask := translatedClearBits(bits, shift)
++		if originX&7 != 0 {
++			mask |= translatedClearBits(bits, shift+1)
++		}
++		mask &= destMask
++		top := (max(y0, sy*8)+originY) >> 3
++		bottom := (min(y1, sy*8+8)-1+originY) >> 3
++		c.clearCoverage[top] |= mask
++		if top != bottom {
++			c.clearCoverage[bottom] |= mask
++		}
++	}
++}
+--- a/runtime/dirty_present_full.go
++++ b/runtime/dirty_present_full.go
+@@ -0,0 +1,5 @@
++//go:build mtile_dirty_upload_full
++
++package runtime
++
++const dirtyPresentForceFull = true
+--- a/runtime/dirty_present_host.go
++++ b/runtime/dirty_present_host.go
+@@ -0,0 +1,25 @@
++//go:build !tinygo && !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import (
++	"github.com/drpaneas/mtile/runtime/hw"
++	"unsafe"
++)
++
++func copyDirtyPageToVRAM(src unsafe.Pointer, dest uintptr, masks unsafe.Pointer) {
++	for ty := 0; ty < 20; ty++ {
++		mask := *(*uint32)(unsafe.Add(masks, ty*4))
++		for tx := 0; tx < 30; tx++ {
++			if mask&(1<<uint(tx)) == 0 {
++				continue
++			}
++			for y := ty * 8; y < (ty+1)*8; y++ {
++				for x := tx * 8; x < (tx+1)*8; x += 4 {
++					offset := y*ScreenWidth + x
++					hw.SetVRAM32(dest+uintptr(offset), *(*uint32)(unsafe.Add(src, offset)))
++				}
++			}
++		}
++	}
++}
+--- a/runtime/dirty_present_mode4.go
++++ b/runtime/dirty_present_mode4.go
+@@ -0,0 +1,39 @@
++//go:build !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import (
++	"github.com/drpaneas/mtile/runtime/hw"
++	"unsafe"
++)
++
++func (c *Context) resetDirtyPageState() {
++	c.dirtyClearPending = [20]uint32{}
++	c.dirtyPagePending = [2][20]uint32{}
++	c.dirtyPageValid = [2]bool{}
++}
++
++// copyDirtyFramebuffer keeps independent age for each physical VRAM page.
++// Coverage survives no-draw frames; this may copy unchanged foreground tiles,
++// but never loses a cleared old position or a page skipped for multiple frames.
++//
++//go:noinline
++func (c *Context) copyDirtyFramebuffer(dest uintptr) {
++	page := 0
++	if dest == hw.Page1 {
++		page = 1
++	}
++	for row, coverage := range c.clearCoverage {
++		changed := coverage | c.dirtyClearPending[row]
++		c.dirtyPagePending[0][row] |= changed
++		c.dirtyPagePending[1][row] |= changed
++		c.dirtyClearPending[row] = 0
++	}
++	if !c.dirtyPageValid[page] || dirtyPresentForceFull || c.blitKind != BlitDMA {
++		c.copyFramebuffer(dest)
++	} else {
++		copyDirtyPageToVRAM(unsafe.Pointer(&c.framebuffer[0]), dest, unsafe.Pointer(&c.dirtyPagePending[page][0]))
++	}
++	c.dirtyPageValid[page] = true
++	c.dirtyPagePending[page] = [20]uint32{}
++}
+--- a/runtime/dirty_present_partial.go
++++ b/runtime/dirty_present_partial.go
+@@ -0,0 +1,5 @@
++//go:build !mtile_dirty_upload_full
++
++package runtime
++
++const dirtyPresentForceFull = false
+--- a/runtime/dirty_present_probe_test.go
++++ b/runtime/dirty_present_probe_test.go
+@@ -0,0 +1,58 @@
++//go:build !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import (
++	"github.com/drpaneas/mtile/runtime/hw"
++	"testing"
++)
++
++func TestDirtyPresentIndependentPageHistory(t *testing.T) {
++	hw.ResetForTest()
++	var c Context
++	c.InitHardware()
++	for frame := 0; frame < 32; frame++ {
++		// Persistent frames, no-draw freeze frames, multiple clears between uploads,
++		// changed background, and palette-mapped clear indices all occur.
++		if frame%7 == 0 {
++			c.Pal(0, (frame/7)%4, 0)
++		}
++		if frame%6 != 4 && frame%6 != 5 {
++			c.Cls(0)
++			c.Rectfill(frame*7%220, frame*11%148, frame*7%220+12, frame*11%148+10, 14)
++		}
++		if frame%9 == 2 {
++			c.Cls(0)
++			c.Pset(0, 159, 19)
++			c.Cls(0)
++			c.Pset(239, 0, 31)
++		}
++		if frame%6 == 5 {
++			c.Pset(120, 80, frame+8)
++		}
++		if frame == 17 {
++			c.InitHardware()
++		}
++		if frame == 21 {
++			c.SetBlitKind(BlitCPU)
++		}
++		if frame == 22 {
++			c.SetBlitKind(BlitDMA)
++		}
++		c.PrepareHiddenPage()
++		page := c.hiddenPage()
++		for i := 0; i < FramebufferSize; i += 4 {
++			want := uint32(c.framebuffer[i]) | uint32(c.framebuffer[i+1])<<8 | uint32(c.framebuffer[i+2])<<16 | uint32(c.framebuffer[i+3])<<24
++			if got := hw.ReadVRAM32(page + uintptr(i)); got != want {
++				t.Fatalf("frame%d offset%d got%x want%x", frame, i, got, want)
++			}
++		}
++		if got := hw.ReadVRAM32(page + FramebufferSize); got != 0xffffffff {
++			t.Fatalf("padding changed: %x", got)
++		}
++		// Updating one hidden page repeatedly must not consume the other page's history.
++		if frame%5 != 3 {
++			c.FlipPage()
++		}
++	}
++}
+--- a/runtime/dirty_present_tinygo.go
++++ b/runtime/dirty_present_tinygo.go
+@@ -0,0 +1,11 @@
++//go:build tinygo && !mtile_mode0 && !mtile_tilecanvas
++
++package runtime
++
++import "unsafe"
++
++//export mtile_mask_upload
++func copyDirtyTiles(src, dst, mask unsafe.Pointer)
++func copyDirtyPageToVRAM(src unsafe.Pointer, dest uintptr, mask unsafe.Pointer) {
++	copyDirtyTiles(src, unsafe.Pointer(dest), mask)
++}
+--- a/runtime/draw.go
++++ b/runtime/draw.go
+@@ -72,8 +72,7 @@
+ 	c.ClipReset()
+ 	c.cursor.x, c.cursor.y = 0, 0
+ 	value := c.drawPal[color]
+-	word := uint32(value) | uint32(value)<<8 | uint32(value)<<16 | uint32(value)<<24
+-	hw.Fill32(c.framebuffer[:], word, FramebufferSize/4)
++	c.clearTrackedFramebuffer(value)
+ }
+ 
+ // Rectfill draws an inclusive rectangle, normalizing reversed corners and
+@@ -123,6 +122,7 @@
+ 		if tileCanvasExperiment {
+ 			c.markCanvasRect(sx0, sy0, sx1, sy1)
+ 		}
++		c.markClearRect(sx0, sy0, sx1, sy1)
+ 		start := sy0 * ScreenWidth
+ 		hw.Fill32(c.framebuffer[start:], word, (sy1-sy0+1)*ScreenWidth/4)
+ 		return
+@@ -145,6 +145,7 @@
+ //go:noinline
+ //go:section .iwram
+ func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
++	c.markClearRect(x0, y, x1, y)
+ 	if tileCanvasExperiment {
+ 		c.markCanvasRect(x0, y, x1, y)
+ 	}
+@@ -183,6 +184,7 @@
+ //go:noinline
+ //go:section .iwram
+ func (c *Context) fillColumn(x, y0, y1 int, value byte) {
++	c.markClearRect(x, y0, x, y1)
+ 	if tileCanvasExperiment {
+ 		c.markCanvasRect(x, y0, x, y1)
+ 	}
+--- a/runtime/mappacked.go
++++ b/runtime/mappacked.go
+@@ -117,6 +117,7 @@
+ 		}
+ 	}
+ 	c.mapPackedSpanCount[bg] = count - int(layer.SpanStart)
++	c.preparePackedClearCoverage(bg)
+ 	c.mapPackedReady[bg] = true
+ 	return true
+ }
+@@ -144,6 +145,7 @@
+ 		return false
+ 	}
+ 	start := int(c.cart.MapPackedLayers[bg].SpanStart)
++	c.markClearPackedCoverage(bg, originX, originY, x0, x1, y0, y1)
+ 	copyMapPackedSpans(src, dst, unsafe.Pointer(&c.cart.MapPackedSpans[start]), c.mapPackedSpanCount[bg], originY*ScreenWidth+originX, x0, x1, y0, y1)
+ 	return true
+ }
+--- a/runtime/mapraster.go
++++ b/runtime/mapraster.go
+@@ -113,6 +113,21 @@
+ 	// may supply an intentionally unaligned byte slice and retain the old path.
+ 	if uintptr(src)&3 != 0 {
+ 		return false
++	}
++	for i := 0; i < c.mapRasterSpanCount; i++ {
++		span := cart.MapRasterSpans[i]
++		y := int(span.Y)
++		if y < y0 {
++			continue
++		}
++		if y >= y1 {
++			break
++		}
++		x := int(span.Offset) - y*w
++		left, right := max(x, x0), min(x+int(span.Length), x1)
++		if left < right {
++			c.markClearRect(left+originX, y+originY, right+originX-1, y+originY)
++		}
+ 	}
+ 	if w == ScreenWidth && originX == 0 && originY == 0 && x0 == 0 && x1 == w && y0 == 0 && y1 == h && uintptr(dst)&3 == 0 {
+ 		copyMapRasterFull(src, dst, unsafe.Pointer(&cart.MapRasterSpans[0]), c.mapRasterSpanCount)
+--- a/runtime/maprender.go
++++ b/runtime/maprender.go
+@@ -261,6 +261,7 @@
+ 			if baseX+8 > clipX1 {
+ 				colX1 = clipX1 - baseX
+ 			}
++			c.markClearRect(baseX+colX0, baseY+rowY0, baseX+colX1-1, baseY+rowY1-1)
+ 			if identity && key0 && (sheetStorageReadOnly || c.cart.SheetReadOnly) &&
+ 				rowY0 == 0 && rowY1 == 8 && colX0 == 0 && colX1 == 8 {
+ 				// The native cell compositor accepts any framebuffer alignment,
+--- a/runtime/mode4.go
++++ b/runtime/mode4.go
+@@ -27,6 +27,7 @@
+ // shows page A. Page B's slot overlaps OBJ character memory, so OBJ is never
+ // enabled by this runtime.
+ func (c *Context) InitHardware() {
++	c.resetDirtyPageState()
+ 	hw.SetReg16(hw.DISPCNT, forceBlank)
+ 	hw.SetReg16(hw.BG2PA, 0x0100)
+ 	hw.SetReg16(hw.BG2PB, 0x0000)
+@@ -98,10 +99,10 @@
+ 	base := c.hiddenPage()
+ 	if c.profileEnabled {
+ 		cycleStart := startShortCycleMeasurement()
+-		c.copyFramebuffer(base)
++		c.copyDirtyFramebuffer(base)
+ 		c.lastBlitCycles = stopShortCycleMeasurement(cycleStart)
+ 	} else {
+-		c.copyFramebuffer(base)
++		c.copyDirtyFramebuffer(base)
+ 		c.lastBlitCycles = 0
+ 	}
+ 	c.lastBlitStart = start
+--- a/runtime/render_state_mode4.go
++++ b/runtime/render_state_mode4.go
+@@ -6,17 +6,30 @@
+ // build tag makes renderer selection a link-time memory decision, not a hot
+ // runtime branch.
+ type renderState struct {
+-	mapPackedReady     [4]bool
+-	mapPackedFailed    [4]bool
+-	mapPackedSpanCount [4]int
+-	framebuffer        [FramebufferSize]byte
+-	mapRasterReady     bool
+-	mapRasterFailed    bool
+-	mapRasterBG        int
+-	mapRasterSpanCount int
++	dirtyClearPending   [20]uint32
++	dirtyPagePending    [2][20]uint32
++	dirtyPageValid      [2]bool
++	packedClearCoverage [4][32]uint64
++	clearCoverage       [20]uint32
++	clearKnown          bool
++	clearIndex          byte
++	mapPackedReady      [4]bool
++	mapPackedFailed     [4]bool
++	mapPackedSpanCount  [4]int
++	framebuffer         [FramebufferSize]byte
++	mapRasterReady      bool
++	mapRasterFailed     bool
++	mapRasterBG         int
++	mapRasterSpanCount  int
+ }
+ 
+-func (c *Context) resetRendererState()            { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
++func (c *Context) resetRendererState() {
++	c.resetDirtyPageState()
++	c.clearKnown = false
++	c.clearCoverage = [20]uint32{}
++	c.invalidateMapRaster()
++	c.invalidateMapPacked(-1)
++}
+ func (c *Context) sheetMutated(x, y int)          { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
+ func (c *Context) mapMutated(x, y int, id uint16) { c.invalidateMapRaster(); c.invalidateMapPacked(0) }
+ func (c *Context) mapLayerMutated(layer, x, y int, id uint16) {
+--- a/runtime/sprite.go
++++ b/runtime/sprite.go
+@@ -383,6 +383,7 @@
+ 			srcY0 = (int(slot) - 1) * 8
+ 		}
+ 	}
++	c.markClearRect(baseX+drawX0, baseY+drawY0, baseX+drawX1-1, baseY+drawY1-1)
+ 	fb := c.framebuffer[:]
+ 	pal := &c.drawPal
+ 	transp := &c.transp
+@@ -477,6 +478,7 @@
+ 	sheet := c.cart.Sheet
+ 	sheetW := c.cart.SheetW
+ 	sheetH := c.cart.SheetH
++	c.markClearRect(baseX+drawX0, baseY+drawY0, baseX+drawX1-1, baseY+drawY1-1)
+ 	fb := c.framebuffer[:]
+ 	pal := &c.drawPal
+ 	transp := &c.transp
+--- a/runtime/text.go
++++ b/runtime/text.go
+@@ -394,6 +394,7 @@
+ 	// test and write straight into the framebuffer. The bits loop also exits
+ 	// as soon as a column has no remaining set pixels.
+ 	if sx >= c.clipX0 && sx+glyphBitmapW <= c.clipX1 && sy >= c.clipY0 && sy+glyphBitmapH <= c.clipY1 {
++		c.markClearRect(sx, sy, sx+glyphBitmapW-1, sy+glyphBitmapH-1)
+ 		base := sy*ScreenWidth + sx
+ 		for col := 0; col < glyphBitmapW; col++ {
+ 			// Mask to the 5 bitmap rows.

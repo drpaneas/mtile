@@ -64,12 +64,12 @@ func TestDirectSoundStartStopKeepsActivePSG(t *testing.T) {
 	ConfigurePSGOutput(7, 7, PSGMix100)
 	RoutePSGChannel(1, SoundRouteBoth)
 	SetPSGActive(true)
-	page := testStreamPage(0)
+	var sample uint32
 	clock, _ := DirectSoundClockForRate(DirectSoundRate16384)
-	if !StartFIFOAStreamBlock(page[:], testStreamBlockSamples, clock) {
+	if !StartFIFOAProbe(&sample, clock) {
 		t.Fatal("stream start failed")
 	}
-	StopFIFOAStream()
+	StopFIFOAProbe()
 
 	if got := GetReg16(SOUNDCNT_L); got != 0x1177 {
 		t.Errorf("FIFO lifecycle changed PSG control: %#04x", got)

@@ -23,12 +23,14 @@ func TestGeneratedAssetsInitSucceedsAgainstRealRuntime(t *testing.T) {
 	dir := t.TempDir()
 	sheet, mapData := nativeFixture()
 	writeTestProject(t, dir, canonicalPalette(), sheet, mapData)
-	library := validSFXLibrary()
-	if err := SaveSFX(dir, &library); err != nil {
+	settings, sounds, music := nativeAudioFixture()
+	if err := SaveNativeAudioSettings(dir, &settings); err != nil {
 		t.Fatal(err)
 	}
-	music := validMusicLibrary()
-	if err := SaveMusic(dir, &music, library); err != nil {
+	if err := SaveNativeSounds(dir, &sounds); err != nil {
+		t.Fatal(err)
+	}
+	if err := SaveNativeMusic(dir, sounds, &music); err != nil {
 		t.Fatal(err)
 	}
 
@@ -45,7 +47,7 @@ func TestGeneratedAssetsInitSucceedsAgainstRealRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mod := fmt.Sprintf("module generated\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
+	mod := fmt.Sprintf("module generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
 	if err := os.WriteFile(filepath.Join(genDir, "go.mod"), []byte(mod), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -77,33 +79,15 @@ func TestInitAssetsWiresRealCartridge(t *testing.T) {
 	if got, want := c.PaletteEntry(1), uint16(0x0842); got != want {
 		t.Fatalf("PaletteEntry(1) = %#04x, want %#04x (canonical aurora gray 0x111111, quantized)", got, want)
 	}
-	var mixer audio.Mixer
-	var player audio.SFXPlayer
-	if !InitSFX(&player, &mixer) {
-		t.Fatal("InitSFX rejected generated target records")
+	var controller audio.Controller
+	if !InitNativeAudio(&controller) {
+		t.Fatal("InitNativeAudio rejected generated target records")
 	}
-	c.AttachSFX(&player)
-	if !c.Music(0, 125) {
-		t.Fatal("generated music pattern 0 did not start")
-	}
-	if state := player.MusicState(); !state.Active || state.PatternID != 0 || state.FadeSamplesRemaining != 2048 {
-		t.Fatalf("generated music state = %+v", state)
-	}
-	player.MixMono(make([]int8, 2048))
-	if !c.Music(-1, 125) {
-		t.Fatal("generated music did not stop")
-	}
-	player.MixMono(make([]int8, 2049))
-	if state := player.MusicState(); state.Active {
-		t.Fatalf("generated music fade-out state = %+v", state)
-	}
-	if !c.SFX(7, 0, 0, 1) {
-		t.Fatal("generated SFX id 7 did not start")
-	}
-	samples := make([]int8, 4)
-	player.MixMono(samples)
-	if samples[0] != -5 {
-		t.Fatalf("generated filtered SFX first sample = %d, want calibrated -5", samples[0])
+	c.AttachNativeAudio(&controller)
+	c.MusicV(rt.NumVal(rt.FromInt(0)), rt.Value{})
+	controller.Service()
+	if got := c.AudioStats().Native; got.CommandsRejected != 0 || got.InvalidAssets != 0 || !got.Channels[0].Active {
+		t.Fatalf("generated PSG state = %+v", got)
 	}
 }
 `
@@ -145,7 +129,7 @@ func TestGeneratedLargeMapUsesStreamingCacheAgainstRealRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mod := fmt.Sprintf("module generated\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
+	mod := fmt.Sprintf("module generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
 	if err := os.WriteFile(filepath.Join(genDir, "go.mod"), []byte(mod), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -206,7 +190,7 @@ func TestRuntimeDefaultPaletteMatchesCanonicalAurora(t *testing.T) {
 		t.Fatal(err)
 	}
 	genDir := t.TempDir()
-	mod := fmt.Sprintf("module generated\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
+	mod := fmt.Sprintf("module generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
 	if err := os.WriteFile(filepath.Join(genDir, "go.mod"), []byte(mod), 0o600); err != nil {
 		t.Fatal(err)
 	}

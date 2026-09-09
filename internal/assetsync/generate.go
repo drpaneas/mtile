@@ -35,11 +35,9 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 	b.WriteString("\t_ \"unsafe\" // required for //go:section\n")
 	b.WriteString("\n")
 	b.WriteString("\trt \"github.com/drpaneas/mtile/runtime\"\n")
-	legacyAudioEnabled := len(assets.SFXROM) != 0 || len(assets.MusicROM) != 0 || len(assets.SampleROM) != 0
 	nativeAudioEnabled := assets.NativeAudio != nil && (len(assets.NativeAudio.Library.Sounds) != 0 ||
 		len(assets.NativeAudio.Library.Clips) != 0 || len(assets.NativeAudio.Library.Parts) != 0 || len(assets.NativeAudio.Library.Songs) != 0)
-	audioEnabled := legacyAudioEnabled || nativeAudioEnabled
-	if audioEnabled {
+	if nativeAudioEnabled {
 		b.WriteString("\t\"github.com/drpaneas/mtile/runtime/audio\"\n")
 	}
 	if nativeAudioEnabled {
@@ -57,22 +55,7 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 	writeByteArray(&b, "flagROM", assets.FlagROM)
 	b.WriteString("//go:section .rodata\n")
 	writeUint16Array(&b, "paletteROM", assets.PaletteROM[:])
-	if legacyAudioEnabled {
-		b.WriteString("//go:section .rodata\n")
-		writeSFXDefinitionArray(&b, "sfxROM", assets.SFXROM)
-		b.WriteString("//go:section .rodata\n")
-		writeSFXStepArray(&b, "sfxStepROM", assets.SFXStepROM)
-	}
-	if len(assets.MusicROM) != 0 {
-		b.WriteString("//go:section .rodata\n")
-		writeMusicPatternArray(&b, "musicROM", assets.MusicROM)
-	}
-	if len(assets.SampleROM) != 0 {
-		b.WriteString("//go:section .rodata\n")
-		writeInt8Array(&b, "samplePCMROM", assets.SamplePCMROM)
-		b.WriteString("//go:section .rodata\n")
-		writeSampleDefinitionArray(&b, "sampleROM", assets.SampleROM)
-	}
+
 	if nativeAudioEnabled {
 		writeNativeAudioArrays(&b, assets.NativeAudio.Library)
 	}
@@ -129,34 +112,7 @@ func InitAssets(ctx *rt.Context) bool {
 	return true
 }
 `)
-	if legacyAudioEnabled {
-		voiceCount := audio.SFXMixerVoices
-		if len(assets.SampleROM) != 0 {
-			voiceCount = audio.SFXSampleMixerVoices
-		}
-		b.WriteString(`
-// InitSFX validates and attaches the generated ROM records to fixed runtime
-// state supplied by the cartridge shell.
-func InitSFX(player *audio.SFXPlayer, mixer *audio.Mixer) bool {
-	if player == nil || mixer == nil || !mixer.Init(`)
-		fmt.Fprintf(&b, "%d", voiceCount)
-		b.WriteString(`) {
-		return false
-	}
-	if !player.Init(mixer, sfxROM[:], sfxStepROM[:]) {
-		return false
-	}
-`)
-		fmt.Fprintf(&b, "\tif !player.SetMasterVolume(%d) {\n\t\treturn false\n\t}\n", assets.AudioSettings.MasterVolume)
-		if len(assets.MusicROM) != 0 {
-			b.WriteString("\tif !player.InitMusic(musicROM[:]) {\n\t\treturn false\n\t}\n")
-		}
-		if len(assets.SampleROM) != 0 {
-			b.WriteString("\tif !player.InitSamples(sampleROM[:], samplePCMROM[:]) {\n\t\treturn false\n\t}\n")
-		}
-		b.WriteString("\treturn true\n")
-		b.WriteString("}\n")
-	}
+
 	if nativeAudioEnabled {
 		settings := assets.NativeAudio.Settings
 		fmt.Fprintf(&b, `
@@ -363,20 +319,6 @@ func writeByteArray(b *strings.Builder, name string, values []byte) {
 	b.WriteString("}\n\n")
 }
 
-func writeInt8Array(b *strings.Builder, name string, values []int8) {
-	fmt.Fprintf(b, "var %s = [%d]int8{\n", name, len(values))
-	for i, value := range values {
-		if i%16 == 0 {
-			b.WriteString("\t")
-		}
-		fmt.Fprintf(b, "%s, ", strconv.Itoa(int(value)))
-		if i%16 == 15 || i == len(values)-1 {
-			b.WriteByte('\n')
-		}
-	}
-	b.WriteString("}\n\n")
-}
-
 func writeUint16Array(b *strings.Builder, name string, values []uint16) {
 	fmt.Fprintf(b, "var %s = [%d]uint16{\n", name, len(values))
 	for i, value := range values {
@@ -387,42 +329,6 @@ func writeUint16Array(b *strings.Builder, name string, values []uint16) {
 		if i%12 == 11 || i == len(values)-1 {
 			b.WriteByte('\n')
 		}
-	}
-	b.WriteString("}\n\n")
-}
-
-func writeSFXDefinitionArray(b *strings.Builder, name string, values []TargetSFX) {
-	fmt.Fprintf(b, "var %s = [%d]audio.SFXDefinition{\n", name, len(values))
-	for _, value := range values {
-		fmt.Fprintf(b, "\t{ID: %d, Speed: %d, StepOffset: %d, StepCount: %d, LoopStart: %d, LoopEnd: %d, Filters: %d},\n",
-			value.ID, value.Speed, value.StepOffset, value.StepCount, value.LoopStart, value.LoopEnd, value.Filters)
-	}
-	b.WriteString("}\n\n")
-}
-
-func writeSFXStepArray(b *strings.Builder, name string, values []TargetSFXStep) {
-	fmt.Fprintf(b, "var %s = [%d]audio.SFXStep{\n", name, len(values))
-	for _, value := range values {
-		fmt.Fprintf(b, "\t{PhaseStep: %d, Volume: %d, Kind: %s, Effect: %s},\n",
-			value.PhaseStep, value.Volume, targetWaveformGoName(value.Waveform), targetEffectGoName(value.Effect))
-	}
-	b.WriteString("}\n\n")
-}
-
-func writeMusicPatternArray(b *strings.Builder, name string, values []TargetMusicPattern) {
-	fmt.Fprintf(b, "var %s = [%d]audio.MusicPattern{\n", name, len(values))
-	for _, value := range values {
-		fmt.Fprintf(b, "\t{ID: %d, Channels: [audio.SFXChannels]int8{%d, %d, %d, %d}, Next: %d, DurationSamples: %d},\n",
-			value.ID, value.Channels[0], value.Channels[1], value.Channels[2], value.Channels[3], value.Next, value.DurationSamples)
-	}
-	b.WriteString("}\n\n")
-}
-
-func writeSampleDefinitionArray(b *strings.Builder, name string, values []TargetSample) {
-	fmt.Fprintf(b, "var %s = [%d]audio.SampleDefinition{\n", name, len(values))
-	for _, value := range values {
-		fmt.Fprintf(b, "\t{ID: %d, DataOffset: %d, DataLength: %d, LoopStart: %d, LoopEnd: %d, Volume: %d, Priority: %d, Loop: %t},\n",
-			value.ID, value.DataOffset, value.DataLength, value.LoopStart, value.LoopEnd, value.Volume, value.Priority, value.Loop)
 	}
 	b.WriteString("}\n\n")
 }

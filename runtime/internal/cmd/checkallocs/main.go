@@ -26,13 +26,17 @@ func main() {
 	}
 }
 
-// checkAllocs accepts TinyGo -print-allocs=. output (stderr). That flag uses
+// checkAllocs accepts TinyGo -print-allocs-cover=. output (stderr). That flag uses
 // Go's "mode: set" coverage-profile format. A trailing count of 0 is a regexp
 // match that did not allocate. Only a nonzero last field is a fail.
 func checkAllocs(r io.Reader) error {
 	sc := bufio.NewScanner(r)
 	var allocs []string
+	coverageHeader := false
 	for sc.Scan() {
+		if strings.TrimSpace(sc.Text()) == "mode: set" {
+			coverageHeader = true
+		}
 		n, ok := allocCount(sc.Text())
 		if !ok {
 			continue
@@ -43,6 +47,9 @@ func checkAllocs(r io.Reader) error {
 	}
 	if err := sc.Err(); err != nil {
 		return err
+	}
+	if !coverageHeader {
+		return fmt.Errorf("missing allocation coverage report; pass -print-allocs-cover=. to TinyGo")
 	}
 	if len(allocs) > 0 {
 		return fmt.Errorf("heap allocs:\n%s", strings.Join(allocs, "\n"))

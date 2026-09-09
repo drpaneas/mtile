@@ -1,0 +1,22 @@
+name: Feature request
+description: Describe a game-development workflow Mtile could support better.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to make?
+      description: Describe the game or contributor workflow and what currently gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Show a small example of how you would use the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and constraints
+      description: Existing workarounds, renderer requirements, or GBA memory/frame-budget constraints you know about.

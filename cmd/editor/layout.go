@@ -79,7 +79,6 @@ var (
 	spriteFlagsPanelRect   editor.Rect
 	spritePickerPanelRect  editor.Rect
 	canvasRect             editor.Rect
-	hoverLabelY            int
 	spriteToolsRect        editor.Rect
 	paletteRect            editor.Rect
 	flagsRect              editor.Rect
@@ -143,7 +142,6 @@ func setEditorLayout(width, height int) bool {
 		W: canvasSize,
 		H: canvasSize,
 	}
-	hoverLabelY = spriteCanvasPanelRect.Y + 12
 
 	spriteToolsPanelRect = editor.Rect{
 		X: spriteRailRect.X,

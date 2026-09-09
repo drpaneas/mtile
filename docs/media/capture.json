@@ -1,0 +1,11 @@
+{
+  "project": "examples/background-layers",
+  "renderer": "project setting (mode0)",
+  "rom_sha256": "2f1da816f7c13b539ea1e6ef08bdb9f6f354e8ca635fdb45f4f363fc3c476364",
+  "frames": 60,
+  "warmup_lcd_frames": 30,
+  "sample_every_lcd_frames": 4,
+  "input": "none",
+  "scale": "3x nearest neighbour",
+  "audio": "omitted from GIF"
+}

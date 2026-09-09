@@ -9,7 +9,29 @@ name: CI
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check documentation links and checker regressions
+        run: |
+          python3 scripts/docs/check_links.py
+          python3 -m unittest discover -s scripts/docs -p '*_test.py'
+      - name: Check release script syntax
+        run: sh -n scripts/release/build-bundle.sh
+      - name: Check packaging with stub toolchains
+        run: python3 -m unittest discover -s scripts/release -p '*_test.py'
+
   test:
     name: Test (${{ matrix.os }})
     strategy:
@@ -54,6 +76,7 @@ jobs:
       - name: Test generated runtime specialization matrix
         working-directory: runtime
         run: |
+          go test -tags=mtile_no_map_raster .
           go test -tags=mtile_map_compact . \
             -run '^(TestMapPlaneSlotTableCoversEverySparseMask|TestLayeredMgetMsetCompactSparsePlanes|TestMapAllDrawsSparseLogicalPlanesFromCompactStorage)$'
           go test -tags=mtile_mode0,mtile_map_compact . \
@@ -117,11 +140,12 @@ jobs:
             exit 1
           fi
 
-      - name: Check audio conformance harness syntax
+      - name: Check audio tooling and port source decoding
         run: |
-          sh -n scripts/audio/*.sh
+          for script in scripts/audio/*.sh; do sh -n "$script"; done
           python3 -m py_compile scripts/audio/*.py
-          python3 -m unittest discover -s scripts/audio -p '*_test.py'
+          python3 -m unittest discover -s scripts/audio -p '*test*.py'
+          python3 -m unittest discover -s examples/celeste-mode0/tests -p '*test*.py'
 
       - name: go vet (CLI module)
         run: go vet ./...
@@ -133,21 +157,23 @@ jobs:
       - name: golangci-lint (CLI module)
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.13.2
 
       - name: golangci-lint (runtime module)
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.13.2
           working-directory: runtime
 
   rom:
     name: ROM build (TinyGo)
     runs-on: ubuntu-latest
     env:
-      TINYGO_VERSION: "0.41.1"
+      TINYGO_VERSION: "0.42.0"
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-go@v5
         with:
@@ -175,9 +201,16 @@ jobs:
             -DUSE_MINIZIP=OFF -DUSE_ZLIB=OFF
           cmake --build /tmp/mtile-player-build --target mtile-player --config Release
 
+      - name: Preview diagnostics and live hardware telemetry
+        env:
+          MTILE_LIVE_INTEGRATION: "1"
+          MTILE_PLAYER: /tmp/mtile-player-build/mtile-player
+        run: >-
+          go test ./internal/emulator
+          -run '^TestLive(DebugTelemetry|PSGTelemetry|RuntimeFailureLog)$' -count=1 -v
+
       # Full pipeline smoke: Lua + strict four-channel assets -> generated Go
-      # -> TinyGo -> .gba. Legacy PICO and PCM fixtures are intentionally not
-      # release inputs for Audio v2.
+      # -> TinyGo -> .gba. All audio examples use the four-channel PSG schema.
       - name: Build examples
         run: |
           go run ./cmd/mtile build -o /tmp/hello.gba examples/hello/
@@ -199,6 +232,13 @@ jobs:
           go run ./cmd/mtile build -renderer mode4 -o /tmp/testio-mode4.gba examples/testio/
           go run ./cmd/mtile build -renderer mode0 -o /tmp/testio-mode0.gba examples/testio/
           go run ./cmd/mtile build -renderer auto -o /tmp/testio-auto.gba examples/testio/
+
+      - name: Check ARM arithmetic and map rendering
+        env:
+          MTILE_DIVISION_PLAYER: /tmp/mtile-player-build/mtile-player
+        run: >-
+          go test ./cmd/renderbench -tags=runtimeperfdiagnostic
+          -run '^Test(DivisionTarget|MapCellTarget|SheetAlignmentTarget)Diagnostic$' -count=1 -v
 
       # Paired, frame-synchronized semantic/performance gate on the actual
       # mGBA core. A mismatch or a missed-frame/cycle/memory regression fails.
@@ -296,15 +336,24 @@ jobs:
       # Fresh-project path a new user hits first.
       - name: Build a new project
         run: |
+          go run ./cmd/mtile doctor
           go run ./cmd/mtile new /tmp/ci-game
           go run ./cmd/mtile build /tmp/ci-game
+
+      - name: Build the beginner game and every lesson
+        run: |
+          go run ./cmd/mtile new -template coin-quest /tmp/ci-coin-quest
+          go run ./cmd/mtile build /tmp/ci-coin-quest
+          for lesson in /tmp/ci-coin-quest/lessons/*.lua; do
+            cp "$lesson" /tmp/ci-coin-quest/game.lua
+            go run ./cmd/mtile build /tmp/ci-coin-quest
+          done
 
       # Build-pipeline tests that skip without TinyGo on PATH.
       - name: Test build pipeline with TinyGo
         run: go test ./internal/build/ ./cmd/mtile/
 
-      # The active release gates link only CH1–CH4. Direct Sound/FIFO/PCM ROMs
-      # remain archived research and are deliberately absent here.
+      # Release gates verify CH1–CH4 and the production PSG controller.
       - name: Game Boy PSG ROMs (checked allocations)
         run: make smoke-gba audioref-gba audiopsg-gba audiopsgcoexist-gba
         working-directory: runtime

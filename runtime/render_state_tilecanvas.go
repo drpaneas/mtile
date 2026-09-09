@@ -48,7 +48,7 @@ type renderState struct {
 
 func (c *Context) resetRendererState() { c.renderState = renderState{} }
 func (c *Context) sheetMutated(x, y int) {
-	panic("tile canvas requires an immutable spritesheet; use Mode 4")
+	runtimePanic("tile canvas requires an immutable spritesheet; use Mode 4")
 }
 func (c *Context) mapMutated(x, y int, id uint16)      { c.mapLayerMutated(0, x, y, id) }
 func (c *Context) drawPaletteMutated()                 {}

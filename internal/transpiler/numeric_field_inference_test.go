@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,6 +160,118 @@ end
 		t.Fatalf("particle field math lost native writes:\n%s", update)
 	}
 	runGeneratedHarness(t, generated, numericFieldSumHarness, "TestNumericFieldSum")
+}
+
+func TestNumericFieldConfirmationKeepsReadWriteAliases(t *testing.T) {
+	generated, err := Transpile("particle-field-aliases.lua", `
+local particles = {}
+local observed = 0
+function _init()
+  add(particles, {x = 16, y = 8})
+end
+function _update()
+  for p in all(particles) do
+    local x = p.x
+    local y = p.y
+    p.x = x
+    p.y = y
+    local copy = {copied_x = x, copied_y = y}
+    observed = copy.copied_x + copy.copied_y
+  end
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertNativeFieldMath(t, generated, "func (g *Game) gluUpdate(")
+	runGeneratedHarness(t, generated, numericFieldSumHarness, "TestNumericFieldSum")
+}
+
+func TestNumericFieldConfirmationPropagatesMixedAliases(t *testing.T) {
+	for _, tc := range []struct {
+		name, replacement, copy string
+		wantNil                 bool
+	}{
+		{"string_local", `"wide"`, "local alias = box.size", false},
+		{"nil_local", "nil", "local alias = box.size", true},
+		{"string_return", `"wide"`, "local alias = read_size()", false},
+		{"nil_return", "nil", "local alias = read_size()", true},
+		{"string_parameter", `"wide"`, "local alias = identity(box.size)", false},
+		{"nil_parameter", "nil", "local alias = identity(box.size)", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := fmt.Sprintf(`
+local box = {}
+local observed = ""
+local replacement = %s
+function read_size()
+  return box.size
+end
+function identity(value)
+  return value
+end
+function _init()
+  box = {size = 4}
+  box.size = replacement
+  %s
+  box = {copied = alias}
+end
+function _update()
+  observed = box.copied
+end
+`, tc.replacement, tc.copy)
+			generated, err := Transpile(tc.name+".lua", source, Options{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			update := generatedSection(generated, "func (g *Game) gluUpdate(")
+			if strings.Contains(update, "TableGetStableNumber(") || !strings.Contains(update, "TableGetStable(") {
+				t.Fatalf("mixed field alias retained a provisional numeric type:\n%s", update)
+			}
+			harness := monomorphicFieldStringHarness
+			if tc.wantNil {
+				harness = `package main
+import("testing"; rt "github.com/drpaneas/mtile/runtime")
+func TestFieldStringValue(t *testing.T) {
+ var g Game
+ var c rt.Context
+ g.Init(&c)
+ g.Update(&c)
+ if g.observed.Kind != rt.KindNil {
+  t.Fatalf("field alias = %#v, want nil", g.observed)
+ }
+}
+`
+			}
+			runGeneratedHarness(t, generated, harness, "TestFieldStringValue")
+		})
+	}
+}
+
+func TestNumericFieldConfirmationPropagatesBeyondProvisionalPassLimit(t *testing.T) {
+	// Every field starts with numeric evidence. The unknown string store must
+	// invalidate one more alias per confirmation pass, beyond the 32 passes
+	// used to discover provisional field/signature facts.
+	var source strings.Builder
+	source.WriteString("local box = {}\nlocal replacement = \"wide\"\nlocal observed = \"\"\nfunction _init()\nbox = {")
+	const last = 40
+	for i := 0; i <= last; i++ {
+		fmt.Fprintf(&source, "f%d = 4,", i)
+	}
+	source.WriteString("}\nbox.f0 = replacement\n")
+	for i := 1; i <= last; i++ {
+		fmt.Fprintf(&source, "local alias%d = box.f%d\nbox.f%d = alias%d\n", i, i-1, i, i)
+	}
+	fmt.Fprintf(&source, "end\nfunction _update()\nobserved = box.f%d\nend\n", last)
+	generated, err := Transpile("long-field-alias-chain.lua", source.String(), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := generatedSection(generated, "func (g *Game) gluUpdate(")
+	if strings.Contains(update, "TableGetStableNumber(") {
+		t.Fatalf("field alias chain retained a numeric type:\n%s", update)
+	}
+	runGeneratedHarness(t, generated, monomorphicFieldStringHarness, "TestFieldStringValue")
 }
 
 func TestNumericFieldWritesPoisonMixedStores(t *testing.T) {

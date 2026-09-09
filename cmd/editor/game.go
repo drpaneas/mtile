@@ -263,6 +263,7 @@ type Game struct {
 	playCount                  int
 	playFPS                    float64
 	playTelemetry              emulator.Telemetry
+	playRunID                  uint64
 	playTelemetrySeq           uint32
 	playCPULoad                [60]float64
 	playCPUSamples             int
@@ -346,7 +347,8 @@ func newGame(dir string) (*Game, error) {
 		return nil, fmt.Errorf("open project code: %w", err)
 	}
 	g.scanDevelopProject()
-	g.refreshProjectSourceAnalysis()
+	// Diagnostics are displayed through sourceAnalysisError; keep the project open.
+	_, _ = g.refreshProjectSourceAnalysis()
 	g.initTheme()
 	g.loadPreferences()
 	g.initNativePerformance()
@@ -435,16 +437,12 @@ func (g *Game) snapshot() undoSnapshot {
 	return undoSnapshot{
 		Sheet:              g.model.Sheet,
 		Map:                g.model.Map,
-		SFX:                g.model.SFX,
-		Music:              g.model.Music,
 		Project:            g.model.Project,
 		Palette:            g.model.ActivePalette,
 		CurrentSprite:      g.currentSprite,
 		CurrentColor:       g.currentColor,
 		GridCols:           g.gridCols,
 		GridRows:           g.gridRows,
-		Samples:            g.model.Samples,
-		AudioSettings:      g.model.AudioSettings,
 		NativeAudio:        g.model.NativeAudio,
 		NativeChannel:      g.nativeChannel,
 		NativeSong:         g.model.NativeSongIndex,
@@ -471,10 +469,6 @@ func (g *Game) restore(s undoSnapshot) {
 	g.resetMapAreaInteraction()
 	g.model.Sheet = s.Sheet
 	g.model.Map = s.Map
-	g.model.SFX = s.SFX
-	g.model.Music = s.Music
-	g.model.Samples = s.Samples
-	g.model.AudioSettings = s.AudioSettings
 	g.model.NativeAudio = s.NativeAudio
 	g.model.Project = s.Project
 	g.model.ActivePalette = s.Palette

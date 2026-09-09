@@ -140,7 +140,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="mtile-mode0-art-") as directory:
         directory = Path(directory)
         (directory / "go.mod").write_text(
-            "module verify-mode0-art\n\ngo 1.22\n\n"
+            "module verify-mode0-art\n\ngo 1.27.1\n\n"
             "require github.com/drpaneas/mtile/runtime v0.0.0\n"
             f"replace github.com/drpaneas/mtile/runtime => {ROOT / 'runtime'}\n")
         (directory / "main.go").write_text(GO)

@@ -1,5 +1,7 @@
 package runtime
 
+import "math/bits"
+
 // Large maps remain in cartridge ROM and are read through a small, fixed
 // working set. Four 32x32 chunks cover a 64x64-tile neighborhood, which is
 // larger than the native 30x20 screen and leaves room for camera movement.
@@ -356,15 +358,24 @@ func (c *Context) mapChunkSlotByIndex(index uint32) int {
 	if planeCells == 0 {
 		return -1
 	}
-	storageLayer := int(index / planeCells)
-	layer, ok := mapLogicalPlane(c.cart.MapPlaneMask, storageLayer, c.cart.MapLayers)
+	storageLayer, local := u32DivMod(index, planeCells)
+	layer, ok := mapLogicalPlane(c.cart.MapPlaneMask, int(storageLayer), c.cart.MapLayers)
 	if !ok {
 		return -1
 	}
-	local := index % planeCells
-	x := int(local % uint32(c.cart.MapW))
-	y := int(local / uint32(c.cart.MapW))
-	return c.mapLayerChunkSlot(layer, x/MapChunkWidth, y/MapChunkHeight)
+	y, x := u32DivMod(local, uint32(c.cart.MapW))
+	return c.mapLayerChunkSlot(layer, int(x)/MapChunkWidth, int(y)/MapChunkHeight)
+}
+
+// u32DivMod is unsigned 32-bit quot/rem. Power-of-two widths (including 128-wide
+// maps, 32-wide chunks) become a shift and a mask; ARM7TDMI has no hardware
+// divide, so the generic path is the IWRAM restoring loop.
+func u32DivMod(n, d uint32) (q, r uint32) {
+	if d&(d-1) == 0 {
+		shift := bits.TrailingZeros32(d)
+		return n >> shift, n & (d - 1)
+	}
+	return n / d, n % d
 }
 
 func (c *Context) mapChunkSlot(chunkX, chunkY int) int {

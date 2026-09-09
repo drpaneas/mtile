@@ -1,11 +1,103 @@
 package main
 
 import (
+	"errors"
+	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/drpaneas/mtile/internal/emulator"
 )
+
+func TestRuntimeLogsIgnoreReplacedPreviewAndRemainBounded(t *testing.T) {
+	g := &Game{runID: 2}
+	g.acceptRuntimeLogs(1, []string{"stale cartridge"})
+	if len(g.runRuntimeLog) != 0 {
+		t.Fatal("old preview wrote into the current run log")
+	}
+	for i := 0; i < 600; i++ {
+		g.acceptRuntimeLogs(2, []string{"current cartridge"})
+	}
+	if len(g.runRuntimeLog) != 512 {
+		t.Fatalf("runtime log length = %d", len(g.runRuntimeLog))
+	}
+	g.stopPlaySession()
+	g.acceptRuntimeLogs(2, []string{"late message after stop"})
+	if strings.Contains(strings.Join(g.runRuntimeLog, "\n"), "late message") {
+		t.Fatal("stopped preview appended a late message")
+	}
+}
+
+func TestPreviewHeapErrorsExplainFailureOnceAndClearOnReset(t *testing.T) {
+	g := &Game{}
+	telemetry := emulator.Telemetry{Valid: true, DebugValid: true, Sequence: 2}
+	telemetry.Stats.HeapError = emulator.HeapOOM
+	g.acceptPlayTelemetry(telemetry)
+	telemetry.Sequence += 2
+	g.acceptPlayTelemetry(telemetry)
+	if len(g.runRuntimeLog) != 1 || !strings.Contains(g.runError, "Lua memory is full") {
+		t.Fatalf("heap failure = %q, logs %q", g.runError, g.runRuntimeLog)
+	}
+	telemetry.Stats.HeapError = emulator.HeapOK
+	g.acceptPlayTelemetry(telemetry)
+	if g.runError != "" {
+		t.Fatalf("reset retained heap error: %s", g.runError)
+	}
+	g.runError = "unrelated build error"
+	g.acceptPlayTelemetry(telemetry)
+	if g.runError != "unrelated build error" {
+		t.Fatal("healthy telemetry cleared an unrelated error")
+	}
+	g.runID = 1 // Old preview is still running while its replacement builds.
+	telemetry.Stats.HeapError = emulator.HeapOOM
+	g.acceptPlayTelemetry(telemetry)
+	if len(g.runRuntimeLog) != 1 {
+		t.Fatal("old preview reported a heap failure into the replacement build")
+	}
+	g.stopPlayback()
+	g.playRunID = g.runID
+	g.runRuntimeLog, g.runError = nil, ""
+	g.acceptPlayTelemetry(telemetry)
+	if len(g.runRuntimeLog) != 1 || !strings.Contains(g.runError, "Lua memory is full") {
+		t.Fatal("new preview suppressed a repeated heap failure")
+	}
+}
+
+type failingLogSession struct {
+	logs   []string
+	closed bool
+}
+
+func (s *failingLogSession) Step(uint16, bool) (emulator.Frame, error) {
+	return emulator.Frame{}, errors.New("frame read failed")
+}
+
+func (s *failingLogSession) Close() error {
+	if !s.closed {
+		s.logs = append(s.logs, "final cartridge diagnostic")
+		s.closed = true
+	}
+	return nil
+}
+
+func (s *failingLogSession) DrainLogs() []string {
+	logs := s.logs
+	s.logs = nil
+	return logs
+}
+
+func TestEmulatorFailureDrainsLastDiagnostics(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		g := &Game{}
+		session := &failingLogSession{}
+		failures := make(chan error, 1)
+		g.runEmulator(session, emulator.NewPCMStream(100), make(chan emulator.Frame, 1), failures, make(chan struct{}), 0)
+		if !session.closed || len(failures) != 1 || len(g.runRuntimeLog) != 1 || g.runRuntimeLog[0] != "final cartridge diagnostic" {
+			t.Fatalf("missing final diagnostic: %q", g.runRuntimeLog)
+		}
+	})
+}
 
 func TestCartridgePlaybackBufferFitsInteractiveLatencyBudget(t *testing.T) {
 	frameDuration := time.Second / 60
@@ -48,7 +140,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	pcm := emulator.NewPCMStream(100)
 	frames := make(chan emulator.Frame, 1)
 
-	stepped, err := g.stepEmulator(stepper, pcm, frames)
+	stepped, err := g.stepEmulator(stepper, pcm, frames, g.runID)
 	if err != nil || stepped || stepper.calls != 0 {
 		t.Fatalf("paused tick = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 	}
@@ -63,7 +155,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	g.playPaused = false
 	g.playKeys = emulator.KeyRight | emulator.KeyB
 	g.runMu.Unlock()
-	stepped, err = g.stepEmulator(stepper, pcm, frames)
+	stepped, err = g.stepEmulator(stepper, pcm, frames, g.runID)
 	if err != nil || !stepped || stepper.calls != 1 {
 		t.Fatalf("live tick = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 	}
@@ -85,7 +177,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	if queued, _, _ := pcm.Stats(); queued != 1 {
 		t.Fatalf("queued PCM frames = %d, want 1", queued)
 	}
-	_, err = g.stepEmulator(stepper, pcm, frames)
+	_, err = g.stepEmulator(stepper, pcm, frames, g.runID)
 	if err != nil || g.playPendingTicks != 0 || g.playPendingKeys != 0 {
 		t.Fatalf("second live tick did not consume key latch: ticks=%d keys=%#x err=%v", g.playPendingTicks, g.playPendingKeys, err)
 	}

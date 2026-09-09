@@ -35,14 +35,6 @@ type developProjectEntry struct {
 	Directory bool
 }
 
-func (g *Game) projectEntryPath() string {
-	entry := "game.lua"
-	if g != nil && g.model != nil && g.model.Project.Entry != "" {
-		entry = g.model.Project.Entry
-	}
-	return filepath.Join(g.model.Dir, filepath.FromSlash(entry))
-}
-
 func cloneGlobalUsage(usage build.GlobalUsage) build.GlobalUsage {
 	usage.Symbols = append([]build.GlobalSymbol(nil), usage.Symbols...)
 	return usage
@@ -244,7 +236,8 @@ func (g *Game) reloadActiveCodeDocument() {
 	document.LastParsed = ""
 	g.activateCodeDocument(document.Path)
 	g.refreshCodeDiagnostics()
-	g.refreshProjectSourceAnalysis()
+	// Diagnostics are displayed through sourceAnalysisError; keep the project open.
+	_, _ = g.refreshProjectSourceAnalysis()
 	g.codeReloadPending = ""
 	g.statusMsg = document.Relative + " reloaded from disk"
 }
@@ -317,7 +310,8 @@ func (g *Game) closeCodeDocument(path string) {
 	g.codeTabs = append(g.codeTabs[:index], g.codeTabs[index+1:]...)
 	next := min(index, len(g.codeTabs)-1)
 	g.activateCodeDocument(g.codeTabs[next])
-	g.refreshProjectSourceAnalysis()
+	// Diagnostics are displayed through sourceAnalysisError; keep the project open.
+	_, _ = g.refreshProjectSourceAnalysis()
 	g.statusMsg = document.Relative + " closed"
 }
 

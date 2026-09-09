@@ -139,7 +139,16 @@ func (c *Conductor) Start(options CaptureOptions) bool {
 }
 
 func (c *Conductor) run(clock TrackerClock, loop bool, cancel <-chan struct{}, done chan<- struct{}) {
-	defer close(done)
+	defer func() {
+		c.mu.Lock()
+		// Recording may be refused after count-in or at a loop boundary if
+		// the session was disarmed. An exited scheduler must be restartable.
+		if c.cancel == cancel {
+			c.active, c.recording = false, false
+		}
+		close(done)
+		c.mu.Unlock()
+	}()
 	beatLength := clock.TimeAtTick(PPQN) - clock.Origin
 	if beatLength <= 0 {
 		beatLength = time.Second / 2

@@ -99,32 +99,24 @@ type Map struct {
 
 // Assets is the validated, flattened representation used by code generation.
 type Assets struct {
-	Project       Project
-	AudioVersion  int
-	NativeAudio   *NativeAudioAssets
-	AudioSettings AudioSettings
-	Palette       Palette
-	PaletteROM    [256]uint16
-	SheetW        int
-	SheetH        int
-	SpriteCols    int
-	SpriteRows    int
-	SpriteN       int
-	MapW          int
-	MapH          int
-	MapLayers     int
-	MapStreaming  bool
-	SheetROM      []byte
-	MapROM        []uint16
-	FlagROM       []byte
-	SFXLibrary    SFXLibrary
-	SFXROM        []TargetSFX
-	SFXStepROM    []TargetSFXStep
-	MusicLibrary  MusicLibrary
-	MusicROM      []TargetMusicPattern
-	SampleLibrary SampleLibrary
-	SampleROM     []TargetSample
-	SamplePCMROM  []int8
+	Project      Project
+	AudioVersion int
+	NativeAudio  *NativeAudioAssets
+
+	Palette      Palette
+	PaletteROM   [256]uint16
+	SheetW       int
+	SheetH       int
+	SpriteCols   int
+	SpriteRows   int
+	SpriteN      int
+	MapW         int
+	MapH         int
+	MapLayers    int
+	MapStreaming bool
+	SheetROM     []byte
+	MapROM       []uint16
+	FlagROM      []byte
 }
 
 // Valid reports whether each component is a 5-bit GBA channel (0..31).

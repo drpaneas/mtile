@@ -2,7 +2,7 @@
 
 This is the "Effective Mtile" for frame budgets: what the hardware gives
 you, what each operation costs in measured ARM7TDMI cycles, and which
-patterns keep a real game at 60 Hz. Every number below was measured with
+patterns keep a real game at 30 Hz. Every number below was measured with
 `runtime/cmd/benchspike` on mGBA (cycle-accurate ARM7TDMI timing) using the
 GBA's own TM0/TM1 hardware timers, on a 128x128 sheet with realistic
 half-transparent art. Re-measure after runtime changes with:
@@ -19,6 +19,25 @@ The tables below retain their stated benchmark snapshots. The September 5
 bounded Mode 4 raster cache for one small static map plane. Its exact-pixel
 fast path substantially changes eligible map costs; older per-cell map timings
 remain relevant to fallback calls, not to the new cached path.
+
+The September 8 [division measurements](division-performance-2026-09-08.md)
+cover exact literal arithmetic, faster IWRAM division helpers, and removal of
+map-validation divisions, including complete-ROM arithmetic checks and a
+pixel-identical Celeste route comparison.
+
+The same day's [original Celeste Mode 4 measurements](celeste-mode4-performance-2026-09-08.md)
+cover reusable compiler and software renderer optimizations, including bounded
+multi-plane caching, native tile copies and exact target alignment checks.
+
+The September 9 [TinyGo 0.42 tuning pass](toolchain-042-performance.md)
+measures faster dynamic numeric table lookups under LLVM 22, with exact-pixel
+renderer controls and a Celeste replay. The table workload improves; Celeste's
+displayed cadence is unchanged. The report records the small string-key cost.
+
+The [dirty-region experiments](celeste-dirty-regions-2026-09-08.md) compare
+partial clearing and uploads against that optimized renderer. The tested
+implementations preserve pixels but regress performance, so the existing
+renderer remains enabled.
 
 ## Paired static-map proof
 

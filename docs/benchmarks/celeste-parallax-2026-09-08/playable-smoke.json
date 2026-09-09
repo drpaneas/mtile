@@ -1,0 +1,20 @@
+{
+  "LCDFramesWithPressedKeysInHardwareTelemetry": 140,
+  "audible": true,
+  "audioFrames": 364,
+  "audioOverflow": false,
+  "debugTelemetryAvailable": false,
+  "emulator": "frozen native mGBA player",
+  "finalFrameSHA256": "1fbaecab56007cf19042857b5a42fcbc4486976e1d7df4ebc0860512ab7a891d",
+  "inputPattern": "right at 240..339, A at 246..253, B at 270..275, left at 340..379; zero otherwise",
+  "inputWindowLCDFrames": 160,
+  "noInputWarmupLCDFrames": 240,
+  "passed": true,
+  "postInputDifferentFramesAgainstIndependentNoInputRun": 156,
+  "preInputDifferencesAgainstIndependentNoInputRun": 0,
+  "romPath": "/private/tmp/mtile-celeste-parallax-231w16pk/celeste-parallax.gba",
+  "romSHA256": "1473fe67263e3008fd5ddd82b29e7184a911143019e91ffd00306efdf1e2dbe9",
+  "scope": "Actual CLI ROM; physical joypad input through emulator API. Release ROM has no debug heap proof unless debugTelemetryAvailable is true.",
+  "totalLCDFrames": 400,
+  "uniqueVideoFrames": 184
+}

@@ -193,7 +193,7 @@ func (r *resolver) visit(path string) error {
 		for i := range cycle {
 			cycle[i] = relativeSlash(r.root, cycle[i])
 		}
-		return fmt.Errorf("Lua module cycle: %s", strings.Join(cycle, " -> "))
+		return fmt.Errorf("require cycle in Lua modules: %s", strings.Join(cycle, " -> "))
 	}
 
 	source, ok := r.overlay[path]

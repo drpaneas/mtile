@@ -1,0 +1,546 @@
+[
+  {
+    "name": "btn",
+    "category": "input",
+    "signature": "btn(index)",
+    "summary": "Check whether a button is held down.",
+    "example": "if btn(0) then x -= 2 end",
+    "note": "Use indices 0\u20133 for left, right, up, and down; 4 is B and 5 is A. In the editor preview, Z is A and X is B."
+  },
+  {
+    "name": "btnp",
+    "category": "input",
+    "signature": "btnp(index)",
+    "summary": "React to a button press, with held-button repeat.",
+    "example": "if btnp(5) then score = 0 end",
+    "note": "A held button repeats after 15 update ticks and then every four ticks. Use btn() for continuous movement."
+  },
+  {
+    "name": "spr",
+    "category": "sprites",
+    "signature": "spr(id, x, y [, w, h, flip_x, flip_y])",
+    "summary": "Draw a sprite from your sheet.",
+    "example": "spr(1, 112, 72)",
+    "note": "Sprite cells are 8\u00d78 pixels. Position is the top-left corner; width and height are in cells. Color 0 is transparent by default. Create the artwork in the Sprites workspace first."
+  },
+  {
+    "name": "sspr",
+    "category": "sprites",
+    "signature": "sspr(sx, sy, sw, sh, dx, dy [, dw, dh, flip_x, flip_y])",
+    "summary": "Draw a rectangular part of the sprite sheet.",
+    "example": "sspr(8, 0, 8, 8, 112, 72)",
+    "note": "Source coordinates and sizes are in pixels. Scaling or arbitrary crops require the bitmap renderer; aligned, unscaled rectangles may use hardware sprites."
+  },
+  {
+    "name": "sget",
+    "category": "sprites",
+    "signature": "sget(x, y)",
+    "summary": "Read a palette index from the sprite sheet.",
+    "example": "pixel = sget(8, 0)",
+    "note": "This reads authored sheet pixels, not the finished screen."
+  },
+  {
+    "name": "sset",
+    "category": "sprites",
+    "signature": "sset(x, y, color)",
+    "summary": "Change a pixel in the sprite sheet.",
+    "example": "sset(8, 0, 40)",
+    "note": "This changes the game\u2019s runtime copy. It does not save artwork back to your project. Hardware rendering requires bounded mutation placement; see the renderer contract."
+  },
+  {
+    "name": "fget",
+    "category": "sprites",
+    "signature": "fget(id [, flag])",
+    "summary": "Read a sprite\u2019s flags.",
+    "example": "solid = fget(1, 0)",
+    "note": "With a flag index, reads that bit; without it, returns the flag byte. Flags are useful for labeling solid or collectible tiles."
+  },
+  {
+    "name": "fset",
+    "category": "sprites",
+    "signature": "fset(id, flags) / fset(id, flag, value)",
+    "summary": "Change a sprite\u2019s flags.",
+    "example": "fset(1, 0, true)",
+    "note": "A flag affects the logical sprite and later map filtering. Runtime mutation can change AUTO renderer selection."
+  },
+  {
+    "name": "map",
+    "category": "maps",
+    "signature": "map() / map(bg [, cx, cy, x, y, w, h, mask])",
+    "summary": "Draw the tile maps you created in the editor.",
+    "example": "function _draw()\n  cls(24)\n  map()\n  spr(1, 112, 72)\nend",
+    "note": "map() draws all authored non-empty planes, back to front. With arguments, the first is always a literal BG0\u2013BG3 layer. Do not mix automatic and explicit forms. Source-cell offsets contribute to world positions; read the map contract before scrolling a subsection."
+  },
+  {
+    "name": "mget",
+    "category": "maps",
+    "signature": "mget(x, y) / mget(bg, x, y)",
+    "summary": "Read the sprite ID in a map cell.",
+    "example": "tile = mget(3, 4)",
+    "note": "Map coordinates are in 8\u00d78 cells. The two-argument form uses BG0. Invalid coordinates or absent planes return 0."
+  },
+  {
+    "name": "mset",
+    "category": "maps",
+    "signature": "mset(x, y, id) / mset(bg, x, y, id)",
+    "summary": "Replace a map cell while the game runs.",
+    "example": "mset(3, 4, 2)",
+    "note": "The three-argument form edits BG0. Runtime edits are not saved into project files. Invalid coordinates are ignored."
+  },
+  {
+    "name": "camera",
+    "category": "maps",
+    "signature": "camera([x, y])",
+    "summary": "Move the view without moving your game objects.",
+    "example": "camera(120, 0)",
+    "note": "The camera position is subtracted from drawing coordinates. camera() resets the view. Keep world coordinates separate from screen coordinates."
+  },
+  {
+    "name": "cls",
+    "category": "drawing",
+    "signature": "cls([color])",
+    "summary": "Clear the screen for a new frame.",
+    "example": "function _draw()\n  cls(24)\n  print(\"HELLO GBA\", 8, 8, 15)\nend",
+    "note": "Colors are palette indices. In Aurora, 24 is dark blue and 15 is white. Put one unconditional cls() at the start of _draw() for hardware-renderer eligibility."
+  },
+  {
+    "name": "print",
+    "category": "drawing",
+    "signature": "print(text, x, y, color)",
+    "summary": "Draw text or a number on the screen.",
+    "example": "print(\"COINS\", 8, 8, 15)\nprint(5, 56, 8, 15)",
+    "note": "This explicit four-argument form is the easiest to start with. Separate labels and numeric values to keep them eligible for hardware rendering. Text uses a 6\u00d78 cell font; Mode 0 has additional glyph and object limits."
+  },
+  {
+    "name": "pset",
+    "category": "drawing",
+    "signature": "pset(x, y [, color])",
+    "summary": "Set one screen pixel.",
+    "example": "pset(120, 80, 40)",
+    "note": "Screen coordinates start at (0, 0) in the top-left. The screen is 240 pixels wide and 160 high."
+  },
+  {
+    "name": "pget",
+    "category": "drawing",
+    "signature": "pget(x, y)",
+    "summary": "Read a color from the composed screen.",
+    "example": "pixel = pget(120, 80)",
+    "note": "The result reflects drawing that has already happened. Use sget() to inspect the sprite sheet instead."
+  },
+  {
+    "name": "line",
+    "category": "drawing",
+    "signature": "line(x0, y0, x1, y1 [, color])",
+    "summary": "Draw a straight line between two points.",
+    "example": "line(16, 16, 100, 80, 15)",
+    "note": "The current camera and clipping rectangle apply to the line."
+  },
+  {
+    "name": "rect",
+    "category": "drawing",
+    "signature": "rect(x0, y0, x1, y1 [, color])",
+    "summary": "Draw a rectangle outline.",
+    "example": "rect(32, 40, 96, 80, 17)",
+    "note": "The last two coordinates are the opposite corner, not width and height. The endpoints are inclusive."
+  },
+  {
+    "name": "rectfill",
+    "category": "drawing",
+    "signature": "rectfill(x0, y0, x1, y1 [, color])",
+    "summary": "Draw a filled rectangle.",
+    "example": "rectfill(32, 40, 96, 80, 17)",
+    "note": "Use opposite-corner coordinates. Drawing a filled rectangle is a bitmap-renderer operation."
+  },
+  {
+    "name": "circ",
+    "category": "drawing",
+    "signature": "circ(x, y, radius [, color])",
+    "summary": "Draw a circle outline.",
+    "example": "circ(120, 80, 16, 40)",
+    "note": "The first two coordinates are the center. The radius is measured in pixels."
+  },
+  {
+    "name": "circfill",
+    "category": "drawing",
+    "signature": "circfill(x, y, radius [, color])",
+    "summary": "Draw a filled circle.",
+    "example": "circfill(120, 80, 16, 40)",
+    "note": "Useful for quick prototypes and particles; this selects bitmap rendering."
+  },
+  {
+    "name": "color",
+    "category": "drawing",
+    "signature": "color([index])",
+    "summary": "Set the default drawing color.",
+    "example": "color(40)",
+    "note": "Explicit color arguments override the default. cls() does not change it."
+  },
+  {
+    "name": "cursor",
+    "category": "drawing",
+    "signature": "cursor([x, y, color])",
+    "summary": "Set the text cursor position and optional color.",
+    "example": "cursor(8, 8, 15)",
+    "note": "Explicitly positioned print() calls are usually clearer for a first game."
+  },
+  {
+    "name": "clip",
+    "category": "drawing",
+    "signature": "clip() / clip(x, y, width, height)",
+    "summary": "Limit drawing to a rectangle.",
+    "example": "clip(16, 16, 208, 128)",
+    "note": "clip() restores full-screen drawing. Smaller clipping rectangles require Mode 4 in the current hardware-renderer subset."
+  },
+  {
+    "name": "pal",
+    "category": "drawing",
+    "signature": "pal() / pal(source, replacement [, bank])",
+    "summary": "Remap one palette color to another.",
+    "example": "pal(40, 17)",
+    "note": "Remapping changes how colors are used or displayed. Mode 0 has placement and remapping restrictions; see the exact contract."
+  },
+  {
+    "name": "palt",
+    "category": "drawing",
+    "signature": "palt() / palt(color, transparent)",
+    "summary": "Control which sprite colors are transparent.",
+    "example": "palt(0, true)",
+    "note": "The default makes palette index 0 transparent in sprites and maps. Arbitrary transparent colors require Mode 4."
+  },
+  {
+    "name": "sfx",
+    "category": "audio",
+    "signature": "sfx(id [, priority])",
+    "summary": "Play a short sound-effect clip.",
+    "example": "sfx(0)",
+    "note": "Create an SFX clip with this ID in Audio first, or use Coin Quest\u2019s included clip 0. Default priority is 160. sfx(-1) stops gameplay-owned effects."
+  },
+  {
+    "name": "music",
+    "category": "audio",
+    "signature": "music(id)",
+    "summary": "Start a song from the Audio workspace.",
+    "example": "music(0)",
+    "note": "Create a song with this ID first. music(-1) stops song-owned notes while leaving gameplay effects independent."
+  },
+  {
+    "name": "gba_note",
+    "category": "audio",
+    "signature": "gba_note(channel, note, sound_id [, duration_ticks])",
+    "summary": "Play a hardware note using a saved sound.",
+    "example": "gba_note(1, 72, 0, 24)",
+    "note": "Channels are 1\u20134. The sound must match the channel. Timed notes use 96 ticks per quarter note; zero duration sustains until stopped."
+  },
+  {
+    "name": "gba_stop",
+    "category": "audio",
+    "signature": "gba_stop(channel)",
+    "summary": "Stop notes on a hardware channel.",
+    "example": "gba_stop(1)",
+    "note": "Use channel numbers 1\u20134. This is a direct channel command; music and effects share these hardware channels."
+  },
+  {
+    "name": "flr",
+    "category": "math",
+    "signature": "flr(number)",
+    "summary": "Round down to an integer.",
+    "example": "tile_x = flr(19 / 8)",
+    "note": "flr(-1.5) is -2, not -1. Use it when converting pixel coordinates into map cells."
+  },
+  {
+    "name": "ceil",
+    "category": "math",
+    "signature": "ceil(number)",
+    "summary": "Round up to an integer.",
+    "example": "pages = ceil(17 / 8)",
+    "note": "ceil(-1.5) is -1. Numbers in mTile use 16:16 fixed point."
+  },
+  {
+    "name": "abs",
+    "category": "math",
+    "signature": "abs(number)",
+    "summary": "Get the distance of a number from zero.",
+    "example": "distance = abs(24 - 112)",
+    "note": "abs(-8) is 8. Handy for simple collision checks."
+  },
+  {
+    "name": "sgn",
+    "category": "math",
+    "signature": "sgn(number)",
+    "summary": "Return -1 for a negative number, or 1 otherwise.",
+    "example": "direction = sgn(-3)",
+    "note": "sgn(0) returns 1."
+  },
+  {
+    "name": "min",
+    "category": "math",
+    "signature": "min(a, b)",
+    "summary": "Choose the smaller of two numbers.",
+    "example": "health = min(health + 1, 5)",
+    "note": "Use this to cap a value at an upper limit."
+  },
+  {
+    "name": "max",
+    "category": "math",
+    "signature": "max(a, b)",
+    "summary": "Choose the larger of two numbers.",
+    "example": "health = max(health - 1, 0)",
+    "note": "Use this to keep a value above a lower limit."
+  },
+  {
+    "name": "mid",
+    "category": "math",
+    "signature": "mid(a, b, c)",
+    "summary": "Choose the middle value of three numbers.",
+    "example": "x = mid(8, x, 224)",
+    "note": "Putting a value between its lower and upper bounds clamps it to that range."
+  },
+  {
+    "name": "sin",
+    "category": "math",
+    "signature": "sin(turns)",
+    "summary": "Get the vertical sine component of a turn.",
+    "example": "y = 80 + sin(0.25) * 16",
+    "note": "Angles use turns, not degrees or radians. sin(0.25) is -1, matching a screen where Y increases downward."
+  },
+  {
+    "name": "cos",
+    "category": "math",
+    "signature": "cos(turns)",
+    "summary": "Get the horizontal cosine component of a turn.",
+    "example": "x = 120 + cos(0) * 16",
+    "note": "One complete turn is 1. cos(0) is 1."
+  },
+  {
+    "name": "atan2",
+    "category": "math",
+    "signature": "atan2(dx, dy)",
+    "summary": "Find a direction angle in turns.",
+    "example": "angle = atan2(1, 0)",
+    "note": "Uses the screen-coordinate convention shared with sin() and cos()."
+  },
+  {
+    "name": "sqrt",
+    "category": "math",
+    "signature": "sqrt(number)",
+    "summary": "Find a square root.",
+    "example": "distance = sqrt(3 * 3 + 4 * 4)",
+    "note": "Fixed-point precision is finite. Squared distances are often sufficient when comparing distances."
+  },
+  {
+    "name": "rnd",
+    "category": "math",
+    "signature": "rnd([limit])",
+    "summary": "Choose a pseudorandom number, or an item from a table.",
+    "example": "roll = flr(rnd(6)) + 1",
+    "note": "The numeric form ranges from zero up to, but excluding, the limit. rnd() uses a limit of 1."
+  },
+  {
+    "name": "srand",
+    "category": "math",
+    "signature": "srand(seed)",
+    "summary": "Set the random-number seed.",
+    "example": "srand(42)",
+    "note": "A fixed seed makes random sequences repeatable for testing."
+  },
+  {
+    "name": "add",
+    "category": "data",
+    "signature": "add(table, value [, index])",
+    "summary": "Append or insert a value into a list.",
+    "example": "coins = {}\nadd(coins, 40)",
+    "note": "Lua list indices start at 1. Insertion shifts the existing elements."
+  },
+  {
+    "name": "del",
+    "category": "data",
+    "signature": "del(table, value)",
+    "summary": "Remove the first matching value from a list.",
+    "example": "coins = {10, 20, 30}\ndel(coins, 20)",
+    "note": "Use deli() when you know the index rather than the value."
+  },
+  {
+    "name": "deli",
+    "category": "data",
+    "signature": "deli(table [, index])",
+    "summary": "Remove an element by its list index.",
+    "example": "coins = {10, 20, 30}\ndeli(coins, 2)",
+    "note": "With no index, removes the final element."
+  },
+  {
+    "name": "count",
+    "category": "data",
+    "signature": "count(table [, value])",
+    "summary": "Count list entries, optionally matching a value.",
+    "example": "coins = {1, 2, 1}\ntotal = count(coins, 1)",
+    "note": "The optional value filters the count."
+  },
+  {
+    "name": "all",
+    "category": "data",
+    "signature": "for value in all(table) do ... end",
+    "summary": "Visit each value in a list.",
+    "example": "for value in all({10, 20, 30}) do\n  printh(value)\nend",
+    "note": "all() is iterator syntax here. Do not assign the iterator itself to a variable."
+  },
+  {
+    "name": "pairs",
+    "category": "data",
+    "signature": "for key, value in pairs(table) do ... end",
+    "summary": "Visit a table\u2019s keys and values.",
+    "example": "for key, value in pairs({score=5}) do\n  printh(key)\nend",
+    "note": "Do not rely on a particular traversal order."
+  },
+  {
+    "name": "foreach",
+    "category": "data",
+    "signature": "foreach(table, callback)",
+    "summary": "Call a function for each list element.",
+    "example": "function show(value)\n  printh(value)\nend\nforeach({10, 20}, show)",
+    "note": "Use a named, statically bound callback. Read the foreach guide for mutation rules."
+  },
+  {
+    "name": "sub",
+    "category": "data",
+    "signature": "sub(text, first [, last])",
+    "summary": "Take a section of a string.",
+    "example": "name = sub(\"EXPLORER\", 1, 4)",
+    "note": "Indices start at 1 and the final index is inclusive. String operations are byte-oriented."
+  },
+  {
+    "name": "tostr",
+    "category": "data",
+    "signature": "tostr(value [, hex])",
+    "summary": "Convert a value to text.",
+    "example": "label = tostr(42)",
+    "note": "For Mode 0 text, print numeric values directly instead of passing a converted string."
+  },
+  {
+    "name": "tonum",
+    "category": "data",
+    "signature": "tonum(text)",
+    "summary": "Convert numeric text to a number.",
+    "example": "speed = tonum(\"2.5\")",
+    "note": "Check input before using a conversion in game logic."
+  },
+  {
+    "name": "chr",
+    "category": "data",
+    "signature": "chr(code)",
+    "summary": "Create a one-byte string from a character code.",
+    "example": "letter = chr(65)",
+    "note": "65 is uppercase A. This is a byte operation, not a Unicode conversion."
+  },
+  {
+    "name": "ord",
+    "category": "data",
+    "signature": "ord(text [, index])",
+    "summary": "Read a byte\u2019s numeric character code.",
+    "example": "code = ord(\"GBA\", 1)",
+    "note": "Indices start at 1."
+  },
+  {
+    "name": "time",
+    "category": "debug",
+    "signature": "time()",
+    "summary": "Read elapsed game time in seconds.",
+    "example": "seconds = time()",
+    "note": "t() is an alias. This is game time, not the computer\u2019s wall clock."
+  },
+  {
+    "name": "t",
+    "category": "debug",
+    "signature": "t()",
+    "summary": "Read elapsed game time in seconds.",
+    "example": "seconds = t()",
+    "note": "An alias for time()."
+  },
+  {
+    "name": "stat",
+    "category": "debug",
+    "signature": "stat(id)",
+    "summary": "Read runtime performance counters.",
+    "example": "load = stat(1)",
+    "note": "stat(1) is the previous tick\u2019s share of the roughly 30 Hz frame budget: 1 means the entire budget. It is not host CPU percentage. See the performance guide for other counters."
+  },
+  {
+    "name": "printh",
+    "category": "debug",
+    "signature": "printh(value)",
+    "summary": "Write a value to the preview debug log.",
+    "example": "printh(\"coin collected\")",
+    "note": "Useful for observing game logic while running in the editor\u2019s instrumented preview."
+  },
+  {
+    "name": "band",
+    "category": "math",
+    "signature": "band(a, b)",
+    "summary": "Bitwise AND.",
+    "example": "bits = band(6, 3)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "bor",
+    "category": "math",
+    "signature": "bor(a, b)",
+    "summary": "Bitwise OR.",
+    "example": "bits = bor(4, 1)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "bxor",
+    "category": "math",
+    "signature": "bxor(a, b)",
+    "summary": "Bitwise exclusive OR.",
+    "example": "bits = bxor(6, 3)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "bnot",
+    "category": "math",
+    "signature": "bnot(number)",
+    "summary": "Invert the bits of a number.",
+    "example": "bits = bnot(0)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "shl",
+    "category": "math",
+    "signature": "shl(a, b)",
+    "summary": "Shift bits left.",
+    "example": "bits = shl(1, 2)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "shr",
+    "category": "math",
+    "signature": "shr(a, b)",
+    "summary": "Shift bits right with sign extension.",
+    "example": "bits = shr(8, 1)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "lshr",
+    "category": "math",
+    "signature": "lshr(a, b)",
+    "summary": "Shift bits right without sign extension.",
+    "example": "bits = lshr(8, 1)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "rotl",
+    "category": "math",
+    "signature": "rotl(a, b)",
+    "summary": "Rotate bits left.",
+    "example": "bits = rotl(1, 2)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "rotr",
+    "category": "math",
+    "signature": "rotr(a, b)",
+    "summary": "Rotate bits right.",
+    "example": "bits = rotr(4, 2)",
+    "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  }
+]

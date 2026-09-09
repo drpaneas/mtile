@@ -37,7 +37,7 @@ func TestGBAStackPointersEndDescendingStackReservations(t *testing.T) {
 	userReserve := strings.Index(linker, ". += __stack_size_usr;")
 	userTop := strings.Index(linker, "_stack_top = .;")
 	if irqReserve < 0 || irqTop < 0 || userReserve < 0 || userTop < 0 ||
-		!(irqReserve < irqTop && irqTop < userReserve && userReserve < userTop) {
+		(irqReserve >= irqTop || irqTop >= userReserve || userReserve >= userTop) {
 		t.Fatalf("descending GBA stack reservations do not end at their stack-top symbols")
 	}
 }

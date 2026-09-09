@@ -100,7 +100,7 @@ func TestSessionIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 	var keys uint16
 	if value := os.Getenv("MTILE_TEST_KEYS"); value != "" {
 		parsed, err := strconv.ParseUint(value, 0, 16)

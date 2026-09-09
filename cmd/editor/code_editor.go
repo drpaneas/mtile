@@ -203,10 +203,6 @@ func codeModifier() bool {
 	return ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 }
 
-func (g *Game) updateCodeMode() {
-	g.updateCodeWorkspace(newCodeLayout())
-}
-
 func (g *Game) updateCodeWorkspace(layout codeLayout) {
 	if g.code == nil {
 		return
@@ -696,31 +692,6 @@ func (g *Game) updateCodeCompletionInput() bool {
 	return false
 }
 
-func (g *Game) drawCodeMode(screen *ebiten.Image) {
-	layout := newCodeLayout()
-	fillRect(screen, editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}, colorInk)
-	fillRect(screen, layout.Header, color.RGBA{R: 30, G: 28, B: 75, A: 255})
-	fillRect(screen, editor.Rect{X: 0, Y: layout.Header.Y, W: layout.Header.W, H: 3}, colorCode)
-	drawDevelopTextScale(screen, "MTILE", 20, layout.Header.Y+4, 2, colorText)
-	drawDevelopText(screen, "CARTRIDGE WORKSTATION  /  LUA", 20, layout.Header.Y+layout.Header.H-developTextHeight-4, colorLCD)
-	fillRect(screen, layout.File, colorBackground)
-	strokeRect(screen, layout.File, colorBorder)
-	name := filepath.Base(g.codePath)
-	if g.code.Dirty() {
-		name += "  *"
-	}
-	drawDevelopText(screen, name, layout.File.X+12, layout.File.Y+(layout.File.H-developTextHeight)/2, colorText)
-	drawDevelopButton(screen, layout.Save, "SAVE", false, colorCode)
-	drawDevelopButton(screen, layout.Run, "RUN GAME  >", false, colorRun)
-
-	g.drawCodeSidebar(screen, layout)
-	g.drawCodeTabs(screen, layout)
-	g.drawCodeDocument(screen, layout)
-	g.drawCodeInspector(screen, layout)
-	g.drawCodeDiagnostics(screen, layout)
-	g.drawCodeOverlays(screen, layout)
-}
-
 func (g *Game) drawCodeOverlays(screen *ebiten.Image, layout codeLayout) {
 	if g.codeQuickOpen {
 		g.drawCodeQuickOpen(screen, layout)
@@ -1088,67 +1059,6 @@ func highlightGoLine(line string) []codeSegment {
 		at++
 	}
 	return result
-}
-
-func (g *Game) drawCodeInspector(screen *ebiten.Image, layout codeLayout) {
-	fillRect(screen, layout.Inspector, colorPanel)
-	strokeRect(screen, layout.Inspector, colorBorder)
-	drawDevelopText(screen, "OUTLINE", layout.Inspector.X+16, layout.Inspector.Y+18, colorCode)
-	functions := codeFunctions(g.code.Text())
-	if len(functions) == 0 {
-		drawDevelopText(screen, "No functions yet", layout.Inspector.X+16, layout.Inspector.Y+50, colorDim)
-	}
-	functionLimit := max(1, (350-50-codeTextHeight)/codeLineHeight)
-	for index, item := range functions {
-		if index >= functionLimit {
-			break
-		}
-		drawCodeText(screen, item, layout.Inspector.X+18, layout.Inspector.Y+50+index*codeLineHeight, colorText)
-	}
-	drawLine(screen, layout.Inspector.X+12, layout.Inspector.Y+350, layout.Inspector.X+layout.Inspector.W-12, layout.Inspector.Y+350, colorBorder)
-	drawDevelopText(screen, "MTILE API", layout.Inspector.X+16, layout.Inspector.Y+370, colorLCD)
-	for index, item := range []string{"spr(id, x, y)", "map(bg, mx, my, sx, sy, mw, mh, mask)", "btn(id)", "sfx(id)", "music(id)", "gba_note(ch, note, vol)"} {
-		drawCodeText(screen, item, layout.Inspector.X+18, layout.Inspector.Y+402+index*codeLineHeight, codeBuiltinColor)
-	}
-	drawDevelopText(screen, "Ctrl+Space  autocomplete", layout.Inspector.X+16, layout.Inspector.Y+layout.Inspector.H-32, colorDim)
-}
-
-func codeFunctions(source string) []string {
-	var functions []string
-	for _, line := range strings.Split(source, "\n") {
-		line = strings.TrimSpace(line)
-		line = strings.TrimPrefix(line, "local ")
-		if !strings.HasPrefix(line, "function ") {
-			continue
-		}
-		name := strings.TrimSpace(strings.TrimPrefix(line, "function "))
-		if at := strings.IndexRune(name, '('); at >= 0 {
-			name = name[:at]
-		}
-		if name != "" {
-			functions = append(functions, name+"()")
-		}
-	}
-	return functions
-}
-
-func (g *Game) drawCodeDiagnostics(screen *ebiten.Image, layout codeLayout) {
-	fillRect(screen, layout.Diagnostics, colorPanel)
-	strokeRect(screen, layout.Diagnostics, colorBorder)
-	drawDevelopText(screen, "PROBLEMS", layout.Diagnostics.X+16, layout.Diagnostics.Y+16, colorDim)
-	clr := colorRun
-	icon := "OK"
-	if g.codeDiagnosticLine != 0 {
-		clr = colorDanger
-		icon = "ERROR"
-	}
-	drawDevelopText(screen, icon, layout.Diagnostics.X+16, layout.Diagnostics.Y+48, clr)
-	message := g.codeDiagnostic
-	if g.codeDiagnosticLine != 0 {
-		message = fmt.Sprintf("Ln %d, Col %d  %s", g.codeDiagnosticLine, g.codeDiagnosticColumn, message)
-	}
-	drawDevelopText(screen, truncateDevelopText(message, layout.Diagnostics.W-110), layout.Diagnostics.X+94, layout.Diagnostics.Y+48, colorText)
-	drawDevelopText(screen, "Lua is parsed and transpiled inside Mtile. No Lua installation is needed.", layout.Diagnostics.X+16, layout.Diagnostics.Y+84, colorLCD)
 }
 
 func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {

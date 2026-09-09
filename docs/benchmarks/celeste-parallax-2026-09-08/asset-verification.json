@@ -1,0 +1,7 @@
+{
+  "identical_source_and_asset_files": 14,
+  "mode0_map_cells_with_identical_pixels_and_flags": 4800,
+  "mode0_palette_identical": true,
+  "cloud_generator_idempotent": true,
+  "cloud_planes_repeat_after_240_pixels": true
+}

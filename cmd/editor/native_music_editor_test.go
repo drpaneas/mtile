@@ -413,9 +413,7 @@ func TestEnteringMusicLabInitializesGraphicsOnlyProjectAsV2(t *testing.T) {
 
 func TestEnteringMusicLabRejectsAuthoredLegacyAudio(t *testing.T) {
 	g := newTestGame(t, 16, 16, 2, 2)
-	if _, err := g.model.AddSFX(); err != nil {
-		t.Fatal(err)
-	}
+	g.model.AudioVersion = 1
 	g.setMode(modeMusic)
 	if g.mode == modeMusic || g.model.AudioVersion == assetsync.NativeAudioSchemaVersion {
 		t.Fatalf("legacy project entered native Music Lab: mode=%v version=%d", g.mode, g.model.AudioVersion)

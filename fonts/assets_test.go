@@ -16,7 +16,7 @@ func TestOpenDyslexicAssetParsesAsMonospacedFace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create OpenDyslexic face: %v", err)
 	}
-	defer face.Close()
+	defer func() { _ = face.Close() }()
 
 	if got := font.MeasureString(face, "M"); got <= 0 {
 		t.Fatalf("OpenDyslexic face has no advance: %v", got)
@@ -36,7 +36,7 @@ func TestOpenDyslexicUIBoldAssetParses(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create bold OpenDyslexic UI face: %v", err)
 	}
-	defer face.Close()
+	defer func() { _ = face.Close() }()
 	if got := font.MeasureString(face, "MTILE"); got <= 0 {
 		t.Fatalf("bold OpenDyslexic UI face has no advance: %v", got)
 	}
@@ -51,7 +51,7 @@ func TestJetBrainsMonoAssetParsesAsMonospacedFace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create JetBrains Mono face: %v", err)
 	}
-	defer face.Close()
+	defer func() { _ = face.Close() }()
 
 	want := font.MeasureString(face, "M")
 	if want <= 0 {

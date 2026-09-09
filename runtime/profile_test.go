@@ -159,38 +159,6 @@ func TestStatReportsMaximumTickCost(t *testing.T) {
 	}
 }
 
-func TestAudioStatIDsMapAndSaturateCounters(t *testing.T) {
-	stats := AudioStats{
-		Stream: audio.StreamStats{
-			Underruns: 11, QueuedBlocks: 2, MaxLateSamples: 19,
-			MaxServiceCycles: 256 * 123, MaxServicePattern: 12, LastUnderrunPattern: 9,
-		},
-		Mixer: audio.Stats{ActiveVoices: 3, PeakActiveVoices: 4, VoiceSteals: 5, FailedStarts: 6},
-		SFX:   audio.SFXStats{Rewinds: 7, FallbackCommands: 8, DroppedCommands: 9},
-	}
-	want := map[int]int{
-		StatAudioUnderruns: 11, StatAudioQueuedBlocks: 2,
-		StatAudioActiveVoices: 3, StatAudioPeakVoices: 4,
-		StatAudioVoiceSteals: 5, StatAudioFailedStarts: 6,
-		StatAudioRewinds: 7, StatAudioFallbacks: 8,
-		StatAudioDroppedCommands: 9, StatAudioMaxLateSamples: 19,
-		StatAudioMaxServiceCyclesPerSample: 123,
-		StatAudioMaxServicePattern:         12, StatAudioLastUnderrunPattern: 9,
-	}
-	for id, integer := range want {
-		if got := audioStatValue(id, stats); got != FromInt(integer) {
-			t.Errorf("audioStatValue(%d) = %v, want %v", id, got, FromInt(integer))
-		}
-	}
-	stats.Stream.Underruns = 100_000
-	if got := audioStatValue(StatAudioUnderruns, stats); got != FromInt(0x7fff) {
-		t.Fatalf("saturated underruns = %v, want %v", got, FromInt(0x7fff))
-	}
-	if got := audioStatValue(79, stats); got != 0 {
-		t.Fatalf("unknown audio stat = %v, want 0", got)
-	}
-}
-
 func TestNativeAudioStatIDsMapPSGScheduler(t *testing.T) {
 	stats := audio.NativeStats{
 		ServiceCalls: 11, EventsApplied: 12, ChannelReplaces: 13,

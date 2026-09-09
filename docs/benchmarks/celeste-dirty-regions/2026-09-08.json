@@ -1,0 +1,637 @@
+{
+  "decision": "retain existing renderer; measured prototypes regress",
+  "budget_cycles": 561792,
+  "percentiles": "nearest rank; median averages the two middle samples for even counts",
+  "baseline_evidence": "../celeste-mode4/2026-09-08.json",
+  "variants": {
+    "baseline": {
+      "rom_sha256": "7e6a7d8c1d631a0988d05933dfecaaf877fd82c47912ae7bf7cc31c9445e5ac2",
+      "rom_bytes": 378248,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 83,
+        "lastframe": {
+          "median": 513561,
+          "p95": 612933,
+          "maximum": 821299,
+          "total": 301041873
+        },
+        "update": {
+          "median": 39341,
+          "p95": 86447,
+          "maximum": 351464,
+          "total": 23111294
+        },
+        "draw": {
+          "median": 394674,
+          "p95": 465279,
+          "maximum": 505326,
+          "total": 230775959
+        },
+        "blit": {
+          "median": 78325,
+          "p95": 82134,
+          "maximum": 85280,
+          "total": 46631141
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 64,
+        "lastframe": {
+          "median": 554455.5,
+          "p95": 645332,
+          "maximum": 673655,
+          "total": 85434126
+        },
+        "update": {
+          "median": 67315.0,
+          "p95": 90172,
+          "maximum": 152234,
+          "total": 10426322
+        },
+        "draw": {
+          "median": 407094.0,
+          "p95": 484205,
+          "maximum": 505326,
+          "total": 62190167
+        },
+        "blit": {
+          "median": 78362.0,
+          "p95": 82157,
+          "maximum": 85280,
+          "total": 12750297
+        }
+      }
+    },
+    "compare_words": {
+      "rom_sha256": "70900ca59c3e3a723bab81973bec72fc4696c3907d8df218a5c265c3978b4a46",
+      "rom_bytes": 377916,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 233,
+        "lastframe": {
+          "median": 552813,
+          "p95": 658670,
+          "maximum": 863888,
+          "total": 324740125
+        },
+        "update": {
+          "median": 39786,
+          "p95": 85440,
+          "maximum": 353555,
+          "total": 23117709
+        },
+        "draw": {
+          "median": 394194,
+          "p95": 466834,
+          "maximum": 501633,
+          "total": 230717939
+        },
+        "blit": {
+          "median": 117261,
+          "p95": 124633,
+          "maximum": 140606,
+          "total": 70383137
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 130,
+        "lastframe": {
+          "median": 593793.0,
+          "p95": 690018,
+          "maximum": 714713,
+          "total": 91953832
+        },
+        "update": {
+          "median": 67401.5,
+          "p95": 90440,
+          "maximum": 152242,
+          "total": 10407295
+        },
+        "draw": {
+          "median": 408366.0,
+          "p95": 482794,
+          "maximum": 498169,
+          "total": 62184803
+        },
+        "blit": {
+          "median": 117403.0,
+          "p95": 124633,
+          "maximum": 129419,
+          "total": 19289701
+        }
+      }
+    },
+    "compare_blocks": {
+      "rom_sha256": "cc14215ca6bfc73b30de2a719775dbdc6415e968d1d0ae8b49da6819a5157e0a",
+      "rom_bytes": 377892,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 211,
+        "lastframe": {
+          "median": 548637,
+          "p95": 659921,
+          "maximum": 855849,
+          "total": 322617010
+        },
+        "update": {
+          "median": 39702,
+          "p95": 85440,
+          "maximum": 350905,
+          "total": 23082714
+        },
+        "draw": {
+          "median": 393943,
+          "p95": 467256,
+          "maximum": 505687,
+          "total": 230722161
+        },
+        "blit": {
+          "median": 112351,
+          "p95": 125939,
+          "maximum": 133406,
+          "total": 68291753
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 123,
+        "lastframe": {
+          "median": 589789.5,
+          "p95": 690424,
+          "maximum": 716025,
+          "total": 91451055
+        },
+        "update": {
+          "median": 67397.5,
+          "p95": 90432,
+          "maximum": 152234,
+          "total": 10401849
+        },
+        "draw": {
+          "median": 407413.5,
+          "p95": 482770,
+          "maximum": 501868,
+          "total": 62184796
+        },
+        "blit": {
+          "median": 112631.0,
+          "p95": 126076,
+          "maximum": 129615,
+          "total": 18795573
+        }
+      }
+    },
+    "span_tracking_full_clear": {
+      "rom_sha256": "11c318a9e09b660a6a6109feb4f075ff16427c803af8ade7407c3250abc88af2",
+      "rom_bytes": 378828,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 575,
+        "lastframe": {
+          "median": 693477,
+          "p95": 794499,
+          "maximum": 998052,
+          "total": 404217064
+        },
+        "update": {
+          "median": 39228,
+          "p95": 85013,
+          "maximum": 352140,
+          "total": 23101665
+        },
+        "draw": {
+          "median": 574434,
+          "p95": 647256,
+          "maximum": 696868,
+          "total": 334102641
+        },
+        "blit": {
+          "median": 78300,
+          "p95": 80006,
+          "maximum": 84910,
+          "total": 46496244
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 148,
+        "lastframe": {
+          "median": 735313.5,
+          "p95": 829198,
+          "maximum": 857552,
+          "total": 112128845
+        },
+        "update": {
+          "median": 67084.5,
+          "p95": 90614,
+          "maximum": 153731,
+          "total": 10412490
+        },
+        "draw": {
+          "median": 589802.0,
+          "p95": 663959,
+          "maximum": 696868,
+          "total": 88922471
+        },
+        "blit": {
+          "median": 78339.0,
+          "p95": 80031,
+          "maximum": 83936,
+          "total": 12726573
+        }
+      }
+    },
+    "span_tracking_partial_clear": {
+      "rom_sha256": "9542cadca664a75f64a89c4fc722fe1f73005516490a20e239415eb68fda9a04",
+      "rom_bytes": 379912,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 575,
+        "lastframe": {
+          "median": 772817,
+          "p95": 874903,
+          "maximum": 1078074,
+          "total": 449276999
+        },
+        "update": {
+          "median": 39580,
+          "p95": 85164,
+          "maximum": 353524,
+          "total": 23080206
+        },
+        "draw": {
+          "median": 653310,
+          "p95": 724585,
+          "maximum": 764843,
+          "total": 379084388
+        },
+        "blit": {
+          "median": 78300,
+          "p95": 82150,
+          "maximum": 86354,
+          "total": 46592293
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 148,
+        "lastframe": {
+          "median": 813364.0,
+          "p95": 905292,
+          "maximum": 938641,
+          "total": 123716608
+        },
+        "update": {
+          "median": 67457.5,
+          "p95": 90622,
+          "maximum": 152395,
+          "total": 10406374
+        },
+        "draw": {
+          "median": 667922.0,
+          "p95": 743864,
+          "maximum": 764312,
+          "total": 100502859
+        },
+        "blit": {
+          "median": 78363.0,
+          "p95": 81354,
+          "maximum": 85748,
+          "total": 12740037
+        }
+      }
+    },
+    "cached_tracking_full_clear": {
+      "rom_sha256": "802afa2f9edc59089484ec56ebc2c9e439f8224785bd5c05357b77a3362ae2f7",
+      "rom_bytes": 379724,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 137,
+        "lastframe": {
+          "median": 532339,
+          "p95": 635442,
+          "maximum": 836554,
+          "total": 311788589
+        },
+        "update": {
+          "median": 39580,
+          "p95": 85333,
+          "maximum": 351365,
+          "total": 23122986
+        },
+        "draw": {
+          "median": 412947,
+          "p95": 486820,
+          "maximum": 530442,
+          "total": 241487740
+        },
+        "blit": {
+          "median": 78287,
+          "p95": 82145,
+          "maximum": 86251,
+          "total": 46637479
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 98,
+        "lastframe": {
+          "median": 572427.0,
+          "p95": 669834,
+          "maximum": 694252,
+          "total": 88370129
+        },
+        "update": {
+          "median": 67470.5,
+          "p95": 91770,
+          "maximum": 151624,
+          "total": 10422603
+        },
+        "draw": {
+          "median": 427412.0,
+          "p95": 505386,
+          "maximum": 527093,
+          "total": 65127552
+        },
+        "blit": {
+          "median": 78349.0,
+          "p95": 82214,
+          "maximum": 84308,
+          "total": 12748237
+        }
+      }
+    },
+    "cached_tracking_go_partial_clear": {
+      "rom_sha256": "2831034ef7feb2afbab7f072cd259fc3313bc958384160286c90f577e42bbd06",
+      "rom_bytes": 380880,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 545,
+        "lastframe": {
+          "median": 615406,
+          "p95": 713023,
+          "maximum": 915212,
+          "total": 358830425
+        },
+        "update": {
+          "median": 40070,
+          "p95": 84413,
+          "maximum": 353547,
+          "total": 23119086
+        },
+        "draw": {
+          "median": 496317,
+          "p95": 566789,
+          "maximum": 612494,
+          "total": 288621821
+        },
+        "blit": {
+          "median": 78287,
+          "p95": 82112,
+          "maximum": 87306,
+          "total": 46570804
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 148,
+        "lastframe": {
+          "median": 655341.5,
+          "p95": 746899,
+          "maximum": 775753,
+          "total": 100429147
+        },
+        "update": {
+          "median": 67111.5,
+          "p95": 88517,
+          "maximum": 152242,
+          "total": 10387793
+        },
+        "draw": {
+          "median": 510930.5,
+          "p95": 586617,
+          "maximum": 602152,
+          "total": 77258405
+        },
+        "blit": {
+          "median": 78324.0,
+          "p95": 80032,
+          "maximum": 84498,
+          "total": 12715647
+        }
+      }
+    },
+    "cached_tracking_native_clear_upload": {
+      "rom_sha256": "6350a949c6a740727d8d077f9289715dd1e0d81814328da7dfa96f9c78975d62",
+      "rom_bytes": 380984,
+      "pixel_mismatches": 0,
+      "watch_mismatches": 0,
+      "all": {
+        "ticks": 593,
+        "over_budget": 162,
+        "lastframe": {
+          "median": 538178,
+          "p95": 665262,
+          "maximum": 852614,
+          "total": 316665211
+        },
+        "update": {
+          "median": 39822,
+          "p95": 85223,
+          "maximum": 351287,
+          "total": 23111989
+        },
+        "draw": {
+          "median": 412446,
+          "p95": 496174,
+          "maximum": 536355,
+          "total": 241844838
+        },
+        "blit": {
+          "median": 83208,
+          "p95": 100981,
+          "maximum": 106565,
+          "total": 51175913
+        }
+      },
+      "action_ticks_29_through_190": {
+        "ticks": 162,
+        "over_budget": 103,
+        "lastframe": {
+          "median": 578110.5,
+          "p95": 691734,
+          "maximum": 726051,
+          "total": 89936563
+        },
+        "update": {
+          "median": 67389.0,
+          "p95": 90440,
+          "maximum": 152286,
+          "total": 10402561
+        },
+        "draw": {
+          "median": 425971.5,
+          "p95": 512413,
+          "maximum": 525903,
+          "total": 65295522
+        },
+        "blit": {
+          "median": 83971.5,
+          "p95": 100731,
+          "maximum": 103275,
+          "total": 14169027
+        }
+      }
+    }
+  },
+  "native_ideal_masks": {
+    "clear": {
+      "cycles": {
+        "median": 57595,
+        "p95": 66579,
+        "max": 73028,
+        "sum": 34828662
+      },
+      "tiles": {
+        "median": 395,
+        "p95": 482,
+        "max": 600,
+        "sum": 241022
+      },
+      "runs": {
+        "median": 63,
+        "p95": 67,
+        "max": 72,
+        "sum": 36792
+      }
+    },
+    "upload-union": {
+      "cycles": {
+        "median": 76382,
+        "p95": 90606,
+        "max": 97048,
+        "sum": 46714685
+      },
+      "tiles": {
+        "median": 406,
+        "p95": 510,
+        "max": 600,
+        "sum": 251669
+      },
+      "runs": {
+        "median": 62,
+        "p95": 67,
+        "max": 73,
+        "sum": 35658
+      }
+    },
+    "upload-delta": {
+      "cycles": {
+        "median": 18857,
+        "p95": 87267,
+        "max": 97048,
+        "sum": 19419798
+      },
+      "tiles": {
+        "median": 65,
+        "p95": 475,
+        "max": 600,
+        "sum": 87017
+      },
+      "runs": {
+        "median": 41,
+        "p95": 82,
+        "max": 104,
+        "sum": 28063
+      }
+    }
+  },
+  "environment": {
+    "tinygo": "tinygo version 0.41.1 darwin/arm64 (using go version go1.26.4 and LLVM version 20.1.1)",
+    "assembler": "GNU assembler (GNU Binutils) 2.43.1",
+    "cc": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+    "mgba_library": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mgba/libmgba-core.a",
+    "mgba_library_sha256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab"
+  },
+  "baseline_runtime_manifest_sha256": "aacd65a739847048c3eeb7f940b1d92a2e8c2522b7c10888debb536d43a1b63d",
+  "image_measurement": {
+    "frames": 593,
+    "tile_grid": [
+      30,
+      20
+    ],
+    "notes": [
+      "Occupancy is exact final nonzero-index coverage. Conservative renderer-bound tracking can mark more, including black-index draws or transient pixels overwritten later.",
+      "Cloud/camera groups inferred from authored static map matching; game globals can be one update ahead of displayed frame.",
+      "N-2 measures displayed index differences across two logical draws; actual VRAM page identity is retained separately."
+    ],
+    "all_medians": {
+      "occupancy": {
+        "pixels": 23404.0,
+        "tiles": 395.0,
+        "pixel_row_runs": 594.0,
+        "tile_row_runs": 63.0,
+        "changed_scanlines": 160.0
+      },
+      "occupancy_union2": {
+        "pixels": 23697.5,
+        "tiles": 401.0,
+        "pixel_row_runs": 598.0,
+        "tile_row_runs": 62.0,
+        "changed_scanlines": 160.0
+      },
+      "occupancy_union_lag2": {
+        "pixels": 23864.0,
+        "tiles": 406.0,
+        "pixel_row_runs": 596.0,
+        "tile_row_runs": 62.0,
+        "changed_scanlines": 160.0
+      },
+      "occupancy_union3": {
+        "pixels": 23906.0,
+        "tiles": 407.0,
+        "pixel_row_runs": 603.0,
+        "tile_row_runs": 61.0,
+        "changed_scanlines": 160.0
+      },
+      "delta1": {
+        "pixels": 390.0,
+        "tiles": 52.0,
+        "pixel_row_runs": 192.0,
+        "tile_row_runs": 39.0,
+        "changed_scanlines": 102.5
+      },
+      "delta2": {
+        "pixels": 688.0,
+        "tiles": 65.0,
+        "pixel_row_runs": 206.0,
+        "tile_row_runs": 41.0,
+        "changed_scanlines": 108.0
+      }
+    }
+  },
+  "sources": {
+    "native-mask.s": "cc168ae7584bb734aaf6b5cd06093176f1260a878cc1cd074b61fa9e87751c72",
+    "native-compare.s": "2316a442250dc18733bda983ce3b960c6c638ed17c50d943cbae2073fa7b8d5a",
+    "native-mask-results.txt": "407577d82a9d972452ae3364928fec84ba48b31eb438b12cbcb09e74a48e625a",
+    "native-compare-results.txt": "bd17661bd2ba9e377613fa08851f4401682eab9a01f4977c48639847ade7fa55",
+    "native-prototype.patch": "886400f412925af29c4d30136418a00219b534a08d4382eaebffd68a142919b2"
+  }
+}

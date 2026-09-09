@@ -183,11 +183,10 @@ func TestDetectAudioVersionDefaultsToV2AndKeepsExplicitLegacySeparate(t *testing
 	if got, err := DetectAudioVersion(dir); err != nil || got != NativeAudioSchemaVersion {
 		t.Fatalf("empty project version = %d, %v", got, err)
 	}
-	legacy := DefaultAudioSettings()
-	if err := SaveAudioSettings(dir, &legacy); err != nil {
+	if err := writeJSON(audioSettingsPath(dir), map[string]int{"version": 1}); err != nil {
 		t.Fatal(err)
 	}
-	if got, err := DetectAudioVersion(dir); err != nil || got != AudioSettingsSchemaVersion {
+	if got, err := DetectAudioVersion(dir); err != nil || got != 1 {
 		t.Fatalf("legacy project version = %d, %v", got, err)
 	}
 	if err := SaveNativeAudioSettings(dir, ptrNativeSettings(DefaultNativeAudioSettings())); err != nil {
@@ -242,7 +241,7 @@ func TestGenerateNativeAudioGoCompilesAgainstRealRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	module := fmt.Sprintf("module generated-native\n\ngo 1.22\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
+	module := fmt.Sprintf("module generated-native\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => %s\n", runtimeDir)
 	if err := os.WriteFile(filepath.Join(genDir, "go.mod"), []byte(module), 0o600); err != nil {
 		t.Fatal(err)
 	}

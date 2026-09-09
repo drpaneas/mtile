@@ -1,6 +1,6 @@
 module github.com/drpaneas/mtile
 
-go 1.25.0
+go 1.27.1
 
 require (
 	github.com/drpaneas/mtile/runtime v0.0.0

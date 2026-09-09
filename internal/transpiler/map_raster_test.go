@@ -20,9 +20,12 @@ func rasterOptions() Options {
 func TestMapRasterGeneratedStorageHasTargetMemoryGuard(t *testing.T) {
 	source := `function _draw() cls(0) map(0) end`
 	options := rasterOptions()
-	got, err := Transpile("raster.lua", source, options)
+	got, report, err := TranspileWithReport("raster.lua", source, options)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if report.MapRasterDisabled {
+		t.Fatal("eligible raster reported disabled")
 	}
 	for _, want := range []string{
 		`const mapRasterBudget = 256*1024 - 512 - 8192 - rt.MapRasterHeapReserve`,
@@ -37,9 +40,12 @@ func TestMapRasterGeneratedStorageHasTargetMemoryGuard(t *testing.T) {
 	}
 	compileGenerated(t, got)
 	options.DisableMapRasterCache = true
-	plain, err := Transpile("raster.lua", source, options)
+	plain, report, err := TranspileWithReport("raster.lua", source, options)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !report.MapRasterDisabled {
+		t.Fatal("disabled raster retained runtime helpers")
 	}
 	if strings.Contains(plain, "mapRasterPixelsRAM") {
 		t.Fatal("disabled cache still allocates storage")
@@ -61,9 +67,12 @@ func TestMapRasterExcludesOtherStorageAndRendererContracts(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := rasterOptions()
 			tc.modify(&opts)
-			got, err := Transpile("raster.lua", tc.source, opts)
+			got, report, err := TranspileWithReport("raster.lua", tc.source, opts)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if !report.MapRasterDisabled {
+				t.Fatal("ineligible raster retained runtime helpers")
 			}
 			if strings.Contains(got, "mapRasterPixelsRAM") {
 				t.Fatal("ineligible cartridge allocates cache")

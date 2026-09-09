@@ -8,16 +8,10 @@ const tileCanvasExperiment = false
 
 func (c *Context) TileCanvasDMARuns() uint32 { return 0 }
 
-func (c *Context) refreshCanvasSpriteFlags() {}
-
-func (c *Context) checkCanvasMap(slot, bg int)      {}
-func (c *Context) markCanvasPixelOffset(offset int) {}
-
-func (c *Context) tileCanvasMap(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {}
-
-func (c *Context) markCanvasRect(x0, y0, x1, y1 int)        {}
-func (c *Context) canvasDirectRear() bool                   { return false }
-func (c *Context) canvasRearSpan(y, x0, x1 int, color byte) {}
-func (c *Context) canvasRearPixel(x, y int, color byte)     {}
+func (c *Context) markCanvasRect(x0, y0, x1, y1 int) {}
 
 func (c *Context) markCanvasPixel(x, y int) {}
+
+// Mode 0 shares tiled_map.go with the diagnostic tile canvas. Its guarded
+// call still needs a declaration when the tile-canvas implementation is absent.
+func (c *Context) checkCanvasMap(slot, bg int) {} //nolint:unused // Used under mtile_mode0.

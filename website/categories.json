@@ -1,0 +1,68 @@
+[
+  {
+    "id": "start",
+    "title": "Start here",
+    "icon": "flag",
+    "description": "Everything you need to make your first ROM."
+  },
+  {
+    "id": "loop",
+    "title": "Game loop & Lua",
+    "icon": "loop",
+    "description": "Give your game a heartbeat, then add your own logic."
+  },
+  {
+    "id": "input",
+    "title": "Controls",
+    "icon": "pad",
+    "description": "Read the D-pad and all six GBA buttons."
+  },
+  {
+    "id": "sprites",
+    "title": "Sprites",
+    "icon": "sprite",
+    "description": "Bring characters, pickups, and animations to life."
+  },
+  {
+    "id": "maps",
+    "title": "Maps & camera",
+    "icon": "map",
+    "description": "Build worlds from tiles and scroll through them."
+  },
+  {
+    "id": "drawing",
+    "title": "Drawing & color",
+    "icon": "palette",
+    "description": "Clear the screen, draw shapes, and work with color."
+  },
+  {
+    "id": "audio",
+    "title": "Sound & music",
+    "icon": "note",
+    "description": "Make pickups chime and give your game a soundtrack."
+  },
+  {
+    "id": "math",
+    "title": "Math & numbers",
+    "icon": "math",
+    "description": "Movement, angles, randomness, and fixed-point numbers."
+  },
+  {
+    "id": "data",
+    "title": "Tables & strings",
+    "icon": "code",
+    "description": "Keep track of objects, lists, and text."
+  },
+  {
+    "id": "debug",
+    "title": "Time & performance",
+    "icon": "clock",
+    "description": "Measure your game and understand its limits."
+  },
+  {
+    "id": "editor",
+    "title": "The editor",
+    "icon": "screen",
+    "description": "Make art, compose sound, write code, and play."
+  }
+]

@@ -1,4 +1,4 @@
-//go:build !mtile_mode0
+//go:build !mtile_mode0 && !mtile_no_map_raster
 
 package runtime
 
@@ -20,7 +20,7 @@ func (c *Context) PrepareMapRaster() {
 	cart := c.cart
 	w, h := cart.MapW*8, cart.MapH*8
 	if w < 1 || w > ScreenWidth || h < 1 || h > ScreenHeight || cart.MapStreaming ||
-		!(sheetStorageReadOnly || cart.SheetReadOnly) || len(cart.Map) != cart.MapW*cart.MapH ||
+		(!sheetStorageReadOnly && !cart.SheetReadOnly) || len(cart.Map) != cart.MapW*cart.MapH ||
 		len(cart.MapRasterPixels) != w*h || len(cart.MapRasterSpans) == 0 || c.mapRasterFailed || c.mapRasterReady {
 		return
 	}
@@ -92,7 +92,7 @@ func (c *Context) drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1,
 	cart := c.cart
 	w, h := cart.MapW*8, cart.MapH*8
 	if w < 1 || w > ScreenWidth || h < 1 || h > ScreenHeight || cart.MapStreaming ||
-		!(sheetStorageReadOnly || cart.SheetReadOnly) || len(cart.Map) != cart.MapW*cart.MapH ||
+		(!sheetStorageReadOnly && !cart.SheetReadOnly) || len(cart.Map) != cart.MapW*cart.MapH ||
 		len(cart.MapRasterPixels) != w*h || len(cart.MapRasterSpans) == 0 || c.mapRasterFailed {
 		return false
 	}
@@ -153,46 +153,39 @@ func (c *Context) drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1,
 //go:noinline
 //go:section .iwram
 func copyMapRasterSpan(src, dst unsafe.Pointer, n int) {
-	for n > 0 && uintptr(dst)&3 != 0 {
-		*(*byte)(dst) = *(*byte)(src)
-		src = unsafe.Add(src, 1)
-		dst = unsafe.Add(dst, 1)
-		n--
+	// Advance an integer cursor rather than forming a pointer one byte past
+	// either allocation after the final store (invalid under Go checkptr).
+	i := 0
+	for i < n && (uintptr(dst)+uintptr(i))&3 != 0 {
+		*(*byte)(unsafe.Add(dst, i)) = *(*byte)(unsafe.Add(src, i))
+		i++
 	}
-	if uintptr(src)&3 == 0 {
-		for n >= 16 {
-			*(*uint32)(dst) = *(*uint32)(src)
-			*(*uint32)(unsafe.Add(dst, 4)) = *(*uint32)(unsafe.Add(src, 4))
-			*(*uint32)(unsafe.Add(dst, 8)) = *(*uint32)(unsafe.Add(src, 8))
-			*(*uint32)(unsafe.Add(dst, 12)) = *(*uint32)(unsafe.Add(src, 12))
-			src = unsafe.Add(src, 16)
-			dst = unsafe.Add(dst, 16)
-			n -= 16
+	if (uintptr(src)+uintptr(i))&3 == 0 {
+		for n-i >= 16 {
+			*(*uint32)(unsafe.Add(dst, i)) = *(*uint32)(unsafe.Add(src, i))
+			*(*uint32)(unsafe.Add(dst, i+4)) = *(*uint32)(unsafe.Add(src, i+4))
+			*(*uint32)(unsafe.Add(dst, i+8)) = *(*uint32)(unsafe.Add(src, i+8))
+			*(*uint32)(unsafe.Add(dst, i+12)) = *(*uint32)(unsafe.Add(src, i+12))
+			i += 16
 		}
-		for n >= 4 {
-			*(*uint32)(dst) = *(*uint32)(src)
-			src = unsafe.Add(src, 4)
-			dst = unsafe.Add(dst, 4)
-			n -= 4
+		for n-i >= 4 {
+			*(*uint32)(unsafe.Add(dst, i)) = *(*uint32)(unsafe.Add(src, i))
+			i += 4
 		}
-	} else if n >= 8 {
-		shift := uint(uintptr(src)&3) * 8
-		aligned := unsafe.Add(src, -int(uintptr(src)&3))
-		low := *(*uint32)(aligned)
-		for n >= 8 {
-			high := *(*uint32)(unsafe.Add(aligned, 4))
-			*(*uint32)(dst) = low>>shift | high<<(32-shift)
+	} else if n-i >= 8 {
+		shift := uint((uintptr(src)+uintptr(i))&3) * 8
+		aligned := i - int(shift/8)
+		low := *(*uint32)(unsafe.Add(src, aligned))
+		for n-i >= 8 {
+			high := *(*uint32)(unsafe.Add(src, aligned+4))
+			*(*uint32)(unsafe.Add(dst, i)) = low>>shift | high<<(32-shift)
 			low = high
-			aligned = unsafe.Add(aligned, 4)
-			src = unsafe.Add(src, 4)
-			dst = unsafe.Add(dst, 4)
-			n -= 4
+			aligned += 4
+			i += 4
 		}
 	}
-	for n > 0 {
-		*(*byte)(dst) = *(*byte)(src)
-		src = unsafe.Add(src, 1)
-		dst = unsafe.Add(dst, 1)
-		n--
+	for i < n {
+		*(*byte)(unsafe.Add(dst, i)) = *(*byte)(unsafe.Add(src, i))
+		i++
 	}
 }

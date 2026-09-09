@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"image/color"
 	"path/filepath"
 	"strings"
@@ -172,12 +172,6 @@ func (g *Game) appendBuildEvent(id uint64, event build.Event) {
 	}
 }
 
-func (g *Game) appendRuntimeLog(message string) {
-	g.runMu.Lock()
-	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, message)
-	g.runMu.Unlock()
-}
-
 func (g *Game) currentRun(id uint64) bool {
 	g.runMu.Lock()
 	current := id == g.runID
@@ -208,7 +202,7 @@ func (g *Game) pumpPlaySession() {
 				if g.playImage == nil {
 					g.playImage = ebiten.NewImage(emulator.Width, emulator.Height)
 				}
-				g.playImage.ReplacePixels(frame.RGBA)
+				g.playImage.WritePixels(frame.RGBA)
 				g.acceptPlayTelemetry(frame.Telemetry)
 				g.playCount++
 				g.capturePlayAudioBaseline()
@@ -240,6 +234,18 @@ func (g *Game) acceptPlayTelemetry(telemetry emulator.Telemetry) {
 	if !telemetry.Valid {
 		return
 	}
+	previous := g.playTelemetry
+	g.runMu.Lock()
+	if g.playRunID == g.runID && telemetry.DebugValid && (!previous.DebugValid || telemetry.Stats.HeapError != previous.Stats.HeapError) {
+		message := runtimeHeapErrorMessage(telemetry.Stats.HeapError)
+		if message != "" {
+			g.runError = message
+			g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, message)
+		} else if g.runError == runtimeHeapErrorMessage(previous.Stats.HeapError) {
+			g.runError = ""
+		}
+	}
+	g.runMu.Unlock()
 	g.playTelemetry = telemetry
 	g.setPlayAudioActive(playTelemetryAudioActive(telemetry))
 	if !telemetry.DebugValid || telemetry.Sequence == g.playTelemetrySeq {
@@ -251,6 +257,19 @@ func (g *Game) acceptPlayTelemetry(telemetry emulator.Telemetry) {
 	copy(g.playCPULoad[:], g.playCPULoad[1:])
 	g.playCPULoad[len(g.playCPULoad)-1] = load
 	g.playCPUSamples = min(len(g.playCPULoad), g.playCPUSamples+1)
+}
+
+func runtimeHeapErrorMessage(err emulator.HeapError) string {
+	switch err {
+	case emulator.HeapOK:
+		return ""
+	case emulator.HeapOOM:
+		return "Lua memory is full. Reuse tables and strings, release unused objects, then reset the preview."
+	case emulator.HeapCorrupt, emulator.HeapCorruptRef:
+		return "Lua memory is damaged. Reset the preview; if this repeats, report it with the project and steps to reproduce."
+	default:
+		return "Lua memory could not be updated. Reset the preview; if this repeats, report it with the project and steps to reproduce."
+	}
 }
 
 func playTelemetryAudioActive(telemetry emulator.Telemetry) bool {
@@ -277,42 +296,6 @@ func (g *Game) capturePlayAudioBaseline() {
 	}
 	_, g.playAudioBaselineUnderruns, g.playAudioBaselineOverruns = g.playPCM.Stats()
 	g.playAudioBaselineReady = true
-}
-
-func (g *Game) updatePlayMode() {
-	g.pumpPlaySession()
-
-	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
-	if mod && inpututil.IsKeyJustPressed(ebiten.KeyR) {
-		g.startRun()
-		return
-	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		g.stopPlaySession()
-	}
-	layout := newPlayLayout()
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		mx, my := ebiten.CursorPosition()
-		switch {
-		case rectContains(layout.Reload, mx, my):
-			g.startRun()
-		case rectContains(layout.Reset, mx, my):
-			g.runMu.Lock()
-			g.playReset = true
-			g.runMu.Unlock()
-		case rectContains(layout.Stop, mx, my):
-			g.stopPlaySession()
-		}
-	}
-	keys := playKeyMask()
-	pressed := playJustPressedKeyMask()
-	g.runMu.Lock()
-	g.playKeys = keys
-	if pressed != 0 {
-		g.playPendingKeys |= pressed
-		g.playPendingTicks = 2
-	}
-	g.runMu.Unlock()
 }
 
 func (g *Game) acceptPlayLaunch(launch playLaunch) {
@@ -399,17 +382,18 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	g.playAudioBaselineUnderruns = 0
 	g.playAudioBaselineOverruns = 0
 	g.runMu.Lock()
+	g.playRunID = launch.id
 	g.playPaused = g.mode != modeCode
 	paused := g.playPaused
 	g.runMu.Unlock()
 	if !paused {
 		player.Play()
 	}
-	go g.runEmulator(launch.session, g.playPCM, g.playFrames, g.playErrors, g.playStop)
+	go g.runEmulator(launch.session, g.playPCM, g.playFrames, g.playErrors, g.playStop, launch.id)
 }
 
-func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames chan emulator.Frame, failures chan error, stop <-chan struct{}) {
-	defer session.Close()
+func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames chan emulator.Frame, failures chan error, stop <-chan struct{}, runID uint64) {
+	defer func() { _ = session.Close() }()
 	ticker := time.NewTicker(time.Second / 60)
 	defer ticker.Stop()
 	for {
@@ -418,8 +402,17 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames 
 			return
 		case <-ticker.C:
 		}
-		_, err := g.stepEmulator(session, pcm, frames)
+		_, err := g.stepEmulator(session, pcm, frames, runID)
 		if err != nil {
+			// Wait for the helper's stderr pump before draining its final lines.
+			// A frame EOF can arrive before the diagnostic explaining the exit.
+			err = errors.Join(err, session.Close())
+			if source, ok := session.(interface{ DrainLogs() []string }); ok {
+				g.acceptRuntimeLogs(runID, source.DrainLogs())
+			}
+			if !g.currentRun(runID) {
+				return
+			}
 			select {
 			case failures <- err:
 			default:
@@ -432,7 +425,7 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames 
 // stepEmulator performs one deterministic preview tick. Keeping the pause and
 // input hand-off here makes the live-player lifecycle directly testable without
 // launching a native helper process.
-func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames chan emulator.Frame) (bool, error) {
+func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames chan emulator.Frame, runID uint64) (bool, error) {
 	g.runMu.Lock()
 	paused := g.playPaused
 	keys := g.playKeys | g.playPendingKeys
@@ -454,6 +447,9 @@ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames
 	g.playLastSentKeys = keys
 	g.runMu.Unlock()
 	frame, err := session.Step(keys, reset)
+	if source, ok := session.(interface{ DrainLogs() []string }); ok {
+		g.acceptRuntimeLogs(runID, source.DrainLogs())
+	}
 	if err != nil {
 		return false, err
 	}
@@ -472,6 +468,20 @@ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames
 		}
 	}
 	return true, nil
+}
+
+func (g *Game) acceptRuntimeLogs(runID uint64, lines []string) {
+	if len(lines) == 0 {
+		return
+	}
+	g.runMu.Lock()
+	defer g.runMu.Unlock()
+	if runID != g.runID {
+		return
+	}
+	for _, line := range lines {
+		g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, line)
+	}
 }
 
 var playKeyBindings = [...]struct {
@@ -583,7 +593,10 @@ func (g *Game) stopPlayback() {
 	g.playLastSentKeys = 0
 	g.playReset = false
 	g.playPaused = false
+	g.playRunID = 0
 	g.runMu.Unlock()
+	g.playTelemetry = emulator.Telemetry{}
+	g.playTelemetrySeq = 0
 	if g.playStop != nil {
 		close(g.playStop)
 		g.playStop = nil
@@ -606,65 +619,6 @@ func (g *Game) stopPlayback() {
 }
 
 func (g *Game) closePlayMode() { g.stopPlaySession() }
-
-func (g *Game) drawPlayMode(screen *ebiten.Image) {
-	layout := newPlayLayout()
-	fillRect(screen, editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}, colorInk)
-	fillRect(screen, layout.Header, colorIndigo)
-	drawTextScale(screen, "PLAY", 20, layout.Header.Y+4, 2, colorText)
-	drawText(screen, "CARTRIDGE PREVIEW  /  REAL mGBA CORE", 20, layout.Header.Y+layout.Header.H-uiTextHeight-4, colorLCD)
-	g.runMu.Lock()
-	status, runError, busy := g.runStatus, g.runError, g.runBusy
-	g.runMu.Unlock()
-	if status == "" {
-		status = "PRESS RUN TO BUILD YOUR CARTRIDGE"
-	}
-	statusColor := colorRun
-	if runError != "" {
-		statusColor = colorDanger
-	} else if busy {
-		statusColor = colorHighlight
-	}
-	statusRect := editor.Rect{X: 250, Y: layout.Header.Y + 17, W: max(1, layout.Reload.X-262), H: 38}
-	drawSmallTextCentered(screen, truncateTextToWidth(status, statusRect.W-16, uiSmallFace), statusRect, statusColor)
-	drawNativeButton(screen, layout.Reload, "BUILD + RELOAD", busy, colorRun)
-	drawNativeButton(screen, layout.Reset, "RESET", false, colorHighlight)
-	drawNativeButton(screen, layout.Stop, "STOP", false, colorDanger)
-
-	fillRect(screen, layout.Stage, colorBackground)
-	g.drawGBABezel(screen, layout)
-	fillRect(screen, layout.Inspector, colorPanel)
-	strokeRect(screen, layout.Inspector, colorBorder)
-	drawText(screen, "CARTRIDGE", layout.Inspector.X+20, layout.Inspector.Y+24, colorDim)
-	drawText(screen, filepath.Base(g.model.Dir), layout.Inspector.X+20, layout.Inspector.Y+54, colorText)
-	drawLine(screen, layout.Inspector.X+16, layout.Inspector.Y+84, layout.Inspector.X+layout.Inspector.W-16, layout.Inspector.Y+84, colorBorder)
-	drawText(screen, "DISPLAY", layout.Inspector.X+20, layout.Inspector.Y+110, colorDim)
-	drawText(screen, "240 x 160  /  59.73 Hz", layout.Inspector.X+20, layout.Inspector.Y+138, colorLCD)
-	drawText(screen, fmt.Sprintf("PREVIEW  %.1f FPS", g.playFPS), layout.Inspector.X+20, layout.Inspector.Y+164, colorText)
-	drawText(screen, "AUDIO", layout.Inspector.X+20, layout.Inspector.Y+210, colorDim)
-	drawText(screen, "48 kHz  /  STEREO", layout.Inspector.X+20, layout.Inspector.Y+238, colorLCD)
-	if g.playPCM != nil {
-		queued, underruns, overruns := g.playPCM.Stats()
-		drawText(screen, fmt.Sprintf("BUFFER  %d frames", queued), layout.Inspector.X+20, layout.Inspector.Y+264, colorText)
-		drawText(screen, fmt.Sprintf("XRUN  %d / %d", underruns, overruns), layout.Inspector.X+20, layout.Inspector.Y+288, colorDim)
-	}
-	drawLine(screen, layout.Inspector.X+16, layout.Inspector.Y+330, layout.Inspector.X+layout.Inspector.W-16, layout.Inspector.Y+330, colorBorder)
-	drawText(screen, "CONTROLS", layout.Inspector.X+20, layout.Inspector.Y+356, colorDim)
-	for index, label := range []string{"ARROWS   D-PAD", "Z / X    A / B", "ENTER    START", "BKSP     SELECT", "A / S    L / R"} {
-		drawText(screen, label, layout.Inspector.X+20, layout.Inspector.Y+388+index*26, colorText)
-	}
-	g.runMu.Lock()
-	inputKeys := g.playKeys | g.playPendingKeys
-	sentKeys := g.playLastSentKeys
-	g.runMu.Unlock()
-	drawText(screen, "INPUT", layout.Inspector.X+20, layout.Inspector.Y+536, colorDim)
-	drawText(screen, playKeyLabel(inputKeys), layout.Inspector.X+86, layout.Inspector.Y+536, playInputColor(inputKeys))
-	drawText(screen, "CORE", layout.Inspector.X+20, layout.Inspector.Y+562, colorDim)
-	drawText(screen, playKeyLabel(sentKeys), layout.Inspector.X+86, layout.Inspector.Y+562, playInputColor(sentKeys))
-	if g.runROMPath != "" {
-		drawText(screen, fmt.Sprintf("ROM  %s  /  %d bytes", filepath.Base(g.runROMPath), g.runROMSize), layout.Inspector.X+20, layout.Inspector.Y+layout.Inspector.H-46, colorLCD)
-	}
-}
 
 func playInputColor(keys uint16) color.Color {
 	if keys == 0 {

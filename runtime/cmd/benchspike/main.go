@@ -307,7 +307,7 @@ var workloads = []workload{
 		sink.Set(uint32(acc))
 	}},
 	{"BLIT DMA", func() { ctx.PrepareHiddenPage() }},
-	// Practical 30 Hz questions: a PICO-8 room is 16x16 cells, not the
+	// Practical 30 Hz questions: a small room is 16x16 cells, not the
 	// GBA's 30x20; real maps are half empty; layered redraws use masks.
 	{"MAP 16X16", func() { ctx.Map(0, 0, 0, 0, 16, 16, 0) }},
 	{"MAP 16 HALF", func() { ctx.Map(0, 48, 0, 0, 16, 16, 0) }},

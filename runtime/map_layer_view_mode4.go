@@ -2,7 +2,7 @@
 
 package runtime
 
-type mapLayerViewRenderState struct{}
+type mapLayerViewRenderState struct{} //nolint:unused // Empty Mode 4 counterpart of the hardware renderer cache.
 
 func (view *MapLayerView) borrowRenderState(c *Context, layer int) {}
 

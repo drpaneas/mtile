@@ -2,6 +2,11 @@
 
 ## Contract
 
+Audio JSON rejects duplicate object keys (including escaped spellings and
+case aliases), invalid UTF-8, and trailing JSON values. This validation also
+applies when detecting the schema version, so ambiguous files cannot bypass
+the strict loader. Existing field casing and null/default behavior are preserved.
+
 Version 2 is strict and PSG-only. Parsers reject unknown fields, unknown
 versions, duplicate IDs, incompatible channel assignments, out-of-range
 hardware values, PCM/sample fields, and version-1 PICO files.

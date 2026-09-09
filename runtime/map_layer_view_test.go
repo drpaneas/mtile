@@ -102,6 +102,37 @@ func TestMapLayerViewInvalidBackingRetainsOrdinaryFallback(t *testing.T) {
 	}
 }
 
+func TestMapLayerReadBorrowPreservesOverflowAndPartialPlaneChecks(t *testing.T) {
+	if mapStorageStreaming {
+		t.Skip("resident backing validation")
+	}
+	maxInt := int(^uint(0) >> 1)
+	dimensions := []int{-1, 0, 1, 2, 3, 4, 7, 16, 1 << 30, maxInt / 2, maxInt - 1, maxInt}
+	for _, width := range dimensions {
+		for _, height := range dimensions {
+			for _, size := range []int{0, 1, 3, 4, 7, 12, 15, 16, 17, 63, 64, 65} {
+				var c Context
+				c.cart = &AssetMemory{MapW: width, MapH: height, MapLayers: 4, MapPlaneMask: 15, Map: make([]uint16, size)}
+				for layer := 0; layer < 4; layer++ {
+					// The original division checks are an overflow-safe reference,
+					// including incomplete final planes and host-sized metadata.
+					want := width > 0 && height > 0 && width <= size/height
+					if want {
+						want = layer < size/(width*height)
+					}
+					view := c.BorrowMapLayerRead(layer)
+					if (view.data != nil) != want {
+						t.Fatalf("%dx%d backing=%d layer=%d borrowed=%v want=%v", width, height, size, layer, view.data != nil, want)
+					}
+					if want && view.data != &c.cart.Map[layer*width*height] {
+						t.Fatal("borrow points at the wrong plane")
+					}
+				}
+			}
+		}
+	}
+}
+
 func TestMapLayerViewStreamingFallbackPreservesEditsEvictionsAndErrors(t *testing.T) {
 	if mapStorageFixed && !mapStorageStreaming {
 		t.Skip("fixed resident build omits streaming semantics")
@@ -148,11 +179,12 @@ func BenchmarkMapLayerView(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				x, y := i%17+7, i/17%12+4
-				if name == "borrowed" {
+				switch name {
+				case "borrowed":
 					view.Set(x, y, int(view.Get(x, y)^1))
-				} else if name == "compact" {
+				case "compact":
 					c.MsetCompact(3, 0, x, y, int(c.MgetCompact(3, 0, x, y)^1))
-				} else {
+				default:
 					c.MsetLayer(3, x, y, int(c.MgetLayer(3, x, y)^1))
 				}
 			}

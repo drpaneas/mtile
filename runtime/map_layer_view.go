@@ -1,6 +1,9 @@
 package runtime
 
-import "unsafe"
+import (
+	"math/bits"
+	"unsafe"
+)
 
 // MapLayerView is a compiler-internal borrow of one resident authored plane.
 // The cartridge's metadata/backing and renderer mapping/camera/clip state
@@ -8,7 +11,7 @@ import "unsafe"
 // GC are allowed. The compiler excludes drawing and other renderer-state
 // calls throughout the borrow. No public Lua API exposes a view.
 type MapLayerView struct {
-	mapLayerViewRenderState
+	mapLayerViewRenderState //nolint:unused // Holds renderer cache fields under mtile_mode0 and mtile_tilecanvas.
 	MapLayerReadView
 }
 
@@ -44,14 +47,21 @@ func (c *Context) BorrowMapLayerRead(layer int) MapLayerReadView {
 	}
 	cart := c.cart
 	slot, present := mapPlaneSlot(cart.MapPlaneMask, layer, cart.MapLayers)
-	if !present || cart.MapW <= 0 || cart.MapH <= 0 || cart.MapW > len(cart.Map)/cart.MapH {
+	if !present || cart.MapW <= 0 || cart.MapH <= 0 {
 		return view
 	}
-	cells := cart.MapW * cart.MapH
-	if slot >= len(cart.Map)/cells {
+	// Check full products instead of dividing the backing length on every
+	// borrow. Mul preserves overflow checks on both 32-bit GBA and 64-bit
+	// hosts; on ARM7TDMI each product is one UMULL, with no software divide.
+	hi, cells := bits.Mul(uint(cart.MapW), uint(cart.MapH))
+	if hi != 0 || cells > uint(len(cart.Map)) {
 		return view
 	}
-	base := slot * cells
+	hi, end := bits.Mul(cells, uint(slot+1))
+	if hi != 0 || end > uint(len(cart.Map)) {
+		return view
+	}
+	base := int(end - cells)
 	view.data = &cart.Map[base]
 	view.width, view.height, view.spriteN = cart.MapW, cart.MapH, cart.SpriteN
 	return view
