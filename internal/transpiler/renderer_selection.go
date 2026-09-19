@@ -642,6 +642,22 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 		return 0, false, false, firstErr
 	}
 	callGraph := newMode0CallGraph(chunk)
+	mode0Layers := mapMaskCount(plan.drawMask)
+	// Four dirty BG maps already consume a substantial part of VBlank. Native
+	// dense-audio captures exceed the complete window when per-frame sheet or
+	// palette work is added. Waiting longer cannot make that commit atomic.
+	// Match native-audio linkage, rather than rejecting unused authored assets;
+	// initialization-only mutations are committed while the LCD is blank.
+	if mode0Layers == 4 && opts.NativeAudio != nil && chunkUsesNativeAudio(chunk) {
+		mutation := callGraph.firstBuiltinFromFunction("_update", "sset", "pal")
+		if mutation == nil {
+			mutation = callGraph.firstBuiltinFromFunction("_draw", "sset", "pal")
+		}
+		if mutation != nil {
+			return 0, false, false, mode0CallError(mutation, reasonMode0ResourceLimit,
+				"Mode 0 with native audio and four materialized BGs cannot prove per-frame sset()/pal() commits fit VBlank; use Mode 4")
+		}
+	}
 	if mapCalls != 0 && (opts.MapW <= 0 || opts.MapH <= 0) {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 map() requires positive map dimensions", reasonMode0ResourceLimit)
 	}
@@ -675,7 +691,6 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	clsIndex, mapIndex, lastMapIndex, firstSpriteIndex, firstPrintIndex := -1, -1, -1, -1, -1
 	maxSpriteID := -1
 	materializedMaps := 0
-	mode0Layers := mapMaskCount(plan.drawMask)
 	for opIndex, op := range ops {
 		switch op.name {
 		case "cls":

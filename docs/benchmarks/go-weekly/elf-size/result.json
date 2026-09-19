@@ -1,0 +1,113 @@
+{
+  "experiment": 6,
+  "decision": "retain",
+  "date": "2026-09-19",
+  "scope": "Standalone dependency-free cmd/elfsize; no build integration or runtime changes",
+  "host": "Apple M2 Pro; darwin/arm64; Go1.27.1",
+  "parse": {
+    "baseline": {
+      "samples": [
+        {
+          "nsPerOp": 51024,
+          "bytesPerOp": 105217,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 50905,
+          "bytesPerOp": 105217,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 50071,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 49792,
+          "bytesPerOp": 105217,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 52766,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        }
+      ],
+      "medianNs": 50905
+    },
+    "candidate": {
+      "samples": [
+        {
+          "nsPerOp": 50246,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 50805,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 51073,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 51522,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        },
+        {
+          "nsPerOp": 51019,
+          "bytesPerOp": 105216,
+          "allocsPerOp": 999
+        }
+      ],
+      "medianNs": 51019
+    }
+  },
+  "compiledCLI": {
+    "samples": 20,
+    "warmups": 2,
+    "medianMs": 10.2786455,
+    "p95Ms": 12.064875,
+    "maxMs": 12.166541
+  },
+  "gates": {
+    "syntheticAccounting": true,
+    "aliasesAndThumb": true,
+    "unionsAndNOBITS": true,
+    "malformedAndTruncatedBackingRejected": true,
+    "missingSymbolsHandled": true,
+    "deterministicJSON": true,
+    "normalHelpExit": true,
+    "fourRealELFReferences": true,
+    "independentReadelfMapROMChecks": true,
+    "race": true
+  },
+  "collisionPair": {
+    "ROMDelta": 288,
+    "IWRAMDelta": 104,
+    "EWRAMDelta": 0,
+    "mailboxDelta": 0,
+    "contributors": {
+      "Context.TableSet": {
+        "ROMDelta": 104
+      },
+      "Context.growTableWithRoots": {
+        "ROMDelta": 80
+      },
+      "Context.hashFind": {
+        "ROMDelta": 104,
+        "IWRAMDelta": 104
+      }
+    }
+  },
+  "limitations": [
+    "Input restricted to linked little-endian ELF32 ARM GBA binaries.",
+    "Symbol matching uses section and sorted alias names; renamed alias groups appear as removals/additions, repeated local names aggregate.",
+    "Section/symbol rows are not additive; totals use range unions and expose unattributed bytes.",
+    "ROM image span includes holes; RAM reports allocated section coverage, not high-water usage including unallocated gaps.",
+    "Parse benchmark reads bytes into memory before timing and analyzes metadata; its MB/s is not full ELF payload scanning or disk throughput."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "Heldout": {
+    "off": {
+      "median_ns/op": 14872282.5,
+      "min_ns/op": 14611024.0,
+      "max_ns/op": 15306722.0,
+      "cvPercent": 1.5117814884868168,
+      "median_B/op": 17205073.5,
+      "median_allocs/op": 105682.0
+    },
+    "trained": {
+      "median_ns/op": 13972378.0,
+      "min_ns/op": 13677117.0,
+      "max_ns/op": 14249927.0,
+      "cvPercent": 1.3614002342772493,
+      "median_B/op": 17200390.0,
+      "median_allocs/op": 105223.5
+    },
+    "medianChangePercent": -6.0508835815887725,
+    "pairedChangesPercent": [
+      -6.709894662286864,
+      -5.618618146784627,
+      -4.008665805232647,
+      -6.05100092416142,
+      -4.493394850354093,
+      -10.64633564260199
+    ],
+    "improvedPairs": 6,
+    "gatePassed": true
+  },
+  "Hello": {
+    "off": {
+      "median_ns/op": 882835.5,
+      "min_ns/op": 877718.0,
+      "max_ns/op": 887467.0,
+      "cvPercent": 0.4318548851766865,
+      "median_B/op": 908033.0,
+      "median_allocs/op": 6479.5
+    },
+    "trained": {
+      "median_ns/op": 844215.0,
+      "min_ns/op": 835947.0,
+      "max_ns/op": 858108.0,
+      "cvPercent": 1.0503861917490263,
+      "median_B/op": 907783.5,
+      "median_allocs/op": 6403.5
+    },
+    "medianChangePercent": -4.374597532609414,
+    "pairedChangesPercent": [
+      -4.067457167352384,
+      -2.914352498735673,
+      -4.526642112144463,
+      -4.013247990812541,
+      -3.3520140580369007,
+      -5.805286281067357
+    ],
+    "improvedPairs": 6,
+    "gatePassed": true
+  },
+  "Noalloc": {
+    "off": {
+      "median_ns/op": 394986.5,
+      "min_ns/op": 392855.0,
+      "max_ns/op": 397588.0,
+      "cvPercent": 0.41655469808838985,
+      "median_B/op": 400189.0,
+      "median_allocs/op": 2977.0
+    },
+    "trained": {
+      "median_ns/op": 395299.0,
+      "min_ns/op": 389828.0,
+      "max_ns/op": 401326.0,
+      "cvPercent": 0.9976241930782019,
+      "median_B/op": 399611.0,
+      "median_allocs/op": 2885.0
+    },
+    "medianChangePercent": 0.07911662803665731,
+    "pairedChangesPercent": [
+      0.44131029360696683,
+      -0.12559899117275952,
+      -1.3613084755369376,
+      0.4431660536330151,
+      0.940169220399012,
+      -0.6641926209263738
+    ],
+    "improvedPairs": 3,
+    "gatePassed": true
+  },
+  "performanceGatePassed": true
+}

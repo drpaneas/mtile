@@ -1,0 +1,4 @@
+ok  	github.com/drpaneas/mtile/internal/editor	1.391s
+ok  	github.com/drpaneas/mtile/cmd/editor	0.985s
+ok  	github.com/drpaneas/mtile/internal/build	16.399s
+ok  	github.com/drpaneas/mtile/cmd/mtile	6.783s

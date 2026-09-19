@@ -1,0 +1,24 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/performance
+cpu: Apple M2 Pro
+BenchmarkLiveStream480Frames-12    	   24466	     47932 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiveStream480Frames-12    	   25029	     47674 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiveStream480Frames-12    	   24903	     47621 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiveStream480Frames-12    	   25077	     47871 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiveStream480Frames-12    	   25078	     50184 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLiveStream480Frames-12    	   25282	     47590 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/performance	10.671s
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/gbapu
+cpu: Apple M2 Pro
+BenchmarkRendererFourChannels480Frames-12    	   45088	     25617 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRendererFourChannels480Frames-12    	   46990	     25585 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRendererFourChannels480Frames-12    	   46680	     25623 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRendererFourChannels480Frames-12    	   45853	     25926 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRendererFourChannels480Frames-12    	   46648	     25544 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRendererFourChannels480Frames-12    	   43257	     25836 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/gbapu	9.020s

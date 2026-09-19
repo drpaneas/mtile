@@ -1,0 +1,14 @@
+=== RUN   TestSpritePasteDitherPreviewIsTransientAndCached
+--- PASS: TestSpritePasteDitherPreviewIsTransientAndCached (0.00s)
+=== RUN   TestSpritePasteDitherCommitIsOneUndoStep
+--- PASS: TestSpritePasteDitherCommitIsOneUndoStep (0.00s)
+=== RUN   TestSpritePasteDitherUsesImportPaletteSnapshot
+--- PASS: TestSpritePasteDitherUsesImportPaletteSnapshot (0.00s)
+=== RUN   TestUndoPaletteChangeCancelsSpritePastePreview
+--- PASS: TestUndoPaletteChangeCancelsSpritePastePreview (0.00s)
+=== RUN   TestSpritePasteDitherToggleLatency
+    sprite_clipboard_ordered_test.go:178: pico-8 max128x128 first UI toggle p95=1.649ms; cached full toggle allocations=0
+    sprite_clipboard_ordered_test.go:178: aurora max128x128 first UI toggle p95=15.330ms; cached full toggle allocations=0
+--- PASS: TestSpritePasteDitherToggleLatency (0.89s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	2.225s

@@ -46,8 +46,9 @@ start_vector:
     // disabled, so every instruction fetched from ROM (i.e. this entire
     // program) runs several times slower than necessary until this is set.
     // 0x4317 selects WS0 first access = 3 cycles, WS0 second (sequential)
-    // access = 1 cycle, and enables the prefetch buffer; it leaves SRAM,
-    // WS1, and WS2 at their defaults since this runtime uses none of them.
+    // access = 1 cycle, and enables the prefetch buffer. It also selects
+    // SRAM = 8 cycles, WS1 = 4/4, and WS2 = 8/8; these are not all reset
+    // defaults. No EWRAM timing/overclock register is changed.
     // This is the standard GBA homebrew fast-ROM WAITCNT value.
     ldr     r0, =0x04000204                 // REG_WAITCNT
     ldr     r1, =0x4317

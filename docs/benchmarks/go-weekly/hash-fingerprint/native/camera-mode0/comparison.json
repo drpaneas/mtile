@@ -1,0 +1,14 @@
+{
+  "baselineRuntimeSHA256": "e2e1e606e2e048065998854e95c3bcf8caca4b32f037547ac1c63a8be4359463",
+  "candidateRuntimeSHA256": "d269a40fd6c1575c5e885e19b21a5f95791294cc65927b74b014bfba6e4e388c",
+  "generatedGoSHA256": "ffd5b0830b130abf8170cdf170947e407b820358df3610ce30fd1960490c8c15",
+  "generatedSourceEqual": true,
+  "medianImprovementPercent": 0,
+  "memoryEqual": true,
+  "name": "camera-mode0",
+  "p95ChangePercent": 0,
+  "pixelsEqual": true,
+  "projectSHA256": "5e69c1df55e2824651b6b91b871c65d56092eeecb3c02101214d15375f909539",
+  "warmupMissedFramesDelta": 0,
+  "watchesEqual": true
+}

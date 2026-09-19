@@ -1,0 +1,94 @@
+=== RUN   TestMode0ObjectBudgetAcceptsPackedExactOAMBoundary
+--- PASS: TestMode0ObjectBudgetAcceptsPackedExactOAMBoundary (0.00s)
+=== RUN   TestMode0ObjectBudgetRejectsPackedOAMBoundaryPlusOne
+--- PASS: TestMode0ObjectBudgetRejectsPackedOAMBoundaryPlusOne (0.00s)
+=== RUN   TestMode0ObjectBudgetSeparatesStaticSpriteBands
+--- PASS: TestMode0ObjectBudgetSeparatesStaticSpriteBands (0.00s)
+=== RUN   TestMode0ObjectBudgetKeepsDynamicCameraAsSharedTranslation
+--- PASS: TestMode0ObjectBudgetKeepsDynamicCameraAsSharedTranslation (0.00s)
+=== RUN   TestMode0ObjectBudgetUsesRuntimeFixedPointForFractionalY
+--- PASS: TestMode0ObjectBudgetUsesRuntimeFixedPointForFractionalY (0.00s)
+=== RUN   TestMode0ObjectBudgetPreservesRepresentableNegativeFractionalY
+--- PASS: TestMode0ObjectBudgetPreservesRepresentableNegativeFractionalY (0.00s)
+=== RUN   TestMode0ObjectBudgetCombinesStaticAndDynamicProfiles
+--- PASS: TestMode0ObjectBudgetCombinesStaticAndDynamicProfiles (0.00s)
+=== RUN   TestMode0ObjectBudgetAccountsForPackedCacheExhaustion
+--- PASS: TestMode0ObjectBudgetAccountsForPackedCacheExhaustion (0.00s)
+=== RUN   TestMode0ObjectBudgetFallsBackWhenSheetIsMutable
+--- PASS: TestMode0ObjectBudgetFallsBackWhenSheetIsMutable (0.00s)
+=== RUN   TestMode0ObjectBudgetCombinesTextAndSpriteEntries
+--- PASS: TestMode0ObjectBudgetCombinesTextAndSpriteEntries (0.00s)
+=== RUN   TestMode0ObjectBudgetAccountsForRuntimeTextWrapping
+--- PASS: TestMode0ObjectBudgetAccountsForRuntimeTextWrapping (0.00s)
+=== RUN   TestMode0ObjectBudgetRejectsCameraRebaseBetweenObjectBands
+--- PASS: TestMode0ObjectBudgetRejectsCameraRebaseBetweenObjectBands (0.00s)
+=== RUN   TestMode0ObjectBudgetRejectsCameraRebaseThroughHelper
+--- PASS: TestMode0ObjectBudgetRejectsCameraRebaseThroughHelper (0.00s)
+=== RUN   TestMode0ObjectBudgetAutoFallsBackOnScanlineOverflow
+--- PASS: TestMode0ObjectBudgetAutoFallsBackOnScanlineOverflow (0.00s)
+=== RUN   TestMode0ObjectBudgetDoesNotDiscountHorizontallyOffscreenObjects
+--- PASS: TestMode0ObjectBudgetDoesNotDiscountHorizontallyOffscreenObjects (0.00s)
+=== RUN   TestMode0ObjectBudgetReportsZeroForObjectFreeDraw
+--- PASS: TestMode0ObjectBudgetReportsZeroForObjectFreeDraw (0.00s)
+=== RUN   TestMode0ObjectBudgetUsesWorstFiniteSpriteSize
+--- PASS: TestMode0ObjectBudgetUsesWorstFiniteSpriteSize (0.00s)
+=== RUN   TestMode0ChecksEveryFiniteSpriteIDAgainstTextReservation
+--- PASS: TestMode0ChecksEveryFiniteSpriteIDAgainstTextReservation (0.00s)
+=== RUN   TestMode0TextAtlasDeduplicatesRepeatedGlyphAndColor
+--- PASS: TestMode0TextAtlasDeduplicatesRepeatedGlyphAndColor (0.00s)
+=== RUN   TestMode0TextAtlasSeparatesOneGlyphAcrossColors
+--- PASS: TestMode0TextAtlasSeparatesOneGlyphAcrossColors (0.00s)
+=== RUN   TestMode0TextAtlasSortsKeysDeterministically
+--- PASS: TestMode0TextAtlasSortsKeysDeterministically (0.00s)
+=== RUN   TestMode0TextAtlasBuildsExactRuntimeTileBytes
+--- PASS: TestMode0TextAtlasBuildsExactRuntimeTileBytes (0.00s)
+=== RUN   TestGeneratedMode0EmbedsAndLoadsStaticTextAtlas
+--- PASS: TestGeneratedMode0EmbedsAndLoadsStaticTextAtlas (0.00s)
+=== RUN   TestGeneratedMode4OmitsMode0TextAtlas
+--- PASS: TestGeneratedMode4OmitsMode0TextAtlas (0.00s)
+=== RUN   TestMode0TextAtlasAccepts128RepeatedOccurrences
+--- PASS: TestMode0TextAtlasAccepts128RepeatedOccurrences (0.00s)
+=== RUN   TestMode0TextAtlasRejects33UniqueGlyphColorTiles
+--- PASS: TestMode0TextAtlasRejects33UniqueGlyphColorTiles (0.00s)
+=== RUN   TestMode0TextAtlasStillRejects129RepeatedOAMEntries
+--- PASS: TestMode0TextAtlasStillRejects129RepeatedOAMEntries (0.00s)
+=== RUN   TestMode0TextTileLimitMatchesRuntimeBank
+--- PASS: TestMode0TextTileLimitMatchesRuntimeBank (0.00s)
+=== RUN   TestMode0TextAtlasInternsNumericPrintFromHelpers
+--- PASS: TestMode0TextAtlasInternsNumericPrintFromHelpers (0.00s)
+=== RUN   TestMode0TextAtlasStampsReservedSheetCells
+--- PASS: TestMode0TextAtlasStampsReservedSheetCells (0.00s)
+=== RUN   TestMode0AcceptsBackdropAndStaticTextWithoutMap
+--- PASS: TestMode0AcceptsBackdropAndStaticTextWithoutMap (0.00s)
+=== RUN   TestMode0InternsRepeatedTextWithinReservedGlyphTiles
+--- PASS: TestMode0InternsRepeatedTextWithinReservedGlyphTiles (0.00s)
+=== RUN   TestMode0AcceptsBoundedStaticObjectText
+--- PASS: TestMode0AcceptsBoundedStaticObjectText (0.00s)
+=== RUN   TestMode0EmptyPrintDoesNotLinkObjectTextBackend
+--- PASS: TestMode0EmptyPrintDoesNotLinkObjectTextBackend (0.00s)
+=== RUN   TestMode0RejectsDrawPaletteMutationThroughHelper
+--- PASS: TestMode0RejectsDrawPaletteMutationThroughHelper (0.00s)
+=== RUN   TestMode0RejectsDynamicOrControlCodeText
+--- PASS: TestMode0RejectsDynamicOrControlCodeText (0.00s)
+=== RUN   TestMode0RejectsOpaqueColorZeroTextAndAutoFallsBack
+--- PASS: TestMode0RejectsOpaqueColorZeroTextAndAutoFallsBack (0.00s)
+=== RUN   TestMode0AcceptsEmptyColorZeroText
+--- PASS: TestMode0AcceptsEmptyColorZeroText (0.00s)
+=== RUN   TestMode0AcceptsExactSSprPaletteAndFullClipSubsets
+--- PASS: TestMode0AcceptsExactSSprPaletteAndFullClipSubsets (0.00s)
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency/scaled-sspr
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency/unaligned-sspr
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency/partial-clip
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency/opaque-zero
+=== RUN   TestMode0RejectsInexactSSprClipPaletteAndTransparency/pal-after-map
+--- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency (0.00s)
+    --- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency/scaled-sspr (0.00s)
+    --- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency/unaligned-sspr (0.00s)
+    --- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency/partial-clip (0.00s)
+    --- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency/opaque-zero (0.00s)
+    --- PASS: TestMode0RejectsInexactSSprClipPaletteAndTransparency/pal-after-map (0.00s)
+=== RUN   TestGeneratedCartridgeSharesExactRuntimeDefaultPalette
+--- PASS: TestGeneratedCartridgeSharesExactRuntimeDefaultPalette (0.51s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	2.182s

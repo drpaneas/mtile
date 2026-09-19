@@ -1,0 +1,13 @@
+$ go test ./...
+cwd=/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime
+GOCACHE=/tmp/mtile-generated-gocache
+
+ok  	github.com/drpaneas/mtile/runtime	(cached)
+ok  	github.com/drpaneas/mtile/runtime/audio	(cached)
+ok  	github.com/drpaneas/mtile/runtime/hw	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	(cached)
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	(cached)
+
+exit_code=0 elapsed_seconds=0.267

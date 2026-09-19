@@ -1,0 +1,16 @@
+{
+  "train": [
+    "celeste",
+    "multi-file",
+    "audio-gb-song"
+  ],
+  "heldout": [
+    "platformer",
+    "pong",
+    "mapdemo"
+  ],
+  "controls": [
+    "hello",
+    "noalloc-call-stress"
+  ]
+}

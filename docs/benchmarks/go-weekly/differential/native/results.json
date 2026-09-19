@@ -1,0 +1,16 @@
+{
+  "mode0": {
+    "byteIdentical": true,
+    "bytes": 24376,
+    "sha256": "9b8abbbacc1c002d7787c1d1c090ebea35e5149c35751e6e0f29620bc029fe4c",
+    "buildSeconds": 2.9596386250050273,
+    "output": "built /tmp/mtile-go-weekly-loop/differential-native/mode0.gba (24376 bytes, 241676 bytes EWRAM free)\nrenderer requested mode0 -> selected mode0 (M0_FORCED_PROVEN), 1 BG layer(s), OBJ false, text false, OAM 0/128, OBJ line 0/1226 cycles\nworkdir /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3354986991\nmap /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3354986991/game.map\n"
+  },
+  "mode4": {
+    "byteIdentical": true,
+    "bytes": 26356,
+    "sha256": "2c49d735a9f57cfb89a42d6e7c5529683e8df96fdc1d1d6f10ac96c7d187d359",
+    "buildSeconds": 1.902075749996584,
+    "output": "built /tmp/mtile-go-weekly-loop/differential-native/mode4.gba (26356 bytes, 185696 bytes EWRAM free)\nrenderer requested mode4 -> selected mode4 (M4_FORCED)\nworkdir /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3797571895\nmap /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3797571895/game.map\n"
+  }
+}

@@ -1,0 +1,545 @@
+{
+  "environment": "native mGBA, HLE BIOS, forced blank, EWRAM source; no physical hardware measurement",
+  "fill": [
+    {
+      "offset": 0,
+      "mismatches": 0,
+      "cycles": 202
+    },
+    {
+      "offset": 1,
+      "mismatches": 33,
+      "cycles": 153
+    },
+    {
+      "offset": 2,
+      "mismatches": 34,
+      "cycles": 153
+    },
+    {
+      "offset": 3,
+      "mismatches": 35,
+      "cycles": 153
+    }
+  ],
+  "copy": [
+    {
+      "kind": "production_dma",
+      "cycles": 76929,
+      "mismatches": 0
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "cycles": 77013,
+      "mismatches": 0
+    },
+    {
+      "kind": "bios_cpufastset",
+      "cycles": 85405,
+      "mismatches": 0
+    }
+  ],
+  "timer": [
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    }
+  ],
+  "counts": [
+    {
+      "kind": "byte_slice",
+      "words": -1,
+      "mismatches": 0,
+      "cycles": 62
+    },
+    {
+      "kind": "byte_slice",
+      "words": 0,
+      "mismatches": 0,
+      "cycles": 62
+    },
+    {
+      "kind": "byte_slice",
+      "words": 65536,
+      "mismatches": 0,
+      "cycles": 50
+    },
+    {
+      "kind": "byte_slice",
+      "words": 9601,
+      "mismatches": 0,
+      "cycles": 50
+    },
+    {
+      "kind": "byte_slice",
+      "words": 1,
+      "mismatches": 0,
+      "cycles": 121
+    },
+    {
+      "kind": "byte_slice",
+      "words": 2,
+      "mismatches": 0,
+      "cycles": 129
+    },
+    {
+      "kind": "byte_slice",
+      "words": 7,
+      "mismatches": 0,
+      "cycles": 169
+    },
+    {
+      "kind": "byte_slice",
+      "words": 8,
+      "mismatches": 0,
+      "cycles": 177
+    },
+    {
+      "kind": "byte_slice",
+      "words": 31,
+      "mismatches": 0,
+      "cycles": 361
+    },
+    {
+      "kind": "byte_slice",
+      "words": 32,
+      "mismatches": 0,
+      "cycles": 369
+    },
+    {
+      "kind": "byte_slice",
+      "words": 4096,
+      "mismatches": 0,
+      "cycles": 32881
+    },
+    {
+      "kind": "byte_slice",
+      "words": 4097,
+      "mismatches": 0,
+      "cycles": 32889
+    },
+    {
+      "kind": "byte_slice",
+      "words": 9600,
+      "mismatches": 0,
+      "cycles": 76913
+    },
+    {
+      "kind": "word_slice",
+      "words": -1,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 0,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 65536,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 9601,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 1,
+      "mismatches": 0,
+      "cycles": 122
+    },
+    {
+      "kind": "word_slice",
+      "words": 2,
+      "mismatches": 0,
+      "cycles": 130
+    },
+    {
+      "kind": "word_slice",
+      "words": 7,
+      "mismatches": 0,
+      "cycles": 170
+    },
+    {
+      "kind": "word_slice",
+      "words": 8,
+      "mismatches": 0,
+      "cycles": 178
+    },
+    {
+      "kind": "word_slice",
+      "words": 31,
+      "mismatches": 0,
+      "cycles": 362
+    },
+    {
+      "kind": "word_slice",
+      "words": 32,
+      "mismatches": 0,
+      "cycles": 370
+    },
+    {
+      "kind": "word_slice",
+      "words": 4096,
+      "mismatches": 0,
+      "cycles": 32882
+    },
+    {
+      "kind": "word_slice",
+      "words": 4097,
+      "mismatches": 0,
+      "cycles": 32890
+    },
+    {
+      "kind": "word_slice",
+      "words": 9600,
+      "mismatches": 0,
+      "cycles": 76914
+    }
+  ],
+  "rejected_fill_mismatches": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "failures": 5
+}

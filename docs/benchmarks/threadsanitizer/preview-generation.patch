@@ -1,0 +1,40 @@
+diff --git a/cmd/editor/play_editor.go b/cmd/editor/play_editor.go
+index c603a55..a702840 100644
+--- a/cmd/editor/play_editor.go
++++ b/cmd/editor/play_editor.go
+@@ -427,23 +427,22 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames
+ // launching a native helper process.
+ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames chan emulator.Frame, runID uint64) (bool, error) {
+ 	g.runMu.Lock()
+-	paused := g.playPaused
++	// Closing playStop does not join the worker: its ticker can already be
++	// ready. Retired previews must not consume a replacement's input. Compare
++	// the active preview, since runID can advance while its replacement builds.
++	if runID != g.playRunID || g.playPaused {
++		g.runMu.Unlock()
++		return false, nil
++	}
+ 	keys := g.playKeys | g.playPendingKeys
+ 	reset := g.playReset
+-	if !paused {
+-		g.playReset = false
+-		if g.playPendingTicks > 0 {
+-			g.playPendingTicks--
+-			if g.playPendingTicks == 0 {
+-				g.playPendingKeys = 0
+-			}
++	g.playReset = false
++	if g.playPendingTicks > 0 {
++		g.playPendingTicks--
++		if g.playPendingTicks == 0 {
++			g.playPendingKeys = 0
+ 		}
+ 	}
+-	g.runMu.Unlock()
+-	if paused {
+-		return false, nil
+-	}
+-	g.runMu.Lock()
+ 	g.playLastSentKeys = keys
+ 	g.runMu.Unlock()
+ 	frame, err := session.Step(keys, reset)

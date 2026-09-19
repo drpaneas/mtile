@@ -1,0 +1,39 @@
+{
+  "command": [
+    "/tmp/mtile-go-weekly-loop/elf-size/elfsize",
+    "-before",
+    "/tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/baseline/game.elf",
+    "-after",
+    "/tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/candidate/game.elf",
+    "-json",
+    "-top",
+    "0"
+  ],
+  "warmups": 2,
+  "samples": [
+    10.443042,
+    9.861583,
+    10.174291,
+    10.593583,
+    12.166541,
+    11.649,
+    10.462125,
+    10.243333,
+    9.806459,
+    10.313958,
+    10.450458,
+    9.997041,
+    9.679375,
+    10.060792,
+    9.670334,
+    12.046375,
+    9.832583,
+    10.058333,
+    10.416458,
+    12.064875
+  ],
+  "medianMs": 10.2786455,
+  "p95Ms": 12.064875,
+  "maxMs": 12.166541,
+  "binarySHA256": "daf2f7d3d6be399b1f4a20134c81b8dcd055e2d866c7b75739a0e47611e1a1b3"
+}

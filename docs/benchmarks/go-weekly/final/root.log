@@ -1,0 +1,24 @@
+$ go test ./...
+cwd=/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile
+GOCACHE=/tmp/mtile-generated-gocache
+
+ok  	github.com/drpaneas/mtile/cmd/editor	1.321s
+ok  	github.com/drpaneas/mtile/cmd/elfsize	0.656s
+ok  	github.com/drpaneas/mtile/cmd/mtile	(cached)
+ok  	github.com/drpaneas/mtile/cmd/renderbench	(cached)
+ok  	github.com/drpaneas/mtile/fonts	(cached)
+ok  	github.com/drpaneas/mtile/internal/assetsync	(cached)
+ok  	github.com/drpaneas/mtile/internal/build	(cached)
+ok  	github.com/drpaneas/mtile/internal/codeeditor	(cached)
+ok  	github.com/drpaneas/mtile/internal/editor	1.107s
+ok  	github.com/drpaneas/mtile/internal/emulator	(cached)
+ok  	github.com/drpaneas/mtile/internal/gbapu	(cached)
+?   	github.com/drpaneas/mtile/internal/hostclipboard	[no test files]
+ok  	github.com/drpaneas/mtile/internal/luaparser	(cached)
+ok  	github.com/drpaneas/mtile/internal/midicontrol	(cached)
+ok  	github.com/drpaneas/mtile/internal/performance	(cached)
+ok  	github.com/drpaneas/mtile/internal/sourcebundle	(cached)
+ok  	github.com/drpaneas/mtile/internal/transpiler	231.013s
+?   	github.com/drpaneas/mtile/scripts/go-weekly/tinygo-debug	[no test files]
+
+exit_code=0 elapsed_seconds=233.302

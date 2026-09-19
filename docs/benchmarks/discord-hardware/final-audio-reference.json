@@ -1,0 +1,30 @@
+{
+  "environment": "native mGBA; emulator-only audio validation",
+  "mgba_sha256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab",
+  "cases": {
+    "ch1": {
+      "count": 12,
+      "pass": true,
+      "rom_sha256": "b9065604fed690b702640a03ace1395b06eae7ab139c95d362bddc7196a106db",
+      "wav_sha256": "6129b15282d2464dc77cb3da9ff00f133188db03aadd9faca02cf92f829da1fd"
+    },
+    "ch2": {
+      "count": 10,
+      "pass": true,
+      "rom_sha256": "e9bf5932e635e61d463eca273c011bc607e639e8dd9c98b79dbd98ced3a8c52b",
+      "wav_sha256": "a9a236910095683fa089503cd41160cbafcd80d6db91ecfe6b9651833f5ed3ea"
+    },
+    "ch3": {
+      "count": 10,
+      "pass": true,
+      "rom_sha256": "ee4886b1fcea934fc5575a5bde0eafccc927d002d45622d91415cc5b97968da1",
+      "wav_sha256": "b417876472d61b9f704112bfebddc8f1842f4d066ddf0347e7d779fd43540008"
+    },
+    "ch4": {
+      "count": 10,
+      "pass": true,
+      "rom_sha256": "3596dfc5acc205aadbb42ed8ac422cc7549489c593229f06e6de115a2ff608b5",
+      "wav_sha256": "dc470b26f270ff2175a4052fd0980abe2f12b52ebf674546118b31b7bc71e0b6"
+    }
+  }
+}

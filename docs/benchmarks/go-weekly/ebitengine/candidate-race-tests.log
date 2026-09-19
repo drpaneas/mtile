@@ -1,0 +1,9 @@
+# gitlab.com/gomidi/midi/v2/drivers/rtmididrv/imported/rtmidi
+RtMidi.cpp:1685:15: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+RtMidi.cpp:1685:15: note: read of non-const variable 'bufsize' is not allowed in a constant expression
+RtMidi.cpp:1684:13: note: declared here
+ok  	github.com/drpaneas/mtile/cmd/editor	4.741s
+ok  	github.com/drpaneas/mtile/internal/emulator	2.612s
+ok  	github.com/drpaneas/mtile/internal/performance	3.030s
+ok  	github.com/drpaneas/mtile/internal/midicontrol	1.896s
+ok  	github.com/drpaneas/mtile/internal/gbapu	4.593s

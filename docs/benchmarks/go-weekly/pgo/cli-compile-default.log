@@ -1,0 +1,897 @@
+$ go build -x -o /private/tmp/mtile-go-weekly-loop/pgo/cli/mtile-default ./cmd/mtile
+WORK=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile
+git status --porcelain
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile
+git -c log.showsignature=false log -1 --format=%H:%ct
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git config extensions.objectformat
+0.010s # cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git config extensions.objectformat
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' --end-of-options 26182b69fcb5325a73e664f4ea13b6727cdb23c2 --
+0.013s # cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' --end-of-options 26182b69fcb5325a73e664f4ea13b6727cdb23c2 --
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git for-each-ref --format=%(refname) --merged=26182b69fcb5325a73e664f4ea13b6727cdb23c2
+0.013s # cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git for-each-ref --format=%(refname) --merged=26182b69fcb5325a73e664f4ea13b6727cdb23c2
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' --end-of-options 26182b69fcb5 --
+0.012s # cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' --end-of-options 26182b69fcb5 --
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git cat-file --end-of-options blob 26182b69fcb5325a73e664f4ea13b6727cdb23c2:go.mod
+0.012s # cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile; git cat-file --end-of-options blob 26182b69fcb5325a73e664f4ea13b6727cdb23c2:go.mod
+mkdir -p $WORK/b111/
+mkdir -p $WORK/b109/
+mkdir -p $WORK/b082/
+echo '# import config' > $WORK/b109/importcfg # internal
+cd /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b109/_pkg_.a -trimpath "$WORK/b109=>" -p image/color -lang=go1.27 -std -complete -buildid ufIKP3KmImtKFQ7887Wg/ufIKP3KmImtKFQ7887Wg -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=12 -shared -nolocalimports -importcfg $WORK/b109/importcfg -pack /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/color/color.go /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/color/ycbcr.go
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b111/importcfg << 'EOF' # internal
+# import config
+packagefile cmp=/tmp/mtile-generated-gocache/d6/d64da366cd7632102c1c914b49b86d9b0536f4930946d06d6a38577e45ad3167-d
+EOF
+echo '# import config' > $WORK/b082/importcfg # internal
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b111/_pkg_.a -trimpath "$WORK/b111=>" -p internal/gover -lang=go1.27 -std -complete -buildid FE4GQXZngXQUeT-5_rrB/FE4GQXZngXQUeT-5_rrB -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=10 -shared -nolocalimports -importcfg $WORK/b111/importcfg -pack /opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/gover/gover.go
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b082/_pkg_.a -trimpath "$WORK/b082=>" -p github.com/drpaneas/mtile/runtime/hw -lang=go1.27 -complete -buildid M4-jI-ByC6xMMDVoM1Ni/M4-jI-ByC6xMMDVoM1Ni -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=7 -shared -nolocalimports -importcfg $WORK/b082/importcfg -pack ./runtime/hw/audio_probe.go ./runtime/hw/copy_bytes.go ./runtime/hw/copy_cpu.go ./runtime/hw/copy_iwram_host.go ./runtime/hw/cycles_host.go ./runtime/hw/fill_host.go ./runtime/hw/mmio_host.go ./runtime/hw/pace_host.go ./runtime/hw/psg.go ./runtime/hw/registers.go ./runtime/hw/sound_control.go ./runtime/hw/wait_host.go
+go tool buildid -w $WORK/b109/_pkg_.a # internal
+go tool buildid -w $WORK/b111/_pkg_.a # internal
+cp $WORK/b109/_pkg_.a /tmp/mtile-generated-gocache/dd/dd3f0587e9e937c3f336d05624acf6df6bfbfde9c5933608c720aeec649b014f-d # internal
+cp $WORK/b111/_pkg_.a /tmp/mtile-generated-gocache/a3/a3b4e10b51547791f998b9b6235abbde556f45307ad33ebb183b7e09214fff92-d # internal
+mkdir -p $WORK/b110/
+mkdir -p $WORK/b108/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b110/importcfg << 'EOF' # internal
+# import config
+packagefile internal/gover=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b111/_pkg_.a
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b110/_pkg_.a -trimpath "$WORK/b110=>" -p go/version -lang=go1.27 -std -complete -buildid legX9l3Lpdnu5cVZ5rAo/legX9l3Lpdnu5cVZ5rAo -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=12 -shared -nolocalimports -importcfg $WORK/b110/importcfg -pack /opt/homebrew/Cellar/go/1.27.1/libexec/src/go/version/version.go
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b108/importcfg << 'EOF' # internal
+# import config
+packagefile bufio=/tmp/mtile-generated-gocache/f3/f342fc2d8ae00e408f15e5200dc90be1caf2fe368658f42355770f0f347b3489-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile image/color=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b109/_pkg_.a
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile math/bits=/tmp/mtile-generated-gocache/0f/0f5150caa9d5164f81bc4cad0a106e82be3dfb5a5a32072b6bd1ea1e644b392b-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile sync=/tmp/mtile-generated-gocache/e8/e8fdc0990419d9f8436ca9610a7ffa8e922f2d3a3e416822b31b83cd32749ccc-d
+packagefile sync/atomic=/tmp/mtile-generated-gocache/d0/d064b76b3a2d9dc55863ba87ba791d17917f92f80a4ffe23ebd7087bd9808cbd-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b108/_pkg_.a -trimpath "$WORK/b108=>" -p image -lang=go1.27 -std -complete -buildid Hai0Kg2T5JoBkwskg3Jk/Hai0Kg2T5JoBkwskg3Jk -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=8 -shared -nolocalimports -importcfg $WORK/b108/importcfg -pack /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/format.go /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/geom.go /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/image.go /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/names.go /opt/homebrew/Cellar/go/1.27.1/libexec/src/image/ycbcr.go
+mkdir -p $WORK/b042/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b042/importcfg << 'EOF' # internal
+# import config
+packagefile encoding=/tmp/mtile-generated-gocache/64/6483452aa174ebaee1804f0fae75f211c3b961b18cfab9abd28fcf3dcdcc6884-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile reflect=/tmp/mtile-generated-gocache/ac/aca472dc28c34fe5c6cbc1bb760be9325272828c1d3930a5babfa16278e41266-d
+packagefile runtime=/tmp/mtile-generated-gocache/df/df210a25118728248e63bbe7871992a54ca4c8adc931d2de869768b7fad56582-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+packagefile time=/tmp/mtile-generated-gocache/8f/8fe6511469eb8b4ad1dde52ec2cf62b42f5b6ac0471c7bdcd58b60a26eb3620b-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b042/_pkg_.a -trimpath "$WORK/b042=>" -p flag -lang=go1.27 -std -complete -buildid bTUnnzzUED-Gkr1puIzJ/bTUnnzzUED-Gkr1puIzJ -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=6 -shared -nolocalimports -importcfg $WORK/b042/importcfg -pack /opt/homebrew/Cellar/go/1.27.1/libexec/src/flag/flag.go
+mkdir -p $WORK/b096/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b096/importcfg << 'EOF' # internal
+# import config
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b096/_pkg_.a -trimpath "$WORK/b096=>" -p github.com/drpaneas/mtile/internal/luaparser -lang=go1.27 -complete -buildid d_mBOqCNLbuA-BKf9V9d/d_mBOqCNLbuA-BKf9V9d -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=5 -shared -nolocalimports -importcfg $WORK/b096/importcfg -pack ./internal/luaparser/ast.go ./internal/luaparser/lexer.go ./internal/luaparser/parser.go ./internal/luaparser/token.go
+go tool buildid -w $WORK/b082/_pkg_.a # internal
+cp $WORK/b082/_pkg_.a /tmp/mtile-generated-gocache/9a/9a3a3b67af96b0f41e3c4e36919219f43a52f6d5441eceb8503d8c9910129943-d # internal
+mkdir -p $WORK/b081/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/importcfg << 'EOF' # internal
+# import config
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b081/_pkg_.a -trimpath "$WORK/b081=>" -p github.com/drpaneas/mtile/runtime/audio -lang=go1.27 -complete -buildid WlL1jSeKp8tVO5dGkJqZ/WlL1jSeKp8tVO5dGkJqZ -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=6 -shared -nolocalimports -importcfg $WORK/b081/importcfg -pack ./runtime/audio/native_clock_host.go ./runtime/audio/native_controller.go ./runtime/audio/native_pitch.go ./runtime/audio/native_sound_index.go ./runtime/audio/native_types.go
+go tool buildid -w $WORK/b110/_pkg_.a # internal
+cp $WORK/b110/_pkg_.a /tmp/mtile-generated-gocache/27/27384e58047f67d165e69a391ccccc5d3d011f3622e35f536d8f6ee1281102c0-d # internal
+go tool buildid -w $WORK/b081/_pkg_.a # internal
+cp $WORK/b081/_pkg_.a /tmp/mtile-generated-gocache/d9/d966880ea4a03ca381f08771860cc138bff52875df34e3a504959ca3b23f9e73-d # internal
+mkdir -p $WORK/b106/
+mkdir -p $WORK/b064/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b106/importcfg << 'EOF' # internal
+# import config
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b106/_pkg_.a -trimpath "$WORK/b106=>" -p github.com/drpaneas/mtile/internal/gbapu -lang=go1.27 -complete -buildid Gb4FQkCr4GM8xERSQXgN/Gb4FQkCr4GM8xERSQXgN -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=10 -shared -nolocalimports -importcfg $WORK/b106/importcfg -pack ./internal/gbapu/blip.go ./internal/gbapu/renderer.go
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/importcfg << 'EOF' # internal
+# import config
+packagefile container/heap=/tmp/mtile-generated-gocache/b8/b8944ecb630c99eb15bc503001e44cfd0dcb0d6e5243687db3c437c5810c9d19-d
+packagefile embed=/tmp/mtile-generated-gocache/17/17c903e5852b01da749a3f8a69f2385e608012c09ea1920193a7af7005f6e632-d
+packagefile encoding/json=/tmp/mtile-generated-gocache/c4/c4b70ab3c46e66015bbf834e1b7278fa0830ea4af89f70d4636f86d09596f1a7-d
+packagefile encoding/json/jsontext=/tmp/mtile-generated-gocache/b5/b5ca579cde3f72df03881979424a0642b4d0b23962a7b49f81d643d26c224f66-d
+packagefile encoding/json/v2=/tmp/mtile-generated-gocache/d2/d27f448c01022294c1e7bc1ea329b42c72284b0380acdc0de0ea3f3fead65c14-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+packagefile go/format=/tmp/mtile-generated-gocache/a4/a40b65f9e6b186ff0401831e36156048970fb1d337279cddd6513d363d907ebe-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile sort=/tmp/mtile-generated-gocache/9f/9fc1c6382f523b4d3d824e6f8a7ca4bcb5fa39f6a573de4683e828d866a9da11-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+packagefile unicode=/tmp/mtile-generated-gocache/aa/aae607d080f921dac1a72d5fb88b9c6d19bb2ccd11351434d608e5a3a8cb5f94-d
+EOF
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/embedcfg << 'EOF' # internal
+{
+	"Patterns": {
+		"aurora.hex": [
+			"aurora.hex"
+		]
+	},
+	"Files": {
+		"aurora.hex": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/assetsync/aurora.hex"
+	}
+}EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b064/_pkg_.a -trimpath "$WORK/b064=>" -p github.com/drpaneas/mtile/internal/assetsync -lang=go1.27 -complete -buildid VOeHHR-uFLP_JivozTci/VOeHHR-uFLP_JivozTci -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=7 -shared -nolocalimports -importcfg $WORK/b064/importcfg -embedcfg $WORK/b064/embedcfg -pack ./internal/assetsync/assets.go ./internal/assetsync/audio_footprint.go ./internal/assetsync/aurora.go ./internal/assetsync/generate.go ./internal/assetsync/iwram.go ./internal/assetsync/json_decode.go ./internal/assetsync/map.go ./internal/assetsync/native_audio.go ./internal/assetsync/palette.go ./internal/assetsync/types.go
+go tool buildid -w $WORK/b108/_pkg_.a # internal
+go tool buildid -w $WORK/b042/_pkg_.a # internal
+cp $WORK/b042/_pkg_.a /tmp/mtile-generated-gocache/8a/8a572b2a84ddee4b19af6417c3aea25ae462ef5062b01e3c9752245938ddc3df-d # internal
+cp $WORK/b108/_pkg_.a /tmp/mtile-generated-gocache/bb/bb0dbcbf9577fdf6e1dcfb3a2dc87893a7924068177f01b3a898b0cb75838d46-d # internal
+mkdir -p $WORK/b100/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/importcfg << 'EOF' # internal
+# import config
+packagefile embed=/tmp/mtile-generated-gocache/17/17c903e5852b01da749a3f8a69f2385e608012c09ea1920193a7af7005f6e632-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+packagefile io/fs=/tmp/mtile-generated-gocache/ab/abbacefa21781605e70c03fece1e557d8c6ecfed55352457a1d0d39e6c41def7-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile math/bits=/tmp/mtile-generated-gocache/0f/0f5150caa9d5164f81bc4cad0a106e82be3dfb5a5a32072b6bd1ea1e644b392b-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile runtime=/tmp/mtile-generated-gocache/df/df210a25118728248e63bbe7871992a54ca4c8adc931d2de869768b7fad56582-d
+EOF
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/embedcfg << 'EOF' # internal
+{
+	"Patterns": {
+		"*.go": [
+			"apiv.go",
+			"apiv_test.go",
+			"audio_api.go",
+			"audio_api_test.go",
+			"bench_test.go",
+			"bundle_host.go",
+			"bundle_host_test.go",
+			"camera.go",
+			"camera_test.go",
+			"cartmem.go",
+			"cartmem_test.go",
+			"context.go",
+			"debug.go",
+			"debug_log.go",
+			"debug_log_disabled.go",
+			"debug_log_tinygo.go",
+			"debug_test.go",
+			"draw.go",
+			"draw_axis_test.go",
+			"draw_span_test.go",
+			"draw_test.go",
+			"fixedpoint.go",
+			"fixedpoint_host.go",
+			"fixedpoint_test.go",
+			"generate.go",
+			"golden_test.go",
+			"hash_bucket_test.go",
+			"heap.go",
+			"heap_capacity_default.go",
+			"heap_capacity_heapless.go",
+			"heap_capacity_heapless_test.go",
+			"heap_clear_test.go",
+			"heap_copy_test.go",
+			"heap_root_pop_test.go",
+			"heap_storage_host.go",
+			"heap_storage_tinygo.go",
+			"heap_test.go",
+			"input.go",
+			"input_test.go",
+			"map_layer_view.go",
+			"map_layer_view_mode0.go",
+			"map_layer_view_mode0_test.go",
+			"map_layer_view_mode4.go",
+			"map_layer_view_mode4_test.go",
+			"map_layer_view_test.go",
+			"map_layers_api_test.go",
+			"map_layers_mode4_test.go",
+			"map_solid_test.go",
+			"map_storage_compact.go",
+			"map_storage_generic.go",
+			"map_storage_streaming.go",
+			"mapcache.go",
+			"mapcache_test.go",
+			"mapcell_host.go",
+			"mapcell_test.go",
+			"mapcell_tinygo.go",
+			"mappacked.go",
+			"mappacked_copy_host.go",
+			"mappacked_copy_tinygo.go",
+			"mappacked_test.go",
+			"mapraster.go",
+			"mapraster_disabled.go",
+			"mapraster_full_host.go",
+			"mapraster_full_tinygo.go",
+			"mapraster_test.go",
+			"maprender.go",
+			"maprender_arity_test.go",
+			"maprender_bounds_test.go",
+			"maprender_test.go",
+			"math.go",
+			"math_test.go",
+			"mode0.go",
+			"mode0_dynamic_obj_test.go",
+			"mode0_full_map_test.go",
+			"mode0_glyph.go",
+			"mode0_glyph_test.go",
+			"mode0_layers0.go",
+			"mode0_layers0_basic_test.go",
+			"mode0_layers0_test.go",
+			"mode0_layers1.go",
+			"mode0_layers2.go",
+			"mode0_layers2_test.go",
+			"mode0_layers3.go",
+			"mode0_layers3_test.go",
+			"mode0_layers4.go",
+			"mode0_layers4_test.go",
+			"mode0_materialize_test.go",
+			"mode0_oam_words_test.go",
+			"mode0_obj.go",
+			"mode0_obj_budget_additional_test.go",
+			"mode0_obj_disabled.go",
+			"mode0_obj_pack.go",
+			"mode0_obj_pack_disabled.go",
+			"mode0_obj_pack_prepare_test.go",
+			"mode0_obj_pack_test.go",
+			"mode0_obj_test.go",
+			"mode0_object_depth_pack_test.go",
+			"mode0_object_depth_test.go",
+			"mode0_object_palette_test.go",
+			"mode0_present_budget.go",
+			"mode0_present_budget_pack_test.go",
+			"mode0_present_budget_test.go",
+			"mode0_present_window_test.go",
+			"mode0_screen.go",
+			"mode0_screen0.go",
+			"mode0_sheet_immutable.go",
+			"mode0_sheet_immutable_test.go",
+			"mode0_sheet_mutable.go",
+			"mode0_sheet_prepare_test.go",
+			"mode0_single_cell_test.go",
+			"mode0_test.go",
+			"mode0_text.go",
+			"mode0_text_disabled.go",
+			"mode0_text_test.go",
+			"mode4.go",
+			"mode4_test.go",
+			"number_array_fast_test.go",
+			"number_array_view.go",
+			"number_array_view_test.go",
+			"numeric_hash_test.go",
+			"objectcanvas_draw.go",
+			"objectcanvas_draw_test.go",
+			"objectcanvas_map.go",
+			"objectcanvas_map_test.go",
+			"objectcanvas_pack.go",
+			"objectcanvas_pack_test.go",
+			"palette.go",
+			"palette_aurora.go",
+			"palette_test.go",
+			"profile.go",
+			"profile_spike_test.go",
+			"profile_test.go",
+			"render_common.go",
+			"render_state_mode0.go",
+			"render_state_mode4.go",
+			"render_state_tilecanvas.go",
+			"renderer_test_helpers_test.go",
+			"sheet_storage_generic.go",
+			"sheet_storage_readonly.go",
+			"short_cycles_host.go",
+			"short_cycles_tinygo.go",
+			"sprite.go",
+			"sprite_test.go",
+			"static_hash_hint_test.go",
+			"static_hash_test.go",
+			"static_string_capacity_1.go",
+			"static_string_capacity_128.go",
+			"static_string_capacity_32.go",
+			"static_string_capacity_8.go",
+			"static_string_capacity_default.go",
+			"static_string_capacity_test.go",
+			"string.go",
+			"string_test.go",
+			"table.go",
+			"table_allocation_fast_test.go",
+			"table_append_known.go",
+			"table_append_known_test.go",
+			"table_cached_read.go",
+			"table_cached_read_test.go",
+			"table_hash_numeric_test.go",
+			"table_list_fast_test.go",
+			"table_literal.go",
+			"table_literal_fresh.go",
+			"table_literal_fresh_test.go",
+			"table_literal_image.go",
+			"table_literal_image_test.go",
+			"table_literal_test.go",
+			"table_test.go",
+			"table_validation_test.go",
+			"text.go",
+			"text_test.go",
+			"tilecanvas.go",
+			"tilecanvas_disabled.go",
+			"tilecanvas_lifecycle_test.go",
+			"tilecanvas_pixels.go",
+			"tilecanvas_pixels_test.go",
+			"tiled_map.go",
+			"tiled_map_full.go",
+			"tiled_map_mutation.go",
+			"tiled_map_span.go",
+			"tiled_map_span_test.go",
+			"value.go",
+			"value_static_equality_test.go",
+			"value_test.go"
+		],
+		"LICENSE": [
+			"LICENSE"
+		],
+		"audio/*.go": [
+			"audio/native_clock_host.go",
+			"audio/native_clock_tinygo.go",
+			"audio/native_controller.go",
+			"audio/native_controller_test.go",
+			"audio/native_fuzz_test.go",
+			"audio/native_pitch.go",
+			"audio/native_sound_index.go",
+			"audio/native_sound_index_test.go",
+			"audio/native_types.go"
+		],
+		"crt0/gba.ld": [
+			"crt0/gba.ld"
+		],
+		"crt0/gba.s": [
+			"crt0/gba.s"
+		],
+		"go.mod": [
+			"go.mod"
+		],
+		"hw/*.go": [
+			"hw/audio_probe.go",
+			"hw/audio_probe_test.go",
+			"hw/copy_bytes.go",
+			"hw/copy_cpu.go",
+			"hw/copy_iwram_host.go",
+			"hw/copy_iwram_tinygo.go",
+			"hw/cycles_host.go",
+			"hw/cycles_tinygo.go",
+			"hw/fill_host.go",
+			"hw/fill_host_test.go",
+			"hw/fill_tinygo.go",
+			"hw/mmio_host.go",
+			"hw/mmio_host_test.go",
+			"hw/mmio_tinygo.go",
+			"hw/pace_host.go",
+			"hw/pace_tinygo.go",
+			"hw/psg.go",
+			"hw/psg_test.go",
+			"hw/registers.go",
+			"hw/sound_control.go",
+			"hw/sound_control_test.go",
+			"hw/wait_host.go",
+			"hw/wait_tinygo.go"
+		]
+	},
+	"Files": {
+		"LICENSE": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/LICENSE",
+		"apiv.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/apiv.go",
+		"apiv_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/apiv_test.go",
+		"audio/native_clock_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_clock_host.go",
+		"audio/native_clock_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_clock_tinygo.go",
+		"audio/native_controller.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_controller.go",
+		"audio/native_controller_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_controller_test.go",
+		"audio/native_fuzz_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_fuzz_test.go",
+		"audio/native_pitch.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_pitch.go",
+		"audio/native_sound_index.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_sound_index.go",
+		"audio/native_sound_index_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_sound_index_test.go",
+		"audio/native_types.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio/native_types.go",
+		"audio_api.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio_api.go",
+		"audio_api_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/audio_api_test.go",
+		"bench_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/bench_test.go",
+		"bundle_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/bundle_host.go",
+		"bundle_host_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/bundle_host_test.go",
+		"camera.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go",
+		"camera_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera_test.go",
+		"cartmem.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go",
+		"cartmem_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem_test.go",
+		"context.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/context.go",
+		"crt0/gba.ld": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.ld",
+		"crt0/gba.s": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s",
+		"debug.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/debug.go",
+		"debug_log.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/debug_log.go",
+		"debug_log_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/debug_log_disabled.go",
+		"debug_log_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/debug_log_tinygo.go",
+		"debug_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/debug_test.go",
+		"draw.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw.go",
+		"draw_axis_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw_axis_test.go",
+		"draw_span_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw_span_test.go",
+		"draw_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw_test.go",
+		"fixedpoint.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/fixedpoint.go",
+		"fixedpoint_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/fixedpoint_host.go",
+		"fixedpoint_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/fixedpoint_test.go",
+		"generate.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/generate.go",
+		"go.mod": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/go.mod",
+		"golden_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/golden_test.go",
+		"hash_bucket_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hash_bucket_test.go",
+		"heap.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap.go",
+		"heap_capacity_default.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_capacity_default.go",
+		"heap_capacity_heapless.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_capacity_heapless.go",
+		"heap_capacity_heapless_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_capacity_heapless_test.go",
+		"heap_clear_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_clear_test.go",
+		"heap_copy_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_copy_test.go",
+		"heap_root_pop_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_root_pop_test.go",
+		"heap_storage_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_storage_host.go",
+		"heap_storage_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_storage_tinygo.go",
+		"heap_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/heap_test.go",
+		"hw/audio_probe.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/audio_probe.go",
+		"hw/audio_probe_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/audio_probe_test.go",
+		"hw/copy_bytes.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/copy_bytes.go",
+		"hw/copy_cpu.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/copy_cpu.go",
+		"hw/copy_iwram_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/copy_iwram_host.go",
+		"hw/copy_iwram_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/copy_iwram_tinygo.go",
+		"hw/cycles_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/cycles_host.go",
+		"hw/cycles_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/cycles_tinygo.go",
+		"hw/fill_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/fill_host.go",
+		"hw/fill_host_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/fill_host_test.go",
+		"hw/fill_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/fill_tinygo.go",
+		"hw/mmio_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/mmio_host.go",
+		"hw/mmio_host_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/mmio_host_test.go",
+		"hw/mmio_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/mmio_tinygo.go",
+		"hw/pace_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/pace_host.go",
+		"hw/pace_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/pace_tinygo.go",
+		"hw/psg.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/psg.go",
+		"hw/psg_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/psg_test.go",
+		"hw/registers.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/registers.go",
+		"hw/sound_control.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/sound_control.go",
+		"hw/sound_control_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/sound_control_test.go",
+		"hw/wait_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/wait_host.go",
+		"hw/wait_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/wait_tinygo.go",
+		"input.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/input.go",
+		"input_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/input_test.go",
+		"map_layer_view.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view.go",
+		"map_layer_view_mode0.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view_mode0.go",
+		"map_layer_view_mode0_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view_mode0_test.go",
+		"map_layer_view_mode4.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view_mode4.go",
+		"map_layer_view_mode4_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view_mode4_test.go",
+		"map_layer_view_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layer_view_test.go",
+		"map_layers_api_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layers_api_test.go",
+		"map_layers_mode4_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_layers_mode4_test.go",
+		"map_solid_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_solid_test.go",
+		"map_storage_compact.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_storage_compact.go",
+		"map_storage_generic.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_storage_generic.go",
+		"map_storage_streaming.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_storage_streaming.go",
+		"mapcache.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go",
+		"mapcache_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache_test.go",
+		"mapcell_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcell_host.go",
+		"mapcell_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcell_test.go",
+		"mapcell_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcell_tinygo.go",
+		"mappacked.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mappacked.go",
+		"mappacked_copy_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mappacked_copy_host.go",
+		"mappacked_copy_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mappacked_copy_tinygo.go",
+		"mappacked_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mappacked_test.go",
+		"mapraster.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapraster.go",
+		"mapraster_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapraster_disabled.go",
+		"mapraster_full_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapraster_full_host.go",
+		"mapraster_full_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapraster_full_tinygo.go",
+		"mapraster_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapraster_test.go",
+		"maprender.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/maprender.go",
+		"maprender_arity_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/maprender_arity_test.go",
+		"maprender_bounds_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/maprender_bounds_test.go",
+		"maprender_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/maprender_test.go",
+		"math.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/math.go",
+		"math_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/math_test.go",
+		"mode0.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go",
+		"mode0_dynamic_obj_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_dynamic_obj_test.go",
+		"mode0_full_map_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_full_map_test.go",
+		"mode0_glyph.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_glyph.go",
+		"mode0_glyph_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_glyph_test.go",
+		"mode0_layers0.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers0.go",
+		"mode0_layers0_basic_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers0_basic_test.go",
+		"mode0_layers0_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers0_test.go",
+		"mode0_layers1.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers1.go",
+		"mode0_layers2.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers2.go",
+		"mode0_layers2_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers2_test.go",
+		"mode0_layers3.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers3.go",
+		"mode0_layers3_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers3_test.go",
+		"mode0_layers4.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers4.go",
+		"mode0_layers4_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_layers4_test.go",
+		"mode0_materialize_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_materialize_test.go",
+		"mode0_oam_words_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_oam_words_test.go",
+		"mode0_obj.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj.go",
+		"mode0_obj_budget_additional_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_budget_additional_test.go",
+		"mode0_obj_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_disabled.go",
+		"mode0_obj_pack.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_pack.go",
+		"mode0_obj_pack_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_pack_disabled.go",
+		"mode0_obj_pack_prepare_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_pack_prepare_test.go",
+		"mode0_obj_pack_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_pack_test.go",
+		"mode0_obj_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_obj_test.go",
+		"mode0_object_depth_pack_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_object_depth_pack_test.go",
+		"mode0_object_depth_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_object_depth_test.go",
+		"mode0_object_palette_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_object_palette_test.go",
+		"mode0_present_budget.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget.go",
+		"mode0_present_budget_pack_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget_pack_test.go",
+		"mode0_present_budget_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget_test.go",
+		"mode0_present_window_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_window_test.go",
+		"mode0_screen.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_screen.go",
+		"mode0_screen0.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_screen0.go",
+		"mode0_sheet_immutable.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_sheet_immutable.go",
+		"mode0_sheet_immutable_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_sheet_immutable_test.go",
+		"mode0_sheet_mutable.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_sheet_mutable.go",
+		"mode0_sheet_prepare_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_sheet_prepare_test.go",
+		"mode0_single_cell_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_single_cell_test.go",
+		"mode0_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_test.go",
+		"mode0_text.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_text.go",
+		"mode0_text_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_text_disabled.go",
+		"mode0_text_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_text_test.go",
+		"mode4.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode4.go",
+		"mode4_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode4_test.go",
+		"number_array_fast_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/number_array_fast_test.go",
+		"number_array_view.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/number_array_view.go",
+		"number_array_view_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/number_array_view_test.go",
+		"numeric_hash_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/numeric_hash_test.go",
+		"objectcanvas_draw.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_draw.go",
+		"objectcanvas_draw_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_draw_test.go",
+		"objectcanvas_map.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_map.go",
+		"objectcanvas_map_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_map_test.go",
+		"objectcanvas_pack.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_pack.go",
+		"objectcanvas_pack_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/objectcanvas_pack_test.go",
+		"palette.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/palette.go",
+		"palette_aurora.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/palette_aurora.go",
+		"palette_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/palette_test.go",
+		"profile.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go",
+		"profile_spike_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile_spike_test.go",
+		"profile_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile_test.go",
+		"render_common.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/render_common.go",
+		"render_state_mode0.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/render_state_mode0.go",
+		"render_state_mode4.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/render_state_mode4.go",
+		"render_state_tilecanvas.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/render_state_tilecanvas.go",
+		"renderer_test_helpers_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/renderer_test_helpers_test.go",
+		"sheet_storage_generic.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/sheet_storage_generic.go",
+		"sheet_storage_readonly.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/sheet_storage_readonly.go",
+		"short_cycles_host.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/short_cycles_host.go",
+		"short_cycles_tinygo.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/short_cycles_tinygo.go",
+		"sprite.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/sprite.go",
+		"sprite_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/sprite_test.go",
+		"static_hash_hint_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_hash_hint_test.go",
+		"static_hash_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_hash_test.go",
+		"static_string_capacity_1.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_1.go",
+		"static_string_capacity_128.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_128.go",
+		"static_string_capacity_32.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_32.go",
+		"static_string_capacity_8.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_8.go",
+		"static_string_capacity_default.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_default.go",
+		"static_string_capacity_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/static_string_capacity_test.go",
+		"string.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/string.go",
+		"string_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/string_test.go",
+		"table.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table.go",
+		"table_allocation_fast_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_allocation_fast_test.go",
+		"table_append_known.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_append_known.go",
+		"table_append_known_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_append_known_test.go",
+		"table_cached_read.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_cached_read.go",
+		"table_cached_read_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_cached_read_test.go",
+		"table_hash_numeric_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_hash_numeric_test.go",
+		"table_list_fast_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_list_fast_test.go",
+		"table_literal.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal.go",
+		"table_literal_fresh.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal_fresh.go",
+		"table_literal_fresh_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal_fresh_test.go",
+		"table_literal_image.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal_image.go",
+		"table_literal_image_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal_image_test.go",
+		"table_literal_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_literal_test.go",
+		"table_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_test.go",
+		"table_validation_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/table_validation_test.go",
+		"text.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/text.go",
+		"text_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/text_test.go",
+		"tilecanvas.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilecanvas.go",
+		"tilecanvas_disabled.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilecanvas_disabled.go",
+		"tilecanvas_lifecycle_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilecanvas_lifecycle_test.go",
+		"tilecanvas_pixels.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilecanvas_pixels.go",
+		"tilecanvas_pixels_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilecanvas_pixels_test.go",
+		"tiled_map.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map.go",
+		"tiled_map_full.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go",
+		"tiled_map_mutation.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_mutation.go",
+		"tiled_map_span.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span.go",
+		"tiled_map_span_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span_test.go",
+		"value.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/value.go",
+		"value_static_equality_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/value_static_equality_test.go",
+		"value_test.go": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/value_test.go"
+	}
+}EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b100/_pkg_.a -trimpath "$WORK/b100=>" -p github.com/drpaneas/mtile/runtime -lang=go1.27 -complete -buildid 9R1b_-EaYWlPweU-pz_l/9R1b_-EaYWlPweU-pz_l -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=9 -shared -nolocalimports -importcfg $WORK/b100/importcfg -embedcfg $WORK/b100/embedcfg -pack ./runtime/apiv.go ./runtime/audio_api.go ./runtime/bundle_host.go ./runtime/camera.go ./runtime/cartmem.go ./runtime/context.go ./runtime/debug.go ./runtime/debug_log.go ./runtime/debug_log_disabled.go ./runtime/draw.go ./runtime/fixedpoint.go ./runtime/fixedpoint_host.go ./runtime/generate.go ./runtime/heap.go ./runtime/heap_capacity_default.go ./runtime/heap_storage_host.go ./runtime/input.go ./runtime/map_layer_view.go ./runtime/map_layer_view_mode4.go ./runtime/map_storage_generic.go ./runtime/mapcache.go ./runtime/mapcell_host.go ./runtime/mappacked.go ./runtime/mappacked_copy_host.go ./runtime/mapraster.go ./runtime/mapraster_full_host.go ./runtime/maprender.go ./runtime/math.go ./runtime/mode0_glyph.go ./runtime/mode4.go ./runtime/number_array_view.go ./runtime/palette.go ./runtime/palette_aurora.go ./runtime/profile.go ./runtime/render_common.go ./runtime/render_state_mode4.go ./runtime/sheet_storage_generic.go ./runtime/short_cycles_host.go ./runtime/sprite.go ./runtime/static_string_capacity_default.go ./runtime/string.go ./runtime/table.go ./runtime/table_append_known.go ./runtime/table_cached_read.go ./runtime/table_literal.go ./runtime/table_literal_fresh.go ./runtime/table_literal_image.go ./runtime/text.go ./runtime/tilecanvas_disabled.go ./runtime/value.go
+go tool buildid -w $WORK/b106/_pkg_.a # internal
+cp $WORK/b106/_pkg_.a /tmp/mtile-generated-gocache/8a/8af3533b618b95303bb4dcc05744b6fb683aef8f8a6448f223a89b126a15c524-d # internal
+mkdir -p $WORK/b107/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b107/importcfg << 'EOF' # internal
+# import config
+packagefile encoding/binary=/tmp/mtile-generated-gocache/48/48c6b9a05d97d05d9ea8059dfb84be4701fddb0f66eb1c89f4785d32e4fecd2f-d
+packagefile github.com/drpaneas/mtile/internal/gbapu=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b106/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile sort=/tmp/mtile-generated-gocache/9f/9fc1c6382f523b4d3d824e6f8a7ca4bcb5fa39f6a573de4683e828d866a9da11-d
+packagefile sync=/tmp/mtile-generated-gocache/e8/e8fdc0990419d9f8436ca9610a7ffa8e922f2d3a3e416822b31b83cd32749ccc-d
+packagefile sync/atomic=/tmp/mtile-generated-gocache/d0/d064b76b3a2d9dc55863ba87ba791d17917f92f80a4ffe23ebd7087bd9808cbd-d
+packagefile time=/tmp/mtile-generated-gocache/8f/8fe6511469eb8b4ad1dde52ec2cf62b42f5b6ac0471c7bdcd58b60a26eb3620b-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b107/_pkg_.a -trimpath "$WORK/b107=>" -p github.com/drpaneas/mtile/internal/performance -lang=go1.27 -complete -buildid aFK0IdagQ5DWXtZT30xU/aFK0IdagQ5DWXtZT30xU -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=9 -shared -nolocalimports -importcfg $WORK/b107/importcfg -pack ./internal/performance/allocator.go ./internal/performance/click.go ./internal/performance/clock.go ./internal/performance/conductor.go ./internal/performance/events.go ./internal/performance/pulse.go ./internal/performance/recorder.go ./internal/performance/session.go ./internal/performance/stream.go
+go tool buildid -w $WORK/b096/_pkg_.a # internal
+cp $WORK/b096/_pkg_.a /tmp/mtile-generated-gocache/0e/0e1a3e657bd570a299dfea36506f4f234bdb7df341cf3d63aa6f36b80aae3483-d # internal
+mkdir -p $WORK/b095/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b095/importcfg << 'EOF' # internal
+# import config
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/luaparser=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b096/_pkg_.a
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile regexp=/tmp/mtile-generated-gocache/a4/a4d9c371b0c78f36085f3cf66b0bd091d5f0cd63c915ba072257da7d55958a6e-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b095/_pkg_.a -trimpath "$WORK/b095=>" -p github.com/drpaneas/mtile/internal/sourcebundle -lang=go1.27 -complete -buildid 7vhA5XC9_IpciDLbwjz3/7vhA5XC9_IpciDLbwjz3 -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=7 -shared -nolocalimports -importcfg $WORK/b095/importcfg -pack ./internal/sourcebundle/bundle.go
+go tool buildid -w $WORK/b107/_pkg_.a # internal
+cp $WORK/b107/_pkg_.a /tmp/mtile-generated-gocache/e0/e05fcdd1cf097ca6937bbbf09a9b2a8dd57ace764ec1bd3d44a15b4b5df5589e-d # internal
+go tool buildid -w $WORK/b095/_pkg_.a # internal
+cp $WORK/b095/_pkg_.a /tmp/mtile-generated-gocache/e4/e464bc2f7d9645c27fb6bb9e9924ee357ff38b146fc93bb62a19612d9963f3e0-d # internal
+go tool buildid -w $WORK/b064/_pkg_.a # internal
+cp $WORK/b064/_pkg_.a /tmp/mtile-generated-gocache/0c/0c50d69a346e18f1248497f5f4bbc9034ad0ac6f1a1a473293a64822242d0acc-d # internal
+go tool buildid -w $WORK/b100/_pkg_.a # internal
+cp $WORK/b100/_pkg_.a /tmp/mtile-generated-gocache/db/dbb0aa7e630140afb147c406d8e6d9b38a171f22266b18aaa6ad6b9b4cc59a71-d # internal
+mkdir -p $WORK/b105/
+mkdir -p $WORK/b099/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b099/importcfg << 'EOF' # internal
+# import config
+packagefile bytes=/tmp/mtile-generated-gocache/eb/eb445ed8412d23b4d8be10e9892dabe7fbf61706d4dc0de10477b1b6d0ce1a0b-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/assetsync=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/luaparser=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b096/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile maps=/tmp/mtile-generated-gocache/39/39f51ecfea4939e5a55901809a491e51966750a4c6ee41d99c3c64a0fd723463-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile math/bits=/tmp/mtile-generated-gocache/0f/0f5150caa9d5164f81bc4cad0a106e82be3dfb5a5a32072b6bd1ea1e644b392b-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile sort=/tmp/mtile-generated-gocache/9f/9fc1c6382f523b4d3d824e6f8a7ca4bcb5fa39f6a573de4683e828d866a9da11-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b099/_pkg_.a -trimpath "$WORK/b099=>" -p github.com/drpaneas/mtile/internal/transpiler -lang=go1.27 -complete -buildid EG6-PQkPKYEY_CEHS7e_/EG6-PQkPKYEY_CEHS7e_ -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=12 -shared -nolocalimports -importcfg $WORK/b099/importcfg -pack ./internal/transpiler/array_iteration.go ./internal/transpiler/coerced_number_params.go ./internal/transpiler/conditions.go ./internal/transpiler/constant_division.go ./internal/transpiler/iwram.go ./internal/transpiler/map_layer_views.go ./internal/transpiler/map_packed.go ./internal/transpiler/mode0_call_graph.go ./internal/transpiler/mode0_draw_walk.go ./internal/transpiler/mode0_finite_nums.go ./internal/transpiler/mode0_object_budget.go ./internal/transpiler/mode0_sprite_ids.go ./internal/transpiler/mode0_text_atlas.go ./internal/transpiler/number_array_views.go ./internal/transpiler/numeric_constants.go ./internal/transpiler/numeric_lengths.go ./internal/transpiler/render_modes.go ./internal/transpiler/renderer_selection.go ./internal/transpiler/solid_sheet.go ./internal/transpiler/stable_reads.go ./internal/transpiler/stable_writes.go ./internal/transpiler/table_appends.go ./internal/transpiler/table_literals.go ./internal/transpiler/table_reservations.go ./internal/transpiler/transpiler.go ./internal/transpiler/typed_draw_calls.go
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b105/importcfg << 'EOF' # internal
+# import config
+packagefile bytes=/tmp/mtile-generated-gocache/eb/eb445ed8412d23b4d8be10e9892dabe7fbf61706d4dc0de10477b1b6d0ce1a0b-d
+packagefile encoding/binary=/tmp/mtile-generated-gocache/48/48c6b9a05d97d05d9ea8059dfb84be4701fddb0f66eb1c89f4785d32e4fecd2f-d
+packagefile encoding/json=/tmp/mtile-generated-gocache/c4/c4b70ab3c46e66015bbf834e1b7278fa0830ea4af89f70d4636f86d09596f1a7-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/assetsync=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/gbapu=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b106/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/performance=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b107/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+packagefile image=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b108/_pkg_.a
+packagefile image/color=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b109/_pkg_.a
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile reflect=/tmp/mtile-generated-gocache/ac/aca472dc28c34fe5c6cbc1bb760be9325272828c1d3930a5babfa16278e41266-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile sort=/tmp/mtile-generated-gocache/9f/9fc1c6382f523b4d3d824e6f8a7ca4bcb5fa39f6a573de4683e828d866a9da11-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+packagefile time=/tmp/mtile-generated-gocache/8f/8fe6511469eb8b4ad1dde52ec2cf62b42f5b6ac0471c7bdcd58b60a26eb3620b-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b105/_pkg_.a -trimpath "$WORK/b105=>" -p github.com/drpaneas/mtile/internal/editor -lang=go1.27 -complete -buildid NvCVm7FolPX4CMg8CogJ/NvCVm7FolPX4CMg8CogJ -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=10 -shared -nolocalimports -importcfg $WORK/b105/importcfg -pack ./internal/editor/image_import.go ./internal/editor/image_import_ordered.go ./internal/editor/model.go ./internal/editor/native_audio.go ./internal/editor/native_music_layout.go ./internal/editor/native_performance.go ./internal/editor/native_preview.go ./internal/editor/native_sound_presets.go ./internal/editor/native_wav.go ./internal/editor/viewport.go
+go tool buildid -w $WORK/b105/_pkg_.a # internal
+cp $WORK/b105/_pkg_.a /tmp/mtile-generated-gocache/25/2507b0abe80ab41ce264060bfc80a1f3e37c4cfd512b1cad121acf5a9ed8d96e-d # internal
+go tool buildid -w $WORK/b099/_pkg_.a # internal
+cp $WORK/b099/_pkg_.a /tmp/mtile-generated-gocache/b5/b5e33af57b1d33449b1d94e27a9882006820c6f0275b8ac9b61894542978b1df-d # internal
+mkdir -p $WORK/b093/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b093/importcfg << 'EOF' # internal
+# import config
+packagefile bufio=/tmp/mtile-generated-gocache/f3/f342fc2d8ae00e408f15e5200dc90be1caf2fe368658f42355770f0f347b3489-d
+packagefile bytes=/tmp/mtile-generated-gocache/eb/eb445ed8412d23b4d8be10e9892dabe7fbf61706d4dc0de10477b1b6d0ce1a0b-d
+packagefile embed=/tmp/mtile-generated-gocache/17/17c903e5852b01da749a3f8a69f2385e608012c09ea1920193a7af7005f6e632-d
+packagefile encoding/json=/tmp/mtile-generated-gocache/c4/c4b70ab3c46e66015bbf834e1b7278fa0830ea4af89f70d4636f86d09596f1a7-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/assetsync=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/sourcebundle=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b095/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/transpiler=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b099/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/_pkg_.a
+packagefile io/fs=/tmp/mtile-generated-gocache/ab/abbacefa21781605e70c03fece1e557d8c6ecfed55352457a1d0d39e6c41def7-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile os/exec=/tmp/mtile-generated-gocache/d5/d59c41b52699282366dd332adc7e7e963b8710b3234832b70fe926fc32a73f2b-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile runtime=/tmp/mtile-generated-gocache/df/df210a25118728248e63bbe7871992a54ca4c8adc931d2de869768b7fad56582-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+EOF
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b093/embedcfg << 'EOF' # internal
+{
+	"Patterns": {
+		"templates/coin-quest": [
+			"templates/coin-quest/README.md",
+			"templates/coin-quest/assets/audio/music.json",
+			"templates/coin-quest/assets/audio/sounds.json",
+			"templates/coin-quest/game.lua",
+			"templates/coin-quest/lessons/01-movement.lua",
+			"templates/coin-quest/lessons/02-coins.lua",
+			"templates/coin-quest/lessons/03-sound.lua",
+			"templates/coin-quest/lessons/04-complete.lua"
+		]
+	},
+	"Files": {
+		"templates/coin-quest/README.md": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/README.md",
+		"templates/coin-quest/assets/audio/music.json": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/assets/audio/music.json",
+		"templates/coin-quest/assets/audio/sounds.json": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/assets/audio/sounds.json",
+		"templates/coin-quest/game.lua": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/game.lua",
+		"templates/coin-quest/lessons/01-movement.lua": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/lessons/01-movement.lua",
+		"templates/coin-quest/lessons/02-coins.lua": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/lessons/02-coins.lua",
+		"templates/coin-quest/lessons/03-sound.lua": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/lessons/03-sound.lua",
+		"templates/coin-quest/lessons/04-complete.lua": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/internal/build/templates/coin-quest/lessons/04-complete.lua"
+	}
+}EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b093/_pkg_.a -trimpath "$WORK/b093=>" -p github.com/drpaneas/mtile/internal/build -lang=go1.27 -complete -buildid vbeb8B9r8FuheaHf8wOR/vbeb8B9r8FuheaHf8wOR -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=12 -shared -nolocalimports -importcfg $WORK/b093/importcfg -embedcfg $WORK/b093/embedcfg -pack ./internal/build/build.go ./internal/build/map.go ./internal/build/project.go ./internal/build/rom.go ./internal/build/source_analysis.go ./internal/build/target.go ./internal/build/templates.go ./internal/build/tilecanvas_experiment.go ./internal/build/toolchain.go
+go tool buildid -w $WORK/b093/_pkg_.a # internal
+cp $WORK/b093/_pkg_.a /tmp/mtile-generated-gocache/dc/dc6225f985cb4507f7929c46af6fe7d35704dedbfa954ecce398e24b4f5f4be5-d # internal
+mkdir -p $WORK/b001/
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b001/importcfg << 'EOF' # internal
+# import config
+packagefile context=/tmp/mtile-generated-gocache/e3/e31e59fa54545740ad74ec24e7ffd43590bdbe28eff3155b44ef55b6fc7cebd6-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile flag=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b042/_pkg_.a
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/assetsync=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/build=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b093/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/editor=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b105/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/transpiler=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b099/_pkg_.a
+packagefile go/version=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b110/_pkg_.a
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile os/exec=/tmp/mtile-generated-gocache/d5/d59c41b52699282366dd332adc7e7e963b8710b3234832b70fe926fc32a73f2b-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile regexp=/tmp/mtile-generated-gocache/a4/a4d9c371b0c78f36085f3cf66b0bd091d5f0cd63c915ba072257da7d55958a6e-d
+packagefile runtime=/tmp/mtile-generated-gocache/df/df210a25118728248e63bbe7871992a54ca4c8adc931d2de869768b7fad56582-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+packagefile time=/tmp/mtile-generated-gocache/8f/8fe6511469eb8b4ad1dde52ec2cf62b42f5b6ac0471c7bdcd58b60a26eb3620b-d
+EOF
+/opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/compile -o $WORK/b001/_pkg_.a -trimpath "$WORK/b001=>" -p main -lang=go1.27 -complete -buildid RaWcyEuO2Xi0hUf1TTfV/RaWcyEuO2Xi0hUf1TTfV -goversion go1.27.1 -pgoprofile=/tmp/mtile-generated-gocache/76/76cfcfeb4a4239af8787714b499da9c9fff40054b1b2d22f192ab00310dfc2ae-d -c=12 -shared -nolocalimports -importcfg $WORK/b001/importcfg -pack ./cmd/mtile/doctor.go ./cmd/mtile/main.go
+go tool buildid -w $WORK/b001/_pkg_.a # internal
+cp $WORK/b001/_pkg_.a /tmp/mtile-generated-gocache/ca/ca746fa80c0095b883a833352fa1baafaa089af9aadec04b27d2957be2dacd26-d # internal
+cat >/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b001/importcfg.link << 'EOF' # internal
+packagefile github.com/drpaneas/mtile/cmd/mtile=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b001/_pkg_.a
+packagefile context=/tmp/mtile-generated-gocache/e3/e31e59fa54545740ad74ec24e7ffd43590bdbe28eff3155b44ef55b6fc7cebd6-d
+packagefile errors=/tmp/mtile-generated-gocache/cd/cddd2e9a3988d7c61e11e6cdaa0ed7039b83906ddf23f9a68dc2bdbd1aab5dda-d
+packagefile flag=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b042/_pkg_.a
+packagefile fmt=/tmp/mtile-generated-gocache/6f/6f13ca9e4da947314076a24c4b493fbca50d2dc5a90fa2891ed1f7154684898e-d
+packagefile github.com/drpaneas/mtile/internal/assetsync=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b064/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/build=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b093/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/editor=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b105/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/transpiler=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b099/_pkg_.a
+packagefile go/version=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b110/_pkg_.a
+packagefile io=/tmp/mtile-generated-gocache/cf/cf52e96f6e374690294548a3d4874eefbbb83922e3a33e7922512c4b089f92aa-d
+packagefile os=/tmp/mtile-generated-gocache/da/dacbbbf0ccfb9aa654e1bccbc6d77e44aa5564efaeadb3292ce37206cae5b3d2-d
+packagefile os/exec=/tmp/mtile-generated-gocache/d5/d59c41b52699282366dd332adc7e7e963b8710b3234832b70fe926fc32a73f2b-d
+packagefile path/filepath=/tmp/mtile-generated-gocache/c3/c39a9aa7098ba4eb487276820e516c7687f8beae88f5eed43cac35587e273214-d
+packagefile regexp=/tmp/mtile-generated-gocache/a4/a4d9c371b0c78f36085f3cf66b0bd091d5f0cd63c915ba072257da7d55958a6e-d
+packagefile runtime=/tmp/mtile-generated-gocache/df/df210a25118728248e63bbe7871992a54ca4c8adc931d2de869768b7fad56582-d
+packagefile strings=/tmp/mtile-generated-gocache/57/57690a0e2fe5431e040bec3d38c30249e7c031cdf8f8e41ad1f6c6902c793287-d
+packagefile time=/tmp/mtile-generated-gocache/8f/8fe6511469eb8b4ad1dde52ec2cf62b42f5b6ac0471c7bdcd58b60a26eb3620b-d
+packagefile internal/reflectlite=/tmp/mtile-generated-gocache/8b/8bc44cf6309b7366c8ac79e457fe3c24e70fc5c8a8cc1c6118874c7f6da69300-d
+packagefile sync=/tmp/mtile-generated-gocache/e8/e8fdc0990419d9f8436ca9610a7ffa8e922f2d3a3e416822b31b83cd32749ccc-d
+packagefile sync/atomic=/tmp/mtile-generated-gocache/d0/d064b76b3a2d9dc55863ba87ba791d17917f92f80a4ffe23ebd7087bd9808cbd-d
+packagefile encoding=/tmp/mtile-generated-gocache/64/6483452aa174ebaee1804f0fae75f211c3b961b18cfab9abd28fcf3dcdcc6884-d
+packagefile reflect=/tmp/mtile-generated-gocache/ac/aca472dc28c34fe5c6cbc1bb760be9325272828c1d3930a5babfa16278e41266-d
+packagefile slices=/tmp/mtile-generated-gocache/e4/e4ef3f957bc793deb3453a255f4e32890bdd63ffc6d8ae8d5e1f8b4643956f1b-d
+packagefile strconv=/tmp/mtile-generated-gocache/ab/abc75edb6bfb6116e41b11e47d87257dfee29cc6413eb31c63d771408e7be437-d
+packagefile internal/fmtsort=/tmp/mtile-generated-gocache/af/afa59ccf33f1fa1a3702091babcacc438220f09e60d634cabbfeb2f8001c54b8-d
+packagefile internal/stringslite=/tmp/mtile-generated-gocache/67/67ff7aa5af3b76fa351146e6b96ce35f17c2b85150c1a98d7f1e58963ae52dfe-d
+packagefile math=/tmp/mtile-generated-gocache/0c/0c94ff44cf7aefa5b24ddc87f0759e9761634d90c56999f9197279b9b775bbad-d
+packagefile unicode/utf8=/tmp/mtile-generated-gocache/3c/3cd779857d7b8ebd9618fc8bfc3124ac22f4701ed0bb657209a5235da9056448-d
+packagefile container/heap=/tmp/mtile-generated-gocache/b8/b8944ecb630c99eb15bc503001e44cfd0dcb0d6e5243687db3c437c5810c9d19-d
+packagefile embed=/tmp/mtile-generated-gocache/17/17c903e5852b01da749a3f8a69f2385e608012c09ea1920193a7af7005f6e632-d
+packagefile encoding/json=/tmp/mtile-generated-gocache/c4/c4b70ab3c46e66015bbf834e1b7278fa0830ea4af89f70d4636f86d09596f1a7-d
+packagefile encoding/json/jsontext=/tmp/mtile-generated-gocache/b5/b5ca579cde3f72df03881979424a0642b4d0b23962a7b49f81d643d26c224f66-d
+packagefile encoding/json/v2=/tmp/mtile-generated-gocache/d2/d27f448c01022294c1e7bc1ea329b42c72284b0380acdc0de0ea3f3fead65c14-d
+packagefile github.com/drpaneas/mtile/runtime/audio=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b081/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime/hw=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b082/_pkg_.a
+packagefile go/format=/tmp/mtile-generated-gocache/a4/a40b65f9e6b186ff0401831e36156048970fb1d337279cddd6513d363d907ebe-d
+packagefile sort=/tmp/mtile-generated-gocache/9f/9fc1c6382f523b4d3d824e6f8a7ca4bcb5fa39f6a573de4683e828d866a9da11-d
+packagefile unicode=/tmp/mtile-generated-gocache/aa/aae607d080f921dac1a72d5fb88b9c6d19bb2ccd11351434d608e5a3a8cb5f94-d
+packagefile bufio=/tmp/mtile-generated-gocache/f3/f342fc2d8ae00e408f15e5200dc90be1caf2fe368658f42355770f0f347b3489-d
+packagefile bytes=/tmp/mtile-generated-gocache/eb/eb445ed8412d23b4d8be10e9892dabe7fbf61706d4dc0de10477b1b6d0ce1a0b-d
+packagefile github.com/drpaneas/mtile/internal/sourcebundle=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b095/_pkg_.a
+packagefile github.com/drpaneas/mtile/runtime=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b100/_pkg_.a
+packagefile io/fs=/tmp/mtile-generated-gocache/ab/abbacefa21781605e70c03fece1e557d8c6ecfed55352457a1d0d39e6c41def7-d
+packagefile encoding/binary=/tmp/mtile-generated-gocache/48/48c6b9a05d97d05d9ea8059dfb84be4701fddb0f66eb1c89f4785d32e4fecd2f-d
+packagefile github.com/drpaneas/mtile/internal/gbapu=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b106/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/performance=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b107/_pkg_.a
+packagefile image=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b108/_pkg_.a
+packagefile image/color=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b109/_pkg_.a
+packagefile github.com/drpaneas/mtile/internal/luaparser=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b096/_pkg_.a
+packagefile maps=/tmp/mtile-generated-gocache/39/39f51ecfea4939e5a55901809a491e51966750a4c6ee41d99c3c64a0fd723463-d
+packagefile math/bits=/tmp/mtile-generated-gocache/0f/0f5150caa9d5164f81bc4cad0a106e82be3dfb5a5a32072b6bd1ea1e644b392b-d
+packagefile internal/gover=/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/go-build3128531399/b111/_pkg_.a
+packagefile internal/bytealg=/tmp/mtile-generated-gocache/4c/4c1c6347fc81704b546708f1659258ab3574057c9a85a88dd481b9adfc7cc571-d
+packagefile internal/filepathlite=/tmp/mtile-generated-gocache/80/80017e275fe82127bd93d96258a1046fdb47c2336f4aa95e77c24927e863b960-d
+packagefile internal/poll=/tmp/mtile-generated-gocache/9f/9f7fc64ca18d7b55ab819d2c219b76ab89fab5d6a06f7b0bee8a201dc920b8b0-d
+packagefile internal/strconv=/tmp/mtile-generated-gocache/12/1227c98a9ba1bd8a8995bc25d1ac6e2b5461c15833335d5ca6d805f421480b1e-d
+packagefile internal/syscall/execenv=/tmp/mtile-generated-gocache/17/17d8ff6cd635f08c2b6ea7f5f965d2e62f3c7260fbec37bed879ee1637400ef3-d
+packagefile internal/syscall/unix=/tmp/mtile-generated-gocache/60/60651aa08e735c0738cc961598aa2a12bdebf851566dd2c0e8273c03e9ddcd59-d
+packagefile internal/testlog=/tmp/mtile-generated-gocache/88/88e67e5557f657805d6e584d5c79b2d009eac66e6ead11ac51d75f9e3e1abe54-d
+packagefile syscall=/tmp/mtile-generated-gocache/f1/f1ab355c6ff5e7938e84867c1d72ff75cb5ce319cc76756122763617719e4cfd-d
+packagefile internal/godebug=/tmp/mtile-generated-gocache/17/172144bb294e01bedbfadbd7a0f6d933670cab6b313df4acafc440b47f77d3da-d
+packagefile iter=/tmp/mtile-generated-gocache/99/99d132b4807f381102fcc10ce9ada88ef7fff227ecb7b1fdeb5d8ecc994f7ca4-d
+packagefile regexp/syntax=/tmp/mtile-generated-gocache/23/2319d6fff01c9770df72d6dbb93a37515676b693d9b3251bc6c22c41e21e061b-d
+packagefile internal/abi=/tmp/mtile-generated-gocache/52/52b4fb3856e221932c95bda959355f6d2044ddfe30005d85c621c267539408f6-d
+packagefile internal/byteorder=/tmp/mtile-generated-gocache/d2/d21ffce8290f0eb4df1d04085990a7d41f6ff96c9994a24d9f57785ff7fbcb94-d
+packagefile internal/chacha8rand=/tmp/mtile-generated-gocache/ef/efd69d8c8b800e38467d378eccb2161dc40af0ac58c3ed37dcd8e3b4a0ff5641-d
+packagefile internal/coverage/rtcov=/tmp/mtile-generated-gocache/5f/5f594bb162691d4c672d105db871e52fdb23e87bf2833c1b8793e26cc4ea24a4-d
+packagefile internal/cpu=/tmp/mtile-generated-gocache/69/69e8085cfebb058f7f1533063d0c7455adccc35a5e20126dacea8e34988423f3-d
+packagefile internal/goarch=/tmp/mtile-generated-gocache/05/05aa45114bb1df1036ef9231ebc6175007264e0d4d98e14e1503f2ca05cdd272-d
+packagefile internal/godebugs=/tmp/mtile-generated-gocache/e7/e7ea78a643d8e020b719356faf422b740e7a08c4adbd25008810250939fa0eb1-d
+packagefile internal/goexperiment=/tmp/mtile-generated-gocache/9f/9fe8cdb8f97530253195f80b1aa5ee6f3ae473ed750f6796c9ab99281471f07a-d
+packagefile internal/goos=/tmp/mtile-generated-gocache/32/32be73895a85a090d978cc6fc521288bb1b02790454692bc3cc3f00ea1453faf-d
+packagefile internal/profilerecord=/tmp/mtile-generated-gocache/7f/7f08a7c75811dee95123b8e16c6ade75a7abcff1a9743cd5533cae5c0aba4c99-d
+packagefile internal/runtime/atomic=/tmp/mtile-generated-gocache/c1/c1b129c2135912e70557940b690c948d063c3e75f8ae7af170d0773498ece890-d
+packagefile internal/runtime/exithook=/tmp/mtile-generated-gocache/80/80fb63953ff41df7dd0ea8cc037436ecaa3ae1a7f27ac26a0e27aa2c2b50df98-d
+packagefile internal/runtime/gc=/tmp/mtile-generated-gocache/2d/2d4c0ad052471a4fd0914cb68e1f7c3b483fc17c2f706b593a3ff7cd4497c2ba-d
+packagefile internal/runtime/gc/scan=/tmp/mtile-generated-gocache/cf/cf7aee72bd7ecc0368a4a14fbd7a649c3e47bb3b0157834214d7758445e571ee-d
+packagefile internal/runtime/maps=/tmp/mtile-generated-gocache/16/161a15da6307e8721f4b7e11109f798a54f5d7dd54db2a5edb631390818d838e-d
+packagefile internal/runtime/math=/tmp/mtile-generated-gocache/e1/e19a70b03639b6d43851415f086a10cf208de64f22870b38facde903c67a7d73-d
+packagefile internal/runtime/pprof/label=/tmp/mtile-generated-gocache/bb/bbfb2e3948d9b0bd8092b3dd05ea86c3d3fd30ab6fb1971fbd06410f3112c357-d
+packagefile internal/runtime/sys=/tmp/mtile-generated-gocache/d5/d5ec168ad1f7a8cee49ed577d4b77e98472dfaa8039f559a09f3c9af01e6516a-d
+packagefile internal/trace/tracev2=/tmp/mtile-generated-gocache/bb/bbdf0c68811d1777d3ea817f0ca51457364846e6b9330ef8f52c1a696d234fab-d
+packagefile internal/unsafeheader=/tmp/mtile-generated-gocache/42/42c92faa9e0d66479ccfdb571b6071a374fbcfb0d4932575b09a53517f57113c-d
+packagefile internal/race=/tmp/mtile-generated-gocache/84/84ac5085215a93a74eea072082cc4aeff231e2e45ea004ccace98aebcafd5e1a-d
+packagefile internal/sync=/tmp/mtile-generated-gocache/2d/2d4154683094da83259f21aba2e10736c733f7665247aa3460cd686561d6447a-d
+packagefile internal/synctest=/tmp/mtile-generated-gocache/8f/8fab3e1de2adef0eba3404f408af36a4f468e115070f0ab8215c009716764497-d
+packagefile cmp=/tmp/mtile-generated-gocache/d6/d64da366cd7632102c1c914b49b86d9b0536f4930946d06d6a38577e45ad3167-d
+packagefile encoding/json/internal=/tmp/mtile-generated-gocache/25/25cc2d42fd08565acb85f3a350f6814f09ad054c4e5d48e8633da21f4b75c145-d
+packagefile encoding/json/internal/jsonflags=/tmp/mtile-generated-gocache/24/24e5fa11d9679f2764c46f15225f412cd2f2572e83e4a16fe06b55e9ac680fe6-d
+packagefile encoding/json/internal/jsonopts=/tmp/mtile-generated-gocache/85/856a6bfe954ba6e73d1a2a6815e2f8bc39e80862e75b3c4bfacc83f6e569fbfb-d
+packagefile encoding/json/internal/jsonwire=/tmp/mtile-generated-gocache/39/3999e411e84340baa5f845450ea4596bbefc9aa9991054ce8e1d79aa53efd483-d
+packagefile encoding/base32=/tmp/mtile-generated-gocache/ff/ff571c29b5908036cc2f6be19415b95152e644ec95575b29849cfceae2afe95b-d
+packagefile encoding/base64=/tmp/mtile-generated-gocache/3c/3cadc78d37b3041dd1c59697e8285e86ee1750747f84e72cfa0c445eacf56ee9-d
+packagefile encoding/hex=/tmp/mtile-generated-gocache/ce/ceea7771e583d6019657a74965a2409289f036ea3f6afeca529273449665b4ba-d
+packagefile go/ast=/tmp/mtile-generated-gocache/c3/c37eedcb33f271e07592a68d4d3206b3fd22d463bcaa32f7bb99328b002d931f-d
+packagefile go/parser=/tmp/mtile-generated-gocache/5e/5e8df373ef8858659e4714a86a0d7fd073f78a95d0edc540154e283bc7af71f8-d
+packagefile go/printer=/tmp/mtile-generated-gocache/ad/ad878d172be0ea37e05aa1cab6433444757181dd31b77018d1b57a7fb798e472-d
+packagefile go/token=/tmp/mtile-generated-gocache/ef/ef553250ee663f38d47f0ffda808332b33bca289de11cf8157bc743370e09d17-d
+packagefile internal/oserror=/tmp/mtile-generated-gocache/a2/a295b8aa4d6d0003aeb3b9f1755ad9c06d2f6365f8dc9dbd7851a09fdecc0bee-d
+packagefile path=/tmp/mtile-generated-gocache/5c/5c4b6d31b8f62f184a0c00af38821a5c4ee914d40cd9271d36df5bed9bedb276-d
+packagefile internal/asan=/tmp/mtile-generated-gocache/62/6298575af0c19f10918366b357acd55c0e334bb5a3d5c34aed4b4777fe950157-d
+packagefile internal/msan=/tmp/mtile-generated-gocache/86/8621006954806e52dfdb6b95302c7b0a941b638707e420482e11b56a7897c591-d
+packagefile internal/bisect=/tmp/mtile-generated-gocache/ec/ec36215771b55509e221758ac5bed38d4fe5a2646e29c0bd51aa8f6745174186-d
+packagefile unicode/utf16=/tmp/mtile-generated-gocache/f9/f991ca7913584ff16984f768da2c8a2e5484c1437fb8bf70fe6d0e39a406af24-d
+packagefile go/scanner=/tmp/mtile-generated-gocache/d5/d5e3b9e313341eb305422ed9e2df2d1fb8e3ec11351c5514a203e61887820adf-d
+packagefile go/build/constraint=/tmp/mtile-generated-gocache/08/08112e2be4781fb1f0b8fa325bc68ad7151fe42a483bd8354d67c365dd583fa1-d
+packagefile go/doc/comment=/tmp/mtile-generated-gocache/31/31b13750d63f212cb5ad2d95e712e1806ed97061467e312246c84f6af49c748b-d
+packagefile text/tabwriter=/tmp/mtile-generated-gocache/8c/8c4a2014fe868a882b020784d9a79810d1891a09d0b8e22da77be0e09101a7da-d
+modinfo "0w\xaf\f\x92t\b\x02A\xe1\xc1\a\xe6\xd6\x18\xe6path\tgithub.com/drpaneas/mtile/cmd/mtile\nmod\tgithub.com/drpaneas/mtile\tv0.0.0-20260909171100-26182b69fcb5+dirty\t\ndep\tgithub.com/drpaneas/mtile/runtime\tv0.0.0\n=>\t./runtime\t(devel)\t\n\nbuild\t-buildmode=exe\nbuild\t-compiler=gc\nbuild\t-pgo=/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/mtile/default.pgo\nbuild\tCGO_CFLAGS=\nbuild\tCGO_CPPFLAGS=\nbuild\tCGO_CXXFLAGS=\nbuild\tCGO_ENABLED=1\nbuild\tCGO_LDFLAGS=\nbuild\tGOARCH=arm64\nbuild\tGOARM64=v8.0\nbuild\tGOOS=darwin\nbuild\tvcs=git\nbuild\tvcs.modified=true\nbuild\tvcs.revision=26182b69fcb5325a73e664f4ea13b6727cdb23c2\nbuild\tvcs.time=2026-09-09T17:11:00Z\n\xf92C1\x86\x18 r\x00\x82B\x10A\x16\xd8\xf2"
+EOF
+mkdir -p $WORK/b001/exe/
+cd .
+GOROOT='/opt/homebrew/Cellar/go/1.27.1/libexec' /opt/homebrew/Cellar/go/1.27.1/libexec/pkg/tool/darwin_arm64/link -o $WORK/b001/exe/a.out -importcfg $WORK/b001/importcfg.link -buildmode=pie -buildid=MjCNNcvns-IIJ-IyoGEV/RaWcyEuO2Xi0hUf1TTfV/ca5etKN1PNlZmxwcy6r_/MjCNNcvns-IIJ-IyoGEV -extld=cc $WORK/b001/_pkg_.a
+go tool buildid -w $WORK/b001/exe/a.out # internal
+mkdir -p /private/tmp/mtile-go-weekly-loop/pgo/cli/
+mv $WORK/b001/exe/a.out /private/tmp/mtile-go-weekly-loop/pgo/cli/mtile-default
+rm -rf $WORK/b001/
+
+exit_code=0

@@ -1,0 +1,24 @@
+/tmp/mtile-go-weekly-loop/native-baseline/mode4-game.elf  :
+section             size        addr
+.text               7740   134217728
+.rodata            14676   134225468
+.stack              9216    50331648
+.data               3940    50340864
+.ewram             75936    33554432
+.debug_mailbox         0    33816064
+.bss                  64    50344804
+.debug_info        52836           0
+.debug_abbrev       1491           0
+.debug_aranges       192           0
+.debug_ranges       2928           0
+.debug_line        14125           0
+.debug_frame        1252           0
+.debug_loc         29368           0
+.debug_str         21990           0
+.debug_pubnames    14777           0
+.debug_pubtypes     4935           0
+.comment             128           0
+.ARM.attributes       58           0
+Total             255652
+
+

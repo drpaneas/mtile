@@ -1,0 +1,34 @@
+{
+  "files": {
+    "cmd/editor/main.go": "d47d629bbb5cc808d53db6e9882b6cd522331007e096b039e7de1e8a56bfd423",
+    "cmd/mtile/main.go": "e5e2f88c41e51820d1d009a22ff6dbd70d5b18d1db5a5a9b22962e7f351e03c0",
+    "cmd/editor/flight_recorder.go": "7c494763f337deff99b6bf8891970a61936d837a1ec35148212674de74c7e689",
+    "cmd/editor/flight_recorder_test.go": "50535604e3ea1804fcc79000e5e944ce88f8f62175f36da80768ff28ba29fc3b",
+    "cmd/editor/flight_recorder_benchmark_test.go": "ffaf6f6e258d79dcc6e0b4b4fc2dab3da67ed9cca063bd911bf5ba3e3551d5e4",
+    "cmd/mtile/flight_recorder_test.go": "4bc267be646c5107b96483f6f106de0a3a11a45113829acaed070092804258df"
+  },
+  "go": "go version go1.27.1 darwin/arm64",
+  "gitRevision": "26182b69fcb5325a73e664f4ea13b6727cdb23c2",
+  "binarySHA256": "a85c795d3fb1c6fa1639e2a129cd8907b455ec1c6d75496bdb224d6d259f3873",
+  "predeclared": {
+    "scenes": [
+      "Sprites",
+      "Map",
+      "Code"
+    ],
+    "pairsPerScene": 6,
+    "order": "off/on then on/off, alternating",
+    "warmupWallSeconds": 1,
+    "minimumMeasuredWorkMillis": 300,
+    "minimumMeasuredFrames": 32,
+    "medianPairedMeanOverheadLimitPercent": 5,
+    "steadyMemoryActivitySeconds": 6,
+    "postStopActivitySeconds": 1,
+    "addedPostGCHeapAllocLimitBytes": 33554432,
+    "retentionMinAgeSeconds": 5,
+    "retentionMaxBytesTarget": 8388608,
+    "completedUpdateThresholdMillis": 100,
+    "perFrameExactRGBRequired": true,
+    "autoCaptureInvalidatesSample": true
+  }
+}

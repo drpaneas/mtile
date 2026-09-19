@@ -1,0 +1,11 @@
+{
+  "ticks": 55,
+  "source_restored": true,
+  "frame_sha256": {
+    "code": "a798b0cf8b10a6df09e306fca9eed8e752045d60b0cb5e7b0febe0e076e9f792",
+    "edited": "957ee6da0336f9b8d6bfe35edcafa17e66c9ddb0a66c2ec364ffd345b27c4f87",
+    "map": "5d4b4de4ee335f2fb9ae747d222a8a1f15e0e1a0393fca727fb638cfd502f7ed",
+    "restored": "e4b843b3666a7949effc0763f46b57568d39d0c4f3205aff5da2cd14d714b54b",
+    "sprites": "0b423a3ee9bbec7286277f69077436a5b150b6c4b6b995570f53852f91bfbba7"
+  }
+}

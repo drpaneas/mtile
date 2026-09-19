@@ -1,0 +1,55 @@
+$ go test . -run ^$ -bench ^BenchmarkHashFingerprintCold$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkHashFingerprintCold/insert-collision         	   60214	      5255 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/insert-distributed       	  169414	      2114 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-dynamic            	  526792	       658.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-static             	10778805	        34.58 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	2.330s
+$ go test . -run ^$ -bench ^BenchmarkHashFingerprintCold$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkHashFingerprintCold/insert-collision         	   66051	      5124 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/insert-distributed       	  173116	      2272 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-dynamic            	  526809	       654.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-static             	10641730	        33.70 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.811s
+$ go test . -run ^$ -bench ^BenchmarkHashFingerprintCold$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkHashFingerprintCold/insert-collision         	   69796	      5141 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/insert-distributed       	  171682	      2078 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-dynamic            	  542713	       659.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-static             	10669827	        33.67 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	2.143s
+$ go test . -run ^$ -bench ^BenchmarkHashFingerprintCold$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkHashFingerprintCold/insert-collision         	   59122	      5121 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/insert-distributed       	  172844	      2071 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-dynamic            	  553711	       656.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-static             	10687368	        33.87 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.829s
+$ go test . -run ^$ -bench ^BenchmarkHashFingerprintCold$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkHashFingerprintCold/insert-collision         	   62451	      5246 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/insert-distributed       	  171189	      2105 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-dynamic            	  534193	       666.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHashFingerprintCold/image-static             	10685199	        34.06 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.905s

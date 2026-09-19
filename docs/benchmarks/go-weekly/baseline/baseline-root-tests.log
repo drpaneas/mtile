@@ -1,0 +1,31 @@
+# github.com/drpaneas/mtile/scripts/discord-hardware/idle-video
+package github.com/drpaneas/mtile/scripts/discord-hardware/idle-video: C source files not allowed when not using cgo or SWIG: capture.c video_controls.c
+FAIL	github.com/drpaneas/mtile/scripts/discord-hardware/idle-video [setup failed]
+# gitlab.com/gomidi/midi/v2/drivers/rtmididrv/imported/rtmidi
+RtMidi.cpp:1685:15: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+RtMidi.cpp:1685:15: note: read of non-const variable 'bufsize' is not allowed in a constant expression
+RtMidi.cpp:1684:13: note: declared here
+# github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/metal
+cgo-gcc-prolog:55:11: warning: 'CVDisplayLinkCreateWithActiveCGDisplays' is deprecated: first deprecated in macOS 15.0 - use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [-Wdeprecated-declarations]
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreVideo.framework/Headers/CVDisplayLink.h:99:20: note: 'CVDisplayLinkCreateWithActiveCGDisplays' has been explicitly marked deprecated here
+cgo-gcc-prolog:76:11: warning: 'CVDisplayLinkSetOutputCallback' is deprecated: first deprecated in macOS 15.0 - use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [-Wdeprecated-declarations]
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreVideo.framework/Headers/CVDisplayLink.h:143:20: note: 'CVDisplayLinkSetOutputCallback' has been explicitly marked deprecated here
+cgo-gcc-prolog:95:11: warning: 'CVDisplayLinkStart' is deprecated: first deprecated in macOS 15.0 - use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [-Wdeprecated-declarations]
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreVideo.framework/Headers/CVDisplayLink.h:164:20: note: 'CVDisplayLinkStart' has been explicitly marked deprecated here
+ok  	github.com/drpaneas/mtile/cmd/editor	0.911s
+ok  	github.com/drpaneas/mtile/cmd/mtile	11.737s
+ok  	github.com/drpaneas/mtile/cmd/renderbench	4.445s
+ok  	github.com/drpaneas/mtile/fonts	1.977s
+ok  	github.com/drpaneas/mtile/internal/assetsync	9.963s
+ok  	github.com/drpaneas/mtile/internal/build	21.226s
+ok  	github.com/drpaneas/mtile/internal/codeeditor	2.824s
+ok  	github.com/drpaneas/mtile/internal/editor	4.022s
+ok  	github.com/drpaneas/mtile/internal/emulator	1.593s
+ok  	github.com/drpaneas/mtile/internal/gbapu	0.868s
+?   	github.com/drpaneas/mtile/internal/hostclipboard	[no test files]
+ok  	github.com/drpaneas/mtile/internal/luaparser	3.163s
+ok  	github.com/drpaneas/mtile/internal/midicontrol	3.476s
+ok  	github.com/drpaneas/mtile/internal/performance	4.716s
+ok  	github.com/drpaneas/mtile/internal/sourcebundle	4.969s
+ok  	github.com/drpaneas/mtile/internal/transpiler	290.923s
+FAIL

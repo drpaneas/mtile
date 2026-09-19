@@ -1,0 +1,66 @@
+[
+  {
+    "Project": "platformer",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 0/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "loop",
+    "Policy": "forced-mode4",
+    "PrefixPassed": false,
+    "Error": "transpile game.lua: transpiler: game.lua:509:3: [MAP_EXPLICIT_CONTRACT] BG0 is drawn more than once",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 60/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      }
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+$ go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintDiagnostic$ -count=1 -v
+=== RUN   TestHashFingerprintDiagnostic
+    hash_fingerprint_diagnostic_test.go:75: transpile game.lua: transpiler: [M0_DRAW_SHAPE] Mode 0 requires one direct cls() and at most four direct map() calls in _draw
+--- FAIL: TestHashFingerprintDiagnostic (0.18s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	1.074s
+FAIL
+
+exit_code=1 elapsed_seconds=2.436

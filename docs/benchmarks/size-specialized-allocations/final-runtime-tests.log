@@ -1,0 +1,7 @@
+ok  	github.com/drpaneas/mtile/runtime	2.946s
+ok  	github.com/drpaneas/mtile/runtime/audio	(cached)
+ok  	github.com/drpaneas/mtile/runtime/hw	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	(cached)
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	(cached)

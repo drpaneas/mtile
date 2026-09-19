@@ -1123,6 +1123,10 @@ func (g *Game) updateCopyPaste() {
 		return
 	}
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
+	if g.spritePaste != nil && !mod && !ebiten.IsKeyPressed(ebiten.KeyAlt) && inpututil.IsKeyJustPressed(ebiten.KeyD) {
+		g.toggleSpritePasteDither()
+		return
+	}
 	if !mod {
 		return
 	}

@@ -1,0 +1,3 @@
+$ go test -c -pgo=/private/tmp/mtile-go-weekly-loop/pgo/training.pprof -o /private/tmp/mtile-go-weekly-loop/pgo/trained.test ./internal/build
+
+exit_code=0

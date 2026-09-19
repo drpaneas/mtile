@@ -1,0 +1,22 @@
+=== RUN   TestRuntimeTableIWRAMDiagnostic
+=== RUN   TestRuntimeTableIWRAMDiagnostic/mode0
+    runtime_table_iwram_diagnostic_test.go:70: rom median=213839 p95=213839 max=213839 draw=474 commit=2236 rom=27600 iwram=10416 ewram_free=108572 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: rom method=hashFind address=0x08002184 size=308
+    runtime_table_iwram_diagnostic_test.go:73: rom method=tableData address=0x0800033c size=436
+    runtime_table_iwram_diagnostic_test.go:70: iwram median=174031 p95=174031 max=174031 draw=474 commit=2236 rom=27616 iwram=11160 ewram_free=108572 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=hashFind address=0x03002a54 size=308
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=tableData address=0x030026bc size=436
+    runtime_table_iwram_diagnostic_test.go:79: saving=18.62% rom_delta=16 iwram_delta=744 ewram_delta=0 differing_pixels=0 checksum_frames=600
+=== RUN   TestRuntimeTableIWRAMDiagnostic/mode4
+    runtime_table_iwram_diagnostic_test.go:70: rom median=357113 p95=357113 max=357113 draw=63862 commit=76920 rom=28784 iwram=12964 ewram_free=71452 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: rom method=hashFind address=0x08001e84 size=308
+    runtime_table_iwram_diagnostic_test.go:73: rom method=tableData address=0x080003b4 size=452
+    runtime_table_iwram_diagnostic_test.go:70: iwram median=315769 p95=315769 max=315769 draw=63862 commit=76920 rom=28800 iwram=13724 ewram_free=71452 heap_allocated=3188 heap_handles=1 gc=0 warmup_frame=20 warmup_missed=0 final_missed=0
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=hashFind address=0x03003418 size=308
+    runtime_table_iwram_diagnostic_test.go:73: iwram method=tableData address=0x03002798 size=452
+    runtime_table_iwram_diagnostic_test.go:79: saving=11.58% rom_delta=16 iwram_delta=760 ewram_delta=0 differing_pixels=0 checksum_frames=600
+--- PASS: TestRuntimeTableIWRAMDiagnostic (8.72s)
+    --- PASS: TestRuntimeTableIWRAMDiagnostic/mode0 (4.30s)
+    --- PASS: TestRuntimeTableIWRAMDiagnostic/mode4 (4.42s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	9.088s

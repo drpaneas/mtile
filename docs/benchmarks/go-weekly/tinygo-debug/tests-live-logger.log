@@ -1,0 +1,4 @@
+=== RUN   TestLiveRuntimeFailureLog
+--- PASS: TestLiveRuntimeFailureLog (0.65s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/emulator	0.929s

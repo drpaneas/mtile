@@ -1,0 +1,14 @@
+{
+  "baselineRuntimeSHA256": "e2e1e606e2e048065998854e95c3bcf8caca4b32f037547ac1c63a8be4359463",
+  "candidateRuntimeSHA256": "d269a40fd6c1575c5e885e19b21a5f95791294cc65927b74b014bfba6e4e388c",
+  "generatedGoSHA256": "8d318b9746a6afc4d45d5e1df144342bf4447604ae10fbba70e2d6648f46f347",
+  "generatedSourceEqual": true,
+  "medianImprovementPercent": -0.36327662541963956,
+  "memoryEqual": true,
+  "name": "static-mode0",
+  "p95ChangePercent": 0.36327662541963956,
+  "pixelsEqual": true,
+  "projectSHA256": "162a1606bb30d53fe7c7fbd3cbe03f5b2b505a299a1c18fe9086c819f043a38f",
+  "warmupMissedFramesDelta": 0,
+  "watchesEqual": true
+}

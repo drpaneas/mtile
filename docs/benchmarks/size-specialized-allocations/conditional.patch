@@ -1,0 +1,47 @@
+--- a/runtime/heap.go
++++ b/runtime/heap.go
+@@ -275,17 +275,33 @@
+ 		base := unsafe.Add(unsafe.Pointer(&space[0]), off)
+ 		at := uint32(0)
+ 		if uintptr(base)&3 == 0 {
+-			for aligned-at >= 16 {
+-				pointer := unsafe.Add(base, at)
+-				*(*uint32)(pointer) = 0
+-				*(*uint32)(unsafe.Add(pointer, 4)) = 0
+-				*(*uint32)(unsafe.Add(pointer, 8)) = 0
+-				*(*uint32)(unsafe.Add(pointer, 12)) = 0
+-				at += 16
+-			}
+-			for aligned-at >= 4 {
+-				*(*uint32)(unsafe.Add(base, at)) = 0
+-				at += 4
++			// Fixed offsets let small allocations clear in place without the
++			// generic loop or a call to the target's memory-clear helper.
++			if aligned <= 16 {
++				*(*uint32)(base) = 0
++				if aligned >= 8 {
++					*(*uint32)(unsafe.Add(base, 4)) = 0
++				}
++				if aligned >= 12 {
++					*(*uint32)(unsafe.Add(base, 8)) = 0
++				}
++				if aligned == 16 {
++					*(*uint32)(unsafe.Add(base, 12)) = 0
++				}
++				at = aligned
++			} else {
++				for aligned-at >= 16 {
++					pointer := unsafe.Add(base, at)
++					*(*uint32)(pointer) = 0
++					*(*uint32)(unsafe.Add(pointer, 4)) = 0
++					*(*uint32)(unsafe.Add(pointer, 8)) = 0
++					*(*uint32)(unsafe.Add(pointer, 12)) = 0
++					at += 16
++				}
++				for aligned-at >= 4 {
++					*(*uint32)(unsafe.Add(base, at)) = 0
++					at += 4
++				}
+ 			}
+ 		}
+ 		for at < aligned {

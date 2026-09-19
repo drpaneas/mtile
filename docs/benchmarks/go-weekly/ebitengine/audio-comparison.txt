@@ -1,0 +1,32 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/gbapu
+cpu: Apple M2 Pro
+                                 │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                                 │                         sec/op                          │                 sec/op                   vs base         │
+RendererFourChannels480Frames-12                                               25.77µ ± 2%                               25.62µ ± 1%  ~ (p=0.240 n=6)
+
+                                 │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                                 │                          B/op                           │                 B/op                   vs base           │
+RendererFourChannels480Frames-12                                                0.000 ± 0%                              0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
+
+                                 │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                                 │                        allocs/op                        │               allocs/op                vs base           │
+RendererFourChannels480Frames-12                                                0.000 ± 0%                              0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
+
+pkg: github.com/drpaneas/mtile/internal/performance
+                       │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                       │                         sec/op                          │                 sec/op                   vs base         │
+LiveStream480Frames-12                                               48.02µ ± 1%                               47.77µ ± 5%  ~ (p=0.119 n=6)
+
+                       │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                       │                          B/op                           │                 B/op                   vs base           │
+LiveStream480Frames-12                                                0.000 ± 0%                              0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
+
+                       │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-audio.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-audio.txt │
+                       │                        allocs/op                        │               allocs/op                vs base           │
+LiveStream480Frames-12                                                0.000 ± 0%                              0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal

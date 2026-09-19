@@ -1,0 +1,13 @@
+$ go test ./internal/transpiler -run ^TestDifferential -count=1 -v
+=== RUN   TestDifferentialExecution
+=== RUN   TestDifferentialExecution/optimized
+    differential_execution_test.go:108: 142 value/condition expressions + 5 statement/literal witnesses: transpile=7.670583ms; generated format/build/execute=1.062703458s
+=== RUN   TestDifferentialExecution/generic
+    differential_execution_test.go:108: 142 value/condition expressions + 5 statement/literal witnesses: transpile=5.916292ms; generated format/build/execute=1.451720167s
+--- PASS: TestDifferentialExecution (2.53s)
+    --- PASS: TestDifferentialExecution/optimized (1.07s)
+    --- PASS: TestDifferentialExecution/generic (1.46s)
+=== RUN   TestDifferentialParserCorpus
+--- PASS: TestDifferentialParserCorpus (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	3.349s

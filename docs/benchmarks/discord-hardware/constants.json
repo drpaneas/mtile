@@ -1,0 +1,52 @@
+{
+  "environment": "native mGBA ARM7TDMI instruction execution; WAITCNT=0x4317; no physical-hardware measurement",
+  "constant": "0x040000de",
+  "checks": "value, r1-r12, stack pointer, condition flags, ARM return state",
+  "measurements": [
+    {
+      "location": "ROM",
+      "sequence": "literal_load",
+      "executions": 16000,
+      "min_cycles": 19,
+      "max_cycles": 19,
+      "mean_cycles": 19.0,
+      "bytes": 12
+    },
+    {
+      "location": "ROM",
+      "sequence": "two_immediates",
+      "executions": 16000,
+      "min_cycles": 14,
+      "max_cycles": 14,
+      "mean_cycles": 14.0,
+      "bytes": 12
+    },
+    {
+      "location": "IWRAM",
+      "sequence": "literal_load",
+      "executions": 16000,
+      "min_cycles": 6,
+      "max_cycles": 6,
+      "mean_cycles": 6.0,
+      "bytes": 12
+    },
+    {
+      "location": "IWRAM",
+      "sequence": "two_immediates",
+      "executions": 16000,
+      "min_cycles": 5,
+      "max_cycles": 5,
+      "mean_cycles": 5.0,
+      "bytes": 12
+    }
+  ],
+  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+  "assembler": "GNU assembler (GNU Binutils) 2.43.1",
+  "source_sha256": {
+    "materialize.s": "f8ac4309e48cd860f76554be2fc4ac0df67f4c2275db769a73778efc7175cb11",
+    "check.c": "69a8af5f0483cf5a9c6876f48639373565ca5394e4c08c5c909dfa52510679af"
+  },
+  "mgba_library": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mgba/libmgba-core.a",
+  "mgba_sha256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab",
+  "exit_code": 0
+}

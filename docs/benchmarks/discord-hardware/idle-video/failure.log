@@ -1,0 +1,9 @@
+=== RUN   TestIdleTrialDiagnostic
+=== RUN   TestIdleTrialDiagnostic/background-layersmode4
+    idle_trial_diagnostic_test.go:59: candidate work=
+    idle_trial_diagnostic_test.go:60: debug telemetry produced 0/180 synchronized frame samples
+--- FAIL: TestIdleTrialDiagnostic (3.80s)
+    --- FAIL: TestIdleTrialDiagnostic/background-layersmode4 (3.80s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	4.632s
+FAIL

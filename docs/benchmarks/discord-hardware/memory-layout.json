@@ -1,0 +1,70 @@
+[
+  {
+    "case": "clean",
+    "mode": "mode0",
+    "ROMSize": 32684,
+    "IWRAMUsed": 10212,
+    "EWRAMFree": 230008,
+    "symbols": [
+      "00000400 A __stack_size_irq",
+      "00002000 A __stack_size_usr",
+      "02007b88 B _ewram_end",
+      "03000400 B _stack_top_irq",
+      "03002400 T _sdata",
+      "03002400 B _stack_top",
+      "030027e0 T _edata",
+      "030027e4 B _ebss"
+    ]
+  },
+  {
+    "case": "clean",
+    "mode": "mode4",
+    "ROMSize": 56180,
+    "IWRAMUsed": 16672,
+    "EWRAMFree": 168104,
+    "symbols": [
+      "00000400 A __stack_size_irq",
+      "00002000 A __stack_size_usr",
+      "02016d58 B _ewram_end",
+      "03000400 B _stack_top_irq",
+      "03002400 T _sdata",
+      "03002400 B _stack_top",
+      "030040e0 T _edata",
+      "03004120 B _ebss"
+    ]
+  },
+  {
+    "case": "all-mutable-audio-dense",
+    "mode": "mode0",
+    "ROMSize": 99868,
+    "IWRAMUsed": 18064,
+    "EWRAMFree": 191360,
+    "symbols": [
+      "00000400 A __stack_size_irq",
+      "00002000 A __stack_size_usr",
+      "02011280 B _ewram_end",
+      "03000400 B _stack_top_irq",
+      "03002400 T _sdata",
+      "03002400 B _stack_top",
+      "0300455c T _edata",
+      "03004690 B _ebss"
+    ]
+  },
+  {
+    "case": "all-mutable-audio-dense",
+    "mode": "mode4",
+    "ROMSize": 121396,
+    "IWRAMUsed": 25000,
+    "EWRAMFree": 171776,
+    "symbols": [
+      "00000400 A __stack_size_irq",
+      "00002000 A __stack_size_usr",
+      "02015f00 B _ewram_end",
+      "03000400 B _stack_top_irq",
+      "03002400 T _sdata",
+      "03002400 B _stack_top",
+      "03006038 T _edata",
+      "030061a8 B _ebss"
+    ]
+  }
+]

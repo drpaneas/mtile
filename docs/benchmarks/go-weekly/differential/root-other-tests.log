@@ -1,0 +1,18 @@
+$ go test github.com/drpaneas/mtile/cmd/editor github.com/drpaneas/mtile/cmd/mtile github.com/drpaneas/mtile/cmd/renderbench github.com/drpaneas/mtile/fonts github.com/drpaneas/mtile/internal/assetsync github.com/drpaneas/mtile/internal/build github.com/drpaneas/mtile/internal/codeeditor github.com/drpaneas/mtile/internal/editor github.com/drpaneas/mtile/internal/emulator github.com/drpaneas/mtile/internal/gbapu github.com/drpaneas/mtile/internal/hostclipboard github.com/drpaneas/mtile/internal/luaparser github.com/drpaneas/mtile/internal/midicontrol github.com/drpaneas/mtile/internal/performance github.com/drpaneas/mtile/internal/sourcebundle
+ok  	github.com/drpaneas/mtile/cmd/editor	(cached)
+ok  	github.com/drpaneas/mtile/cmd/mtile	(cached)
+ok  	github.com/drpaneas/mtile/cmd/renderbench	(cached)
+ok  	github.com/drpaneas/mtile/fonts	(cached)
+ok  	github.com/drpaneas/mtile/internal/assetsync	(cached)
+ok  	github.com/drpaneas/mtile/internal/build	(cached)
+ok  	github.com/drpaneas/mtile/internal/codeeditor	(cached)
+ok  	github.com/drpaneas/mtile/internal/editor	(cached)
+ok  	github.com/drpaneas/mtile/internal/emulator	(cached)
+ok  	github.com/drpaneas/mtile/internal/gbapu	(cached)
+?   	github.com/drpaneas/mtile/internal/hostclipboard	[no test files]
+ok  	github.com/drpaneas/mtile/internal/luaparser	(cached)
+ok  	github.com/drpaneas/mtile/internal/midicontrol	(cached)
+ok  	github.com/drpaneas/mtile/internal/performance	(cached)
+ok  	github.com/drpaneas/mtile/internal/sourcebundle	(cached)
+
+exit_code=0 elapsed_seconds=0.379

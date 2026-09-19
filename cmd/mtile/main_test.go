@@ -198,6 +198,36 @@ func TestRunBuildRejectsUnknownRenderer(t *testing.T) {
 	}
 }
 
+func TestRunBuildHelpListsExperimentalTileCanvas(t *testing.T) {
+	var out bytes.Buffer
+	if err := run([]string{"build", "-h"}, &out, &bytes.Buffer{}); err != nil {
+		t.Fatalf("run([build -h]) error = %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "-experimental-tilecanvas") || !strings.Contains(got, "-experimental-tilecanvas-objects") {
+		t.Fatalf("build -h = %q, want the experimental tile-canvas flags", got)
+	}
+}
+
+func TestRunBuildAcceptsExperimentalTileCanvas(t *testing.T) {
+	const key = "MTILE_EXPERIMENTAL_TILECANVAS_PROJECT"
+	t.Setenv(key, "/previous/project")
+	for _, name := range []string{"-experimental-tilecanvas", "-experimental-tilecanvas-objects"} {
+		t.Run(name, func(t *testing.T) {
+			err := run([]string{"build", name, filepath.Join(t.TempDir(), "missing")}, &bytes.Buffer{}, &bytes.Buffer{})
+			if err == nil || strings.Contains(err.Error(), "flag provided but not defined") {
+				t.Fatalf("run([build %s]) error = %v, want the flag to be accepted", name, err)
+			}
+			if !strings.Contains(err.Error(), "project directory") {
+				t.Fatalf("run([build %s]) error = %v, want Service.Build's project directory error", name, err)
+			}
+			if os.Getenv(key) != "/previous/project" {
+				t.Fatal("build leaked the experiment into the process environment")
+			}
+		})
+	}
+}
+
 // TestRunBuildPropagatesNewServiceError guards runBuild's error path from
 // build.NewService: this is the only test that would catch a regression
 // where a bad -runtime flag was silently ignored instead of failing fast.

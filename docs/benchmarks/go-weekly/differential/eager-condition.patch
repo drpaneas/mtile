@@ -1,0 +1,10 @@
+--- internal/transpiler/conditions.go
++++ internal/transpiler/conditions.go
+@@ -45,6 +45,7 @@
+ 			if x.Op == luaparser.OpOr {
+ 				guard = "!" + guard
+ 			}
++			guard = "true"
+ 			g.pending = append(g.pending, "if "+guard+" {")
+ 			g.indentPending(rightStmts)
+ 			g.pending = append(g.pending, "\t"+result+" = "+right, "}")

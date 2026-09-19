@@ -1,0 +1,7 @@
+$ go test -pgo=off ./internal/build -run ^TestPGOPreparationManifest$ -count=1 -v
+=== RUN   TestPGOPreparationManifest
+--- PASS: TestPGOPreparationManifest (0.12s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/build	0.790s
+
+exit_code=0

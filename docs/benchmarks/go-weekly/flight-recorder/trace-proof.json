@@ -1,0 +1,18 @@
+{
+  "parsedToEOF": true,
+  "events": {
+    "before": "M=6180188160 P=11 G=66 Log Time=110831435967040 Task=0 Category=\"mtile.test\" Message=\"pre-stall-sentinel\"",
+    "begin": "M=6180188160 P=11 G=66 RegionBegin Time=110831435968064 Task=0 Type=\"controlled-stall\"",
+    "end": "M=6240432128 P=9 G=66 RegionEnd Time=110831557991040 Task=0 Type=\"controlled-stall\"",
+    "trigger": "M=6240432128 P=9 G=66 Log Time=110831557994496 Task=0 Category=\"mtile.stall\" Message=\"completed Update exceeded 100ms\""
+  },
+  "timesNs": {
+    "before": 110831435967040,
+    "begin": 110831435968064,
+    "end": 110831557991040,
+    "trigger": 110831557994496
+  },
+  "stallNs": 122022976,
+  "traceBytes": 6964,
+  "mode": "0o600"
+}

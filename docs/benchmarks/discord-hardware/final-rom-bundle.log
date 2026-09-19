@@ -1,0 +1,30 @@
+go run ./internal/cmd/gentarget
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audioref-ch1.gba ./cmd/audioref-ch1 2>audioref-ch1.allocs
+go run ./internal/cmd/checkallocs audioref-ch1.allocs
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audioref-ch2.gba ./cmd/audioref-ch2 2>audioref-ch2.allocs
+go run ./internal/cmd/checkallocs audioref-ch2.allocs
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audioref-ch3.gba ./cmd/audioref-ch3 2>audioref-ch3.allocs
+go run ./internal/cmd/checkallocs audioref-ch3.allocs
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audioref-ch4.gba ./cmd/audioref-ch4 2>audioref-ch4.allocs
+go run ./internal/cmd/checkallocs audioref-ch4.allocs
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audiopsg.gba ./cmd/audiopsg 2>audiopsg.allocs
+go run ./internal/cmd/checkallocs audiopsg.allocs
+tinygo build -gc=none -opt=2 -print-allocs-cover=. -target=target-gba.json -o audiopsgcoexist.gba ./cmd/audiopsgcoexist 2>audiopsgcoexist.allocs
+go run ./internal/cmd/checkallocs audiopsgcoexist.allocs
+ROM                                 BYTES  SHA256
+audioref-ch1.gba                    10492  b9065604fed690b702640a03ace1395b06eae7ab139c95d362bddc7196a106db
+audioref-ch2.gba                    10452  e9bf5932e635e61d463eca273c011bc607e639e8dd9c98b79dbd98ced3a8c52b
+audioref-ch3.gba                    10700  ee4886b1fcea934fc5575a5bde0eafccc927d002d45622d91415cc5b97968da1
+audioref-ch4.gba                    10368  3596dfc5acc205aadbb42ed8ac422cc7549489c593229f06e6de115a2ff608b5
+audiopsg.gba                        19988  3480380b441047d7bf2bde860b68d4c51a3708882b6fad2ef8979560149de34c
+audiopsgcoexist.gba                 33656  358affb93aa26033a836c17282878ae15200b897e8792dbc0eb1754004ed8c51
+audioref-ch1.gba: OK
+audioref-ch2.gba: OK
+audioref-ch3.gba: OK
+audioref-ch4.gba: OK
+audiopsg.gba: OK
+audiopsgcoexist.gba: OK
+Physical-GBA result form: structurally valid; 59 checks pending
+PSG-only hardware sign-off bundle: PASS
+
+Hardware sign-off bundle: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-rom-bundle

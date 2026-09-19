@@ -1,0 +1,26 @@
+{
+  "source": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1071691559/main.go",
+  "staticCallSites": 4,
+  "calls": [
+    {
+      "line": 10373,
+      "function": "func (g *Game) create_hair(c *rt.Context) {",
+      "call": "glu_tbl_144, glu_tblErr_146 = c.NewTableFromImage(gluTableImg0[:])"
+    },
+    {
+      "line": 10698,
+      "function": "func (g *Game) reset_player(c *rt.Context) {",
+      "call": "glu_tbl_267, glu_tblErr_269 = c.NewTableFromImage(gluTableImg1[:])"
+    },
+    {
+      "line": 13144,
+      "function": "func (g *Game) create_death_particles(c *rt.Context, a0 rt.Number, a1 rt.Number) {",
+      "call": "glu_tbl_1302, glu_tblErr_1304 = c.NewTableFromImage(gluTableImg2[:])"
+    },
+    {
+      "line": 13369,
+      "function": "func (g *Game) initialize_effects(c *rt.Context) {",
+      "call": "glu_tbl_1394, glu_tblErr_1395 = c.NewTableFromImage(gluTableImg3[:])"
+    }
+  ]
+}

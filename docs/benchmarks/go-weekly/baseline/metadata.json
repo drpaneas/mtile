@@ -1,0 +1,11 @@
+{
+  "go": "go1.27.1 darwin/arm64",
+  "tinygo": "0.42.0",
+  "llvm": "22.1.4",
+  "gitHead": "26182b69fcb5325a73e664f4ea13b6727cdb23c2",
+  "workingTree": "existing uncommitted work included; see initial source hashes",
+  "initialRootSuite": "all test packages passed; archived fixture directory caused discovery failure",
+  "repairedRootSuite": "passed",
+  "runtimeSuite": "passed",
+  "baselineRepair": "Renamed two standalone archived Go source templates to .go.in and adjusted only runner source paths; C programs and copied Go source content unchanged."
+}

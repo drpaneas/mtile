@@ -1,0 +1,7 @@
+=== RUN   TestDiscordSharedAnimationTrial
+    discord_shared_trial_test.go:84: sprites median=52115 p95=52115 draw=49855 commit=2058 cold=290184 rom=12940 ewram_free=257180 oam=128 line=128 missed=0 diff=0
+    discord_shared_trial_test.go:84: shared median=5368 p95=5378 draw=620 commit=795 cold=521775 rom=14808 ewram_free=253004 oam=0 line=0 missed=0 diff=0
+    discord_shared_trial_test.go:84: phases median=52155 p95=52178 draw=49876 commit=2066 cold=290192 rom=12988 ewram_free=257176 oam=128 line=128 missed=0 diff=122880
+--- PASS: TestDiscordSharedAnimationTrial (4.48s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	5.280s

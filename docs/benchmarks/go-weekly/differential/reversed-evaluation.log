@@ -1,0 +1,1195 @@
+$ go test ./internal/transpiler -run ^TestDifferentialExecution$ -count=1 -v
+=== RUN   TestDifferentialExecution
+=== RUN   TestDifferentialExecution/optimized
+    differential_execution_test.go:107: generated harness failed: exit status 1
+        === RUN   TestDifferentialGenerated
+        === RUN   TestDifferentialGenerated/value0
+        === RUN   TestDifferentialGenerated/condition0
+        === RUN   TestDifferentialGenerated/value1
+        === RUN   TestDifferentialGenerated/condition1
+        === RUN   TestDifferentialGenerated/value2
+        === RUN   TestDifferentialGenerated/condition2
+        === RUN   TestDifferentialGenerated/value3
+        === RUN   TestDifferentialGenerated/condition3
+        === RUN   TestDifferentialGenerated/value4
+        === RUN   TestDifferentialGenerated/condition4
+        === RUN   TestDifferentialGenerated/value5
+        === RUN   TestDifferentialGenerated/condition5
+        === RUN   TestDifferentialGenerated/value6
+        === RUN   TestDifferentialGenerated/condition6
+        === RUN   TestDifferentialGenerated/value7
+            harness_test.go:319: semantic mismatch: mark(1, 1) + mark(2, 2): got number:196608 trace [2 1], want number:196608 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition7
+            harness_test.go:319: semantic mismatch: mark(1, 1) + mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/value8
+            harness_test.go:319: semantic mismatch: mark(1, 1) < mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition8
+            harness_test.go:319: semantic mismatch: mark(1, 1) < mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/value9
+        === RUN   TestDifferentialGenerated/condition9
+        === RUN   TestDifferentialGenerated/value10
+        === RUN   TestDifferentialGenerated/condition10
+        === RUN   TestDifferentialGenerated/value11
+        === RUN   TestDifferentialGenerated/condition11
+        === RUN   TestDifferentialGenerated/value12
+        === RUN   TestDifferentialGenerated/condition12
+        === RUN   TestDifferentialGenerated/value13
+        === RUN   TestDifferentialGenerated/condition13
+        === RUN   TestDifferentialGenerated/value14
+        === RUN   TestDifferentialGenerated/condition14
+        === RUN   TestDifferentialGenerated/value15
+        === RUN   TestDifferentialGenerated/condition15
+        === RUN   TestDifferentialGenerated/value16
+        === RUN   TestDifferentialGenerated/condition16
+        === RUN   TestDifferentialGenerated/value17
+        === RUN   TestDifferentialGenerated/condition17
+        === RUN   TestDifferentialGenerated/value18
+        === RUN   TestDifferentialGenerated/condition18
+        === RUN   TestDifferentialGenerated/value19
+        === RUN   TestDifferentialGenerated/condition19
+        === RUN   TestDifferentialGenerated/value20
+        === RUN   TestDifferentialGenerated/condition20
+        === RUN   TestDifferentialGenerated/value21
+        === RUN   TestDifferentialGenerated/condition21
+        === RUN   TestDifferentialGenerated/value22
+        === RUN   TestDifferentialGenerated/condition22
+        === RUN   TestDifferentialGenerated/value23
+        === RUN   TestDifferentialGenerated/condition23
+        === RUN   TestDifferentialGenerated/value24
+        === RUN   TestDifferentialGenerated/condition24
+        === RUN   TestDifferentialGenerated/value25
+        === RUN   TestDifferentialGenerated/condition25
+        === RUN   TestDifferentialGenerated/value26
+        === RUN   TestDifferentialGenerated/condition26
+        === RUN   TestDifferentialGenerated/value27
+        === RUN   TestDifferentialGenerated/condition27
+        === RUN   TestDifferentialGenerated/value28
+        === RUN   TestDifferentialGenerated/condition28
+        === RUN   TestDifferentialGenerated/value29
+        === RUN   TestDifferentialGenerated/condition29
+        === RUN   TestDifferentialGenerated/value30
+        === RUN   TestDifferentialGenerated/condition30
+        === RUN   TestDifferentialGenerated/value31
+        === RUN   TestDifferentialGenerated/condition31
+        === RUN   TestDifferentialGenerated/value32
+        === RUN   TestDifferentialGenerated/condition32
+        === RUN   TestDifferentialGenerated/value33
+        === RUN   TestDifferentialGenerated/condition33
+        === RUN   TestDifferentialGenerated/value34
+        === RUN   TestDifferentialGenerated/condition34
+        === RUN   TestDifferentialGenerated/value35
+        === RUN   TestDifferentialGenerated/condition35
+        === RUN   TestDifferentialGenerated/value36
+        === RUN   TestDifferentialGenerated/condition36
+        === RUN   TestDifferentialGenerated/value37
+        === RUN   TestDifferentialGenerated/condition37
+        === RUN   TestDifferentialGenerated/value38
+        === RUN   TestDifferentialGenerated/condition38
+        === RUN   TestDifferentialGenerated/value39
+        === RUN   TestDifferentialGenerated/condition39
+        === RUN   TestDifferentialGenerated/value40
+        === RUN   TestDifferentialGenerated/condition40
+        === RUN   TestDifferentialGenerated/value41
+        === RUN   TestDifferentialGenerated/condition41
+        === RUN   TestDifferentialGenerated/value42
+        === RUN   TestDifferentialGenerated/condition42
+        === RUN   TestDifferentialGenerated/value43
+        === RUN   TestDifferentialGenerated/condition43
+        === RUN   TestDifferentialGenerated/value44
+        === RUN   TestDifferentialGenerated/condition44
+        === RUN   TestDifferentialGenerated/value45
+        === RUN   TestDifferentialGenerated/condition45
+        === RUN   TestDifferentialGenerated/value46
+        === RUN   TestDifferentialGenerated/condition46
+        === RUN   TestDifferentialGenerated/value47
+        === RUN   TestDifferentialGenerated/condition47
+        === RUN   TestDifferentialGenerated/value48
+        === RUN   TestDifferentialGenerated/condition48
+        === RUN   TestDifferentialGenerated/value49
+        === RUN   TestDifferentialGenerated/condition49
+        === RUN   TestDifferentialGenerated/value50
+        === RUN   TestDifferentialGenerated/condition50
+        === RUN   TestDifferentialGenerated/value51
+        === RUN   TestDifferentialGenerated/condition51
+        === RUN   TestDifferentialGenerated/value52
+        === RUN   TestDifferentialGenerated/condition52
+        === RUN   TestDifferentialGenerated/value53
+        === RUN   TestDifferentialGenerated/condition53
+        === RUN   TestDifferentialGenerated/value54
+        === RUN   TestDifferentialGenerated/condition54
+        === RUN   TestDifferentialGenerated/value55
+            harness_test.go:319: semantic mismatch: mark(1, mark(2, 1)) + mark(3, 0.25 - 0): got number:81920 trace [3 2 1], want number:81920 trace [2 1 3]
+        === RUN   TestDifferentialGenerated/condition55
+            harness_test.go:319: semantic mismatch: mark(1, mark(2, 1)) + mark(3, 0.25 - 0): got bool:1 trace [3 2 1], want bool:1 trace [2 1 3]
+        === RUN   TestDifferentialGenerated/value56
+        === RUN   TestDifferentialGenerated/condition56
+        === RUN   TestDifferentialGenerated/value57
+        === RUN   TestDifferentialGenerated/condition57
+        === RUN   TestDifferentialGenerated/value58
+        === RUN   TestDifferentialGenerated/condition58
+        === RUN   TestDifferentialGenerated/value59
+        === RUN   TestDifferentialGenerated/condition59
+        === RUN   TestDifferentialGenerated/value60
+        === RUN   TestDifferentialGenerated/condition60
+        === RUN   TestDifferentialGenerated/value61
+        === RUN   TestDifferentialGenerated/condition61
+        === RUN   TestDifferentialGenerated/value62
+        === RUN   TestDifferentialGenerated/condition62
+        === RUN   TestDifferentialGenerated/value63
+        === RUN   TestDifferentialGenerated/condition63
+        === RUN   TestDifferentialGenerated/value64
+        === RUN   TestDifferentialGenerated/condition64
+        === RUN   TestDifferentialGenerated/value65
+        === RUN   TestDifferentialGenerated/condition65
+        === RUN   TestDifferentialGenerated/value66
+        === RUN   TestDifferentialGenerated/condition66
+        === RUN   TestDifferentialGenerated/value67
+        === RUN   TestDifferentialGenerated/condition67
+        === RUN   TestDifferentialGenerated/value68
+        === RUN   TestDifferentialGenerated/condition68
+        === RUN   TestDifferentialGenerated/value69
+        === RUN   TestDifferentialGenerated/condition69
+        === RUN   TestDifferentialGenerated/value70
+        === RUN   TestDifferentialGenerated/condition70
+        === RUN   TestDifferentialGenerated/value71
+        === RUN   TestDifferentialGenerated/condition71
+        === RUN   TestDifferentialGenerated/value72
+        === RUN   TestDifferentialGenerated/condition72
+        === RUN   TestDifferentialGenerated/value73
+        === RUN   TestDifferentialGenerated/condition73
+        === RUN   TestDifferentialGenerated/value74
+        === RUN   TestDifferentialGenerated/condition74
+        === RUN   TestDifferentialGenerated/value75
+        === RUN   TestDifferentialGenerated/condition75
+        === RUN   TestDifferentialGenerated/value76
+        === RUN   TestDifferentialGenerated/condition76
+        === RUN   TestDifferentialGenerated/value77
+        === RUN   TestDifferentialGenerated/condition77
+        === RUN   TestDifferentialGenerated/value78
+        === RUN   TestDifferentialGenerated/condition78
+        === RUN   TestDifferentialGenerated/value79
+        === RUN   TestDifferentialGenerated/condition79
+        === RUN   TestDifferentialGenerated/value80
+        === RUN   TestDifferentialGenerated/condition80
+        === RUN   TestDifferentialGenerated/value81
+        === RUN   TestDifferentialGenerated/condition81
+        === RUN   TestDifferentialGenerated/value82
+        === RUN   TestDifferentialGenerated/condition82
+        === RUN   TestDifferentialGenerated/value83
+        === RUN   TestDifferentialGenerated/condition83
+        === RUN   TestDifferentialGenerated/value84
+        === RUN   TestDifferentialGenerated/condition84
+        === RUN   TestDifferentialGenerated/value85
+        === RUN   TestDifferentialGenerated/condition85
+        === RUN   TestDifferentialGenerated/value86
+        === RUN   TestDifferentialGenerated/condition86
+        === RUN   TestDifferentialGenerated/value87
+        === RUN   TestDifferentialGenerated/condition87
+        === RUN   TestDifferentialGenerated/value88
+        === RUN   TestDifferentialGenerated/condition88
+        === RUN   TestDifferentialGenerated/value89
+        === RUN   TestDifferentialGenerated/condition89
+        === RUN   TestDifferentialGenerated/value90
+        === RUN   TestDifferentialGenerated/condition90
+        === RUN   TestDifferentialGenerated/value91
+        === RUN   TestDifferentialGenerated/condition91
+        === RUN   TestDifferentialGenerated/value92
+        === RUN   TestDifferentialGenerated/condition92
+        === RUN   TestDifferentialGenerated/value93
+        === RUN   TestDifferentialGenerated/condition93
+        === RUN   TestDifferentialGenerated/value94
+        === RUN   TestDifferentialGenerated/condition94
+        === RUN   TestDifferentialGenerated/value95
+        === RUN   TestDifferentialGenerated/condition95
+        === RUN   TestDifferentialGenerated/value96
+        === RUN   TestDifferentialGenerated/condition96
+        === RUN   TestDifferentialGenerated/value97
+        === RUN   TestDifferentialGenerated/condition97
+        === RUN   TestDifferentialGenerated/value98
+        === RUN   TestDifferentialGenerated/condition98
+        === RUN   TestDifferentialGenerated/value99
+        === RUN   TestDifferentialGenerated/condition99
+        === RUN   TestDifferentialGenerated/value100
+        === RUN   TestDifferentialGenerated/condition100
+        === RUN   TestDifferentialGenerated/value101
+        === RUN   TestDifferentialGenerated/condition101
+        === RUN   TestDifferentialGenerated/value102
+        === RUN   TestDifferentialGenerated/condition102
+        === RUN   TestDifferentialGenerated/value103
+        === RUN   TestDifferentialGenerated/condition103
+        === RUN   TestDifferentialGenerated/value104
+        === RUN   TestDifferentialGenerated/condition104
+        === RUN   TestDifferentialGenerated/value105
+        === RUN   TestDifferentialGenerated/condition105
+        === RUN   TestDifferentialGenerated/value106
+        === RUN   TestDifferentialGenerated/condition106
+        === RUN   TestDifferentialGenerated/value107
+        === RUN   TestDifferentialGenerated/condition107
+        === RUN   TestDifferentialGenerated/value108
+        === RUN   TestDifferentialGenerated/condition108
+        === RUN   TestDifferentialGenerated/value109
+        === RUN   TestDifferentialGenerated/condition109
+        === RUN   TestDifferentialGenerated/value110
+        === RUN   TestDifferentialGenerated/condition110
+        === RUN   TestDifferentialGenerated/value111
+        === RUN   TestDifferentialGenerated/condition111
+        === RUN   TestDifferentialGenerated/value112
+        === RUN   TestDifferentialGenerated/condition112
+        === RUN   TestDifferentialGenerated/value113
+        === RUN   TestDifferentialGenerated/condition113
+        === RUN   TestDifferentialGenerated/value114
+        === RUN   TestDifferentialGenerated/condition114
+        === RUN   TestDifferentialGenerated/value115
+        === RUN   TestDifferentialGenerated/condition115
+        === RUN   TestDifferentialGenerated/value116
+        === RUN   TestDifferentialGenerated/condition116
+        === RUN   TestDifferentialGenerated/value117
+        === RUN   TestDifferentialGenerated/condition117
+        === RUN   TestDifferentialGenerated/value118
+        === RUN   TestDifferentialGenerated/condition118
+        === RUN   TestDifferentialGenerated/value119
+        === RUN   TestDifferentialGenerated/condition119
+        === RUN   TestDifferentialGenerated/value120
+        === RUN   TestDifferentialGenerated/condition120
+        === RUN   TestDifferentialGenerated/value121
+        === RUN   TestDifferentialGenerated/condition121
+        === RUN   TestDifferentialGenerated/value122
+        === RUN   TestDifferentialGenerated/condition122
+        === RUN   TestDifferentialGenerated/value123
+        === RUN   TestDifferentialGenerated/condition123
+        === RUN   TestDifferentialGenerated/value124
+        === RUN   TestDifferentialGenerated/condition124
+        === RUN   TestDifferentialGenerated/value125
+        === RUN   TestDifferentialGenerated/condition125
+        === RUN   TestDifferentialGenerated/value126
+            harness_test.go:319: semantic mismatch: mark(1, 0.25 + 1) == mark(2, 0 - (-32768)): got bool:0 trace [2 1], want bool:0 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition126
+            harness_test.go:319: semantic mismatch: mark(1, 0.25 + 1) == mark(2, 0 - (-32768)): got bool:0 trace [2 1], want bool:0 trace [1 2]
+        === RUN   TestDifferentialGenerated/value127
+        === RUN   TestDifferentialGenerated/condition127
+        === RUN   TestDifferentialGenerated/value128
+        === RUN   TestDifferentialGenerated/condition128
+        === RUN   TestDifferentialGenerated/value129
+        === RUN   TestDifferentialGenerated/condition129
+        === RUN   TestDifferentialGenerated/value130
+        === RUN   TestDifferentialGenerated/condition130
+        === RUN   TestDifferentialGenerated/value131
+        === RUN   TestDifferentialGenerated/condition131
+        === RUN   TestDifferentialGenerated/value132
+        === RUN   TestDifferentialGenerated/condition132
+        === RUN   TestDifferentialGenerated/value133
+        === RUN   TestDifferentialGenerated/condition133
+        === RUN   TestDifferentialGenerated/value134
+        === RUN   TestDifferentialGenerated/condition134
+        === RUN   TestDifferentialGenerated/value135
+        === RUN   TestDifferentialGenerated/condition135
+        === RUN   TestDifferentialGenerated/value136
+        === RUN   TestDifferentialGenerated/condition136
+        === RUN   TestDifferentialGenerated/value137
+        === RUN   TestDifferentialGenerated/condition137
+        === RUN   TestDifferentialGenerated/value138
+        === RUN   TestDifferentialGenerated/condition138
+        === RUN   TestDifferentialGenerated/value139
+        === RUN   TestDifferentialGenerated/condition139
+        === RUN   TestDifferentialGenerated/value140
+        === RUN   TestDifferentialGenerated/condition140
+        === RUN   TestDifferentialGenerated/value141
+        === RUN   TestDifferentialGenerated/condition141
+        === RUN   TestDifferentialGenerated/compound
+        === RUN   TestDifferentialGenerated/minimumglobal
+        === RUN   TestDifferentialGenerated/minimumparen
+        === RUN   TestDifferentialGenerated/negatedcall
+        === RUN   TestDifferentialGenerated/skippednegatedcall
+        --- FAIL: TestDifferentialGenerated (0.00s)
+            --- PASS: TestDifferentialGenerated/value0 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition0 (0.00s)
+            --- PASS: TestDifferentialGenerated/value1 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition1 (0.00s)
+            --- PASS: TestDifferentialGenerated/value2 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition2 (0.00s)
+            --- PASS: TestDifferentialGenerated/value3 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition3 (0.00s)
+            --- PASS: TestDifferentialGenerated/value4 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition4 (0.00s)
+            --- PASS: TestDifferentialGenerated/value5 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition5 (0.00s)
+            --- PASS: TestDifferentialGenerated/value6 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition6 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value7 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition7 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value8 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition8 (0.00s)
+            --- PASS: TestDifferentialGenerated/value9 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition9 (0.00s)
+            --- PASS: TestDifferentialGenerated/value10 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition10 (0.00s)
+            --- PASS: TestDifferentialGenerated/value11 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition11 (0.00s)
+            --- PASS: TestDifferentialGenerated/value12 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition12 (0.00s)
+            --- PASS: TestDifferentialGenerated/value13 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition13 (0.00s)
+            --- PASS: TestDifferentialGenerated/value14 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition14 (0.00s)
+            --- PASS: TestDifferentialGenerated/value15 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition15 (0.00s)
+            --- PASS: TestDifferentialGenerated/value16 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition16 (0.00s)
+            --- PASS: TestDifferentialGenerated/value17 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition17 (0.00s)
+            --- PASS: TestDifferentialGenerated/value18 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition18 (0.00s)
+            --- PASS: TestDifferentialGenerated/value19 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition19 (0.00s)
+            --- PASS: TestDifferentialGenerated/value20 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition20 (0.00s)
+            --- PASS: TestDifferentialGenerated/value21 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition21 (0.00s)
+            --- PASS: TestDifferentialGenerated/value22 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition22 (0.00s)
+            --- PASS: TestDifferentialGenerated/value23 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition23 (0.00s)
+            --- PASS: TestDifferentialGenerated/value24 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition24 (0.00s)
+            --- PASS: TestDifferentialGenerated/value25 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition25 (0.00s)
+            --- PASS: TestDifferentialGenerated/value26 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition26 (0.00s)
+            --- PASS: TestDifferentialGenerated/value27 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition27 (0.00s)
+            --- PASS: TestDifferentialGenerated/value28 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition28 (0.00s)
+            --- PASS: TestDifferentialGenerated/value29 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition29 (0.00s)
+            --- PASS: TestDifferentialGenerated/value30 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition30 (0.00s)
+            --- PASS: TestDifferentialGenerated/value31 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition31 (0.00s)
+            --- PASS: TestDifferentialGenerated/value32 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition32 (0.00s)
+            --- PASS: TestDifferentialGenerated/value33 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition33 (0.00s)
+            --- PASS: TestDifferentialGenerated/value34 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition34 (0.00s)
+            --- PASS: TestDifferentialGenerated/value35 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition35 (0.00s)
+            --- PASS: TestDifferentialGenerated/value36 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition36 (0.00s)
+            --- PASS: TestDifferentialGenerated/value37 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition37 (0.00s)
+            --- PASS: TestDifferentialGenerated/value38 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition38 (0.00s)
+            --- PASS: TestDifferentialGenerated/value39 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition39 (0.00s)
+            --- PASS: TestDifferentialGenerated/value40 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition40 (0.00s)
+            --- PASS: TestDifferentialGenerated/value41 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition41 (0.00s)
+            --- PASS: TestDifferentialGenerated/value42 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition42 (0.00s)
+            --- PASS: TestDifferentialGenerated/value43 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition43 (0.00s)
+            --- PASS: TestDifferentialGenerated/value44 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition44 (0.00s)
+            --- PASS: TestDifferentialGenerated/value45 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition45 (0.00s)
+            --- PASS: TestDifferentialGenerated/value46 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition46 (0.00s)
+            --- PASS: TestDifferentialGenerated/value47 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition47 (0.00s)
+            --- PASS: TestDifferentialGenerated/value48 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition48 (0.00s)
+            --- PASS: TestDifferentialGenerated/value49 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition49 (0.00s)
+            --- PASS: TestDifferentialGenerated/value50 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition50 (0.00s)
+            --- PASS: TestDifferentialGenerated/value51 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition51 (0.00s)
+            --- PASS: TestDifferentialGenerated/value52 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition52 (0.00s)
+            --- PASS: TestDifferentialGenerated/value53 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition53 (0.00s)
+            --- PASS: TestDifferentialGenerated/value54 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition54 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value55 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition55 (0.00s)
+            --- PASS: TestDifferentialGenerated/value56 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition56 (0.00s)
+            --- PASS: TestDifferentialGenerated/value57 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition57 (0.00s)
+            --- PASS: TestDifferentialGenerated/value58 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition58 (0.00s)
+            --- PASS: TestDifferentialGenerated/value59 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition59 (0.00s)
+            --- PASS: TestDifferentialGenerated/value60 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition60 (0.00s)
+            --- PASS: TestDifferentialGenerated/value61 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition61 (0.00s)
+            --- PASS: TestDifferentialGenerated/value62 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition62 (0.00s)
+            --- PASS: TestDifferentialGenerated/value63 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition63 (0.00s)
+            --- PASS: TestDifferentialGenerated/value64 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition64 (0.00s)
+            --- PASS: TestDifferentialGenerated/value65 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition65 (0.00s)
+            --- PASS: TestDifferentialGenerated/value66 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition66 (0.00s)
+            --- PASS: TestDifferentialGenerated/value67 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition67 (0.00s)
+            --- PASS: TestDifferentialGenerated/value68 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition68 (0.00s)
+            --- PASS: TestDifferentialGenerated/value69 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition69 (0.00s)
+            --- PASS: TestDifferentialGenerated/value70 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition70 (0.00s)
+            --- PASS: TestDifferentialGenerated/value71 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition71 (0.00s)
+            --- PASS: TestDifferentialGenerated/value72 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition72 (0.00s)
+            --- PASS: TestDifferentialGenerated/value73 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition73 (0.00s)
+            --- PASS: TestDifferentialGenerated/value74 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition74 (0.00s)
+            --- PASS: TestDifferentialGenerated/value75 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition75 (0.00s)
+            --- PASS: TestDifferentialGenerated/value76 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition76 (0.00s)
+            --- PASS: TestDifferentialGenerated/value77 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition77 (0.00s)
+            --- PASS: TestDifferentialGenerated/value78 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition78 (0.00s)
+            --- PASS: TestDifferentialGenerated/value79 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition79 (0.00s)
+            --- PASS: TestDifferentialGenerated/value80 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition80 (0.00s)
+            --- PASS: TestDifferentialGenerated/value81 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition81 (0.00s)
+            --- PASS: TestDifferentialGenerated/value82 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition82 (0.00s)
+            --- PASS: TestDifferentialGenerated/value83 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition83 (0.00s)
+            --- PASS: TestDifferentialGenerated/value84 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition84 (0.00s)
+            --- PASS: TestDifferentialGenerated/value85 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition85 (0.00s)
+            --- PASS: TestDifferentialGenerated/value86 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition86 (0.00s)
+            --- PASS: TestDifferentialGenerated/value87 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition87 (0.00s)
+            --- PASS: TestDifferentialGenerated/value88 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition88 (0.00s)
+            --- PASS: TestDifferentialGenerated/value89 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition89 (0.00s)
+            --- PASS: TestDifferentialGenerated/value90 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition90 (0.00s)
+            --- PASS: TestDifferentialGenerated/value91 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition91 (0.00s)
+            --- PASS: TestDifferentialGenerated/value92 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition92 (0.00s)
+            --- PASS: TestDifferentialGenerated/value93 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition93 (0.00s)
+            --- PASS: TestDifferentialGenerated/value94 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition94 (0.00s)
+            --- PASS: TestDifferentialGenerated/value95 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition95 (0.00s)
+            --- PASS: TestDifferentialGenerated/value96 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition96 (0.00s)
+            --- PASS: TestDifferentialGenerated/value97 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition97 (0.00s)
+            --- PASS: TestDifferentialGenerated/value98 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition98 (0.00s)
+            --- PASS: TestDifferentialGenerated/value99 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition99 (0.00s)
+            --- PASS: TestDifferentialGenerated/value100 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition100 (0.00s)
+            --- PASS: TestDifferentialGenerated/value101 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition101 (0.00s)
+            --- PASS: TestDifferentialGenerated/value102 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition102 (0.00s)
+            --- PASS: TestDifferentialGenerated/value103 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition103 (0.00s)
+            --- PASS: TestDifferentialGenerated/value104 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition104 (0.00s)
+            --- PASS: TestDifferentialGenerated/value105 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition105 (0.00s)
+            --- PASS: TestDifferentialGenerated/value106 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition106 (0.00s)
+            --- PASS: TestDifferentialGenerated/value107 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition107 (0.00s)
+            --- PASS: TestDifferentialGenerated/value108 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition108 (0.00s)
+            --- PASS: TestDifferentialGenerated/value109 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition109 (0.00s)
+            --- PASS: TestDifferentialGenerated/value110 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition110 (0.00s)
+            --- PASS: TestDifferentialGenerated/value111 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition111 (0.00s)
+            --- PASS: TestDifferentialGenerated/value112 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition112 (0.00s)
+            --- PASS: TestDifferentialGenerated/value113 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition113 (0.00s)
+            --- PASS: TestDifferentialGenerated/value114 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition114 (0.00s)
+            --- PASS: TestDifferentialGenerated/value115 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition115 (0.00s)
+            --- PASS: TestDifferentialGenerated/value116 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition116 (0.00s)
+            --- PASS: TestDifferentialGenerated/value117 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition117 (0.00s)
+            --- PASS: TestDifferentialGenerated/value118 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition118 (0.00s)
+            --- PASS: TestDifferentialGenerated/value119 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition119 (0.00s)
+            --- PASS: TestDifferentialGenerated/value120 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition120 (0.00s)
+            --- PASS: TestDifferentialGenerated/value121 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition121 (0.00s)
+            --- PASS: TestDifferentialGenerated/value122 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition122 (0.00s)
+            --- PASS: TestDifferentialGenerated/value123 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition123 (0.00s)
+            --- PASS: TestDifferentialGenerated/value124 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition124 (0.00s)
+            --- PASS: TestDifferentialGenerated/value125 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition125 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value126 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition126 (0.00s)
+            --- PASS: TestDifferentialGenerated/value127 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition127 (0.00s)
+            --- PASS: TestDifferentialGenerated/value128 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition128 (0.00s)
+            --- PASS: TestDifferentialGenerated/value129 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition129 (0.00s)
+            --- PASS: TestDifferentialGenerated/value130 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition130 (0.00s)
+            --- PASS: TestDifferentialGenerated/value131 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition131 (0.00s)
+            --- PASS: TestDifferentialGenerated/value132 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition132 (0.00s)
+            --- PASS: TestDifferentialGenerated/value133 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition133 (0.00s)
+            --- PASS: TestDifferentialGenerated/value134 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition134 (0.00s)
+            --- PASS: TestDifferentialGenerated/value135 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition135 (0.00s)
+            --- PASS: TestDifferentialGenerated/value136 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition136 (0.00s)
+            --- PASS: TestDifferentialGenerated/value137 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition137 (0.00s)
+            --- PASS: TestDifferentialGenerated/value138 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition138 (0.00s)
+            --- PASS: TestDifferentialGenerated/value139 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition139 (0.00s)
+            --- PASS: TestDifferentialGenerated/value140 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition140 (0.00s)
+            --- PASS: TestDifferentialGenerated/value141 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition141 (0.00s)
+            --- PASS: TestDifferentialGenerated/compound (0.00s)
+            --- PASS: TestDifferentialGenerated/minimumglobal (0.00s)
+            --- PASS: TestDifferentialGenerated/minimumparen (0.00s)
+            --- PASS: TestDifferentialGenerated/negatedcall (0.00s)
+            --- PASS: TestDifferentialGenerated/skippednegatedcall (0.00s)
+        FAIL
+        FAIL	generated	0.780s
+        FAIL
+=== RUN   TestDifferentialExecution/generic
+    differential_execution_test.go:107: generated harness failed: exit status 1
+        === RUN   TestDifferentialGenerated
+        === RUN   TestDifferentialGenerated/value0
+        === RUN   TestDifferentialGenerated/condition0
+        === RUN   TestDifferentialGenerated/value1
+        === RUN   TestDifferentialGenerated/condition1
+        === RUN   TestDifferentialGenerated/value2
+        === RUN   TestDifferentialGenerated/condition2
+        === RUN   TestDifferentialGenerated/value3
+        === RUN   TestDifferentialGenerated/condition3
+        === RUN   TestDifferentialGenerated/value4
+        === RUN   TestDifferentialGenerated/condition4
+        === RUN   TestDifferentialGenerated/value5
+        === RUN   TestDifferentialGenerated/condition5
+        === RUN   TestDifferentialGenerated/value6
+        === RUN   TestDifferentialGenerated/condition6
+        === RUN   TestDifferentialGenerated/value7
+            harness_test.go:319: semantic mismatch: mark(1, 1) + mark(2, 2): got number:196608 trace [2 1], want number:196608 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition7
+            harness_test.go:319: semantic mismatch: mark(1, 1) + mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/value8
+            harness_test.go:319: semantic mismatch: mark(1, 1) < mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition8
+            harness_test.go:319: semantic mismatch: mark(1, 1) < mark(2, 2): got bool:1 trace [2 1], want bool:1 trace [1 2]
+        === RUN   TestDifferentialGenerated/value9
+        === RUN   TestDifferentialGenerated/condition9
+        === RUN   TestDifferentialGenerated/value10
+        === RUN   TestDifferentialGenerated/condition10
+        === RUN   TestDifferentialGenerated/value11
+        === RUN   TestDifferentialGenerated/condition11
+        === RUN   TestDifferentialGenerated/value12
+        === RUN   TestDifferentialGenerated/condition12
+        === RUN   TestDifferentialGenerated/value13
+        === RUN   TestDifferentialGenerated/condition13
+        === RUN   TestDifferentialGenerated/value14
+        === RUN   TestDifferentialGenerated/condition14
+        === RUN   TestDifferentialGenerated/value15
+        === RUN   TestDifferentialGenerated/condition15
+        === RUN   TestDifferentialGenerated/value16
+        === RUN   TestDifferentialGenerated/condition16
+        === RUN   TestDifferentialGenerated/value17
+        === RUN   TestDifferentialGenerated/condition17
+        === RUN   TestDifferentialGenerated/value18
+        === RUN   TestDifferentialGenerated/condition18
+        === RUN   TestDifferentialGenerated/value19
+        === RUN   TestDifferentialGenerated/condition19
+        === RUN   TestDifferentialGenerated/value20
+        === RUN   TestDifferentialGenerated/condition20
+        === RUN   TestDifferentialGenerated/value21
+        === RUN   TestDifferentialGenerated/condition21
+        === RUN   TestDifferentialGenerated/value22
+        === RUN   TestDifferentialGenerated/condition22
+        === RUN   TestDifferentialGenerated/value23
+        === RUN   TestDifferentialGenerated/condition23
+        === RUN   TestDifferentialGenerated/value24
+        === RUN   TestDifferentialGenerated/condition24
+        === RUN   TestDifferentialGenerated/value25
+        === RUN   TestDifferentialGenerated/condition25
+        === RUN   TestDifferentialGenerated/value26
+        === RUN   TestDifferentialGenerated/condition26
+        === RUN   TestDifferentialGenerated/value27
+        === RUN   TestDifferentialGenerated/condition27
+        === RUN   TestDifferentialGenerated/value28
+        === RUN   TestDifferentialGenerated/condition28
+        === RUN   TestDifferentialGenerated/value29
+        === RUN   TestDifferentialGenerated/condition29
+        === RUN   TestDifferentialGenerated/value30
+        === RUN   TestDifferentialGenerated/condition30
+        === RUN   TestDifferentialGenerated/value31
+        === RUN   TestDifferentialGenerated/condition31
+        === RUN   TestDifferentialGenerated/value32
+        === RUN   TestDifferentialGenerated/condition32
+        === RUN   TestDifferentialGenerated/value33
+        === RUN   TestDifferentialGenerated/condition33
+        === RUN   TestDifferentialGenerated/value34
+        === RUN   TestDifferentialGenerated/condition34
+        === RUN   TestDifferentialGenerated/value35
+        === RUN   TestDifferentialGenerated/condition35
+        === RUN   TestDifferentialGenerated/value36
+        === RUN   TestDifferentialGenerated/condition36
+        === RUN   TestDifferentialGenerated/value37
+        === RUN   TestDifferentialGenerated/condition37
+        === RUN   TestDifferentialGenerated/value38
+        === RUN   TestDifferentialGenerated/condition38
+        === RUN   TestDifferentialGenerated/value39
+        === RUN   TestDifferentialGenerated/condition39
+        === RUN   TestDifferentialGenerated/value40
+        === RUN   TestDifferentialGenerated/condition40
+        === RUN   TestDifferentialGenerated/value41
+        === RUN   TestDifferentialGenerated/condition41
+        === RUN   TestDifferentialGenerated/value42
+        === RUN   TestDifferentialGenerated/condition42
+        === RUN   TestDifferentialGenerated/value43
+        === RUN   TestDifferentialGenerated/condition43
+        === RUN   TestDifferentialGenerated/value44
+        === RUN   TestDifferentialGenerated/condition44
+        === RUN   TestDifferentialGenerated/value45
+        === RUN   TestDifferentialGenerated/condition45
+        === RUN   TestDifferentialGenerated/value46
+        === RUN   TestDifferentialGenerated/condition46
+        === RUN   TestDifferentialGenerated/value47
+        === RUN   TestDifferentialGenerated/condition47
+        === RUN   TestDifferentialGenerated/value48
+        === RUN   TestDifferentialGenerated/condition48
+        === RUN   TestDifferentialGenerated/value49
+        === RUN   TestDifferentialGenerated/condition49
+        === RUN   TestDifferentialGenerated/value50
+        === RUN   TestDifferentialGenerated/condition50
+        === RUN   TestDifferentialGenerated/value51
+        === RUN   TestDifferentialGenerated/condition51
+        === RUN   TestDifferentialGenerated/value52
+        === RUN   TestDifferentialGenerated/condition52
+        === RUN   TestDifferentialGenerated/value53
+        === RUN   TestDifferentialGenerated/condition53
+        === RUN   TestDifferentialGenerated/value54
+        === RUN   TestDifferentialGenerated/condition54
+        === RUN   TestDifferentialGenerated/value55
+            harness_test.go:319: semantic mismatch: mark(1, mark(2, 1)) + mark(3, 0.25 - 0): got number:81920 trace [3 2 1], want number:81920 trace [2 1 3]
+        === RUN   TestDifferentialGenerated/condition55
+            harness_test.go:319: semantic mismatch: mark(1, mark(2, 1)) + mark(3, 0.25 - 0): got bool:1 trace [3 2 1], want bool:1 trace [2 1 3]
+        === RUN   TestDifferentialGenerated/value56
+        === RUN   TestDifferentialGenerated/condition56
+        === RUN   TestDifferentialGenerated/value57
+        === RUN   TestDifferentialGenerated/condition57
+        === RUN   TestDifferentialGenerated/value58
+        === RUN   TestDifferentialGenerated/condition58
+        === RUN   TestDifferentialGenerated/value59
+        === RUN   TestDifferentialGenerated/condition59
+        === RUN   TestDifferentialGenerated/value60
+        === RUN   TestDifferentialGenerated/condition60
+        === RUN   TestDifferentialGenerated/value61
+        === RUN   TestDifferentialGenerated/condition61
+        === RUN   TestDifferentialGenerated/value62
+        === RUN   TestDifferentialGenerated/condition62
+        === RUN   TestDifferentialGenerated/value63
+        === RUN   TestDifferentialGenerated/condition63
+        === RUN   TestDifferentialGenerated/value64
+        === RUN   TestDifferentialGenerated/condition64
+        === RUN   TestDifferentialGenerated/value65
+        === RUN   TestDifferentialGenerated/condition65
+        === RUN   TestDifferentialGenerated/value66
+        === RUN   TestDifferentialGenerated/condition66
+        === RUN   TestDifferentialGenerated/value67
+        === RUN   TestDifferentialGenerated/condition67
+        === RUN   TestDifferentialGenerated/value68
+        === RUN   TestDifferentialGenerated/condition68
+        === RUN   TestDifferentialGenerated/value69
+        === RUN   TestDifferentialGenerated/condition69
+        === RUN   TestDifferentialGenerated/value70
+        === RUN   TestDifferentialGenerated/condition70
+        === RUN   TestDifferentialGenerated/value71
+        === RUN   TestDifferentialGenerated/condition71
+        === RUN   TestDifferentialGenerated/value72
+        === RUN   TestDifferentialGenerated/condition72
+        === RUN   TestDifferentialGenerated/value73
+        === RUN   TestDifferentialGenerated/condition73
+        === RUN   TestDifferentialGenerated/value74
+        === RUN   TestDifferentialGenerated/condition74
+        === RUN   TestDifferentialGenerated/value75
+        === RUN   TestDifferentialGenerated/condition75
+        === RUN   TestDifferentialGenerated/value76
+        === RUN   TestDifferentialGenerated/condition76
+        === RUN   TestDifferentialGenerated/value77
+        === RUN   TestDifferentialGenerated/condition77
+        === RUN   TestDifferentialGenerated/value78
+        === RUN   TestDifferentialGenerated/condition78
+        === RUN   TestDifferentialGenerated/value79
+        === RUN   TestDifferentialGenerated/condition79
+        === RUN   TestDifferentialGenerated/value80
+        === RUN   TestDifferentialGenerated/condition80
+        === RUN   TestDifferentialGenerated/value81
+        === RUN   TestDifferentialGenerated/condition81
+        === RUN   TestDifferentialGenerated/value82
+        === RUN   TestDifferentialGenerated/condition82
+        === RUN   TestDifferentialGenerated/value83
+        === RUN   TestDifferentialGenerated/condition83
+        === RUN   TestDifferentialGenerated/value84
+        === RUN   TestDifferentialGenerated/condition84
+        === RUN   TestDifferentialGenerated/value85
+        === RUN   TestDifferentialGenerated/condition85
+        === RUN   TestDifferentialGenerated/value86
+        === RUN   TestDifferentialGenerated/condition86
+        === RUN   TestDifferentialGenerated/value87
+        === RUN   TestDifferentialGenerated/condition87
+        === RUN   TestDifferentialGenerated/value88
+        === RUN   TestDifferentialGenerated/condition88
+        === RUN   TestDifferentialGenerated/value89
+        === RUN   TestDifferentialGenerated/condition89
+        === RUN   TestDifferentialGenerated/value90
+        === RUN   TestDifferentialGenerated/condition90
+        === RUN   TestDifferentialGenerated/value91
+        === RUN   TestDifferentialGenerated/condition91
+        === RUN   TestDifferentialGenerated/value92
+        === RUN   TestDifferentialGenerated/condition92
+        === RUN   TestDifferentialGenerated/value93
+        === RUN   TestDifferentialGenerated/condition93
+        === RUN   TestDifferentialGenerated/value94
+        === RUN   TestDifferentialGenerated/condition94
+        === RUN   TestDifferentialGenerated/value95
+        === RUN   TestDifferentialGenerated/condition95
+        === RUN   TestDifferentialGenerated/value96
+        === RUN   TestDifferentialGenerated/condition96
+        === RUN   TestDifferentialGenerated/value97
+        === RUN   TestDifferentialGenerated/condition97
+        === RUN   TestDifferentialGenerated/value98
+        === RUN   TestDifferentialGenerated/condition98
+        === RUN   TestDifferentialGenerated/value99
+        === RUN   TestDifferentialGenerated/condition99
+        === RUN   TestDifferentialGenerated/value100
+        === RUN   TestDifferentialGenerated/condition100
+        === RUN   TestDifferentialGenerated/value101
+        === RUN   TestDifferentialGenerated/condition101
+        === RUN   TestDifferentialGenerated/value102
+        === RUN   TestDifferentialGenerated/condition102
+        === RUN   TestDifferentialGenerated/value103
+        === RUN   TestDifferentialGenerated/condition103
+        === RUN   TestDifferentialGenerated/value104
+        === RUN   TestDifferentialGenerated/condition104
+        === RUN   TestDifferentialGenerated/value105
+        === RUN   TestDifferentialGenerated/condition105
+        === RUN   TestDifferentialGenerated/value106
+        === RUN   TestDifferentialGenerated/condition106
+        === RUN   TestDifferentialGenerated/value107
+        === RUN   TestDifferentialGenerated/condition107
+        === RUN   TestDifferentialGenerated/value108
+        === RUN   TestDifferentialGenerated/condition108
+        === RUN   TestDifferentialGenerated/value109
+        === RUN   TestDifferentialGenerated/condition109
+        === RUN   TestDifferentialGenerated/value110
+        === RUN   TestDifferentialGenerated/condition110
+        === RUN   TestDifferentialGenerated/value111
+        === RUN   TestDifferentialGenerated/condition111
+        === RUN   TestDifferentialGenerated/value112
+        === RUN   TestDifferentialGenerated/condition112
+        === RUN   TestDifferentialGenerated/value113
+        === RUN   TestDifferentialGenerated/condition113
+        === RUN   TestDifferentialGenerated/value114
+        === RUN   TestDifferentialGenerated/condition114
+        === RUN   TestDifferentialGenerated/value115
+        === RUN   TestDifferentialGenerated/condition115
+        === RUN   TestDifferentialGenerated/value116
+        === RUN   TestDifferentialGenerated/condition116
+        === RUN   TestDifferentialGenerated/value117
+        === RUN   TestDifferentialGenerated/condition117
+        === RUN   TestDifferentialGenerated/value118
+        === RUN   TestDifferentialGenerated/condition118
+        === RUN   TestDifferentialGenerated/value119
+        === RUN   TestDifferentialGenerated/condition119
+        === RUN   TestDifferentialGenerated/value120
+        === RUN   TestDifferentialGenerated/condition120
+        === RUN   TestDifferentialGenerated/value121
+        === RUN   TestDifferentialGenerated/condition121
+        === RUN   TestDifferentialGenerated/value122
+        === RUN   TestDifferentialGenerated/condition122
+        === RUN   TestDifferentialGenerated/value123
+        === RUN   TestDifferentialGenerated/condition123
+        === RUN   TestDifferentialGenerated/value124
+        === RUN   TestDifferentialGenerated/condition124
+        === RUN   TestDifferentialGenerated/value125
+        === RUN   TestDifferentialGenerated/condition125
+        === RUN   TestDifferentialGenerated/value126
+            harness_test.go:319: semantic mismatch: mark(1, 0.25 + 1) == mark(2, 0 - (-32768)): got bool:0 trace [2 1], want bool:0 trace [1 2]
+        === RUN   TestDifferentialGenerated/condition126
+            harness_test.go:319: semantic mismatch: mark(1, 0.25 + 1) == mark(2, 0 - (-32768)): got bool:0 trace [2 1], want bool:0 trace [1 2]
+        === RUN   TestDifferentialGenerated/value127
+        === RUN   TestDifferentialGenerated/condition127
+        === RUN   TestDifferentialGenerated/value128
+        === RUN   TestDifferentialGenerated/condition128
+        === RUN   TestDifferentialGenerated/value129
+        === RUN   TestDifferentialGenerated/condition129
+        === RUN   TestDifferentialGenerated/value130
+        === RUN   TestDifferentialGenerated/condition130
+        === RUN   TestDifferentialGenerated/value131
+        === RUN   TestDifferentialGenerated/condition131
+        === RUN   TestDifferentialGenerated/value132
+        === RUN   TestDifferentialGenerated/condition132
+        === RUN   TestDifferentialGenerated/value133
+        === RUN   TestDifferentialGenerated/condition133
+        === RUN   TestDifferentialGenerated/value134
+        === RUN   TestDifferentialGenerated/condition134
+        === RUN   TestDifferentialGenerated/value135
+        === RUN   TestDifferentialGenerated/condition135
+        === RUN   TestDifferentialGenerated/value136
+        === RUN   TestDifferentialGenerated/condition136
+        === RUN   TestDifferentialGenerated/value137
+        === RUN   TestDifferentialGenerated/condition137
+        === RUN   TestDifferentialGenerated/value138
+        === RUN   TestDifferentialGenerated/condition138
+        === RUN   TestDifferentialGenerated/value139
+        === RUN   TestDifferentialGenerated/condition139
+        === RUN   TestDifferentialGenerated/value140
+        === RUN   TestDifferentialGenerated/condition140
+        === RUN   TestDifferentialGenerated/value141
+        === RUN   TestDifferentialGenerated/condition141
+        === RUN   TestDifferentialGenerated/compound
+        === RUN   TestDifferentialGenerated/minimumglobal
+        === RUN   TestDifferentialGenerated/minimumparen
+        === RUN   TestDifferentialGenerated/negatedcall
+            harness_test.go:319: semantic mismatch: return -numbermark(1) + numbermark(2): got number:65536 trace [2 1], want number:65536 trace [1 2]
+        === RUN   TestDifferentialGenerated/skippednegatedcall
+        --- FAIL: TestDifferentialGenerated (0.00s)
+            --- PASS: TestDifferentialGenerated/value0 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition0 (0.00s)
+            --- PASS: TestDifferentialGenerated/value1 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition1 (0.00s)
+            --- PASS: TestDifferentialGenerated/value2 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition2 (0.00s)
+            --- PASS: TestDifferentialGenerated/value3 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition3 (0.00s)
+            --- PASS: TestDifferentialGenerated/value4 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition4 (0.00s)
+            --- PASS: TestDifferentialGenerated/value5 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition5 (0.00s)
+            --- PASS: TestDifferentialGenerated/value6 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition6 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value7 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition7 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value8 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition8 (0.00s)
+            --- PASS: TestDifferentialGenerated/value9 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition9 (0.00s)
+            --- PASS: TestDifferentialGenerated/value10 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition10 (0.00s)
+            --- PASS: TestDifferentialGenerated/value11 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition11 (0.00s)
+            --- PASS: TestDifferentialGenerated/value12 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition12 (0.00s)
+            --- PASS: TestDifferentialGenerated/value13 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition13 (0.00s)
+            --- PASS: TestDifferentialGenerated/value14 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition14 (0.00s)
+            --- PASS: TestDifferentialGenerated/value15 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition15 (0.00s)
+            --- PASS: TestDifferentialGenerated/value16 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition16 (0.00s)
+            --- PASS: TestDifferentialGenerated/value17 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition17 (0.00s)
+            --- PASS: TestDifferentialGenerated/value18 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition18 (0.00s)
+            --- PASS: TestDifferentialGenerated/value19 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition19 (0.00s)
+            --- PASS: TestDifferentialGenerated/value20 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition20 (0.00s)
+            --- PASS: TestDifferentialGenerated/value21 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition21 (0.00s)
+            --- PASS: TestDifferentialGenerated/value22 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition22 (0.00s)
+            --- PASS: TestDifferentialGenerated/value23 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition23 (0.00s)
+            --- PASS: TestDifferentialGenerated/value24 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition24 (0.00s)
+            --- PASS: TestDifferentialGenerated/value25 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition25 (0.00s)
+            --- PASS: TestDifferentialGenerated/value26 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition26 (0.00s)
+            --- PASS: TestDifferentialGenerated/value27 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition27 (0.00s)
+            --- PASS: TestDifferentialGenerated/value28 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition28 (0.00s)
+            --- PASS: TestDifferentialGenerated/value29 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition29 (0.00s)
+            --- PASS: TestDifferentialGenerated/value30 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition30 (0.00s)
+            --- PASS: TestDifferentialGenerated/value31 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition31 (0.00s)
+            --- PASS: TestDifferentialGenerated/value32 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition32 (0.00s)
+            --- PASS: TestDifferentialGenerated/value33 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition33 (0.00s)
+            --- PASS: TestDifferentialGenerated/value34 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition34 (0.00s)
+            --- PASS: TestDifferentialGenerated/value35 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition35 (0.00s)
+            --- PASS: TestDifferentialGenerated/value36 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition36 (0.00s)
+            --- PASS: TestDifferentialGenerated/value37 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition37 (0.00s)
+            --- PASS: TestDifferentialGenerated/value38 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition38 (0.00s)
+            --- PASS: TestDifferentialGenerated/value39 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition39 (0.00s)
+            --- PASS: TestDifferentialGenerated/value40 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition40 (0.00s)
+            --- PASS: TestDifferentialGenerated/value41 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition41 (0.00s)
+            --- PASS: TestDifferentialGenerated/value42 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition42 (0.00s)
+            --- PASS: TestDifferentialGenerated/value43 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition43 (0.00s)
+            --- PASS: TestDifferentialGenerated/value44 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition44 (0.00s)
+            --- PASS: TestDifferentialGenerated/value45 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition45 (0.00s)
+            --- PASS: TestDifferentialGenerated/value46 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition46 (0.00s)
+            --- PASS: TestDifferentialGenerated/value47 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition47 (0.00s)
+            --- PASS: TestDifferentialGenerated/value48 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition48 (0.00s)
+            --- PASS: TestDifferentialGenerated/value49 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition49 (0.00s)
+            --- PASS: TestDifferentialGenerated/value50 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition50 (0.00s)
+            --- PASS: TestDifferentialGenerated/value51 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition51 (0.00s)
+            --- PASS: TestDifferentialGenerated/value52 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition52 (0.00s)
+            --- PASS: TestDifferentialGenerated/value53 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition53 (0.00s)
+            --- PASS: TestDifferentialGenerated/value54 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition54 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value55 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition55 (0.00s)
+            --- PASS: TestDifferentialGenerated/value56 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition56 (0.00s)
+            --- PASS: TestDifferentialGenerated/value57 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition57 (0.00s)
+            --- PASS: TestDifferentialGenerated/value58 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition58 (0.00s)
+            --- PASS: TestDifferentialGenerated/value59 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition59 (0.00s)
+            --- PASS: TestDifferentialGenerated/value60 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition60 (0.00s)
+            --- PASS: TestDifferentialGenerated/value61 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition61 (0.00s)
+            --- PASS: TestDifferentialGenerated/value62 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition62 (0.00s)
+            --- PASS: TestDifferentialGenerated/value63 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition63 (0.00s)
+            --- PASS: TestDifferentialGenerated/value64 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition64 (0.00s)
+            --- PASS: TestDifferentialGenerated/value65 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition65 (0.00s)
+            --- PASS: TestDifferentialGenerated/value66 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition66 (0.00s)
+            --- PASS: TestDifferentialGenerated/value67 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition67 (0.00s)
+            --- PASS: TestDifferentialGenerated/value68 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition68 (0.00s)
+            --- PASS: TestDifferentialGenerated/value69 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition69 (0.00s)
+            --- PASS: TestDifferentialGenerated/value70 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition70 (0.00s)
+            --- PASS: TestDifferentialGenerated/value71 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition71 (0.00s)
+            --- PASS: TestDifferentialGenerated/value72 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition72 (0.00s)
+            --- PASS: TestDifferentialGenerated/value73 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition73 (0.00s)
+            --- PASS: TestDifferentialGenerated/value74 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition74 (0.00s)
+            --- PASS: TestDifferentialGenerated/value75 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition75 (0.00s)
+            --- PASS: TestDifferentialGenerated/value76 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition76 (0.00s)
+            --- PASS: TestDifferentialGenerated/value77 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition77 (0.00s)
+            --- PASS: TestDifferentialGenerated/value78 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition78 (0.00s)
+            --- PASS: TestDifferentialGenerated/value79 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition79 (0.00s)
+            --- PASS: TestDifferentialGenerated/value80 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition80 (0.00s)
+            --- PASS: TestDifferentialGenerated/value81 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition81 (0.00s)
+            --- PASS: TestDifferentialGenerated/value82 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition82 (0.00s)
+            --- PASS: TestDifferentialGenerated/value83 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition83 (0.00s)
+            --- PASS: TestDifferentialGenerated/value84 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition84 (0.00s)
+            --- PASS: TestDifferentialGenerated/value85 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition85 (0.00s)
+            --- PASS: TestDifferentialGenerated/value86 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition86 (0.00s)
+            --- PASS: TestDifferentialGenerated/value87 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition87 (0.00s)
+            --- PASS: TestDifferentialGenerated/value88 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition88 (0.00s)
+            --- PASS: TestDifferentialGenerated/value89 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition89 (0.00s)
+            --- PASS: TestDifferentialGenerated/value90 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition90 (0.00s)
+            --- PASS: TestDifferentialGenerated/value91 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition91 (0.00s)
+            --- PASS: TestDifferentialGenerated/value92 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition92 (0.00s)
+            --- PASS: TestDifferentialGenerated/value93 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition93 (0.00s)
+            --- PASS: TestDifferentialGenerated/value94 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition94 (0.00s)
+            --- PASS: TestDifferentialGenerated/value95 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition95 (0.00s)
+            --- PASS: TestDifferentialGenerated/value96 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition96 (0.00s)
+            --- PASS: TestDifferentialGenerated/value97 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition97 (0.00s)
+            --- PASS: TestDifferentialGenerated/value98 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition98 (0.00s)
+            --- PASS: TestDifferentialGenerated/value99 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition99 (0.00s)
+            --- PASS: TestDifferentialGenerated/value100 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition100 (0.00s)
+            --- PASS: TestDifferentialGenerated/value101 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition101 (0.00s)
+            --- PASS: TestDifferentialGenerated/value102 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition102 (0.00s)
+            --- PASS: TestDifferentialGenerated/value103 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition103 (0.00s)
+            --- PASS: TestDifferentialGenerated/value104 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition104 (0.00s)
+            --- PASS: TestDifferentialGenerated/value105 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition105 (0.00s)
+            --- PASS: TestDifferentialGenerated/value106 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition106 (0.00s)
+            --- PASS: TestDifferentialGenerated/value107 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition107 (0.00s)
+            --- PASS: TestDifferentialGenerated/value108 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition108 (0.00s)
+            --- PASS: TestDifferentialGenerated/value109 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition109 (0.00s)
+            --- PASS: TestDifferentialGenerated/value110 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition110 (0.00s)
+            --- PASS: TestDifferentialGenerated/value111 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition111 (0.00s)
+            --- PASS: TestDifferentialGenerated/value112 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition112 (0.00s)
+            --- PASS: TestDifferentialGenerated/value113 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition113 (0.00s)
+            --- PASS: TestDifferentialGenerated/value114 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition114 (0.00s)
+            --- PASS: TestDifferentialGenerated/value115 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition115 (0.00s)
+            --- PASS: TestDifferentialGenerated/value116 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition116 (0.00s)
+            --- PASS: TestDifferentialGenerated/value117 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition117 (0.00s)
+            --- PASS: TestDifferentialGenerated/value118 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition118 (0.00s)
+            --- PASS: TestDifferentialGenerated/value119 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition119 (0.00s)
+            --- PASS: TestDifferentialGenerated/value120 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition120 (0.00s)
+            --- PASS: TestDifferentialGenerated/value121 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition121 (0.00s)
+            --- PASS: TestDifferentialGenerated/value122 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition122 (0.00s)
+            --- PASS: TestDifferentialGenerated/value123 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition123 (0.00s)
+            --- PASS: TestDifferentialGenerated/value124 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition124 (0.00s)
+            --- PASS: TestDifferentialGenerated/value125 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition125 (0.00s)
+            --- FAIL: TestDifferentialGenerated/value126 (0.00s)
+            --- FAIL: TestDifferentialGenerated/condition126 (0.00s)
+            --- PASS: TestDifferentialGenerated/value127 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition127 (0.00s)
+            --- PASS: TestDifferentialGenerated/value128 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition128 (0.00s)
+            --- PASS: TestDifferentialGenerated/value129 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition129 (0.00s)
+            --- PASS: TestDifferentialGenerated/value130 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition130 (0.00s)
+            --- PASS: TestDifferentialGenerated/value131 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition131 (0.00s)
+            --- PASS: TestDifferentialGenerated/value132 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition132 (0.00s)
+            --- PASS: TestDifferentialGenerated/value133 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition133 (0.00s)
+            --- PASS: TestDifferentialGenerated/value134 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition134 (0.00s)
+            --- PASS: TestDifferentialGenerated/value135 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition135 (0.00s)
+            --- PASS: TestDifferentialGenerated/value136 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition136 (0.00s)
+            --- PASS: TestDifferentialGenerated/value137 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition137 (0.00s)
+            --- PASS: TestDifferentialGenerated/value138 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition138 (0.00s)
+            --- PASS: TestDifferentialGenerated/value139 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition139 (0.00s)
+            --- PASS: TestDifferentialGenerated/value140 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition140 (0.00s)
+            --- PASS: TestDifferentialGenerated/value141 (0.00s)
+            --- PASS: TestDifferentialGenerated/condition141 (0.00s)
+            --- PASS: TestDifferentialGenerated/compound (0.00s)
+            --- PASS: TestDifferentialGenerated/minimumglobal (0.00s)
+            --- PASS: TestDifferentialGenerated/minimumparen (0.00s)
+            --- FAIL: TestDifferentialGenerated/negatedcall (0.00s)
+            --- PASS: TestDifferentialGenerated/skippednegatedcall (0.00s)
+        FAIL
+        FAIL	generated	0.768s
+        FAIL
+--- FAIL: TestDifferentialExecution (2.63s)
+    --- FAIL: TestDifferentialExecution/optimized (1.27s)
+    --- FAIL: TestDifferentialExecution/generic (1.36s)
+FAIL
+FAIL	github.com/drpaneas/mtile/internal/transpiler	3.251s
+FAIL

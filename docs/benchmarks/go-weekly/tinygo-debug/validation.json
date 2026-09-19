@@ -1,0 +1,62 @@
+[
+  {
+    "label": "tests-build",
+    "command": [
+      "go",
+      "test",
+      "./internal/build",
+      "-run",
+      "TestGenerateTarget|TestGenerateSmokeTarget|TestPreviewRuntimeLoggingIsOptIn|TestBuildEndToEndWithRealTinyGo$",
+      "-count=1"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "environment": {},
+    "exitCode": 0,
+    "seconds": 2.2387028749944875
+  },
+  {
+    "label": "tests-emulator",
+    "command": [
+      "go",
+      "test",
+      "./internal/emulator",
+      "-count=1"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "environment": {},
+    "exitCode": 0,
+    "seconds": 0.6535107080126181
+  },
+  {
+    "label": "tests-live-logger",
+    "command": [
+      "go",
+      "test",
+      "./internal/emulator",
+      "-run",
+      "TestLiveRuntimeFailureLog$",
+      "-count=1",
+      "-v"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "environment": {
+      "MTILE_LIVE_INTEGRATION": "1",
+      "MTILE_PLAYER": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mtile-player"
+    },
+    "exitCode": 0,
+    "seconds": 1.1747646670119138
+  },
+  {
+    "label": "tests-runtime",
+    "command": [
+      "go",
+      "test",
+      "./...",
+      "-count=1"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+    "environment": {},
+    "exitCode": 0,
+    "seconds": 2.5151718330016593
+  }
+]

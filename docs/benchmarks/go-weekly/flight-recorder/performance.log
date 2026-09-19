@@ -1,0 +1,13 @@
+=== RUN   TestFlightRecorderPerformance
+=== RUN   TestFlightRecorderPerformance/Sprites
+    flight_recorder_benchmark_test.go:206: Sprites paired changes=[0.6322130742604681 11.9089533141995 -14.20328560784676 -3.250815227414816 -7.867072868297587 -3.7404530110303202] median=-3.496%
+=== RUN   TestFlightRecorderPerformance/Map
+    flight_recorder_benchmark_test.go:206: Map paired changes=[6.8853776110515685 0.6919188553366595 4.66163899239338 -0.4861975513868688 3.1053968187751746 -2.8342114701493615] median=+1.899%
+=== RUN   TestFlightRecorderPerformance/Code
+    flight_recorder_benchmark_test.go:206: Code paired changes=[25.97370687363645 5.795699967322032 4.6724725655917565 20.126942552893713 12.321430940214896 -3.4160913325810838] median=+9.059%
+    flight_recorder_benchmark_test.go:208: predeclared 5% overhead gate failed; stop without tuning
+--- FAIL: TestFlightRecorderPerformance (95.06s)
+    --- PASS: TestFlightRecorderPerformance/Sprites (35.04s)
+    --- PASS: TestFlightRecorderPerformance/Map (34.17s)
+    --- FAIL: TestFlightRecorderPerformance/Code (25.86s)
+FAIL

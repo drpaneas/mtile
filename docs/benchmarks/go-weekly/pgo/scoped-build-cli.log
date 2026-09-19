@@ -1,0 +1,5 @@
+$ go test ./internal/build ./cmd/mtile (cwd=.)
+ok  	github.com/drpaneas/mtile/internal/build	17.018s
+ok  	github.com/drpaneas/mtile/cmd/mtile	5.640s
+
+exit_code=0

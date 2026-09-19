@@ -1,0 +1,14 @@
+{
+  "frames": 120,
+  "warmSamples": 118,
+  "maxWarmCommitCycles": 64540,
+  "maxAudioServiceCycles": 28651,
+  "firstDifferentPixels": 0,
+  "lastDifferentPixels": 0,
+  "allDifferentPixels": 0,
+  "maxOAMBytes": 1024,
+  "maxMapBytes": 16384,
+  "maxTileBytes": 0,
+  "audioErrors": 0,
+  "maxEndScanline": 212
+}

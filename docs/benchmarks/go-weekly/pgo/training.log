@@ -1,0 +1,7 @@
+$ /private/tmp/mtile-go-weekly-loop/pgo/off.test -test.run=^TestPGOTraining$ -test.v
+=== RUN   TestPGOTraining
+    pgo_benchmark_test.go:317: training rounds=1509 projects=celeste,multi-file,audio-gb-song
+--- PASS: TestPGOTraining (30.14s)
+PASS
+
+exit_code=0

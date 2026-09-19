@@ -1,0 +1,864 @@
+M=-1 P=-1 G=-1 Sync Time=110831435926528 N=1 Trace=110831435935360 Mono=110831435935375 Wall=2026-09-19T14:44:03.669613+03:00
+M=6180188160 P=-1 G=-1 StateTransition Time=110831435938112 ProcID=11 Undetermined->Running Reason=""
+M=6180188160 P=11 G=-1 StateTransition Time=110831435938304 GoID=66 Undetermined->Running Reason=""
+M=6180188160 P=11 G=66 Metric Time=110831435941056 Name="/sched/gomaxprocs:threads" Value=Value{Uint64(12)}
+Stack=
+	runtime.traceLocker.Gomaxprocs @ 0x10089e664
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/traceruntime.go:282
+	runtime.StartTrace @ 0x100897a33
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:428
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x10095256f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:142
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 RangeBegin Time=110831435941504 Name="stop-the-world (start trace)" Scope=Goroutine(66)
+Stack=
+	runtime.StartTrace @ 0x100897a43
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:429
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x10095256f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:142
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 Metric Time=110831435941568 Name="/gc/heap/goal:bytes" Value=Value{Uint64(6100794)}
+M=6180188160 P=11 G=66 Metric Time=110831435955392 Name="/sched/gomaxprocs:threads" Value=Value{Uint64(12)}
+Stack=
+	runtime.startTheWorld @ 0x10087936b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:1559
+	runtime.StartTrace @ 0x100897aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:446
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x10095256f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:142
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 RangeEnd Time=110831435957248 Name="stop-the-world (start trace)" Scope=Goroutine(66) Attributes=[]
+M=6180188160 P=11 G=66 Metric Time=110831435960064 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4175288)}
+M=6180188160 P=11 G=66 Metric Time=110831435960512 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4183032)}
+M=6180188160 P=11 G=66 Metric Time=110831435960832 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4191032)}
+M=6180188160 P=11 G=66 Metric Time=110831435961216 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4198504)}
+M=6180188160 P=11 G=66 Metric Time=110831435961408 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4205736)}
+M=6180188160 P=11 G=66 StateTransition Time=110831435962624 GoID=25 NotExist->Runnable Reason=""
+TransitionStack=
+	runtime.traceStartReadCPU.func1 @ 0x1008a8eb3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:44
+
+Stack=
+	runtime.traceStartReadCPU @ 0x10089d2cf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:44
+	runtime.StartTrace @ 0x100897b03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:448
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x10095256f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:142
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 StateTransition Time=110831435963648 GoID=26 NotExist->Runnable Reason=""
+TransitionStack=
+	runtime.(*traceAdvancerState).start.func1 @ 0x1008a87c3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1102
+
+Stack=
+	runtime.(*traceAdvancerState).start @ 0x10089833b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1102
+	runtime.StartTrace @ 0x100897b0f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:449
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x10095256f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:142
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 Metric Time=110831435963904 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4213784)}
+M=6180188160 P=11 G=66 Metric Time=110831435964160 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4221912)}
+M=6180188160 P=11 G=66 StateTransition Time=110831435964736 GoID=27 NotExist->Runnable Reason=""
+TransitionStack=
+	runtime/trace.(*traceMultiplexer).startLocked.func1 @ 0x1009529e3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:157
+
+Stack=
+	runtime/trace.(*traceMultiplexer).startLocked @ 0x1009526f3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:157
+	runtime/trace.(*traceMultiplexer).addedSubscriber @ 0x10095246b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:112
+	runtime/trace.(*traceMultiplexer).subscribeFlightRecorder @ 0x100951a3b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:41
+	runtime/trace.(*FlightRecorder).Start @ 0x100950aff
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/flightrecorder.go:79
+	github.com/drpaneas/mtile/cmd/editor.wrapFlightRecorder @ 0x100d4cce3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:49
+	github.com/drpaneas/mtile/cmd/editor.editorWithFlightRecorder @ 0x100d4cb8f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:36
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87aab
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:272
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 RegionBegin Time=110831435966272 Task=0 Type="mtile.editor.Update"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cfd7
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:70
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b07
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:277
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 Log Time=110831435967040 Task=0 Category="mtile.test" Message="pre-stall-sentinel"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture.func1 @ 0x100db02fb
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:264
+	github.com/drpaneas/mtile/cmd/editor.(*flightTestGame).Update @ 0x100d862a3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:21
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cff3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:71
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b07
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:277
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 RegionEnd Time=110831435967232 Task=0 Type="mtile.editor.Update"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4d004
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:72
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b07
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:277
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=-1 G=-1 StateTransition Time=110831435967360 ProcID=10 Undetermined->Idle Reason=""
+M=6240432128 P=-1 G=-1 StateTransition Time=110831435967488 ProcID=10 Idle->Running Reason=""
+M=6180188160 P=11 G=66 RegionBegin Time=110831435967680 Task=0 Type="mtile.editor.Update"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cfd7
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:70
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 RegionBegin Time=110831435968064 Task=0 Type="controlled-stall"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture.func1 @ 0x100db031f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:266
+	github.com/drpaneas/mtile/cmd/editor.(*flightTestGame).Update @ 0x100d862a3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:21
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cff3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:71
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6180188160 P=11 G=66 StateTransition Time=110831435968320 GoID=66 Running->Waiting Reason="sleep"
+TransitionStack=
+	time.Sleep @ 0x1008b3cdf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/time.go:368
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture.func1 @ 0x100db032f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:267
+	github.com/drpaneas/mtile/cmd/editor.(*flightTestGame).Update @ 0x100d862a3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:21
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cff3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:71
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+Stack=
+	time.Sleep @ 0x1008b3cdf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/time.go:368
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture.func1 @ 0x100db032f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:267
+	github.com/drpaneas/mtile/cmd/editor.(*flightTestGame).Update @ 0x100d862a3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:21
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cff3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:71
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=10 G=-1 StateTransition Time=110831435969984 GoID=25 Runnable->Running Reason=""
+M=6180188160 P=11 G=-1 StateTransition Time=110831435970368 GoID=27 Runnable->Running Reason=""
+M=6240432128 P=10 G=25 Metric Time=110831435970752 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4229016)}
+M=6180188160 P=11 G=27 Metric Time=110831435970944 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4237128)}
+M=6240432128 P=10 G=25 StateTransition Time=110831435976256 GoID=25 Running->Waiting Reason="chan receive"
+TransitionStack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.traceStartReadCPU.func1 @ 0x1008a8ef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:56
+
+Stack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.traceStartReadCPU.func1 @ 0x1008a8ef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:56
+
+M=6240432128 P=10 G=-1 StateTransition Time=110831435976704 GoID=26 Runnable->Running Reason=""
+M=6240432128 P=10 G=26 Metric Time=110831435977152 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4242696)}
+M=6240432128 P=10 G=26 Metric Time=110831435977536 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4250104)}
+M=6240432128 P=10 G=26 StateTransition Time=110831435977920 GoID=26 Running->Waiting Reason="chan receive"
+TransitionStack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.(*traceAdvancerState).start.func1 @ 0x1008a87f3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1105
+
+Stack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.(*traceAdvancerState).start.func1 @ 0x1008a87f3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1105
+
+M=6240432128 P=10 G=-1 StateTransition Time=110831435978816 ProcID=10 Running->Idle Reason=""
+M=6180188160 P=11 G=27 Metric Time=110831435980032 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4257976)}
+M=6248886272 P=-1 G=-1 StateTransition Time=110831435980864 ProcID=9 Undetermined->Idle Reason=""
+M=6248886272 P=-1 G=-1 StateTransition Time=110831435980928 ProcID=9 Idle->Running Reason=""
+M=6180188160 P=11 G=27 StateTransition Time=110831435980992 GoID=27 Running->Waiting Reason="system goroutine wait"
+TransitionStack=
+	runtime/trace.(*traceMultiplexer).startLocked.func1 @ 0x100952a8b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:167
+
+Stack=
+	runtime/trace.(*traceMultiplexer).startLocked.func1 @ 0x100952a8b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace/subscribe.go:167
+
+M=6180188160 P=11 G=-1 StateTransition Time=110831435982016 ProcID=11 Running->Idle Reason=""
+M=6248886272 P=9 G=-1 StateTransition Time=110831435982272 ProcID=9 Running->Idle Reason=""
+M=6188609536 P=-1 G=-1 StateTransition Time=110831435982784 ProcID=8 Undetermined->Idle Reason=""
+M=6188609536 P=-1 G=-1 StateTransition Time=110831435982912 ProcID=8 Idle->Running Reason=""
+M=6188609536 P=8 G=-1 StateTransition Time=110831435983872 ProcID=8 Running->Idle Reason=""
+M=6240432128 P=-1 G=-1 StateTransition Time=110831537985856 ProcID=8 Idle->Running Reason=""
+M=6240432128 P=8 G=-1 StateTransition Time=110831537991424 GoID=25 Waiting->Runnable Reason=""
+M=6240432128 P=8 G=-1 StateTransition Time=110831537998720 GoID=25 Runnable->Running Reason=""
+M=6240432128 P=8 G=25 Metric Time=110831538033344 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4265144)}
+M=6240432128 P=8 G=25 StateTransition Time=110831538036288 GoID=25 Running->Waiting Reason="chan receive"
+TransitionStack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.traceStartReadCPU.func1 @ 0x1008a8ef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:56
+
+Stack=
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	runtime.(*wakeableSleep).sleep @ 0x100898467
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/trace.go:1168
+	runtime.traceStartReadCPU.func1 @ 0x1008a8ef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/tracecpu.go:56
+
+M=6240432128 P=8 G=-1 StateTransition Time=110831538036864 ProcID=8 Running->Idle Reason=""
+M=6180188160 P=-1 G=-1 StateTransition Time=110831538048384 ProcID=9 Idle->Running Reason=""
+M=6180188160 P=9 G=-1 StateTransition Time=110831538054208 ProcID=9 Running->Idle Reason=""
+M=6240432128 P=-1 G=-1 StateTransition Time=110831538080512 ProcID=9 Idle->Running Reason=""
+M=6240432128 P=9 G=-1 StateTransition Time=110831538081984 ProcID=9 Running->Idle Reason=""
+M=6240432128 P=-1 G=-1 StateTransition Time=110831557980224 ProcID=9 Idle->Running Reason=""
+M=6240432128 P=9 G=-1 StateTransition Time=110831557983424 GoID=66 Waiting->Runnable Reason=""
+M=6240432128 P=9 G=-1 StateTransition Time=110831557988224 GoID=66 Runnable->Running Reason=""
+M=6240432128 P=9 G=66 RegionEnd Time=110831557991040 Task=0 Type="controlled-stall"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture.func1 @ 0x100db0338
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:268
+	github.com/drpaneas/mtile/cmd/editor.(*flightTestGame).Update @ 0x100d862a3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:21
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4cff3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:71
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=9 G=66 RegionEnd Time=110831557992000 Task=0 Type="mtile.editor.Update"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4d004
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:72
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=9 G=66 Log Time=110831557994496 Task=0 Category="mtile.stall" Message="completed Update exceeded 100ms"
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture @ 0x100d4d26f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:104
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4d067
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:75
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=9 G=66 Metric Time=110831557996352 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4273120)}
+M=6180188160 P=-1 G=-1 StateTransition Time=110831557996672 ProcID=8 Idle->Running Reason=""
+M=6180188160 P=8 G=-1 StateTransition Time=110831557998336 ProcID=8 Running->Idle Reason=""
+M=6240432128 P=9 G=66 StateTransition Time=110831558038208 GoID=62 NotExist->Runnable Reason=""
+TransitionStack=
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac153
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:105
+
+Stack=
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture @ 0x100d4d2bf
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:105
+	github.com/drpaneas/mtile/cmd/editor.(*flightRecorderGame).Update @ 0x100d4d067
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:75
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b43
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:280
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6188609536 P=-1 G=-1 StateTransition Time=110831558048448 ProcID=8 Idle->Running Reason=""
+M=6240432128 P=9 G=66 StateTransition Time=110831558061440 GoID=66 Running->Waiting Reason="sync"
+TransitionStack=
+	sync.(*WaitGroup).Wait @ 0x1008c1d43
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/waitgroup.go:206
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).close.func1 @ 0x100dac51f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:150
+	sync.(*Once).doSlow @ 0x1008c056b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/once.go:78
+	sync.(*Once).Do @ 0x100d4d7df
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/once.go:69
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).close @ 0x100d4d7b8
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:144
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b7b
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:283
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+Stack=
+	sync.(*WaitGroup).Wait @ 0x1008c1d43
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/waitgroup.go:206
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).close.func1 @ 0x100dac51f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:150
+	sync.(*Once).doSlow @ 0x1008c056b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/once.go:78
+	sync.(*Once).Do @ 0x100d4d7df
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/sync/once.go:69
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).close @ 0x100d4d7b8
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:144
+	github.com/drpaneas/mtile/cmd/editor.TestFlightRecorderRealPreStallCapture @ 0x100d87b7b
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder_test.go:283
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+
+M=6240432128 P=9 G=-1 StateTransition Time=110831558062656 ProcID=9 Running->Idle Reason=""
+M=6188609536 P=8 G=-1 StateTransition Time=110831558062912 GoID=62 Runnable->Running Reason=""
+M=6248886272 P=-1 G=-1 StateTransition Time=110831558068416 ProcID=11 Idle->Running Reason=""
+M=6248886272 P=11 G=-1 StateTransition Time=110831558069376 ProcID=11 Running->Idle Reason=""
+M=6188609536 P=8 G=62 Metric Time=110831558163840 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4281200)}
+M=6188609536 P=8 G=62 StateTransition Time=110831558165120 GoID=62 Running->Syscall Reason=""
+TransitionStack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Open @ 0x1008cb8bf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1162
+	os.open @ 0x1008f5b27
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_open_unix.go:15
+	os.openFileNolog.func1 @ 0x1008f5ab0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:261
+	os.ignoringEINTR @ 0x1008f5af4
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_posix.go:263
+	os.openFileNolog @ 0x1008f5ac0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:260
+	os.OpenFile @ 0x1008f408f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file.go:412
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d323
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:121
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+Stack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Open @ 0x1008cb8bf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1162
+	os.open @ 0x1008f5b27
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_open_unix.go:15
+	os.openFileNolog.func1 @ 0x1008f5ab0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:261
+	os.ignoringEINTR @ 0x1008f5af4
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_posix.go:263
+	os.openFileNolog @ 0x1008f5ac0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:260
+	os.OpenFile @ 0x1008f408f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file.go:412
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d323
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:121
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+M=6171766784 P=-1 G=-1 StateTransition Time=110831558176896 ProcID=8 Running->Idle Reason=""
+M=6188609536 P=-1 G=62 StateTransition Time=110831558410240 ProcID=8 Idle->Running Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558410368 GoID=62 Syscall->Runnable Reason=""
+M=6188609536 P=8 G=-1 StateTransition Time=110831558410496 GoID=62 Runnable->Running Reason=""
+M=6188609536 P=8 G=62 Metric Time=110831558411904 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4289248)}
+M=6188609536 P=8 G=62 Metric Time=110831558413376 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4294080)}
+M=6188609536 P=8 G=62 StateTransition Time=110831558414528 GoID=62 Running->Syscall Reason=""
+TransitionStack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Fstat @ 0x1008cc6d7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1897
+	os.newFile.func1 @ 0x1008f59b3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:170
+	os.ignoringEINTR @ 0x1008f59a8
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_posix.go:263
+	os.newFile @ 0x1008f5894
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:169
+	os.openFileNolog @ 0x1008f5b9b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:279
+	os.OpenFile @ 0x1008f408f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file.go:412
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d323
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:121
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+Stack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Fstat @ 0x1008cc6d7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1897
+	os.newFile.func1 @ 0x1008f59b3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:170
+	os.ignoringEINTR @ 0x1008f59a8
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_posix.go:263
+	os.newFile @ 0x1008f5894
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:169
+	os.openFileNolog @ 0x1008f5b9b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file_unix.go:279
+	os.OpenFile @ 0x1008f408f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/file.go:412
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d323
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:121
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+M=6188609536 P=8 G=62 StateTransition Time=110831558431360 GoID=62 Syscall->Running Reason=""
+M=6188609536 P=8 G=62 Metric Time=110831558435648 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4300400)}
+M=6188609536 P=8 G=62 StateTransition Time=110831558615360 GoID=62 Running->Syscall Reason=""
+TransitionStack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Fstat @ 0x1008cc6d7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1897
+	internal/poll.(*FD).Fstat.func1 @ 0x1008ed627
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_unix.go:650
+	internal/poll.ignoringEINTR @ 0x1008ed620
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_posix.go:74
+	internal/poll.(*FD).Fstat @ 0x1008ed658
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_unix.go:649
+	os.(*File).Stat @ 0x1008f8a1b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/stat_unix.go:20
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d32f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:125
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+Stack=
+	syscall.syscall @ 0x1008ccf03
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/syscall_darwin.go:384
+	syscall.Fstat @ 0x1008cc6d7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/syscall/zsyscall_darwin_arm64.go:1897
+	internal/poll.(*FD).Fstat.func1 @ 0x1008ed627
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_unix.go:650
+	internal/poll.ignoringEINTR @ 0x1008ed620
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_posix.go:74
+	internal/poll.(*FD).Fstat @ 0x1008ed658
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/internal/poll/fd_unix.go:649
+	os.(*File).Stat @ 0x1008f8a1b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/os/stat_unix.go:20
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).writeSnapshot @ 0x100d4d32f
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:125
+	github.com/drpaneas/mtile/cmd/editor.(*stallRecorder).capture.func1 @ 0x100dac1d3
+		/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor/flight_recorder.go:109
+
+M=6188609536 P=8 G=62 StateTransition Time=110831558621056 GoID=62 Syscall->Running Reason=""
+M=6188609536 P=8 G=62 Metric Time=110831558640896 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4308352)}
+M=6188609536 P=8 G=62 Metric Time=110831558643328 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4316304)}
+M=6188609536 P=8 G=62 Metric Time=110831558644736 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4318416)}
+M=6188609536 P=8 G=62 Metric Time=110831558646528 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4325968)}
+M=6188609536 P=8 G=62 Metric Time=110831558649216 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4332752)}
+M=6188609536 P=8 G=62 Metric Time=110831558669568 Name="/memory/classes/heap/objects:bytes" Value=Value{Uint64(4344912)}
+M=6188609536 P=8 G=62 StateTransition Time=110831558696704 ProcID=7 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558696832 ProcID=6 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558696896 ProcID=5 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558697024 ProcID=4 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558697152 ProcID=3 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558697216 ProcID=2 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558697408 ProcID=1 Undetermined->Idle Reason=""
+M=6188609536 P=8 G=62 StateTransition Time=110831558697536 ProcID=0 Undetermined->Idle Reason=""
+M=-1 P=-1 G=-1 StateTransition Time=110831558712000 GoID=1 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.chanrecv @ 0x10083f27f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:667
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	testing.(*T).Run @ 0x10095f38b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2266
+	testing.runTests.func1 @ 0x100964687
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2742
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+	testing.runTests @ 0x100960eaf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2740
+	testing.(*M).Run @ 0x10095fef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2600
+	main.main @ 0x100db3b4f
+		_testmain.go:428
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.chanrecv @ 0x10083f27f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:667
+	runtime.chanrecv1 @ 0x10083edd3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/chan.go:509
+	testing.(*T).Run @ 0x10095f38b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2266
+	testing.runTests.func1 @ 0x100964687
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2742
+	testing.tRunner @ 0x10095ef53
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2193
+	testing.runTests @ 0x100960eaf
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2740
+	testing.(*M).Run @ 0x10095fef7
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/testing/testing.go:2600
+	main.main @ 0x100db3b4f
+		_testmain.go:428
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712128 GoID=18 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100876fb3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.forcegchelper @ 0x100876f90
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:387
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100876fb3
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.forcegchelper @ 0x100876f90
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:387
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712192 GoID=19 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100860b97
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.bgsweep @ 0x100860b74
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcsweep.go:324
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100860b97
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.bgsweep @ 0x100860b74
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcsweep.go:324
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712256 GoID=20 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x10085e70b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.(*scavengerState).park @ 0x10085e6f0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcscavenge.go:425
+	runtime.bgscavenge @ 0x10085ec9b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcscavenge.go:658
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x10085e70b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.(*scavengerState).park @ 0x10085e6f0
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcscavenge.go:425
+	runtime.bgscavenge @ 0x10085ec9b
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgcscavenge.go:658
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712320 GoID=34 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100884983
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.updateMaxProcsGoroutine @ 0x100884960
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:7146
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x100884983
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.updateMaxProcsGoroutine @ 0x100884960
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:7146
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712384 GoID=35 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.runFinalizers @ 0x100851c2f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mfinal.go:210
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.runFinalizers @ 0x100851c2f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mfinal.go:210
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712448 GoID=21 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x10084ec0f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.(*cleanupQueue).dequeue @ 0x10084ec10
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mcleanup.go:522
+	runtime.runCleanups @ 0x10084f35f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mcleanup.go:718
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.goparkunlock @ 0x10084ec0f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:480
+	runtime.(*cleanupQueue).dequeue @ 0x10084ec10
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mcleanup.go:522
+	runtime.runCleanups @ 0x10084f35f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mcleanup.go:718
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712512 GoID=50 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712576 GoID=51 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712640 GoID=52 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712704 GoID=53 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712768 GoID=54 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712832 GoID=55 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712896 GoID=56 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558712960 GoID=57 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558713024 GoID=58 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558713088 GoID=59 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558713152 GoID=60 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 StateTransition Time=110831558713216 GoID=61 Undetermined->Waiting Reason=""
+TransitionStack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+Stack=
+	runtime.gopark @ 0x1008af517
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/proc.go:474
+	runtime.gcBgMarkWorker @ 0x100854f7f
+		/opt/homebrew/Cellar/go/1.27.1/libexec/src/runtime/mgc.go:1807
+
+M=-1 P=-1 G=-1 Sync Time=110831558713217 N=2

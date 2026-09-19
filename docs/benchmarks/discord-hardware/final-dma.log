@@ -1,0 +1,44 @@
+{
+  "environment": "native mGBA, HLE BIOS, forced blank, EWRAM source; no physical hardware measurement",
+  "fill": [
+    {
+      "offset": 0,
+      "mismatches": 0,
+      "cycles": 215
+    },
+    {
+      "offset": 1,
+      "mismatches": 0,
+      "cycles": 186
+    },
+    {
+      "offset": 2,
+      "mismatches": 0,
+      "cycles": 186
+    },
+    {
+      "offset": 3,
+      "mismatches": 0,
+      "cycles": 186
+    }
+  ],
+  "copy": [
+    {
+      "kind": "production_dma",
+      "cycles": 77013,
+      "mismatches": 0
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "cycles": 77046,
+      "mismatches": 0
+    },
+    {
+      "kind": "bios_cpufastset",
+      "cycles": 85426,
+      "mismatches": 0
+    }
+  ],
+  "failures": 0
+}
+Artifacts: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-dma

@@ -1,0 +1,90 @@
+{
+  "initialFiles": 1134,
+  "unchangedOriginalFiles": 1125,
+  "changedOriginalFiles": [
+    {
+      "path": "cmd/editor/game.go",
+      "reason": "cancel stale image paste on undo/redo",
+      "beforeSHA256": "498f1b95c1c0329f3663069ad02ba828f2f0eed717ac8e1cecdf76b284a2ec09",
+      "afterSHA256": "9c9f6a4751be4059321b1b5142439cb64eb8e147c006d8090b1a2551c888fb7f"
+    },
+    {
+      "path": "cmd/editor/sprite_clipboard.go",
+      "reason": "optional ordered import preview",
+      "beforeSHA256": "159872f75400c204045dde370467153f81cbcb98f425027502221f94e5e05599",
+      "afterSHA256": "7f484236b31099a74c42687e22352aaeaa25301e394a74b122a7a16841197d0b"
+    },
+    {
+      "path": "cmd/editor/sprite_editor.go",
+      "reason": "D toggle and preview status",
+      "beforeSHA256": "a81192f0da8498e215540f57083e056495cb6a46745b79981be46db3ca879bfe",
+      "afterSHA256": "4eef6da47759e17e8b2908090d8653a226bf75618aaaba9f787f941672aebfd5"
+    },
+    {
+      "path": "go.mod",
+      "reason": "Ebitengine/Oto upgrade",
+      "beforeSHA256": "77019d96b015ef1eb9f17ea3c6cb3a8503d3f9b161d42534c43fa940cbd76ef7",
+      "afterSHA256": "e88db84fcace1bec0456439a91c1f999dbe901acff05a91be1dc2da487fe2aa4"
+    },
+    {
+      "path": "go.sum",
+      "reason": "Ebitengine/Oto upgrade checksums",
+      "beforeSHA256": "06fdfe7a05522082af961074b866a6ccdbec12b7bfdfea2d17a6b846beb71eb9",
+      "afterSHA256": "663dbcd4a8eebfd0d4c272100c41e7bdef3472cc3f5249de81a4849dbf0ac7c4"
+    },
+    {
+      "path": "internal/transpiler/transpiler.go",
+      "reason": "fixed-point unary negation correction",
+      "beforeSHA256": "79d49d2dbfb85b3840658fb7375c333ea2027896762f32f5ed7ded84890aed6f",
+      "afterSHA256": "82db459c7da9768e79083c7e02733dc5a73807a13ad43199988a28728261cd3f"
+    },
+    {
+      "path": "scripts/discord-hardware/idle-video/run.py",
+      "reason": "archived snippet filenames",
+      "beforeSHA256": "0f38e8c5955282eaa43271c49f942197dd31bf79be9c08da8f80a7a620486ea2",
+      "afterSHA256": "0f9c15264d2f49d2b82516108f9af0c6f64429dae2e2086fe72bf817bd35a6aa"
+    }
+  ],
+  "renamedArchives": [
+    {
+      "original": "scripts/discord-hardware/idle-video/idle_trial_clock_test.go",
+      "replacement": "scripts/discord-hardware/idle-video/idle_trial_clock_test.go.in",
+      "byteIdentical": true
+    },
+    {
+      "original": "scripts/discord-hardware/idle-video/idle_trial_diagnostic_test.go",
+      "replacement": "scripts/discord-hardware/idle-video/idle_trial_diagnostic_test.go.in",
+      "byteIdentical": true
+    }
+  ],
+  "unexpectedChanges": [],
+  "checkedGoFiles": [
+    "cmd/editor/render_benchmark_test.go",
+    "cmd/editor/sprite_clipboard_ordered_render_test.go",
+    "cmd/editor/sprite_clipboard_ordered_test.go",
+    "cmd/elfsize/elf.go",
+    "cmd/elfsize/elf_test.go",
+    "cmd/elfsize/main.go",
+    "cmd/renderbench/hash_fingerprint_diagnostic_test.go",
+    "internal/build/pgo_benchmark_test.go",
+    "internal/cmd/editorvmcheck/main.go",
+    "internal/editor/image_import_benchmark_test.go",
+    "internal/editor/image_import_ordered.go",
+    "internal/editor/image_import_ordered_test.go",
+    "internal/transpiler/differential_execution_test.go",
+    "internal/transpiler/differential_fuzz_test.go",
+    "scripts/go-weekly/tinygo-debug/harness.go",
+    "cmd/editor/game.go",
+    "cmd/editor/sprite_clipboard.go",
+    "cmd/editor/sprite_editor.go",
+    "internal/transpiler/transpiler.go"
+  ],
+  "unformattedGoFiles": [],
+  "gofmtExit": 0,
+  "diffCheckExit": 0,
+  "diffCheckOutput": "",
+  "defaultPGO": {
+    "bytes": 48300,
+    "sha256": "682893860f209a26f98a83191d0283d3198d253adcd7c7ce3d01b0407fbbbb3c"
+  }
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "name": "root",
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "command": [
+      "go",
+      "test",
+      "./..."
+    ],
+    "exitCode": 0,
+    "seconds": 233.30196699999215
+  },
+  {
+    "name": "runtime",
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+    "command": [
+      "go",
+      "test",
+      "./..."
+    ],
+    "exitCode": 0,
+    "seconds": 0.2674381669930881
+  },
+  {
+    "name": "runtime-mode0",
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+    "command": [
+      "go",
+      "test",
+      "-tags=mtile_mode0",
+      "./..."
+    ],
+    "exitCode": 0,
+    "seconds": 0.2683395829953952
+  }
+]

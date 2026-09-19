@@ -1,0 +1,30 @@
+{
+  "initialUserChanges": {
+    "cmd/mtile/main.go": "unchanged from user baseline",
+    "cmd/mtile/main_test.go": "unchanged from user baseline",
+    "docs/render-modes.md": "preserved baseline plus documented resource restriction",
+    "internal/build/build.go": "unchanged from user baseline",
+    "internal/build/tilecanvas_experiment.go": "unchanged from user baseline",
+    "internal/build/tilecanvas_experiment_test.go": "unchanged from user baseline",
+    "internal/transpiler/iwram_test.go": "unchanged from user baseline",
+    "internal/transpiler/transpiler.go": "unchanged from user baseline",
+    "runtime/objectcanvas_map_test.go": "unchanged from user baseline",
+    "runtime/tilecanvas.go": "unchanged from user baseline",
+    "docs/discord-gbadev-hardware-notes-2026-09-19.md": "unchanged from user baseline",
+    "docs/discord-gbadev-history-2020-2025.md": "unchanged from user baseline"
+  },
+  "validationScope": "emulator execution and debugging, per user instruction",
+  "passed": [
+    "required root packages",
+    "runtime default renderer",
+    "runtime Mode0 with four layers/OBJ/packing/text",
+    "native DMA/fill/copy alignment and independent timer overflow checks",
+    "first-scan Mode0 controls and exact Mode4 AUTO fallback with active audible PSG",
+    "120-frame shared animation comparison and independent-phase counterexample",
+    "120-frame scanline38 pixel parity",
+    "42 PSG reference PCM cases",
+    "1800-frame final PSG debugger workload",
+    "read-only integration review; coverage finding fixed and retested",
+    "git diff --check and gofmt"
+  ]
+}

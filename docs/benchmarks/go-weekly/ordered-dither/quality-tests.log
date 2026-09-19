@@ -1,0 +1,13 @@
+=== RUN   TestOrderedImportPreservesExactColorsAndTransparency
+--- PASS: TestOrderedImportPreservesExactColorsAndTransparency (0.00s)
+=== RUN   TestOrderedImportBayerCoverageAndTilePhase
+--- PASS: TestOrderedImportBayerCoverageAndTilePhase (0.00s)
+=== RUN   TestOrderedImportPreservesAuthoredPixelArt
+--- PASS: TestOrderedImportPreservesAuthoredPixelArt (0.01s)
+=== RUN   TestOrderedDitherReport
+    image_import_ordered_test.go:306: fixed 12-image corpus: median 4x4 RGB15 mean-error reduction 75.98%
+    image_import_ordered_test.go:329: 128x128/16 colors first-compute p95 1.614ms
+    image_import_ordered_test.go:329: 128x128/256 colors first-compute p95 28.119ms
+--- PASS: TestOrderedDitherReport (1.38s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/editor	2.098s

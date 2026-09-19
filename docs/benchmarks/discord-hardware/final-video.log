@@ -1,0 +1,16 @@
+blend OBJ over BG positive control pixel(3,3)=007f007f expected=007f007f PASS
+blend OBJ over OBJ rejected by hardware pixel(3,3)=000000ff expected=000000ff PASS
+blend OBJ over OBJ uses underlying BG pixel(3,3)=00007f7f expected=00007f7f PASS
+blend WIN0 masks BG but cannot make OBJ a blend target pixel(3,3)=000000ff expected=000000ff PASS
+blend outside WIN0 includes BG blend target pixel(5,3)=00007f7f expected=00007f7f PASS
+GBA DMA: Starting DMA 0 0x02001002 -> 0x05000000 (A240:0001)
+hblank transfer benchmark: transfers=160 scheduled_service_cycles=2400 frame_fraction=0.008544
+hblank immutable table: bad_pixels=0 source=02001142 PASS=1
+hblank no source rewind: changed_pixels=38160 source=02001282 expected_failure=1
+GBA DMA: Starting DMA 0 0x02001002 -> 0x05000000 (A240:0001)
+hblank active overwrite: top_red_bad=0 bottom_blue_bad=0 split_frame=1
+GBA DMA: Starting DMA 0 0x02001002 -> 0x05000000 (A240:0001)
+GBA DMA: Starting DMA 0 0x02002002 -> 0x05000000 (A240:0001)
+hblank double buffering: old_frame_bad=0 new_frame_bad=0 PASS=1; source_bytes_per_frame=320 two_161_halfword_buffers=644
+
+Artifacts: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-video

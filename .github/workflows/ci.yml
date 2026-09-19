@@ -65,6 +65,14 @@ jobs:
         if: runner.os == 'macOS'
         run: go test ./...
 
+      # Exercise the host goroutine boundaries. Logical ownership tests still
+      # matter: a clean race-detector run cannot prove lifecycle correctness.
+      - name: Test editor concurrency (Linux, headless)
+        if: runner.os == 'Linux'
+        run: >-
+          xvfb-run -a go test -race -count=1 -cpu=1,4
+          ./cmd/editor ./internal/emulator ./internal/performance ./internal/midicontrol
+
       - name: Test runtime module
         run: go test ./...
         working-directory: runtime

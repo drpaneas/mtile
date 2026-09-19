@@ -1,0 +1,11 @@
+$ go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintCelesteDiagnostic$ -count=1 -timeout=15m -v
+=== RUN   TestHashFingerprintCelesteDiagnostic
+    hash_fingerprint_diagnostic_test.go:199: evidence: /tmp/mtile-go-weekly-loop/hash-fingerprint/native/celeste-1312246221
+    hash_fingerprint_diagnostic_test.go:203: building baseline-mode0
+    hash_fingerprint_diagnostic_test.go:203: baseline-mode0 build: transpile game.lua: transpiler: src/player.lua:97:3: [M0_RESOURCE_LIMIT] Mode 0 with native audio and four materialized BGs cannot prove per-frame sset()/pal() commits fit VBlank; use Mode 4
+--- FAIL: TestHashFingerprintCelesteDiagnostic (0.10s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	1.145s
+FAIL
+
+exit_code=1 elapsed_seconds=2.292

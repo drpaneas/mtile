@@ -1,0 +1,4 @@
+$ go test ./internal/transpiler -run TableLiteral|EveryBuiltinHasRendererCompatibility|RendererCompatibility (cwd=.)
+ok  	github.com/drpaneas/mtile/internal/transpiler	24.694s
+
+exit_code=0 elapsed_seconds=25.214

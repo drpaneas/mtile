@@ -1,0 +1,10 @@
+$ go test ./...
+ok  	github.com/drpaneas/mtile/runtime	3.048s
+ok  	github.com/drpaneas/mtile/runtime/audio	0.410s
+ok  	github.com/drpaneas/mtile/runtime/hw	0.719s
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	1.284s
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.004s
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	1.911s
+
+exit_code=0 elapsed_seconds=3.916

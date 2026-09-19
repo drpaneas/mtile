@@ -1,0 +1,25 @@
+{
+  "pairs": 6,
+  "gomaxprocs": 12,
+  "profileSHA256": "682893860f209a26f98a83191d0283d3198d253adcd7c7ce3d01b0407fbbbb3c",
+  "driverSHA256": "0efac45250dcfb2607296c9b9a1bb5479d1e47e8823c9a9b77986dbfb0d4ccf6",
+  "productionMethod": "build.Service.Build",
+  "stopBefore": "PhaseWorkspace",
+  "harnessOverhead": "Trace callback plus one panic/recover included identically",
+  "thresholds": {
+    "heldoutImprovementPercent": 3,
+    "eachControlMaxSlowdownPercent": 2
+  },
+  "binaries": {
+    "off": {
+      "path": "/private/tmp/mtile-go-weekly-loop/pgo/actual-off.test",
+      "sha256": "1e724aa4f880ee65f8a469c3e218f26b278d629f18efe0dc032f3f72448c9c3a",
+      "bytes": 8895170
+    },
+    "trained": {
+      "path": "/private/tmp/mtile-go-weekly-loop/pgo/actual-trained.test",
+      "sha256": "1c4c374a36a8b07e967fed760861f575d018c69bdb27caa0a055ccfbe65f803c",
+      "bytes": 9126642
+    }
+  }
+}

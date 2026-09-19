@@ -2,6 +2,8 @@
 
 package hw
 
+import "unsafe"
+
 // The host implementation is deliberately small. It makes the runtime's
 // drawing and input semantics testable without pretending to emulate GBA
 // scanline timing.
@@ -196,14 +198,18 @@ func ReadPaletteRAM16(index int) uint16 {
 }
 
 func CopyToVRAM32DMA(src []byte, dest uintptr, words int) {
-	if words <= 0 || words > 0xFFFF {
+	if words <= 0 || words > 0xFFFF || len(src) < words*4 || dest&3 != 0 {
+		return
+	}
+	if uintptr(unsafe.Pointer(&src[0]))&3 != 0 {
+		copyBytesToVRAM32(src, dest, words)
 		return
 	}
 	CopyToVRAM32CPU(src, dest, words)
 }
 
 func CopyWordsToVRAM32DMA(src []uint32, dest uintptr, words int) {
-	if words <= 0 || words > len(src) || words > 0xFFFF {
+	if words <= 0 || words > len(src) || words > 0xFFFF || dest&3 != 0 {
 		return
 	}
 	for index := 0; index < words; index++ {

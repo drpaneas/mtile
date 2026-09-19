@@ -1,0 +1,93 @@
+{
+  "decision": "drop",
+  "reason": "Code median paired overhead 9.058565% exceeds frozen 5% gate",
+  "scenes": {
+    "Code": {
+      "disabledMedianMeanMillis": 4.178773356151538,
+      "enabledMedianMeanMillis": 5.161375091388889,
+      "medianPairedChangePercent": 9.058565453768464,
+      "pairRangePercent": [
+        -3.4160913325810838,
+        25.97370687363645
+      ],
+      "bootstrapMedian95Percent": [
+        0.6281906165053364,
+        23.05032471326508
+      ],
+      "measuredFrames": 817,
+      "allPixelsEqual": true,
+      "invalidSamples": [],
+      "memory": {},
+      "addedSteadyHeapAlloc": null
+    },
+    "Map": {
+      "disabledMedianMeanMillis": 14.89531646875,
+      "enabledMedianMeanMillis": 15.320403609375,
+      "medianPairedChangePercent": 1.898657837055917,
+      "pairRangePercent": [
+        -2.8342114701493615,
+        6.8853776110515685
+      ],
+      "bootstrapMedian95Percent": [
+        -1.6602045107681151,
+        5.773508301722474
+      ],
+      "measuredFrames": 384,
+      "allPixelsEqual": true,
+      "invalidSamples": [],
+      "memory": {
+        "disabled": {
+          "HeapAlloc": 1110715248,
+          "HeapInuse": 1114365952,
+          "RSSBytes": 1950482432
+        },
+        "enabled": {
+          "HeapAlloc": 1113723376,
+          "HeapInuse": 1117585408,
+          "RSSBytes": 2090532864
+        },
+        "released": {
+          "HeapAlloc": 1106867656,
+          "HeapInuse": 1110269952,
+          "RSSBytes": 2089893888
+        }
+      },
+      "addedSteadyHeapAlloc": 3008128
+    },
+    "Sprites": {
+      "disabledMedianMeanMillis": 6.450290298692812,
+      "enabledMedianMeanMillis": 5.994132136923077,
+      "medianPairedChangePercent": -3.495634119222568,
+      "pairRangePercent": [
+        -14.20328560784676,
+        11.9089533141995
+      ],
+      "bootstrapMedian95Percent": [
+        -11.035179238072175,
+        6.270583194229984
+      ],
+      "measuredFrames": 581,
+      "allPixelsEqual": true,
+      "invalidSamples": [],
+      "memory": {
+        "disabled": {
+          "HeapAlloc": 280815392,
+          "HeapInuse": 284090368,
+          "RSSBytes": 809369600
+        },
+        "enabled": {
+          "HeapAlloc": 284921592,
+          "HeapInuse": 288686080,
+          "RSSBytes": 809091072
+        },
+        "released": {
+          "HeapAlloc": 277016408,
+          "HeapInuse": 280387584,
+          "RSSBytes": 805404672
+        }
+      },
+      "addedSteadyHeapAlloc": 4106200
+    }
+  },
+  "uncertainty": "Exact percentile bootstrap over all 6^6 resamples of six paired percentage changes; descriptive uncertainty, not proof of deterministic host overhead."
+}

@@ -1,0 +1,36 @@
+{
+  "goVersion": "go version go1.27.1 darwin/arm64",
+  "goEnv": {
+    "GOAMD64": "",
+    "GOARCH": "arm64",
+    "GOARM64": "v8.0",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.27.1"
+  },
+  "gomaxprocsEnvironment": null,
+  "benchtime": "1s",
+  "pairs": 10,
+  "trainingSeconds": 30,
+  "source": "/private/tmp/mtile-go-weekly-loop/pgo/source",
+  "inputs": "/private/tmp/mtile-go-weekly-loop/pgo/inputs",
+  "thresholds": {
+    "heldoutImprovementPercent": 3,
+    "eachControlMaxSlowdownPercent": 2
+  },
+  "gomaxprocs": 12,
+  "numCPU": 12,
+  "outputManifestsEqual": true,
+  "profileSHA256": "682893860f209a26f98a83191d0283d3198d253adcd7c7ce3d01b0407fbbbb3c",
+  "binaries": {
+    "off": {
+      "path": "/private/tmp/mtile-go-weekly-loop/pgo/off.test",
+      "bytes": 8878018,
+      "sha256": "a5d02b072c157b2d4dc583eaaa4e477d4275025db33437b09f238da76bf3f7ca"
+    },
+    "trained": {
+      "path": "/private/tmp/mtile-go-weekly-loop/pgo/trained.test",
+      "bytes": 9109474,
+      "sha256": "112db23179e7c5a4f11aeaaaedd82b79aa6d7f09b865d67366b7eae9e257af1a"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+--- FAIL: TestRetiredEmulatorCannotConsumeActivePreviewInput (0.00s)
+    --- FAIL: TestRetiredEmulatorCannotConsumeActivePreviewInput/stopped (0.00s)
+        play_generation_test.go:33: retired tick = stepped true, calls 1, err <nil>
+        play_generation_test.go:37: retired preview changed active preview input or consumed its reset
+        play_generation_test.go:40: retired preview published output: PCM frames 1, video frames 1
+    --- FAIL: TestRetiredEmulatorCannotConsumeActivePreviewInput/replaced (0.00s)
+        play_generation_test.go:33: retired tick = stepped true, calls 1, err <nil>
+        play_generation_test.go:37: retired preview changed active preview input or consumed its reset
+        play_generation_test.go:40: retired preview published output: PCM frames 1, video frames 1
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/editor	4.066s
+FAIL

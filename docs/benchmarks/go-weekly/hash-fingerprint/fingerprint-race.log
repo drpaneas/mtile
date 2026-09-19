@@ -1,0 +1,4 @@
+$ go test -race . -run ^TestHashFingerprint -count=1
+ok  	github.com/drpaneas/mtile/runtime	4.409s
+
+exit_code=0 elapsed_seconds=10.520

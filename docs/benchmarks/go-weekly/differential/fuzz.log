@@ -1,0 +1,16 @@
+$ GOCACHE=/tmp/mtile-generated-gocache go test ./internal/transpiler -run '^$' -fuzz '^FuzzDifferentialParser$' -fuzztime=30s -parallel=1
+fuzz: elapsed: 0s, gathering baseline coverage: 0/33 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 33/33 completed, now fuzzing with 1 workers
+fuzz: elapsed: 3s, execs: 43598 (14527/sec), new interesting: 42 (total: 75)
+fuzz: elapsed: 6s, execs: 86949 (14455/sec), new interesting: 56 (total: 89)
+fuzz: elapsed: 9s, execs: 130060 (14368/sec), new interesting: 61 (total: 94)
+fuzz: elapsed: 12s, execs: 173979 (14642/sec), new interesting: 64 (total: 97)
+fuzz: elapsed: 15s, execs: 217369 (14461/sec), new interesting: 66 (total: 99)
+fuzz: elapsed: 18s, execs: 259979 (14201/sec), new interesting: 66 (total: 99)
+fuzz: elapsed: 21s, execs: 304674 (14898/sec), new interesting: 66 (total: 99)
+fuzz: elapsed: 24s, execs: 347824 (14383/sec), new interesting: 66 (total: 99)
+fuzz: elapsed: 27s, execs: 393003 (15062/sec), new interesting: 66 (total: 99)
+fuzz: elapsed: 30s, execs: 436272 (14423/sec), new interesting: 67 (total: 100)
+fuzz: elapsed: 30s, execs: 436272 (0/sec), new interesting: 67 (total: 100)
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	30.822s

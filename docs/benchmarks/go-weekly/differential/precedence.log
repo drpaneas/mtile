@@ -1,0 +1,7 @@
+$ go test ./internal/transpiler -run ^TestDifferentialParserCorpus$ -count=1 -v
+=== RUN   TestDifferentialParserCorpus
+    differential_fuzz_test.go:298: semantic mismatch: 1 + 2 * 3: got number:589824 trace [], want number:458752 trace []
+--- FAIL: TestDifferentialParserCorpus (0.00s)
+FAIL
+FAIL	github.com/drpaneas/mtile/internal/transpiler	0.633s
+FAIL

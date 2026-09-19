@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "decisions": {
+    "E04": "DROP: candidate stops publishing after the first background-layers Mode4 frame; baseline continues",
+    "E12": "KEEP hardware limitation evidence; DROP arbitrary OBJ-over-OBJ alpha mapping",
+    "E13": "KEEP coherent double-buffer/source-rearm proof; DROP production API integration without scoped scene benefit",
+    "E14": "KEEP existing nominal time API; DROP wall-clock reinterpretation"
+  },
+  "clock": {
+    "nominalUpdateHz": 30,
+    "updatesPerAPISecond": 30,
+    "displayCyclesPerFrame": 280896,
+    "cpuCyclesPerSecond": 16777216,
+    "displayFramesPerWallSecond": 59.72750056960583,
+    "wallSecondsPer30Updates": 1.0045623779296875
+  },
+  "idleProbe": {
+    "displayFrames": 650,
+    "baseline": {
+      "samples": 1435767,
+      "halted": 0,
+      "dma": 0,
+      "haltedPercent": 0.0
+    },
+    "candidate": {
+      "samples": 1435767,
+      "halted": 947827,
+      "dma": 0,
+      "haltedPercent": 66.01537714684903
+    },
+    "scanlineEntryCases": 228,
+    "baselineWrongPresentLines": 0,
+    "candidateWrongPresentLines": 0,
+    "paceCases": 120,
+    "candidateExitVDrawCyclesMinMax": [
+      561757,
+      561766
+    ],
+    "baselineExitVDrawCyclesMinMax": [
+      561746,
+      561782
+    ],
+    "candidateComplete": true
+  },
+  "audio": {
+    "displayFrames": 1200,
+    "baseline": {
+      "samples": 2652242,
+      "halted": 0,
+      "dma": 361032,
+      "haltedPercent": 0.0
+    },
+    "candidate": {
+      "samples": 2652243,
+      "halted": 309618,
+      "dma": 354397,
+      "haltedPercent": 11.673817218105581
+    },
+    "baselineStatus": "50534702",
+    "candidateStatus": "50534702",
+    "baselineServiceCalls": 5007,
+    "candidateServiceCalls": 5002,
+    "bothMaxServiceCycles": 9590,
+    "bothEvents": 199,
+    "bothChannelsSeen": 15,
+    "bothFrameSkips": 0,
+    "bothOverflows": 0,
+    "bothRejected": 0,
+    "bothFailureFlags": 0
+  },
+  "matchedTicks": {
+    "samplesPerCase": 180,
+    "pongMode4": {
+      "differentPixels": 0,
+      "baselineMedian": 185451,
+      "candidateMedian": 184884,
+      "baselineP95": 188281,
+      "candidateP95": 187309,
+      "missedBoth": 0,
+      "romDelta": 824,
+      "iwramDelta": 0,
+      "ewramDelta": 0
+    },
+    "backgroundMode0": {
+      "differentPixels": 0,
+      "baselineMedian": 22338,
+      "candidateMedian": 22227,
+      "baselineP95": 42164,
+      "candidateP95": 42053,
+      "missedBoth": 0,
+      "romDelta": 900,
+      "iwramDelta": 4,
+      "ewramDelta": 0
+    },
+    "backgroundMode4": {
+      "candidateMatchedSamples": 0,
+      "baselineCompletes": true,
+      "longRunDisplayFrames": 5000,
+      "candidateDebugSequence": 2,
+      "baselineDebugSequence": 4894,
+      "candidatePC": "000001c4",
+      "failingRegisters": {
+        "IME": 0,
+        "IE": 4,
+        "DISPSTAT": "e321",
+        "VCOUNT": 160,
+        "IF": 0
+      }
+    }
+  },
+  "hblank": {
+    "steadyPixelsWrong": 0,
+    "withoutRewindChangedPixels": 38160,
+    "activeMutationSplitFrame": true,
+    "inactiveMutationOldWrongPixels": 0,
+    "inactiveMutationNewWrongPixels": 0,
+    "transfersPerFrame": 160,
+    "sourceBytesPerFrame": 320,
+    "scheduledDMAServiceCycles": 2400,
+    "displayCyclePercent": 0.8544087491455913,
+    "doubleBufferBytes": 644
+  },
+  "limitations": [
+    "mGBA emulation only; no battery measurements",
+    "HALT measured by 127-cycle CPU-state sampling with emulator idle-loop optimization disabled",
+    "DMA cycles are emulator event schedule deltas, excluding table-generation/software setup and startup cost",
+    "mGBA rendered RGB components for blending are eight-bit; lower24bits compared",
+    "Sleep failure is observed/reproducible; exact root cause not isolated",
+    "No public API changed"
+  ],
+  "environment": {
+    "root": "/private/tmp/mtile-discord-experiments-ofgo5qwq/baseline",
+    "librarySHA256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab",
+    "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+    "trial": "sleep",
+    "baselineSourceSHA256": {
+      "runtime/hw/pace_tinygo.go": "accf54a6f718bfb5257251ee568e1ecd48b8ca55a84d3d1e9cc7d0f2ec0271a3",
+      "runtime/hw/wait_tinygo.go": "f7b01b2c76d29f4d02932769f00576e9e2e87ec2520d5b0ff2d7256f8a3743d3",
+      "runtime/crt0/gba.s": "b1e6d4e7709fdff8f0a7c663fa8edbd95aafca72a264032c1819f750de3b72a8",
+      "runtime/audio/native_clock_tinygo.go": "7ac85cdb6fca2ade552b53f71a1e703df21fe2413a2168594c8d553bd7b22dcc",
+      "runtime/math.go": "242c1c8c820e9074748717c0a21d649aa6b9b87333dd46b2613d58c7c6353c5c"
+    }
+  },
+  "blend": {
+    "cases": 5,
+    "allPass": true,
+    "objOverBG": "purple",
+    "objOverOBJ": "opaque red",
+    "objOverOBJAndBG": "yellow from green BG",
+    "win0Inside": "BG0 masked, OBJ/effects enabled: opaque red",
+    "win0Outside": "BG0+OBJ/effects enabled: yellow"
+  },
+  "packagedRunnerVerification": {
+    "completed": true,
+    "runnerExitCode": 0,
+    "baselineRuntimeTestsPass": true,
+    "candidateRuntimeTestsPass": true,
+    "candidateRootPackageTestsPass": true,
+    "nativePairedRejectionReproduced": true,
+    "nativePairedPassingCases": 2,
+    "nativePairedRejectedCases": 1,
+    "artifactDirectory": "/private/tmp/mtile-discord-experiments-ofgo5qwq/sleep-repro-fixed",
+    "scope": "Packaging validation re-ran existing experiments; production candidate remains rejected."
+  }
+}

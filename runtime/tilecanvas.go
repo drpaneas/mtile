@@ -86,7 +86,10 @@ func (c *Context) clearRender(color int) {
 }
 
 func (c *Context) checkCanvasMap(slot, bg int) {
-	if !c.canvasDrawn || c.canvasHasPixels || slot != bg || bg <= c.canvasLastBG || bg < 0 || bg >= 4 {
+	// MapBGAt packs unused logical planes out of the hardware slots. Slot and
+	// BG number are therefore not the same identity; they must still be in
+	// range, strictly increasing in BG order, and unique per slot.
+	if !c.canvasDrawn || c.canvasHasPixels || slot < 0 || slot >= 4 || bg < 0 || bg >= 4 || bg <= c.canvasLastBG || c.mode0MapSeen&(1<<uint(slot)) != 0 {
 		runtimePanic("tile canvas requires ordered backgrounds before foreground raster calls; use Mode 4")
 	}
 	c.ensureDrawState()

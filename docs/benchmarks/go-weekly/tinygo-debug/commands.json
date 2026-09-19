@@ -1,0 +1,547 @@
+[
+  {
+    "label": "toolchain-root",
+    "command": [
+      "/opt/homebrew/bin/tinygo",
+      "env",
+      "TINYGOROOT"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.14340699999593198,
+    "exitCode": 0
+  },
+  {
+    "label": "clone-toolchain",
+    "command": [
+      "cp",
+      "-cR",
+      "/opt/homebrew/Cellar/tinygo/0.42.0",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/tinygo"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 2.2722535000066273,
+    "exitCode": 0
+  },
+  {
+    "label": "tinygo-version",
+    "command": [
+      "/opt/homebrew/bin/tinygo",
+      "version"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.05595862500194926,
+    "exitCode": 0
+  },
+  {
+    "label": "go-version",
+    "command": [
+      "go",
+      "version"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.011270792005234398,
+    "exitCode": 0
+  },
+  {
+    "label": "revision",
+    "command": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.009435291998670436,
+    "exitCode": 0
+  },
+  {
+    "label": "working-tree",
+    "command": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.05358870900818147,
+    "exitCode": 0
+  },
+  {
+    "label": "original-root",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "env",
+      "TINYGOROOT"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.5454734160011867,
+    "exitCode": 0
+  },
+  {
+    "label": "original-debug-root",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original-debug",
+      "env",
+      "TINYGOROOT"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.39025608300289605,
+    "exitCode": 0
+  },
+  {
+    "label": "patched-root",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched",
+      "env",
+      "TINYGOROOT"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.3754994170012651,
+    "exitCode": 0
+  },
+  {
+    "label": "patched-debug-root",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "env",
+      "TINYGOROOT"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.37180058399098925,
+    "exitCode": 0
+  },
+  {
+    "label": "build-harness",
+    "command": [
+      "go",
+      "build",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "./scripts/go-weekly/tinygo-debug"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.5768625000055181,
+    "exitCode": 0
+  },
+  {
+    "label": "build-allocation-checker",
+    "command": [
+      "go",
+      "build",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/checkallocs",
+      "./internal/cmd/checkallocs"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+    "seconds": 0.3052248750027502,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-original-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.9452571660076501,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic",
+    "seconds": 0.43573962499795016,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-original-allocations",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/checkallocs",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/tinygo-debug/panic-original.log"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.41642308299196884,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-original-debug-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original-debug.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.1001747500122292,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-original-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original-debug",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original-debug.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/original-debug.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic",
+    "seconds": 0.24758012499660254,
+    "exitCode": 1
+  },
+  {
+    "label": "panic-patched-debug-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/patched-debug.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.09312112499901559,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-patched-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/patched-debug.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic/patched-debug.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/panic",
+    "seconds": 0.5670834170014132,
+    "exitCode": 0
+  },
+  {
+    "label": "panic-patched-debug-allocations",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/checkallocs",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/tinygo-debug/panic-patched-debug.log"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.01966866699513048,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-original-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.11071274999994785,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds",
+    "seconds": 0.45641304200398736,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-original-allocations",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/checkallocs",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/tinygo-debug/bounds-original.log"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.00897029199404642,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-original-debug-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original-debug.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.11178274999838322,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-original-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original-debug",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original-debug.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/original-debug.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds",
+    "seconds": 0.21130783300031908,
+    "exitCode": 1
+  },
+  {
+    "label": "bounds-patched-debug-target",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-target",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/patched-debug.json"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.09252991700486746,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-patched-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "build",
+      "-gc=none",
+      "-opt=2",
+      "-panic=print",
+      "-print-allocs-cover=.",
+      "-target=/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/patched-debug.json",
+      "-o",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds/patched-debug.gba",
+      "."
+    ],
+    "cwd": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/bounds",
+    "seconds": 0.4675705840054434,
+    "exitCode": 0
+  },
+  {
+    "label": "bounds-patched-debug-allocations",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/checkallocs",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/tinygo-debug/bounds-patched-debug.log"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 0.020221459009917453,
+    "exitCode": 0
+  },
+  {
+    "label": "mode0-release-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode0-release-original.gba",
+      "-renderer",
+      "mode0"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.5366470830049366,
+    "exitCode": 0
+  },
+  {
+    "label": "mode0-release-patched",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode0-release-patched.gba",
+      "-renderer",
+      "mode0"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.5561000419984339,
+    "exitCode": 0
+  },
+  {
+    "label": "mode0-preview-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode0-preview-original.gba",
+      "-renderer",
+      "mode0",
+      "-debug",
+      "-player",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mtile-player",
+      "-samples",
+      "300"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.8936694999865722,
+    "exitCode": 0
+  },
+  {
+    "label": "mode0-preview-patched-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode0-preview-patched-debug.gba",
+      "-renderer",
+      "mode0",
+      "-debug",
+      "-player",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mtile-player",
+      "-samples",
+      "300"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.9471617500093998,
+    "exitCode": 0
+  },
+  {
+    "label": "mode4-release-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode4-release-original.gba",
+      "-renderer",
+      "mode4"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.5676289580005687,
+    "exitCode": 0
+  },
+  {
+    "label": "mode4-release-patched",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode4-release-patched.gba",
+      "-renderer",
+      "mode4"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.5522915830079,
+    "exitCode": 0
+  },
+  {
+    "label": "mode4-preview-original",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/original",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode4-preview-original.gba",
+      "-renderer",
+      "mode4",
+      "-debug",
+      "-player",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mtile-player",
+      "-samples",
+      "300"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.9270161249878583,
+    "exitCode": 0
+  },
+  {
+    "label": "mode4-preview-patched-debug",
+    "command": [
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/harness",
+      "-compiler",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/patched-debug",
+      "-runtime",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime",
+      "-project",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/examples/testio",
+      "-out",
+      "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode4-preview-patched-debug.gba",
+      "-renderer",
+      "mode4",
+      "-debug",
+      "-player",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/build/player/mtile-player",
+      "-samples",
+      "300"
+    ],
+    "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile",
+    "seconds": 1.981437000009464,
+    "exitCode": 0
+  }
+]

@@ -1,0 +1,3 @@
+ok  	github.com/drpaneas/mtile/internal/transpiler	252.265s
+ok  	github.com/drpaneas/mtile/internal/build	15.657s
+ok  	github.com/drpaneas/mtile/cmd/mtile	6.600s

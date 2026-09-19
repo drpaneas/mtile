@@ -1,0 +1,8 @@
+{
+  "snapshot": "/tmp/mtile-flight-recorder-pre7",
+  "sha256": {
+    "cmd/editor/main.go": "e1ae20ecfe897b82cbc628bfeb1adf203f33284ea830bb0c55198b20881df068",
+    "cmd/mtile/main.go": "46973e644dda729039c12449a50fe283bc155f666af952fe601a8de7fefba073",
+    "cmd/mtile/main_test.go": "87f659b1190fcea5d7fdc451c3330456c1a4e0ff2714ccfabdc89353f76fec16"
+  }
+}

@@ -48,6 +48,33 @@ func TestTileCanvasEditorExperimentIsProjectScoped(t *testing.T) {
 	}
 }
 
+func TestTileCanvasBuildOptInDoesNotNeedEditorEnv(t *testing.T) {
+	t.Setenv("MTILE_EXPERIMENTAL_TILECANVAS_PROJECT", "")
+	t.Setenv("MTILE_EXPERIMENTAL_TILECANVAS_OBJECTS", "")
+	project := t.TempDir()
+	service := Service{UseProjectRenderer: true, ExperimentalTileCanvas: true}
+	service.configureTileCanvasExperiment(project)
+	renderer, err := service.resolveRenderer(assetsync.Project{Renderer: "auto"})
+	if err != nil || renderer != transpiler.RendererMode4 || !service.DisableMapRasterCache || !service.tileCanvasExperiment {
+		t.Fatalf("build opt-in did not enable the private build: %+v renderer=%v error=%v", service, renderer, err)
+	}
+	report := transpiler.RendererReport{Selected: renderer, HeapLinked: true, SheetReadOnly: true}
+	tags := service.runtimeBuildTags(report)
+	if tags != runtimeBuildTags(report)+",mtile_tilecanvas" || strings.Contains(tags, "mtile_mode0") {
+		t.Fatalf("build opt-in lost ordinary specialization or enabled public Mode 0: %s", tags)
+	}
+}
+
+func TestTileCanvasBuildOptInIgnoresUnrelatedEditorEnv(t *testing.T) {
+	other := t.TempDir()
+	t.Setenv("MTILE_EXPERIMENTAL_TILECANVAS_PROJECT", other)
+	service := Service{UseProjectRenderer: true, ExperimentalTileCanvas: true}
+	service.configureTileCanvasExperiment(t.TempDir())
+	if !service.tileCanvasExperiment || service.UseProjectRenderer || service.Renderer != transpiler.RendererMode4 {
+		t.Fatalf("build opt-in should not depend on editor env: %+v", service)
+	}
+}
+
 func TestLegacyObjectsOptInDoesNotAddSceneSpecificRuntime(t *testing.T) {
 	selected, other := t.TempDir(), t.TempDir()
 	t.Setenv("MTILE_EXPERIMENTAL_TILECANVAS_PROJECT", selected)

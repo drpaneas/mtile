@@ -1,0 +1,22 @@
+{
+  "insert-collision": {
+    "baseline_ns/op": 6860.0,
+    "candidate_ns/op": 5141.0,
+    "changePercent": -25.058309037900873
+  },
+  "insert-distributed": {
+    "baseline_ns/op": 1467.0,
+    "candidate_ns/op": 2105.0,
+    "changePercent": 43.49011588275391
+  },
+  "image-dynamic": {
+    "baseline_ns/op": 23.24,
+    "candidate_ns/op": 658.9,
+    "changePercent": 2735.197934595525
+  },
+  "image-static": {
+    "baseline_ns/op": 22.12,
+    "candidate_ns/op": 33.87,
+    "changePercent": 53.119349005424944
+  }
+}

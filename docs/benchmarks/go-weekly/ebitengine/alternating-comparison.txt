@@ -1,0 +1,19 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-alternating.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-alternating.txt │
+                        │                            sec/op                             │                  sec/op                   vs base              │
+EditorRender/Sprites-12                                                     17.62m ± 1%                                16.65m ± 1%  -5.49% (p=0.000 n=8)
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-alternating.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-alternating.txt │
+                        │                         render-sec/op                         │              render-sec/op                vs base              │
+EditorRender/Sprites-12                                                    6.875m ± 12%                               6.442m ± 31%  -6.29% (p=0.010 n=8)
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-alternating.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-alternating.txt │
+                        │                             B/op                              │                   B/op                    vs base              │
+EditorRender/Sprites-12                                                    4.391Mi ± 1%                               4.254Mi ± 1%  -3.12% (p=0.000 n=8)
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-alternating.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-alternating.txt │
+                        │                           allocs/op                           │                allocs/op                 vs base               │
+EditorRender/Sprites-12                                                     5.915k ± 0%                               5.245k ± 0%  -11.33% (p=0.000 n=8)

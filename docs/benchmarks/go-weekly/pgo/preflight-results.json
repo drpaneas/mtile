@@ -1,0 +1,398 @@
+[
+  {
+    "Project": "celeste",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 5 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 49/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested auto -\u003e selected mode4 (M4_AUTO_MODE0_INELIGIBLE)"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer AUTO profile: tile-v1"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer fallback: transpiler: src/presentation.lua:67:5: [M0_MODE4_BUILTIN] circfill() requires the Mode 4 framebuffer"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "celeste-parallax",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 5 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 41/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested auto -\u003e selected mode4 (M4_AUTO_MODE0_INELIGIBLE)"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer AUTO profile: tile-v1"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer fallback: transpiler: src/presentation.lua:66:5: [M0_MODE4_BUILTIN] circfill() requires the Mode 4 framebuffer"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "celeste-mode0",
+    "Policy": "project",
+    "PrefixPassed": false,
+    "Error": "transpile game.lua: transpiler: src/player.lua:97:3: [M0_RESOURCE_LIMIT] Mode 0 with native audio and four materialized BGs cannot prove per-frame sset()/pal() commits fit VBlank; use Mode 4",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 4 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 50/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      }
+    ]
+  },
+  {
+    "Project": "multi-file",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 3 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 2/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "audio-gb-song",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 0/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "loop",
+    "Policy": "project",
+    "PrefixPassed": false,
+    "Error": "transpile game.lua: transpiler: game.lua:509:3: [MAP_EXPLICIT_CONTRACT] BG0 is drawn more than once",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 60/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      }
+    ]
+  },
+  {
+    "Project": "pong",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 23/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "mapdemo",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 9/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "hello",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 2/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "noalloc-call-stress",
+    "Policy": "project",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 1 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 1/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  },
+  {
+    "Project": "celeste-mode0",
+    "Policy": "forced-mode4",
+    "PrefixPassed": true,
+    "Error": "",
+    "Events": [
+      {
+        "Phase": "source",
+        "Message": "Resolving project"
+      },
+      {
+        "Phase": "source",
+        "Message": "Resolved 4 Lua source file(s), entry game.lua"
+      },
+      {
+        "Phase": "source",
+        "Message": "Global state: 50/256 persistent fields"
+      },
+      {
+        "Phase": "assets",
+        "Message": "Loading and validating cartridge assets"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Transpiling Lua to Go"
+      },
+      {
+        "Phase": "transpile",
+        "Message": "Renderer: requested mode4 -\u003e selected mode4 (M4_FORCED)"
+      },
+      {
+        "Phase": "workspace",
+        "Message": "Creating isolated build workspace"
+      }
+    ]
+  }
+]

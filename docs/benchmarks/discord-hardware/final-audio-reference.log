@@ -1,0 +1,46 @@
+ch1: PASS (789552 frames at 32768 Hz)
+  case 0: rms L=3753.5 R=3753.5
+  case 1: rms L=4989.6 R=4989.6
+  case 2: rms L=5760.0 R=5760.0
+  case 3: rms L=4977.7 R=4977.7
+  case 4: rms L=0.0 R=0.0
+  case 5: rms L=5760.0 R=5760.0
+  case 6: rms L=0.0 R=0.0
+  case 7: rms L=0.0 R=0.0
+  case 8: rms L=641.7 R=641.7
+  case 9: rms L=5701.5 R=5701.5
+  case 10: rms L=5759.9 R=0.0
+  case 11: rms L=0.0 R=5759.9
+ch2: PASS (657882 frames at 32768 Hz)
+  case 0: rms L=3334.1 R=3334.1
+  case 1: rms L=4350.4 R=4350.4
+  case 2: rms L=4992.0 R=4992.0
+  case 3: rms L=4303.4 R=4303.4
+  case 4: rms L=200.8 R=200.8
+  case 5: rms L=5728.8 R=5728.8
+  case 6: rms L=0.0 R=0.0
+  case 7: rms L=4991.9 R=0.0
+  case 8: rms L=0.0 R=4991.9
+  case 9: rms L=4992.0 R=4992.0
+ch3: PASS (657882 frames at 32768 Hz)
+  case 0: rms L=3541.3 R=3541.3
+  case 1: rms L=5759.9 R=5759.9
+  case 2: rms L=1760.6 R=1760.6
+  case 3: rms L=860.8 R=860.8
+  case 4: rms L=2657.2 R=2657.2
+  case 5: rms L=4776.1 R=4776.1
+  case 6: rms L=4770.5 R=4770.5
+  case 7: rms L=3539.2 R=3539.2
+  case 8: rms L=0.0 R=0.0
+  case 9: rms L=0.0 R=0.0
+ch4: PASS (657882 frames at 32768 Hz)
+  case 0: rms L=5759.6 R=5759.6
+  case 1: rms L=5760.0 R=5760.0
+  case 2: rms L=5759.8 R=5759.8
+  case 3: rms L=5760.0 R=5760.0
+  case 4: rms L=2946.3 R=2946.3
+  case 5: rms L=479.6 R=479.6
+  case 6: rms L=5723.6 R=5723.6
+  case 7: rms L=0.0 R=0.0
+  case 8: rms L=5759.7 R=0.0
+  case 9: rms L=0.0 R=5759.7

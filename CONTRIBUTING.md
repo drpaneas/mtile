@@ -75,6 +75,22 @@ can fail during display initialization before tests run.
 `go test -c -o /tmp/mtile-editor.test ./cmd/editor` checks compilation only;
 it does not substitute for the desktop tests.
 
+For changes to preview workers, audio callbacks or MIDI handling, also run:
+
+```sh
+go test -race -count=1 -cpu=1,4 \
+  ./cmd/editor ./internal/emulator ./internal/performance ./internal/midicontrol
+```
+
+On headless Linux, prefix that command with `xvfb-run -a`. Pair the race detector
+with deterministic ownership and lifecycle tests: mutex-protected stale work
+can still consume a replacement preview's input. Use a few bounded workers and
+explicit handoffs in regressions instead of depending on sleeps or thousands
+of goroutines to reproduce a bug. Go's detector covers executed, instrumented
+Go accesses; this command does not validate native libraries or GBA interrupt
+ordering. See the [concurrency audit](docs/threadsanitizer-concurrency-audit.md)
+for the scope and evidence behind this gate.
+
 For edits to the README and entry-point guides, use Python 3.9+ and run
 `python3 scripts/docs/check_links.py`. This checks local destinations and
 heading anchors without relying on network access. Regenerating the optional

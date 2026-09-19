@@ -1,0 +1,11 @@
+$ /private/tmp/mtile-go-weekly-loop/pgo/actual-trained.test -test.run=^$ -test.bench=^BenchmarkPGOActual(Heldout|Hello|Noalloc)$ -test.benchmem -test.count=1 -test.benchtime=1s
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/build
+cpu: Apple M2 Pro
+BenchmarkPGOActualHeldout-12    	      84	  13954493 ns/op	17202817 B/op	  105224 allocs/op
+BenchmarkPGOActualHello-12      	    1414	    854691 ns/op	  908820 B/op	    6404 allocs/op
+BenchmarkPGOActualNoalloc-12    	    3156	    401326 ns/op	  399539 B/op	    2885 allocs/op
+PASS
+
+exit_code=0

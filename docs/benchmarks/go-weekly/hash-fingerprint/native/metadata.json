@@ -1,0 +1,7 @@
+{
+  "go": "go version go1.27.1 darwin/arm64",
+  "playerSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "samples": 600,
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "warmupFrames": 20
+}

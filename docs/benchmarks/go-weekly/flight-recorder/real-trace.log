@@ -1,0 +1,6 @@
+=== RUN   TestFlightRecorderRealPreStallCapture
+2026/09/19 14:44:03 editor: saved stall trace /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/flight-recorder/pre-stall.trace (Update 122.025208ms)
+    flight_recorder_test.go:288: captured 6964 bytes: /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/flight-recorder/pre-stall.trace
+--- PASS: TestFlightRecorderRealPreStallCapture (0.13s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	0.682s

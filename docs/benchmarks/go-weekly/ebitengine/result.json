@@ -1,0 +1,47 @@
+{
+  "decision": "retain",
+  "baseline": {
+    "ebitengine": "2.9.9",
+    "oto": "3.4.0"
+  },
+  "candidate": {
+    "ebitengine": "2.10.2",
+    "oto": "3.5.0"
+  },
+  "host": "Apple M2 Pro, darwin/arm64, Go 1.27.1",
+  "pixel_parity": {
+    "Sprites": {
+      "width": 1200,
+      "height": 800,
+      "exact_rgba_equal": true,
+      "rgba_sha256": "770791162f4f0e71f09c35f05f235a2a4c6aa2d0fd5f76dd7d164bc6d8dafc8d"
+    },
+    "Map": {
+      "width": 1200,
+      "height": 800,
+      "exact_rgba_equal": true,
+      "rgba_sha256": "5cbc45bdac792323e8042cdc686ba177c1d9183f2b9590505b919c4643f7521e"
+    },
+    "Code": {
+      "width": 1200,
+      "height": 800,
+      "exact_rgba_equal": true,
+      "rgba_sha256": "f12af17476985087f36a88935abb801c5820f30c45929d37c5bc1d50ae06350e"
+    }
+  },
+  "gates": {
+    "editor_audio_emulator_midi_race_tests": "pass (-cpu=1,4)",
+    "vm_edit_save_undo_source_restoration": "pass",
+    "vm_ticks": 55,
+    "vm_clean_guest_exit": "pass",
+    "linux_amd64_cgo_disabled_baseline": "fails: Oto/GLFW implementation missing",
+    "linux_amd64_cgo_disabled_candidate": "pass"
+  },
+  "limits": [
+    "Desktop graphics workload; not GBA cycle measurements",
+    "Pixel readback and OS presentation affect timing",
+    "Native Oto device latency and physical MIDI were not measured",
+    "Code workspace allocations per frame increase by about 711 (58%); bytes increase 1.5% while measured render time improves",
+    "VM validates editing only; explicit nonexistent TinyGo path prevents preview compiler launch"
+  ]
+}

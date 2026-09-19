@@ -1,0 +1,86 @@
+=== RUN   TestMode0TransparentSpriteZeroIsAnInactiveDynamicSlot
+--- PASS: TestMode0TransparentSpriteZeroIsAnInactiveDynamicSlot (0.00s)
+=== RUN   TestMode0VisibleSpriteZeroStillRendersAndTracksSset
+--- PASS: TestMode0VisibleSpriteZeroStillRendersAndTracksSset (0.00s)
+=== RUN   TestMode0TransparentSpriteZeroDoesNotHideRestOfMetasprite
+--- PASS: TestMode0TransparentSpriteZeroDoesNotHideRestOfMetasprite (0.00s)
+=== RUN   TestMode0CompactVisibleSpriteZeroUsesOBJTileZero
+--- PASS: TestMode0CompactVisibleSpriteZeroUsesOBJTileZero (0.00s)
+=== RUN   TestMode0PackedOAMEntryMatchesBytesAtEveryAlignment
+--- PASS: TestMode0PackedOAMEntryMatchesBytesAtEveryAlignment (0.00s)
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-1
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-63
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-64
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-65
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-100
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-127
+=== RUN   TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-128
+--- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-1 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-63 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-64 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-65 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-100 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-127 (0.00s)
+    --- PASS: TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes/count-128 (0.00s)
+=== RUN   TestMode0OAMOverflowRejectsWholeMetasprite
+--- PASS: TestMode0OAMOverflowRejectsWholeMetasprite (0.00s)
+=== RUN   TestMode0OAMCompactionClearsShrinkingAndGrowingFrames
+--- PASS: TestMode0OAMCompactionClearsShrinkingAndGrowingFrames (0.00s)
+=== RUN   TestMode0PackedObjectsKeepOAMDMAAligned
+--- PASS: TestMode0PackedObjectsKeepOAMDMAAligned (0.00s)
+=== RUN   TestMode0HardwareSpriteUsesOBJVRAMCameraFlipAndOAM
+--- PASS: TestMode0HardwareSpriteUsesOBJVRAMCameraFlipAndOAM (0.00s)
+=== RUN   TestMode0ObjectAllocatorUsesAll128OAMEntriesAndStopsSafely
+--- PASS: TestMode0ObjectAllocatorUsesAll128OAMEntriesAndStopsSafely (0.00s)
+=== RUN   TestMode0MovingObjectsDoNotRewriteUnchangedPalette
+--- PASS: TestMode0MovingObjectsDoNotRewriteUnchangedPalette (0.00s)
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/native-palette
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/draw-remap
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/display-remap
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/draw-layer-reset
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/display-layer-reset
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/full-reset
+=== RUN   TestMode0PaletteMutationsReachBothBanksWithoutObjects/composed-remaps
+--- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/native-palette (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/draw-remap (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/display-remap (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/draw-layer-reset (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/display-layer-reset (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/full-reset (0.00s)
+    --- PASS: TestMode0PaletteMutationsReachBothBanksWithoutObjects/composed-remaps (0.00s)
+=== RUN   TestMode0PaletteMutationAfterInvisibleFrameAppliesToNextSprite
+--- PASS: TestMode0PaletteMutationAfterInvisibleFrameAppliesToNextSprite (0.00s)
+=== RUN   TestMode0InitPaletteMutationCommitsWhileForceBlanked
+--- PASS: TestMode0InitPaletteMutationCommitsWhileForceBlanked (0.00s)
+=== RUN   TestMode0CommitBudgetCountsOnlyPendingMapTransfers
+--- PASS: TestMode0CommitBudgetCountsOnlyPendingMapTransfers (0.00s)
+=== RUN   TestMode0CommitBudgetRetainsFullWindowForUnprovenWork
+--- PASS: TestMode0CommitBudgetRetainsFullWindowForUnprovenWork (0.00s)
+=== RUN   TestMode0CommitBudgetAddsBoundedNativeAudioIRQReserve
+--- PASS: TestMode0CommitBudgetAddsBoundedNativeAudioIRQReserve (0.00s)
+=== RUN   TestMode0PreparedTilesPreserveLateMutationAndOverflowFallback
+--- PASS: TestMode0PreparedTilesPreserveLateMutationAndOverflowFallback (0.00s)
+=== RUN   TestMode0CombinesDrawAndDisplayPaletteRemaps
+--- PASS: TestMode0CombinesDrawAndDisplayPaletteRemaps (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.377s
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/audio	2.341s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/hw	1.642s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	2.872s [no tests to run]
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.937s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	2.575s [no tests to run]

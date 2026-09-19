@@ -1,0 +1,21 @@
+--- a/internal/transpiler/transpiler.go
++++ b/internal/transpiler/transpiler.go
+@@ -5282,13 +5282,11 @@
+ 		}
+ 		value := g.emitNumberExpr(x.Expr)
+ 		if x.Op == luaparser.OpNegate {
+-			// Negating the minimum Number as a Go constant overflows int32.
+-			// Its two's-complement negation is the same bit pattern, so emit
+-			// that wrapped value directly instead of asking Go to fold it.
+-			if literal, ok := x.Expr.(*luaparser.NumberExpr); ok && fixedNumberLiteral(literal.Value) == -2147483648 {
+-				return "rt.Number(-2147483648)"
+-			}
+-			return "-(" + value + ")"
++			// A variable forces signed 16:16 wrapping instead of Go constant
++			// overflow, including parenthesized literals and inlined globals.
++			tmp := g.next("neg")
++			g.pending = append(g.pending, tmp+" := "+value)
++			return "-(" + tmp + ")"
+ 		}
+ 		return "(" + value + ").Bnot()"
+ 	case *luaparser.BinaryExpr:

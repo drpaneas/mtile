@@ -1,0 +1,59 @@
+{
+  "binaries": {
+    "off": {
+      "bytes": 7374434,
+      "sha256": "79be9b2c35c58ff82d7d7fc571116a1eddd468948a21c0f867147bfa2d588d0e",
+      "buildInfo": "/private/tmp/mtile-go-weekly-loop/pgo/cli/mtile-off: go1.27.1\n\tpath\tgithub.com/drpaneas/mtile/cmd/mtile\n\tmod\tgithub.com/drpaneas/mtile\tv0.0.0-20260909171100-26182b69fcb5+dirty\t\n\tdep\tgithub.com/drpaneas/mtile/runtime\tv0.0.0\n\t=>\t./runtime\t(devel)\t\n\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n\tbuild\tvcs=git\n\tbuild\tvcs.revision=26182b69fcb5325a73e664f4ea13b6727cdb23c2\n\tbuild\tvcs.time=2026-09-09T17:11:00Z\n\tbuild\tvcs.modified=true\n"
+    },
+    "default": {
+      "bytes": 7605842,
+      "sha256": "12882023c73326e99c779fe3a62d8112e97b21b9cf0d445ba0bbc1e886dafd9f",
+      "buildInfo": "/private/tmp/mtile-go-weekly-loop/pgo/cli/mtile-default: go1.27.1\n\tpath\tgithub.com/drpaneas/mtile/cmd/mtile\n\tmod\tgithub.com/drpaneas/mtile\tv0.0.0-20260909171100-26182b69fcb5+dirty\t\n\tdep\tgithub.com/drpaneas/mtile/runtime\tv0.0.0\n\t=>\t./runtime\t(devel)\t\n\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-pgo=/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/mtile/default.pgo\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=arm64\n\tbuild\tGOARM64=v8.0\n\tbuild\tGOOS=darwin\n\tbuild\tvcs=git\n\tbuild\tvcs.modified=true\n\tbuild\tvcs.revision=26182b69fcb5325a73e664f4ea13b6727cdb23c2\n\tbuild\tvcs.time=2026-09-09T17:11:00Z\n"
+    }
+  },
+  "projects": {
+    "hello": {
+      "off": {
+        "ROMBytes": 25100,
+        "ROMSHA256": "85735121c9f030bb58188c72ed19b31654d8e0bdc80721f50108645c4b2368f6",
+        "generatedGoSHA256": "f98b1b7752848b0824d403e8a1f64e93c3bb871761a5ef9ca92feab340699e31",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3094390056"
+      },
+      "default": {
+        "ROMBytes": 25100,
+        "ROMSHA256": "85735121c9f030bb58188c72ed19b31654d8e0bdc80721f50108645c4b2368f6",
+        "generatedGoSHA256": "f98b1b7752848b0824d403e8a1f64e93c3bb871761a5ef9ca92feab340699e31",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2757958037"
+      }
+    },
+    "pong": {
+      "off": {
+        "ROMBytes": 70708,
+        "ROMSHA256": "613ea093bec73b1fd0312d827dfc68e491c87debef9c3f11969c6c496382b559",
+        "generatedGoSHA256": "bb919cb8b136235a77d884d2cf37260efbbf54df4bfe2f5feafd30e17a1394e4",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-3873832718"
+      },
+      "default": {
+        "ROMBytes": 70708,
+        "ROMSHA256": "613ea093bec73b1fd0312d827dfc68e491c87debef9c3f11969c6c496382b559",
+        "generatedGoSHA256": "bb919cb8b136235a77d884d2cf37260efbbf54df4bfe2f5feafd30e17a1394e4",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2477876102"
+      }
+    },
+    "mapdemo": {
+      "off": {
+        "ROMBytes": 195508,
+        "ROMSHA256": "2326b8dd346e23ba15abb55f29cbf46e8976d0800b2459c5326ab13273a0edf0",
+        "generatedGoSHA256": "ea6c7548c60e8dc4ac44bba81d45b8f3f8a7889ab6efb2c5e4ee9840af3a8fdc",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2366839716"
+      },
+      "default": {
+        "ROMBytes": 195508,
+        "ROMSHA256": "2326b8dd346e23ba15abb55f29cbf46e8976d0800b2459c5326ab13273a0edf0",
+        "generatedGoSHA256": "ea6c7548c60e8dc4ac44bba81d45b8f3f8a7889ab6efb2c5e4ee9840af3a8fdc",
+        "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1874495554"
+      }
+    }
+  },
+  "defaultProfileSHA256": "682893860f209a26f98a83191d0283d3198d253adcd7c7ce3d01b0407fbbbb3c"
+}

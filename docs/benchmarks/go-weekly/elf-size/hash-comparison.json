@@ -1,0 +1,318 @@
+{
+  "before": {
+    "path": "/tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/baseline/game.elf",
+    "totals": {
+      "romLoadBytes": 42940,
+      "iwramBytes": 11660,
+      "ewramBytes": 153928,
+      "debugMailboxBytes": 512,
+      "otherAllocatedBytes": 0
+    },
+    "romImageBytes": 42940,
+    "romSegmentPaddingBytes": 0,
+    "symbolsAvailable": true,
+    "sections": [
+      {
+        "name": ".text",
+        "type": "SHT_PROGBITS",
+        "vma": 134217728,
+        "lma": 134217728,
+        "size": 31436,
+        "cost": {
+          "romLoadBytes": 31436,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 424
+      },
+      {
+        "name": ".rodata",
+        "type": "SHT_PROGBITS",
+        "vma": 134249164,
+        "lma": 134249164,
+        "size": 9060,
+        "cost": {
+          "romLoadBytes": 9060,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 8
+      },
+      {
+        "name": ".stack",
+        "type": "SHT_NOBITS",
+        "vma": 50331648,
+        "size": 9216,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 9216,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 9216
+      },
+      {
+        "name": ".data",
+        "type": "SHT_PROGBITS",
+        "vma": 50340864,
+        "lma": 134258224,
+        "size": 2444,
+        "cost": {
+          "romLoadBytes": 2444,
+          "iwramBytes": 2444,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      },
+      {
+        "name": ".ewram",
+        "type": "SHT_NOBITS",
+        "vma": 33554432,
+        "size": 153928,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 153928,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 2
+      },
+      {
+        "name": ".debug_mailbox",
+        "type": "SHT_NOBITS",
+        "vma": 33816064,
+        "size": 512,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 512,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      },
+      {
+        "name": ".bss",
+        "type": "SHT_NOBITS",
+        "vma": 50343308,
+        "size": 0,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      }
+    ]
+  },
+  "after": {
+    "path": "/tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/candidate/game.elf",
+    "totals": {
+      "romLoadBytes": 43228,
+      "iwramBytes": 11764,
+      "ewramBytes": 153928,
+      "debugMailboxBytes": 512,
+      "otherAllocatedBytes": 0
+    },
+    "romImageBytes": 43228,
+    "romSegmentPaddingBytes": 0,
+    "symbolsAvailable": true,
+    "sections": [
+      {
+        "name": ".text",
+        "type": "SHT_PROGBITS",
+        "vma": 134217728,
+        "lma": 134217728,
+        "size": 31620,
+        "cost": {
+          "romLoadBytes": 31620,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 424
+      },
+      {
+        "name": ".rodata",
+        "type": "SHT_PROGBITS",
+        "vma": 134249348,
+        "lma": 134249348,
+        "size": 9060,
+        "cost": {
+          "romLoadBytes": 9060,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 8
+      },
+      {
+        "name": ".stack",
+        "type": "SHT_NOBITS",
+        "vma": 50331648,
+        "size": 9216,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 9216,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 9216
+      },
+      {
+        "name": ".data",
+        "type": "SHT_PROGBITS",
+        "vma": 50340864,
+        "lma": 134258408,
+        "size": 2548,
+        "cost": {
+          "romLoadBytes": 2548,
+          "iwramBytes": 2548,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      },
+      {
+        "name": ".ewram",
+        "type": "SHT_NOBITS",
+        "vma": 33554432,
+        "size": 153928,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 153928,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 2
+      },
+      {
+        "name": ".debug_mailbox",
+        "type": "SHT_NOBITS",
+        "vma": 33816064,
+        "size": 512,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 512,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      },
+      {
+        "name": ".bss",
+        "type": "SHT_NOBITS",
+        "vma": 50343412,
+        "size": 0,
+        "cost": {
+          "romLoadBytes": 0,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        },
+        "unattributedBytes": 0
+      }
+    ]
+  },
+  "comparison": {
+    "totalsDelta": {
+      "romLoadBytes": 288,
+      "iwramBytes": 104,
+      "ewramBytes": 0,
+      "debugMailboxBytes": 0,
+      "otherAllocatedBytes": 0
+    },
+    "romImageBytesDelta": 288,
+    "romSegmentPaddingBytesDelta": 0,
+    "sections": [
+      {
+        "name": ".text",
+        "beforeBytes": 31436,
+        "afterBytes": 31620,
+        "deltaBytes": 184,
+        "costDelta": {
+          "romLoadBytes": 184,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        }
+      },
+      {
+        "name": ".data",
+        "beforeBytes": 2444,
+        "afterBytes": 2548,
+        "deltaBytes": 104,
+        "costDelta": {
+          "romLoadBytes": 104,
+          "iwramBytes": 104,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        }
+      }
+    ],
+    "symbols": [
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).hashFind",
+        "section": ".data",
+        "beforeBytes": 656,
+        "afterBytes": 760,
+        "deltaBytes": 104,
+        "costDelta": {
+          "romLoadBytes": 104,
+          "iwramBytes": 104,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        }
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).TableSet",
+        "section": ".text",
+        "beforeBytes": 1172,
+        "afterBytes": 1276,
+        "deltaBytes": 104,
+        "costDelta": {
+          "romLoadBytes": 104,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        }
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).growTableWithRoots",
+        "section": ".text",
+        "beforeBytes": 2368,
+        "afterBytes": 2448,
+        "deltaBytes": 80,
+        "costDelta": {
+          "romLoadBytes": 80,
+          "iwramBytes": 0,
+          "ewramBytes": 0,
+          "debugMailboxBytes": 0,
+          "otherAllocatedBytes": 0
+        }
+      }
+    ],
+    "symbolsComparable": true
+  }
+}

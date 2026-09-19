@@ -44,6 +44,27 @@ function _draw() cls(0) end`
 	}
 }
 
+func TestPrintHelpersAreNoInline(t *testing.T) {
+	got, err := Transpile("print-noinline.lua", `
+function hud()
+  print("HI", 0, 0, 7)
+end
+function _draw()
+  cls(0)
+  hud()
+end
+`, Options{SheetW: 8, SheetH: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "//go:noinline\nfunc (g *Game) hud(") {
+		t.Fatal("print helper must not be inlined into gluDraw")
+	}
+	if strings.Contains(got, "//go:noinline\nfunc (g *Game) gluDraw(") {
+		t.Fatal("_draw without print must keep its ordinary frame")
+	}
+}
+
 func TestIWRAMFunctionsRejectInvalidAndUnknownNames(t *testing.T) {
 	for _, tc := range []struct {
 		names []string

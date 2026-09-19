@@ -1,0 +1,107 @@
+--- a/runtime/hw/pace_tinygo.go
++++ b/runtime/hw/pace_tinygo.go
+@@ -26,5 +26,6 @@
+ // the only way 30 Hz can visibly jitter on this panel.
+ func PaceWaitUntil(deadline uint32) {
+ 	for ReadFrameCycleCounter() < deadline {
++		idleUntilScanline(0, deadline)
+ 	}
+ }
+--- a/runtime/hw/wait_tinygo.go
++++ b/runtime/hw/wait_tinygo.go
+@@ -7,10 +7,16 @@
+ 		return
+ 	}
+ 	for GetReg16(VCOUNT) < ScreenHeight {
++		if GetReg16(VCOUNT) < ScreenHeight-2 {
++			idleUntilScanline(ScreenHeight-1, 0)
++		}
+ 	}
+ }
+ 
+ func WaitVDraw() {
+ 	for GetReg16(VCOUNT) >= ScreenHeight {
++		if GetReg16(VCOUNT) < 226 {
++			idleUntilScanline(227, 0)
++		}
+ 	}
+ }
+--- /dev/null
++++ b/runtime/hw/idle_tinygo.go
+@@ -0,0 +1,58 @@
++//go:build tinygo
++
++package hw
++
++import (
++	"device/gba"
++	"runtime/interrupt"
++	_ "unsafe"
++)
++
++const idleDispstat uintptr = 0x04000004
++
++var idleIRQ = interrupt.New(gba.IRQ_VCOUNT, func(interrupt.Interrupt) {})
++
++// idleUntilScanline borrows VCOUNT only when no other code owns it. Halt
++// wakes on IE&IF even with IME disabled. Restoring IME after each wake services
++// audio before trying another nap. No timer or BIOS IntrWait flags are borrowed.
++func idleUntilScanline(line uint16, deadline uint32) {
++	if GetReg16(INTERRUPT_IME) == 0 || interrupt.In() {
++		return
++	}
++	state := interrupt.Disable()
++	stat := GetReg16(idleDispstat)
++	ie := GetReg16(INTERRUPT_IE)
++	if stat&(1<<5) != 0 || ie&(1<<2) != 0 || GetReg16(INTERRUPT_IF)&(1<<2) != 0 {
++		interrupt.Restore(state)
++		return
++	}
++	nowLine := uint32(GetReg16(VCOUNT))
++	if deadline != 0 {
++		now := ReadFrameCycleCounter()
++		if now >= deadline || deadline-now <= 4*1232 || deadline-now >= 280896 {
++			interrupt.Restore(state)
++			return
++		}
++		target := nowLine + (deadline-now)/1232 - 2
++		if target >= 228 {
++			target -= 228
++		}
++		line = uint16(target)
++	} else if nowLine+2 >= uint32(line) {
++		interrupt.Restore(state)
++		return
++	}
++	SetReg16(idleDispstat, stat&0x00df|line<<8|1<<5)
++	idleIRQ.Enable()
++	// Pending sources must be serviced without sleeping.
++	if GetReg16(INTERRUPT_IF)&GetReg16(INTERRUPT_IE) == 0 {
++		idleHalt()
++	}
++	SetReg16(idleDispstat, stat)
++	SetReg16(INTERRUPT_IE, ie)
++	SetReg16(INTERRUPT_IF, 1<<2)
++	interrupt.Restore(state)
++}
++
++//export mtile_idle_halt
++func idleHalt()
+--- a/runtime/crt0/gba.s
++++ b/runtime/crt0/gba.s
+@@ -1075,3 +1075,15 @@
+     ldmia   sp!, {r4-r9}
+     bx      lr
+ .size mtile_fill_words, .-mtile_fill_words
++
++// BIOS Halt follows the ARM SWI immediate convention and a real call boundary
++// exposes caller-saved register clobbers to the Go compiler.
++.section .text.mtile_idle_halt,"ax",%progbits
++.arm
++.align 2
++.global mtile_idle_halt
++.type mtile_idle_halt,%function
++mtile_idle_halt:
++    swi 0x020000
++    bx lr
++.size mtile_idle_halt, .-mtile_idle_halt

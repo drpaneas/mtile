@@ -1,0 +1,22 @@
+[
+  {
+    "mutation": "precedence",
+    "exit_code": 1,
+    "semantic_mismatch": true
+  },
+  {
+    "mutation": "eager-condition",
+    "exit_code": 1,
+    "semantic_mismatch": true
+  },
+  {
+    "mutation": "reversed-evaluation",
+    "exit_code": 1,
+    "semantic_mismatch": true
+  },
+  {
+    "mutation": "minimum-negation-regression",
+    "exit_code": 1,
+    "known_compile_failure_reproduced": true
+  }
+]

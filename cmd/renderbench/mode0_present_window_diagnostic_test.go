@@ -123,6 +123,46 @@ func TestMode0PresentWindowNativeDiagnostic(t *testing.T) {
 				svc.Renderer = renderer
 				svc.TinyGoBin = mode0PresentTinyGoWrapper(t, dir, service.TinyGoBin, renderer)
 				result, err := svc.Build(project, filepath.Join(dir, renderer.String()+".gba"))
+				if renderer == transpiler.RendererMode0 && (kind == "all-mutable-audio-dense" || kind == "all-packed-audio-dense") {
+					// These fixtures exposed commits larger than a complete VBlank.
+					// Keep exercising the rejected shape and its exact AUTO fallback.
+					if err == nil || !strings.Contains(err.Error(), "[M0_RESOURCE_LIMIT]") || !strings.Contains(err.Error(), "four materialized BGs") {
+						t.Fatalf("expected oversized audio commit rejection, got %v", err)
+					}
+					rejection := err.Error()
+					svc.Renderer = transpiler.RendererAuto
+					svc.TinyGoBin = mode0PresentTinyGoWrapper(t, dir, service.TinyGoBin, transpiler.RendererMode4)
+					fallback, err := svc.Build(project, filepath.Join(dir, "auto.gba"))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if fallback.Renderer != transpiler.RendererMode4 || fallback.RendererDiagnostic == "" || !strings.HasSuffix(rejection, fallback.RendererDiagnostic) {
+						t.Fatalf("AUTO did not preserve the forced rejection: %+v", fallback)
+					}
+					rows, err := capturePresentWindow(helper, fallback.ROMPath, len(oracle))
+					if err != nil {
+						t.Fatal(err)
+					}
+					audible := false
+					var peak uint32
+					for i, row := range rows {
+						if row.Tick != oracle[i].Tick || row.FirstSHA != oracle[i].FirstSHA || row.LastSHA != oracle[i].LastSHA || row.AudioErrors != 0 {
+							t.Fatalf("AUTO/Mode4 mismatch at tick %d", row.Tick)
+						}
+						audible = audible || row.Audible
+						if row.AudioActive > peak {
+							peak = row.AudioActive
+						}
+					}
+					if !audible || peak != 4 {
+						t.Fatalf("AUTO audio coverage audible=%v peak=%d", audible, peak)
+					}
+					mode0PresentWriteJSON(t, filepath.Join(dir, "rejection.json"), map[string]string{"diagnostic": rejection})
+					mode0PresentWriteJSON(t, filepath.Join(dir, "auto-build.json"), fallback)
+					mode0PresentWriteJSON(t, filepath.Join(dir, "auto-traces.json"), rows)
+					t.Logf("%s: forced Mode0 rejected; AUTO matches Mode4 on %d first/last scans", kind, len(rows))
+					continue
+				}
 				if err != nil {
 					t.Fatal(err)
 				}

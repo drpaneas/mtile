@@ -1,0 +1,14 @@
+{
+  "baselineRuntimeSHA256": "e2e1e606e2e048065998854e95c3bcf8caca4b32f037547ac1c63a8be4359463",
+  "candidateRuntimeSHA256": "d269a40fd6c1575c5e885e19b21a5f95791294cc65927b74b014bfba6e4e388c",
+  "generatedGoSHA256": "d61bacb7b0a206fc178a5dd0dba769673d8de92f65e0fe33c0642fbfca1f4b61",
+  "generatedSourceEqual": true,
+  "medianImprovementPercent": -0.1599511825292721,
+  "memoryEqual": true,
+  "name": "distributed-mode4",
+  "p95ChangePercent": 0.1599511825292721,
+  "pixelsEqual": true,
+  "projectSHA256": "246352499a3c503341a6d1391e8010a58af2b7c3a8eec4245c63c5f75d58b78f",
+  "warmupMissedFramesDelta": 0,
+  "watchesEqual": true
+}

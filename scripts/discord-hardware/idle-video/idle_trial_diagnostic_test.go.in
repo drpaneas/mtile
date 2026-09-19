@@ -1,0 +1,75 @@
+//go:build runtimeperfdiagnostic
+
+package main
+
+import (
+	"github.com/drpaneas/mtile/internal/build"
+	"github.com/drpaneas/mtile/internal/transpiler"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+)
+
+func TestIdleTrialDiagnostic(t *testing.T) {
+	baselineDir := os.Getenv("MTILE_PERF_BASELINE_RUNTIME")
+	if baselineDir == "" {
+		t.Skip("isolated sleep experiment")
+	}
+	out := os.Getenv("MTILE_IDLE_OUT")
+	if out == "" {
+		t.Fatal("MTILE_IDLE_OUT required")
+	}
+	for _, tc := range []struct {
+		name     string
+		renderer transpiler.Renderer
+	}{
+		{"pong", transpiler.RendererMode4},
+		{"background-layers", transpiler.RendererMode0},
+		{"background-layers", transpiler.RendererMode4},
+	} {
+		t.Run(tc.name+tc.renderer.String(), func(t *testing.T) {
+			bs, e := build.NewService("", baselineDir)
+			if e != nil {
+				t.Fatal(e)
+			}
+			cs, e := build.NewService("", "")
+			if e != nil {
+				t.Fatal(e)
+			}
+			bs.Debug = true
+			cs.Debug = true
+			cs.KeepWork = true
+			bd := filepath.Join(out, tc.name+tc.renderer.String(), "baseline")
+			cd := filepath.Join(out, tc.name+tc.renderer.String(), "candidate")
+			if e = os.MkdirAll(bd, 0755); e != nil {
+				t.Fatal(e)
+			}
+			if e = os.MkdirAll(cd, 0755); e != nil {
+				t.Fatal(e)
+			}
+			project := filepath.Join("../../examples", tc.name)
+			helper := "../../build/player/mtile-player"
+			br, b, e := buildAndCapture(bs, tc.renderer, project, helper, bd, 20, 180)
+			if e != nil {
+				t.Fatal(e)
+			}
+			cr, c, e := buildAndCaptureAtFrames(cs, tc.renderer, project, helper, cd, 20, 180, b.frameNumbers)
+			if e != nil {
+				t.Logf("candidate work=%s", cr.WorkDir)
+				t.Fatal(e)
+			}
+			d := compareFrames(b.frames, c.frames)
+			t.Logf("pixels=%d median=%d/%d p95=%d/%d missed=%d/%d rom=%d/%d iwram=%d/%d ewram=%d/%d", d, percentile(b.cycles, 50), percentile(c.cycles, 50), percentile(b.cycles, 95), percentile(c.cycles, 95), b.missed, c.missed, br.ROMSize, cr.ROMSize, br.IWRAMUsed, cr.IWRAMUsed, br.EWRAMUsed, cr.EWRAMUsed)
+			if d != 0 || !reflect.DeepEqual(b.watches, c.watches) {
+				t.Error("pixel or game-state parity failed")
+			}
+			if b.missed != c.missed {
+				t.Error("missed frame regression")
+			}
+			if percentile(c.cycles, 95) > percentile(b.cycles, 95)*101/100 {
+				t.Error("work p95 regressed >1%")
+			}
+		})
+	}
+}

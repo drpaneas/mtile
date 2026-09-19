@@ -1,0 +1,23 @@
+/tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/baseline/game.elf -> /tmp/mtile-go-weekly-loop/hash-fingerprint/native/collision-mode0/candidate/game.elf
+BYTES                                 BEFORE  AFTER   DELTA
+ROM load (union)                      42940   43228   +288
+ROM image span from origin            42940   43228   +288
+ROM segment padding outside sections  0       0       +0
+IWRAM allocated                       11660   11764   +104
+EWRAM application allocated           153928  153928  +0
+EWRAM debug mailbox                   512     512     +0
+Other allocated                       0       0       +0
+
+SECTION CHANGES
+NAME   SECTION  BEFORE  AFTER  DELTA  ROM   IWRAM  EWRAM  UNATTRIBUTED
+.text           31436   31620  +184   +184  +0     +0     +0
+.data           2444    2548   +104   +104  +104   +0     +0
+
+SYMBOL CHANGES (aliases grouped)
+NAME                                                             SECTION  BEFORE  AFTER  DELTA  ROM   IWRAM  EWRAM  UNATTRIBUTED
+(*github.com/drpaneas/mtile/runtime.Context).hashFind            .data    656     760    +104   +104  +104   +0     +0
+(*github.com/drpaneas/mtile/runtime.Context).TableSet            .text    1172    1276   +104   +104  +0     +0     +0
+(*github.com/drpaneas/mtile/runtime.Context).growTableWithRoots  .text    2368    2448   +80    +80   +0     +0     +0
+
+ROM and RAM are separate costs: initialized IWRAM occupies both. NOBITS occupies RAM only.
+Totals use range unions. Section/symbol rows can overlap and are not additive; symbols omit padding and unsized assembly.

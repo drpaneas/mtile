@@ -1,0 +1,236 @@
+//go:build mtile_editor_bench
+
+package main
+
+import (
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"slices"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type flightTimingSample struct {
+	Pair         int     `json:"pair"`
+	Enabled      bool    `json:"enabled"`
+	WarmupFrames int     `json:"warmupFrames"`
+	FrameNanos   []int64 `json:"frameNanos"`
+	MeanNanos    float64 `json:"meanNanos"`
+	RGBSHA256    string  `json:"rgbSHA256"`
+	Invalid      string  `json:"invalid,omitempty"`
+}
+
+type flightMemorySample struct {
+	HeapAlloc, HeapInuse, RSSBytes uint64
+}
+
+type flightSceneReport struct {
+	Samples       []flightTimingSample          `json:"samples"`
+	PairedChanges []float64                     `json:"pairedChangesPercent"`
+	MedianChange  float64                       `json:"medianPairedChangePercent"`
+	Memory        map[string]flightMemorySample `json:"memory"`
+	AddedHeap     int64                         `json:"addedSteadyHeapAlloc"`
+}
+
+func flightMemory(t *testing.T) flightMemorySample {
+	t.Helper()
+	runtime.GC()
+	var stats runtime.MemStats
+	runtime.ReadMemStats(&stats)
+	rss, err := exec.Command("ps", "-o", "rss=", "-p", strconv.Itoa(os.Getpid())).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kb, err := strconv.ParseUint(strings.TrimSpace(string(rss)), 10, 64)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return flightMemorySample{stats.HeapAlloc, stats.HeapInuse, kb * 1024}
+}
+
+// This opt-in diagnostic uses the existing render-thread harness. Only the
+// Update + forced Draw + ReadPixels fence is timed; dispatch, hashes, setup,
+// recorder startup/shutdown, and JSON output are outside measured durations.
+func TestFlightRecorderPerformance(t *testing.T) {
+	out := os.Getenv("MTILE_FLIGHT_BENCH")
+	if out == "" {
+		t.Skip("set MTILE_FLIGHT_BENCH to record the predeclared experiment")
+	}
+	if err := os.MkdirAll(out, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("MTILE_TINYGO", filepath.Join(t.TempDir(), "missing-tinygo"))
+	reports := map[string]*flightSceneReport{}
+	save := func() {
+		data, err := json.MarshalIndent(reports, "", "  ")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(out, "performance.json"), append(data, '\n'), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, scene := range []struct {
+		name string
+		mode editorMode
+	}{{"Sprites", modeSprites}, {"Map", modeMap}, {"Code", modeCode}} {
+		t.Run(scene.name, func(t *testing.T) {
+			dir := t.TempDir()
+			if err := os.CopyFS(dir, os.DirFS(filepath.Join("..", "..", "examples", "background-layers"))); err != nil {
+				t.Fatal(err)
+			}
+			g, err := newGame(dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer g.closePlayMode()
+			defer g.closeNativePerformance()
+			g.preferences = defaultEditorPreferences()
+			g.applyPreferences()
+			g.Layout(1200, 800)
+			g.mode = scene.mode
+			if scene.mode == modeMap {
+				g.prepareMapView()
+			}
+			target := ebiten.NewImage(1200, 800)
+			defer target.Deallocate()
+			pixels := make([]byte, 1200*800*4)
+			report := &flightSceneReport{Memory: map[string]flightMemorySample{}}
+			reports[scene.name] = report
+			var expectedRGB string
+			frame := func(game ebiten.Game) (int64, string, error) {
+				var elapsed int64
+				var updateErr error
+				onRenderBenchmarkFrame(func() {
+					start := time.Now()
+					updateErr = game.Update()
+					g.requestRender()
+					game.Draw(target)
+					target.ReadPixels(pixels)
+					elapsed = time.Since(start).Nanoseconds()
+				})
+				return elapsed, fmt.Sprintf("%x", sha256.Sum256(pixels)), updateErr
+			}
+			warm := func(game ebiten.Game, duration time.Duration) int {
+				start, count := time.Now(), 0
+				for time.Since(start) < duration {
+					if _, _, err := frame(game); err != nil {
+						t.Fatal(err)
+					}
+					count++
+				}
+				return count
+			}
+			for pair := 0; pair < 6; pair++ {
+				var means [2]float64
+				order := []bool{false, true}
+				if pair%2 != 0 {
+					order = []bool{true, false}
+				}
+				for _, enabled := range order {
+					path := ""
+					if enabled {
+						path = filepath.Join(out, fmt.Sprintf("unexpected-%s-%d.trace", scene.name, pair))
+					}
+					game, shutdown, err := editorWithFlightRecorder(g, path)
+					if err != nil {
+						t.Fatal(err)
+					}
+					sample := flightTimingSample{Pair: pair, Enabled: enabled}
+					sample.WarmupFrames = warm(game, time.Second)
+					var total int64
+					for total < int64(300*time.Millisecond) || len(sample.FrameNanos) < 32 {
+						elapsed, rgb, updateErr := frame(game)
+						if updateErr != nil {
+							sample.Invalid = updateErr.Error()
+							break
+						}
+						if expectedRGB == "" {
+							expectedRGB = rgb
+						}
+						if rgb != expectedRGB {
+							sample.Invalid = "scene pixels changed"
+						}
+						sample.RGBSHA256 = rgb
+						sample.FrameNanos = append(sample.FrameNanos, elapsed)
+						total += elapsed
+						if enabled && game.(*flightRecorderGame).recorder.captured() {
+							sample.Invalid = "recorder triggered during warmup/measurement"
+						}
+						if sample.Invalid != "" {
+							break
+						}
+					}
+					shutdown()
+					if len(sample.FrameNanos) > 0 {
+						sample.MeanNanos = float64(total) / float64(len(sample.FrameNanos))
+					}
+					report.Samples = append(report.Samples, sample)
+					save()
+					if sample.Invalid != "" {
+						t.Fatal(sample.Invalid)
+					}
+					index := 0
+					if enabled {
+						index = 1
+					}
+					means[index] = sample.MeanNanos
+				}
+				report.PairedChanges = append(report.PairedChanges, 100*(means[1]/means[0]-1))
+				save()
+			}
+			sorted := slices.Clone(report.PairedChanges)
+			slices.Sort(sorted)
+			report.MedianChange = (sorted[2] + sorted[3]) / 2
+			f, err := os.Create(filepath.Join(out, scene.name+".png"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = png.Encode(f, &image.RGBA{Pix: pixels, Stride: 1200 * 4, Rect: image.Rect(0, 0, 1200, 800)})
+			closeErr := f.Close()
+			if err != nil || closeErr != nil {
+				t.Fatalf("capture: %v %v", err, closeErr)
+			}
+			save()
+			t.Logf("%s paired changes=%v median=%+.3f%%", scene.name, report.PairedChanges, report.MedianChange)
+			if report.MedianChange > 5 {
+				t.Fatal("predeclared 5% overhead gate failed; stop without tuning")
+			}
+			// Memory is a separate 6-second active workload for each state.
+			warm(g, 6*time.Second)
+			report.Memory["disabled"] = flightMemory(t)
+			game, shutdown, err := editorWithFlightRecorder(g, filepath.Join(out, "unexpected-memory-"+scene.name+".trace"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			warm(game, 6*time.Second)
+			report.Memory["enabled"] = flightMemory(t)
+			triggered := game.(*flightRecorderGame).recorder.captured()
+			shutdown()
+			warm(g, time.Second)
+			report.Memory["released"] = flightMemory(t)
+			report.AddedHeap = int64(report.Memory["enabled"].HeapAlloc) - int64(report.Memory["disabled"].HeapAlloc)
+			save()
+			if triggered {
+				t.Fatal("recorder triggered during separate memory sample")
+			}
+			if report.AddedHeap > 32<<20 {
+				t.Fatal("predeclared 32MiB steady live heap gate failed")
+			}
+		})
+		if t.Failed() {
+			return
+		}
+	}
+}

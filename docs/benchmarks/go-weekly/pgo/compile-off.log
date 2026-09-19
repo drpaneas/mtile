@@ -1,0 +1,3 @@
+$ go test -c -pgo=off -o /private/tmp/mtile-go-weekly-loop/pgo/off.test ./internal/build
+
+exit_code=0

@@ -1,0 +1,619 @@
+{
+  "path": "/tmp/mtile-go-weekly-loop/native-baseline/mode0-game.elf",
+  "totals": {
+    "romLoadBytes": 24376,
+    "iwramBytes": 10200,
+    "ewramBytes": 19956,
+    "debugMailboxBytes": 0,
+    "otherAllocatedBytes": 0
+  },
+  "romImageBytes": 24376,
+  "romSegmentPaddingBytes": 0,
+  "symbolsAvailable": true,
+  "sections": [
+    {
+      "name": ".text",
+      "type": "SHT_PROGBITS",
+      "vma": 134217728,
+      "lma": 134217728,
+      "size": 9016,
+      "cost": {
+        "romLoadBytes": 9016,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 424
+    },
+    {
+      "name": ".rodata",
+      "type": "SHT_PROGBITS",
+      "vma": 134226744,
+      "lma": 134226744,
+      "size": 14376,
+      "cost": {
+        "romLoadBytes": 14376,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 0
+    },
+    {
+      "name": ".stack",
+      "type": "SHT_NOBITS",
+      "vma": 50331648,
+      "size": 9216,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 9216,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 9216
+    },
+    {
+      "name": ".data",
+      "type": "SHT_PROGBITS",
+      "vma": 50340864,
+      "lma": 134241120,
+      "size": 984,
+      "cost": {
+        "romLoadBytes": 984,
+        "iwramBytes": 984,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 0
+    },
+    {
+      "name": ".ewram",
+      "type": "SHT_NOBITS",
+      "vma": 33554432,
+      "size": 19956,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 19956,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 0
+    },
+    {
+      "name": ".debug_mailbox",
+      "type": "SHT_NOBITS",
+      "vma": 33816064,
+      "size": 0,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 0
+    },
+    {
+      "name": ".bss",
+      "type": "SHT_NOBITS",
+      "vma": 50341848,
+      "size": 0,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      },
+      "unattributedBytes": 0
+    }
+  ],
+  "symbols": [
+    {
+      "names": [
+        "main.sheetRAM"
+      ],
+      "section": ".ewram",
+      "vma": 33554432,
+      "size": 9600,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 9600,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.sheetROM"
+      ],
+      "section": ".rodata",
+      "vma": 134226808,
+      "lma": 134226808,
+      "size": 9600,
+      "cost": {
+        "romLoadBytes": 9600,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.main"
+      ],
+      "section": ".text",
+      "vma": 134218556,
+      "lma": 134218556,
+      "size": 8164,
+      "cost": {
+        "romLoadBytes": 8164,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.ctx"
+      ],
+      "section": ".ewram",
+      "vma": 33568436,
+      "size": 5952,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 5952,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.mapRAM"
+      ],
+      "section": ".ewram",
+      "vma": 33565232,
+      "size": 2400,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 2400,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.mapROM"
+      ],
+      "section": ".rodata",
+      "vma": 134237608,
+      "lma": 134237608,
+      "size": 2400,
+      "cost": {
+        "romLoadBytes": 2400,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.sheetIndexRAM"
+      ],
+      "section": ".ewram",
+      "vma": 33564032,
+      "size": 1200,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 1200,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.sheetIndexROM"
+      ],
+      "section": ".rodata",
+      "vma": 134236408,
+      "lma": 134236408,
+      "size": 1200,
+      "cost": {
+        "romLoadBytes": 1200,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.flagRAM"
+      ],
+      "section": ".ewram",
+      "vma": 33567632,
+      "size": 600,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 600,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.flagROM"
+      ],
+      "section": ".rodata",
+      "vma": 134240008,
+      "lma": 134240008,
+      "size": 600,
+      "cost": {
+        "romLoadBytes": 600,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "github.com/drpaneas/mtile/runtime.defaultPalette"
+      ],
+      "section": ".rodata",
+      "vma": 134240608,
+      "lma": 134240608,
+      "size": 512,
+      "cost": {
+        "romLoadBytes": 512,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "memcpy",
+        "memmove"
+      ],
+      "section": ".data",
+      "vma": 50340988,
+      "lma": 134241244,
+      "size": 296,
+      "cost": {
+        "romLoadBytes": 296,
+        "iwramBytes": 296,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__aeabi_uidiv",
+        "__aeabi_uidivmod",
+        "__udivsi3"
+      ],
+      "section": ".data",
+      "vma": 50341284,
+      "lma": 134241540,
+      "size": 280,
+      "cost": {
+        "romLoadBytes": 280,
+        "iwramBytes": 280,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "handleInterrupt"
+      ],
+      "section": ".text",
+      "vma": 134218204,
+      "lma": 134218204,
+      "size": 248,
+      "cost": {
+        "romLoadBytes": 248,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main.cartData"
+      ],
+      "section": ".ewram",
+      "vma": 33568232,
+      "size": 204,
+      "cost": {
+        "romLoadBytes": 0,
+        "iwramBytes": 0,
+        "ewramBytes": 204,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan"
+      ],
+      "section": ".data",
+      "vma": 50341660,
+      "lma": 134241916,
+      "size": 188,
+      "cost": {
+        "romLoadBytes": 188,
+        "iwramBytes": 188,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "memset"
+      ],
+      "section": ".data",
+      "vma": 50340864,
+      "lma": 134241120,
+      "size": 124,
+      "cost": {
+        "romLoadBytes": 124,
+        "iwramBytes": 124,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "mtile_fill_words"
+      ],
+      "section": ".data",
+      "vma": 50341564,
+      "lma": 134241820,
+      "size": 96,
+      "cost": {
+        "romLoadBytes": 96,
+        "iwramBytes": 96,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "runtime.preinit"
+      ],
+      "section": ".text",
+      "vma": 134218460,
+      "lma": 134218460,
+      "size": 92,
+      "cost": {
+        "romLoadBytes": 92,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "github.com/drpaneas/mtile/runtime.mapPlaneSlots"
+      ],
+      "section": ".rodata",
+      "vma": 134226744,
+      "lma": 134226744,
+      "size": 64,
+      "cost": {
+        "romLoadBytes": 64,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__aeabi_memset",
+        "__aeabi_memset4",
+        "__aeabi_memset8"
+      ],
+      "section": ".text",
+      "vma": 134218152,
+      "lma": 134218152,
+      "size": 16,
+      "cost": {
+        "romLoadBytes": 16,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__aeabi_memclr",
+        "__aeabi_memclr4",
+        "__aeabi_memclr8"
+      ],
+      "section": ".text",
+      "vma": 134218168,
+      "lma": 134218168,
+      "size": 12,
+      "cost": {
+        "romLoadBytes": 12,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__ARMv5LongLdrPcThunk___aeabi_uidiv"
+      ],
+      "section": ".text",
+      "vma": 134226736,
+      "lma": 134226736,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime.mode0CopyMapSpan"
+      ],
+      "section": ".text",
+      "vma": 134226728,
+      "lma": 134226728,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__ARMv5LongLdrPcThunk_memcpy"
+      ],
+      "section": ".text",
+      "vma": 134218196,
+      "lma": 134218196,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__ARMv5LongLdrPcThunk_memset"
+      ],
+      "section": ".text",
+      "vma": 134218188,
+      "lma": 134218188,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__ARMv5LongLdrPcThunk_mtile_fill_words"
+      ],
+      "section": ".text",
+      "vma": 134226720,
+      "lma": 134226720,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "main"
+      ],
+      "section": ".text",
+      "vma": 134218452,
+      "lma": 134218452,
+      "size": 8,
+      "cost": {
+        "romLoadBytes": 8,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__aeabi_memcpy",
+        "__aeabi_memcpy4",
+        "__aeabi_memcpy8"
+      ],
+      "section": ".text",
+      "vma": 134218180,
+      "lma": 134218180,
+      "size": 4,
+      "cost": {
+        "romLoadBytes": 4,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "__aeabi_memmove",
+        "__aeabi_memmove4",
+        "__aeabi_memmove8"
+      ],
+      "section": ".text",
+      "vma": 134218184,
+      "lma": 134218184,
+      "size": 4,
+      "cost": {
+        "romLoadBytes": 4,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    },
+    {
+      "names": [
+        "runtime.run"
+      ],
+      "section": ".text",
+      "vma": 134218552,
+      "lma": 134218552,
+      "size": 4,
+      "cost": {
+        "romLoadBytes": 4,
+        "iwramBytes": 0,
+        "ewramBytes": 0,
+        "debugMailboxBytes": 0,
+        "otherAllocatedBytes": 0
+      }
+    }
+  ]
+}

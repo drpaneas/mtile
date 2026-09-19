@@ -1,0 +1,28 @@
+{
+  "cmd/editor/main.go": {
+    "state": "restored",
+    "sha256": "e1ae20ecfe897b82cbc628bfeb1adf203f33284ea830bb0c55198b20881df068",
+    "matchesPre7": true
+  },
+  "cmd/mtile/main.go": {
+    "state": "restored",
+    "sha256": "46973e644dda729039c12449a50fe283bc155f666af952fe601a8de7fefba073",
+    "matchesPre7": true
+  },
+  "cmd/editor/flight_recorder.go": {
+    "state": "removed",
+    "exists": false
+  },
+  "cmd/editor/flight_recorder_test.go": {
+    "state": "removed",
+    "exists": false
+  },
+  "cmd/editor/flight_recorder_benchmark_test.go": {
+    "state": "removed",
+    "exists": false
+  },
+  "cmd/mtile/flight_recorder_test.go": {
+    "state": "removed",
+    "exists": false
+  }
+}

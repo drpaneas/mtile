@@ -1,0 +1,7 @@
+$ /private/tmp/mtile-go-weekly-loop/pgo/cli/mtile-default build -runtime /Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime -keep-work -o /private/tmp/mtile-go-weekly-loop/pgo/cli/mapdemo-default.gba /private/tmp/mtile-go-weekly-loop/pgo/inputs/mapdemo
+built /private/tmp/mtile-go-weekly-loop/pgo/cli/mapdemo-default.gba (195508 bytes, 34800 bytes EWRAM free)
+renderer requested mode4 -> selected mode4 (M4_FORCED)
+workdir /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1874495554
+map /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1874495554/game.map
+
+exit_code=0

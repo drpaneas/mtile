@@ -1,0 +1,8 @@
+Command: cd runtime && go test -tags=mtile_mode0,mtile_mode0_layers4,mtile_mode0_obj,mtile_mode0_objpack,mtile_mode0_text ./...
+ok  github.com/drpaneas/mtile/runtime 6.362s
+ok  github.com/drpaneas/mtile/runtime/audio 1.517s
+ok  github.com/drpaneas/mtile/runtime/hw 1.817s
+ok  github.com/drpaneas/mtile/runtime/internal/audioref 0.860s
+?   github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest [no test files]
+ok  github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs 0.577s
+ok  github.com/drpaneas/mtile/runtime/internal/cmd/gentarget 1.288s

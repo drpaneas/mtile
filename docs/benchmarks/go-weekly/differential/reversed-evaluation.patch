@@ -1,0 +1,13 @@
+--- internal/transpiler/transpiler.go
++++ internal/transpiler/transpiler.go
+@@ -4969,7 +4969,9 @@
+ 	}
+ 	savedRoots := g.extraRoots
+ 	g.extraRoots = append([]string(nil), savedRoots...)
+-	for i, e := range exprs {
++	for reverse := range exprs {
++		i := len(exprs) - 1 - reverse
++		e := exprs[i]
+ 		expr := g.emitExpr(e)
+ 		if len(exprs) == 1 {
+ 			names[i] = expr

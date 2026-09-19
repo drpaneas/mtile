@@ -1,0 +1,8 @@
+=== RUN   TestMode0PresentWindowNativeDiagnostic
+    mode0_present_window_diagnostic_test.go:40: evidence: /private/tmp/mtile-discord-experiments-ofgo5qwq/fourbpp/trial-artifacts/present-fourmapaudio-unguarded
+=== RUN   TestMode0PresentWindowNativeDiagnostic/dirty-maps-audio-dense
+    mode0_present_window_diagnostic_test.go:175: dirty-maps-audio-dense: warm maximum commit=64540 cycles; safe/unsafe tested starts=118/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/fourbpp/trial-artifacts/present-fourmapaudio-unguarded/dirty-maps-audio-dense
+--- PASS: TestMode0PresentWindowNativeDiagnostic (8.33s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/dirty-maps-audio-dense (8.29s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	9.164s

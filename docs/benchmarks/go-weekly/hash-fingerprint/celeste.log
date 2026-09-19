@@ -1,0 +1,12 @@
+$ go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintCelesteDiagnostic$ -count=1 -timeout=15m -v
+=== RUN   TestHashFingerprintCelesteDiagnostic
+    hash_fingerprint_diagnostic_test.go:199: evidence: /tmp/mtile-go-weekly-loop/hash-fingerprint/native/celeste-857728358
+    hash_fingerprint_diagnostic_test.go:205: building baseline-mode4
+    hash_fingerprint_diagnostic_test.go:205: baseline-mode4 build: link ELF: exit status 1: ld.lld: error: section '.data' will not fit in region 'iwram': overflowed by 880 bytes
+        ld.lld: error: section '.bss' will not fit in region 'iwram': overflowed by 1252 bytes (temporary build workspace kept at /var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-1071691559)
+--- FAIL: TestHashFingerprintCelesteDiagnostic (5.15s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	5.897s
+FAIL
+
+exit_code=1 elapsed_seconds=7.077

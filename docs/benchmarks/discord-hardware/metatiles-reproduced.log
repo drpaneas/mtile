@@ -1,0 +1,23 @@
+{
+  "state": 305397762,
+  "frames": 225,
+  "repeatedRawCycles": 6042,
+  "repeatedMetatileCycles": 27530,
+  "repeatedMismatches": 0,
+  "diverseRawCycles": 6042,
+  "diverseMetatileCycles": 27530,
+  "diverseMismatches": 0,
+  "samplesPerCase": 100,
+  "mapWidth": 32,
+  "mapHeight": 32,
+  "metaWidth": 2,
+  "metaHeight": 2,
+  "rawPayloadBytes": 2048,
+  "repeatedPayloadBytes": 272,
+  "diversePayloadBytes": 2304,
+  "expandedMapBytes": 2048,
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "romSHA256": "58b828057047bf9b444bf55688c6e5cab78e3595c2d3d0164f51be68aae52d87",
+  "helperSHA256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab",
+  "decision": "Reject blanket conversion: slower expansion and data-dependent storage regression."
+}

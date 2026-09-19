@@ -1,0 +1,178 @@
+There are 23 section headers, starting at offset 0x57520:
+
+Section Headers:
+  [Nr] Name              Type            Address  Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        08000000 010000 001e3c 00  AX  0   0  4
+  [ 2] .rodata           PROGBITS        08001e3c 011e3c 003954 00  WA  0   0  4
+  [ 3] .stack            NOBITS          03000000 020000 002400 00  WA  0   0  1
+  [ 4] .data             PROGBITS        03002400 022400 000f64 00  AX  0   0  4
+  [ 5] .ewram            NOBITS          02000000 030000 0128a0 00  WA  0   0  4
+  [ 6] .debug_mailbox    NOBITS          0203fe00 030000 000000 00  WA  0   0  1
+  [ 7] .bss              NOBITS          03003364 033364 000040 00  WA  0   0  1
+  [ 8] .debug_info       PROGBITS        00000000 033364 00ce64 00      0   0  1
+  [ 9] .debug_abbrev     PROGBITS        00000000 0401c8 0005d3 00      0   0  1
+  [10] .debug_aranges    PROGBITS        00000000 04079b 0000c0 00      0   0  1
+  [11] .debug_ranges     PROGBITS        00000000 04085b 000b70 00      0   0  1
+  [12] .debug_line       PROGBITS        00000000 0413cb 00372d 00      0   0  1
+  [13] .debug_frame      PROGBITS        00000000 044af8 0004e4 00      0   0  4
+  [14] .debug_loc        PROGBITS        00000000 044fdc 0072b8 00      0   0  1
+  [15] .debug_str        PROGBITS        00000000 04c294 0055e6 01  MS  0   0  1
+  [16] .debug_pubnames   PROGBITS        00000000 05187a 0039b9 00      0   0  1
+  [17] .debug_pubtypes   PROGBITS        00000000 055233 001347 00      0   0  1
+  [18] .comment          PROGBITS        00000000 05657a 000080 01  MS  0   0  1
+  [19] .ARM.attributes   ARM_ATTRIBUTES  00000000 0565fa 00003a 00      0   0  1
+  [20] .symtab           SYMTAB          00000000 056634 000760 10     22  92  4
+  [21] .shstrtab         STRTAB          00000000 056d94 0000f0 00      0   0  1
+  [22] .strtab           STRTAB          00000000 056e84 000699 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), y (purecode), p (processor specific)
+
+Elf file type is EXEC (Executable file)
+Entry point 0x8000000
+There are 7 program headers, starting at offset 52
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x010000 0x08000000 0x08000000 0x01e3c 0x01e3c R E 0x10000
+  LOAD           0x011e3c 0x08001e3c 0x08001e3c 0x03954 0x03954 RW  0x10000
+  LOAD           0x020000 0x03000000 0x03000000 0x00000 0x02400 RW  0x10000
+  LOAD           0x022400 0x03002400 0x08005790 0x00f64 0x00f64 R E 0x10000
+  LOAD           0x030000 0x02000000 0x02000000 0x00000 0x128a0 RW  0x10000
+  LOAD           0x033364 0x03003364 0x03003364 0x00000 0x00040 RW  0x10000
+  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x0
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .text 
+   01     .rodata 
+   02     .stack 
+   03     .data 
+   04     .ewram 
+   05     .bss 
+   06     
+   None   .debug_mailbox .debug_info .debug_abbrev .debug_aranges .debug_ranges .debug_line .debug_frame .debug_loc .debug_str .debug_pubnames .debug_pubtypes .comment .ARM.attributes .symtab .shstrtab .strtab 
+
+Symbol table '.symtab' contains 118 entries:
+   Num:    Value  Size Type    Bind   Vis       Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT   UND 
+     1: 08000000     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     2: 08000120     0 NOTYPE  LOCAL  DEFAULT     1 start_vector
+     3: 08000004     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     4: 08000120     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     5: 0800017c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     6: 0800019c     0 NOTYPE  LOCAL  DEFAULT     1 handleInterruptARM
+     7: 0800019c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     8: 080001a4     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     9: 03002400     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    10: 03002528     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    11: 03002634     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    12: 03002638     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    13: 0300294c     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    14: 080001a8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    15: 00000000     0 FILE    LOCAL  DEFAULT   ABS main
+    16: 080001b4   124 FUNC    LOCAL  DEFAULT     1 github.com/drpaneas/mtile/runtime/hw.CopyToVRAM32CPU
+    17: 080001b4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    18: 0800022c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    19: 020036b4 40024 OBJECT  LOCAL  DEFAULT     5 main.ctx
+    20: 030029ac   124 FUNC    LOCAL  DEFAULT     4 github.com/drpaneas/mtile/runtime/hw.CopyToVRAM32IWRAM
+    21: 030029ac     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    22: 03002a24     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    23: 08000230     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    24: 08000320     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    25: 08000328     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    26: 08000330    92 FUNC    LOCAL  DEFAULT     1 runtime.preinit
+    27: 0800038c     4 FUNC    LOCAL  DEFAULT     1 runtime.run
+    28: 08000330     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    29: 08000378     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    30: 0800038c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    31: 08000830  5596 FUNC    LOCAL  DEFAULT     1 main.main
+    32: 03002a28   412 FUNC    LOCAL  DEFAULT     4 (*github.com/drpaneas/mtile/runtime.Context).fillRowWord
+    33: 03002a28     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    34: 03002bc0     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    35: 03002bc4   268 FUNC    LOCAL  DEFAULT     4 (*github.com/drpaneas/mtile/runtime.Context).drawMapPacked
+    36: 03002bc4     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    37: 03002ccc     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    38: 03002cd0  1684 FUNC    LOCAL  DEFAULT     4 github.com/drpaneas/mtile/runtime.blitUnflippedCell8
+    39: 03002cd0     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    40: 03003358     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    41: 08000390  1184 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).buildMapPacked
+    42: 08000390     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    43: 08000828     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    44: 08000830     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    45: 080017c0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    46: 020035e8   204 OBJECT  LOCAL  DEFAULT     5 main.cartData
+    47: 02002580  1200 OBJECT  LOCAL  DEFAULT     5 main.sheetIndexRAM
+    48: 08005464   300 OBJECT  LOCAL  DEFAULT     2 main.sheetSolidROM
+    49: 02012008  2200 OBJECT  LOCAL  DEFAULT     5 main.mapPackedSpansRAM
+    50: 080017d0     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    51: 08001880     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    52: 0200d30c 19708 OBJECT  LOCAL  DEFAULT     5 main.mapPackedWordsRAM
+    53: 02000000  9600 OBJECT  LOCAL  DEFAULT     5 main.sheetRAM
+    54: 02003390   600 OBJECT  LOCAL  DEFAULT     5 main.flagRAM
+    55: 02002a30  2400 OBJECT  LOCAL  DEFAULT     5 main.mapRAM
+    56: 08001894     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    57: 08001960     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    58: 08001e7c  9600 OBJECT  LOCAL  DEFAULT     2 main.sheetROM
+    59: 08001964     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    60: 08001b58     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    61: 080043fc  1200 OBJECT  LOCAL  DEFAULT     2 main.sheetIndexROM
+    62: 0800520c   600 OBJECT  LOCAL  DEFAULT     2 main.flagROM
+    63: 080048ac  2400 OBJECT  LOCAL  DEFAULT     2 main.mapROM
+    64: 08001b64     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    65: 08001d28     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    66: 08005590   512 OBJECT  LOCAL  DEFAULT     2 github.com/drpaneas/mtile/runtime.defaultPalette
+    67: 08001d30     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    68: 08001df8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    69: 08001e3c    64 OBJECT  LOCAL  DEFAULT     2 github.com/drpaneas/mtile/runtime.mapPlaneSlots
+    70: 03003364    64 OBJECT  LOCAL  DEFAULT     7 github.com/drpaneas/mtile/runtime.emptySpriteCell
+    71: 080001ac     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_memcpy
+    72: 080001ac     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    73: 080001b0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    74: 08001e0c     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_mtile_fill_words
+    75: 08001e0c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    76: 08001e10     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    77: 08001e14     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).drawMapPacked
+    78: 08001e14     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    79: 08001e18     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    80: 08001e1c     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime.blitUnflippedCell8
+    81: 08001e1c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    82: 08001e20     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    83: 08001e24     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_mtile_copy_map_cell8_key0
+    84: 08001e24     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    85: 08001e28     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    86: 08001e2c     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).fillRowWord
+    87: 08001e2c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    88: 08001e30     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    89: 08001e34     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime/hw.CopyToVRAM32IWRAM
+    90: 08001e34     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    91: 08001e38     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    92: 08000230   248 FUNC    GLOBAL DEFAULT     1 handleInterrupt
+    93: 08000328     8 FUNC    GLOBAL DEFAULT     1 main
+    94: 0300294c    96 FUNC    GLOBAL DEFAULT     4 mtile_fill_words
+    95: 03002528   272 FUNC    GLOBAL DEFAULT     4 mtile_copy_map_cell8_key0
+    96: 03002638   788 FUNC    GLOBAL DEFAULT     4 mtile_copy_map_packed_spans
+    97: 03003364     0 NOTYPE  GLOBAL DEFAULT     7 _sbss
+    98: 030033a4     0 NOTYPE  GLOBAL DEFAULT     7 _ebss
+    99: 03002400     0 NOTYPE  GLOBAL DEFAULT     4 _sdata
+   100: 08005790     0 NOTYPE  GLOBAL DEFAULT   ABS _sidata
+   101: 03003364     0 NOTYPE  GLOBAL DEFAULT     4 _edata
+   102: 080001a8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy
+   103: 080001a8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy4
+   104: 080001a8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy8
+   105: 08000000     0 NOTYPE  GLOBAL DEFAULT     1 _start
+   106: 03000400     0 NOTYPE  GLOBAL DEFAULT     3 _stack_top_irq
+   107: 03002400     0 NOTYPE  GLOBAL DEFAULT     3 _stack_top
+   108: 02000000     0 NOTYPE  GLOBAL DEFAULT     5 _ewram_start
+   109: 020128a0     0 NOTYPE  GLOBAL DEFAULT     5 _ewram_end
+   110: 03002400   296 FUNC    GLOBAL DEFAULT     4 memcpy
+   111: 03002400   296 FUNC    GLOBAL DEFAULT     4 memmove
+   112: 00000400     0 NOTYPE  GLOBAL DEFAULT   ABS __stack_size_irq
+   113: 00002000     0 NOTYPE  GLOBAL DEFAULT   ABS __stack_size_usr
+   114: 0203fe00     0 NOTYPE  GLOBAL DEFAULT   ABS _heap_end
+   115: 020128a0     0 NOTYPE  GLOBAL DEFAULT     5 _heap_start
+   116: 03002400     0 NOTYPE  GLOBAL DEFAULT     4 _globals_start
+   117: 030033a4     0 NOTYPE  GLOBAL DEFAULT     7 _globals_end

@@ -136,6 +136,13 @@ prove all of these conditions:
 - `sset` is a direct unconditional statement in `_init` or `_update`; `_init`
   mutations commit while force-blanked and `_update` permits at most 16 calls
   so the visible dirty-tile upload is bounded to VBlank; and
+- when native audio is linked and four BGs are materialized, no `sset` or
+  `pal` call is reachable from `_update` or `_draw`, including through helpers.
+  This combination has no proven VBlank commit bound: forced Mode 0 rejects it
+  at the mutation call with `M0_RESOURCE_LIMIT`, and AUTO falls back to Mode 4.
+  Initialization-only mutations remain supported while force-blanked. Unused
+  authored audio does not trigger this restriction, nor do four authored
+  planes when fewer than four are drawn; and
 - the BG tile budget fits: zero/one/two/three/four map layers allow at most
   1024/960/896/832/768 sheet cells respectively.
 
@@ -391,6 +398,17 @@ not make an oversized commit fit. `LastBlitWindow` records the actual writes,
 excluding the wait. Native fixtures must still demonstrate that the commit
 finishes before active display resumes.
 
+A dense native-audio trial with four dirty maps, 16 tile mutations, palette
+remaps, and 128 OBJs measured a 100,599-cycle warm commit and exposed first-scan
+tearing. The full 68-line VBlank is only 83,776 cycles. Moving palette work
+outside the commit reduced the maximum to 93,211 cycles but did not establish
+safe admission, so that runtime prototype was dropped. A separate control with
+four dirty maps and the same audio/OBJ load, but no per-frame `sset` or `pal`,
+passed 120 synchronized first-scan frames with a 64,540-cycle maximum. The
+compiler therefore conservatively excludes the combined mutation shape above;
+it does not claim that every excluded program would tear. Audio scheduling
+and the public API's renderer classifications remain unchanged.
+
 BG and OBJ palette uploads share the palette dirty flag. Moving sprites
 alone does not rewrite the unchanged OBJ palette. Palette changes made by
 `_init` are committed in `FinalizeInitHardware`, while the LCD remains
@@ -471,12 +489,13 @@ The earlier scene-specific allocation and measurements remain in the
 Public builds continue to reject/fall back for unsupported raster calls as
 documented above; the experiment is not evidence for wider public eligibility.
 
-For interactive engineering work, `mtile edit -experimental-tilecanvas
-examples/celeste` opts only that editor's selected project into the experiment.
-It uses Mode 4 code generation with the private runtime tag and reports the
-actual Mode 0 presentation as `experimental-tilecanvas`. This explicit opt-in
-is not public Mode 0/AUTO eligibility; the private composition and resource
-bounds above still apply. Omit the flag to use the normal project renderer policy.
+For interactive engineering work, `mtile build -experimental-tilecanvas
+examples/celeste` and `mtile edit -experimental-tilecanvas examples/celeste`
+opt only that selected project into the experiment. They use Mode 4 code
+generation with the private runtime tag and report the actual Mode 0
+presentation as `experimental-tilecanvas`. This explicit opt-in is not public
+Mode 0/AUTO eligibility; the private composition and resource bounds above still
+apply. Omit the flag to use the normal project renderer policy.
 
 ## `examples/testio`
 

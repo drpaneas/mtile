@@ -1,0 +1,270 @@
+package runtime
+
+import (
+	"fmt"
+	"hash/fnv"
+	"strings"
+	"testing"
+)
+
+// These 64-byte keys were selected before measuring the candidate. The first
+// twelve are present and the remaining four are absent. All collision keys
+// start in bucket zero at capacity 16; zero is an ordinary fingerprint.
+func fingerprintKeys(kind string) []string {
+	var suffixes []string
+	switch kind {
+	case "collision":
+		suffixes = strings.Fields("00000018 00000021 0000002a 00000047 00000054 0000005d 00000083 0000008c 00000090 000000b1 000000ba 000000d7 00000102 0000010b 00000115 0000011e")
+	case "distributed":
+		suffixes = strings.Fields("00000018 00000000 00000027 00000019 00000007 00000026 00000009 00000006 00000003 00000008 00000005 00000002 00000025 00000004 00000001 00000024")
+	case "same-tag":
+		suffixes = strings.Fields("000011d5 0000154a 00001b73 000036fb 00004696 00006250 0000665d 0000726b 0000ab73 00012e23 00012eb3 0001309d 000135df 00014774 000156be 000177f6")
+	default:
+		panic(kind)
+	}
+	for i := range suffixes {
+		suffixes[i] = "mtile/" + strings.Repeat("x", 50) + suffixes[i]
+	}
+	return suffixes
+}
+
+func fingerprintHash(s string) uint32 {
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(s))
+	return h.Sum32()
+}
+
+func TestHashFingerprintKeySets(t *testing.T) {
+	for _, kind := range []string{"collision", "distributed", "same-tag"} {
+		seen := map[byte]bool{}
+		for i, key := range fingerprintKeys(kind) {
+			hash := fingerprintHash(key)
+			if len(key) != 64 || (kind != "distributed" && hash&15 != 0) || (kind == "distributed" && hash&15 != uint32(i)) {
+				t.Fatalf("%s key %d has wrong shape/hash: %08x", kind, i, hash)
+			}
+			tag := byte(hash >> 24)
+			if (kind == "same-tag" && tag != 0x5a) || (kind == "collision" && seen[tag]) {
+				t.Fatalf("%s key %d has wrong tag %02x", kind, i, tag)
+			}
+			seen[tag] = true
+		}
+		if kind == "collision" && !seen[0] {
+			t.Fatal("zero fingerprint is not covered")
+		}
+	}
+}
+
+func fingerprintString(t testing.TB, c *Context, text string) Value {
+	t.Helper()
+	v, err := c.NewString([]byte(text))
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	return v
+}
+
+func fingerprintCheck(t *testing.T, c *Context, table Value, keys []string, want map[string]Value) {
+	t.Helper()
+	data, err := c.tableData(table)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	for slot := 0; slot < int(readU16(data, 6)); slot++ {
+		off := hashKeyOff(readU16(data, 2), slot)
+		key := readValue(data, off)
+		if key.Kind == KindString && data[off+1] != byte(fingerprintHash(string(c.stringBytes(key)))>>24) {
+			t.Fatalf("slot %d fingerprint is stale", slot)
+		}
+	}
+	// An independent scan observes the public pairs order and key/value fields;
+	// it does not use the candidate hash probe or generic ValuesEqual helper.
+	seen := map[string]bool{}
+	for slot := 0; slot < c.TableSlotCount(table); slot++ {
+		key := c.TableKeyAt(table, slot)
+		if key.Kind == KindNil {
+			continue
+		}
+		text := string(c.stringBytes(key))
+		if seen[text] || c.TableValueAt(table, slot) != want[text] {
+			t.Fatalf("pairs mismatch for %q", text)
+		}
+		seen[text] = true
+	}
+	for _, text := range keys {
+		for _, query := range []Value{c.InternStatic(text), fingerprintString(t, c, text)} {
+			if got := c.TableGet(table, query); got != want[text] {
+				t.Fatalf("lookup kind=%d %q: got %+v, want %+v", query.Kind, text, got, want[text])
+			}
+		}
+		if (want[text].Kind != KindNil) != seen[text] {
+			t.Fatalf("pairs membership mismatch for %q", text)
+		}
+	}
+}
+
+func TestHashFingerprintMixedKeysGrowthDeletionAndGC(t *testing.T) {
+	for _, kind := range []string{"collision", "distributed", "same-tag"} {
+		for _, capacity := range []int{0, 3, 16} {
+			t.Run(fmt.Sprintf("%s/cap%d", kind, capacity), func(t *testing.T) {
+				var c Context
+				table, err := c.NewTableWithCaps(0, capacity)
+				if err != HeapOK {
+					t.Fatal(err)
+				}
+				c.RegisterGlobal(&table)
+				keys := fingerprintKeys(kind)
+				want := map[string]Value{}
+				for i, text := range keys[:12] {
+					key := fingerprintString(t, &c, text)
+					if i%3 == 0 {
+						key = c.InternStatic(text)
+					}
+					want[text] = IntVal(i + 1)
+					if err := c.TableSet(table, key, want[text]); err != HeapOK {
+						t.Fatal(err)
+					}
+				}
+				fingerprintCheck(t, &c, table, keys, want)
+				for i := 0; i < 12; i += 2 {
+					if err := c.TableSet(table, c.InternStatic(keys[i]), NilVal()); err != HeapOK {
+						t.Fatal(err)
+					}
+					delete(want, keys[i])
+				}
+				fingerprintCheck(t, &c, table, keys, want)
+				for i, text := range keys {
+					want[text] = IntVal(100 + i)
+					if err := c.TableSet(table, fingerprintString(t, &c, text), want[text]); err != HeapOK {
+						t.Fatal(err)
+					}
+				}
+				order := make([]Value, c.TableSlotCount(table))
+				for i := range order {
+					order[i] = c.TableKeyAt(table, i)
+				}
+				if err := c.Collect(); err != HeapOK {
+					t.Fatal(err)
+				}
+				for i, key := range order {
+					if c.TableKeyAt(table, i) != key {
+						t.Fatal("GC changed pairs order")
+					}
+				}
+				fingerprintCheck(t, &c, table, keys, want)
+			})
+		}
+	}
+}
+
+func TestHashFingerprintRawImageNormalizesDynamicKeys(t *testing.T) {
+	var c Context
+	source, err := c.NewTableWithCaps(0, 16)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	c.RegisterGlobal(&source) // Roots image references during constructor GC.
+	keys := fingerprintKeys("collision")
+	want := map[string]Value{}
+	for i, text := range keys[:12] {
+		key := fingerprintString(t, &c, text)
+		want[text] = IntVal(i + 1)
+		if err := c.TableSet(source, key, want[text]); err != HeapOK {
+			t.Fatal(err)
+		}
+	}
+	payload, _ := c.tableData(source)
+	image := append([]byte(nil), payload...)
+	for slot := 0; slot < 16; slot++ {
+		off := hashKeyOff(0, slot)
+		if readValue(image, off).Kind == KindString {
+			image[off+1] ^= 0xff
+		}
+	}
+	c.heap.cursor = uint32(heapSize - 4) // Require collection before image copy.
+	copy, err := c.NewTableFromImage(image)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	c.RegisterGlobal(&copy)
+	fingerprintCheck(t, &c, copy, keys, want)
+	if err := c.Collect(); err != HeapOK {
+		t.Fatal(err)
+	}
+	fingerprintCheck(t, &c, copy, keys, want)
+}
+
+func TestHashFingerprintEmptyAndEmbeddedNUL(t *testing.T) {
+	var c Context
+	table, err := c.NewTableWithCaps(0, 8)
+	if err != HeapOK {
+		t.Fatal(err)
+	}
+	c.RegisterGlobal(&table)
+	keys := []string{"", "\x00", "a\x00b", "a\x00c", "a", "absent\x00"}
+	want := map[string]Value{}
+	for i, key := range keys[:5] {
+		stored := fingerprintString(t, &c, key)
+		if i%2 != 0 {
+			stored = c.InternStatic(key)
+		}
+		want[key] = IntVal(i + 1)
+		if err := c.TableSet(table, stored, want[key]); err != HeapOK {
+			t.Fatal(err)
+		}
+	}
+	fingerprintCheck(t, &c, table, keys, want)
+}
+
+var fingerprintBenchSink Value
+
+// Allocation/normal collection are included; reusable key materialization and
+// image preparation are excluded. Each operation constructs a fresh table.
+func BenchmarkHashFingerprintCold(b *testing.B) {
+	for _, name := range []string{"insert-collision", "insert-distributed", "image-dynamic", "image-static"} {
+		b.Run(name, func(b *testing.B) {
+			var c Context
+			keys := make([]Value, 12)
+			keyset := "collision"
+			if name == "insert-distributed" {
+				keyset = "distributed"
+			}
+			for i, text := range fingerprintKeys(keyset)[:12] {
+				keys[i] = c.InternStatic(text)
+				if name != "image-static" {
+					keys[i] = fingerprintString(b, &c, text)
+				}
+				c.RegisterGlobal(&keys[i])
+			}
+			table, _ := c.NewTableWithCaps(0, 16)
+			c.RegisterGlobal(&table)
+			for i, key := range keys {
+				if err := c.TableSet(table, key, IntVal(i+1)); err != HeapOK {
+					b.Fatal(err)
+				}
+			}
+			payload, _ := c.tableData(table)
+			image := append([]byte(nil), payload...)
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				var err HeapError
+				if strings.HasPrefix(name, "insert-") {
+					table, err = c.NewTableWithCaps(0, 16)
+					if err == HeapOK {
+						for i, key := range keys {
+							if err = c.TableSet(table, key, IntVal(i+1)); err != HeapOK {
+								break
+							}
+						}
+					}
+				} else {
+					table, err = c.NewTableFromImage(image)
+				}
+				if err != HeapOK {
+					b.Fatal(err)
+				}
+			}
+			fingerprintBenchSink = table
+		})
+	}
+}

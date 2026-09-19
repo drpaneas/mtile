@@ -200,6 +200,41 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 	}
 }
 
+func TestDevelopStatusMessageDoesNotOverlapWorkspace(t *testing.T) {
+	t.Cleanup(func() {
+		setInterfaceTextSize(textComfort)
+		setEditorLayout(defaultScreenWidth, defaultScreenHeight)
+	})
+	for textSize := textCompact; textSize < interfaceTextSizeCount; textSize++ {
+		for _, size := range [][2]int{{1024, 900}, {1399, 900}, {1400, 900}, {1920, 1200}, {2560, 1440}, {3840, 2160}} {
+			t.Run(fmt.Sprintf("%s/%dx%d", textSize, size[0], size[1]), func(t *testing.T) {
+				setInterfaceTextSize(textSize)
+				setEditorLayout(size[0], size[1])
+				layout := newDevelopLayout()
+				// The dark workspace must surround the bottom pane with the
+				// same margin used at its right edge, before the message row.
+				diagnostics := layout.Code.Diagnostics
+				wantMargin := screenWidth - (diagnostics.X + diagnostics.W)
+				if got := layout.Message.Y - (diagnostics.Y + diagnostics.H); got != wantMargin || got <= 0 {
+					t.Errorf("bottom workspace margin = %d, want right margin %d", got, wantMargin)
+				}
+				// The message sits six pixels above the main status bar. Its
+				// entire line must be reserved, including beneath diagnostics.
+				message := editor.Rect{X: 8, Y: statusBarRect.Y - developTextHeight - 6, W: statusBarRect.W - 16, H: developTextHeight}
+				for name, rect := range map[string]editor.Rect{
+					"sidebar": layout.Code.Sidebar, "diagnostics": layout.Code.Diagnostics,
+					"source": layout.Code.Editor, "preview": layout.Play.Stage,
+					"telemetry": layout.Play.Inspector, "status bar": statusBarRect,
+				} {
+					if rect.W > 0 && rectsOverlapIDE(message, rect) {
+						t.Errorf("message overlaps %s: %#v and %#v", name, message, rect)
+					}
+				}
+			})
+		}
+	}
+}
+
 func TestPreferencesLayoutKeepsEveryControlInsideItsPanel(t *testing.T) {
 	defer setEditorLayout(defaultScreenWidth, defaultScreenHeight)
 	for _, size := range [][2]int{{minimumScreenWidth, minimumScreenHeight}, {1920, 1200}, {2560, 1440}, {3840, 2160}} {

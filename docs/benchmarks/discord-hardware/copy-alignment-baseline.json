@@ -1,0 +1,697 @@
+{
+  "environment": "native mGBA, HLE BIOS, forced blank, EWRAM source; no physical hardware measurement",
+  "fill": [
+    {
+      "offset": 0,
+      "mismatches": 0,
+      "cycles": 215
+    },
+    {
+      "offset": 1,
+      "mismatches": 0,
+      "cycles": 186
+    },
+    {
+      "offset": 2,
+      "mismatches": 0,
+      "cycles": 186
+    },
+    {
+      "offset": 3,
+      "mismatches": 0,
+      "cycles": 186
+    }
+  ],
+  "copy": [
+    {
+      "kind": "production_dma",
+      "cycles": 77025,
+      "mismatches": 0
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "cycles": 77034,
+      "mismatches": 0
+    },
+    {
+      "kind": "bios_cpufastset",
+      "cycles": 85426,
+      "mismatches": 0
+    }
+  ],
+  "timer": [
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "production_dma",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "explicit_4096_word_chunks",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 32768,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 40960,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 0,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 0,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 8192,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 16384,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 24576,
+      "overflows": 1,
+      "interrupts": 1
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 32768,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 40960,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 49152,
+      "overflows": 2,
+      "interrupts": 2
+    },
+    {
+      "kind": "bios_cpufastset",
+      "irq_body_cycles": 16384,
+      "phase_cycles": 57344,
+      "overflows": 2,
+      "interrupts": 2
+    }
+  ],
+  "counts": [
+    {
+      "kind": "byte_slice",
+      "words": -1,
+      "mismatches": 0,
+      "cycles": 62
+    },
+    {
+      "kind": "byte_slice",
+      "words": 0,
+      "mismatches": 0,
+      "cycles": 62
+    },
+    {
+      "kind": "byte_slice",
+      "words": 65536,
+      "mismatches": 0,
+      "cycles": 50
+    },
+    {
+      "kind": "byte_slice",
+      "words": 9601,
+      "mismatches": 0,
+      "cycles": 50
+    },
+    {
+      "kind": "byte_slice",
+      "words": 1,
+      "mismatches": 0,
+      "cycles": 143
+    },
+    {
+      "kind": "byte_slice",
+      "words": 2,
+      "mismatches": 0,
+      "cycles": 151
+    },
+    {
+      "kind": "byte_slice",
+      "words": 7,
+      "mismatches": 0,
+      "cycles": 191
+    },
+    {
+      "kind": "byte_slice",
+      "words": 8,
+      "mismatches": 0,
+      "cycles": 199
+    },
+    {
+      "kind": "byte_slice",
+      "words": 31,
+      "mismatches": 0,
+      "cycles": 383
+    },
+    {
+      "kind": "byte_slice",
+      "words": 32,
+      "mismatches": 0,
+      "cycles": 391
+    },
+    {
+      "kind": "byte_slice",
+      "words": 4096,
+      "mismatches": 0,
+      "cycles": 32903
+    },
+    {
+      "kind": "byte_slice",
+      "words": 4097,
+      "mismatches": 0,
+      "cycles": 32959
+    },
+    {
+      "kind": "byte_slice",
+      "words": 9600,
+      "mismatches": 0,
+      "cycles": 77047
+    },
+    {
+      "kind": "word_slice",
+      "words": -1,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 0,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 65536,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 9601,
+      "mismatches": 0,
+      "cycles": 77
+    },
+    {
+      "kind": "word_slice",
+      "words": 1,
+      "mismatches": 0,
+      "cycles": 144
+    },
+    {
+      "kind": "word_slice",
+      "words": 2,
+      "mismatches": 0,
+      "cycles": 152
+    },
+    {
+      "kind": "word_slice",
+      "words": 7,
+      "mismatches": 0,
+      "cycles": 192
+    },
+    {
+      "kind": "word_slice",
+      "words": 8,
+      "mismatches": 0,
+      "cycles": 200
+    },
+    {
+      "kind": "word_slice",
+      "words": 31,
+      "mismatches": 0,
+      "cycles": 384
+    },
+    {
+      "kind": "word_slice",
+      "words": 32,
+      "mismatches": 0,
+      "cycles": 392
+    },
+    {
+      "kind": "word_slice",
+      "words": 4096,
+      "mismatches": 0,
+      "cycles": 32904
+    },
+    {
+      "kind": "word_slice",
+      "words": 4097,
+      "mismatches": 0,
+      "cycles": 32960
+    },
+    {
+      "kind": "word_slice",
+      "words": 9600,
+      "mismatches": 0,
+      "cycles": 77048
+    }
+  ],
+  "alignment": [
+    {
+      "kind": "byte_slice",
+      "source_offset": 0,
+      "dest_offset": 0,
+      "mismatches": 0,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 0,
+      "dest_offset": 1,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 0,
+      "dest_offset": 2,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 0,
+      "dest_offset": 3,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 1,
+      "dest_offset": 0,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 1,
+      "dest_offset": 1,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 1,
+      "dest_offset": 2,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 1,
+      "dest_offset": 3,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 2,
+      "dest_offset": 0,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 2,
+      "dest_offset": 1,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 2,
+      "dest_offset": 2,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 2,
+      "dest_offset": 3,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 3,
+      "dest_offset": 0,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 3,
+      "dest_offset": 1,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 3,
+      "dest_offset": 2,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "byte_slice",
+      "source_offset": 3,
+      "dest_offset": 3,
+      "mismatches": 8,
+      "cycles": 118
+    },
+    {
+      "kind": "word_slice",
+      "source_offset": 0,
+      "dest_offset": 0,
+      "mismatches": 0,
+      "cycles": 157
+    },
+    {
+      "kind": "word_slice",
+      "source_offset": 0,
+      "dest_offset": 1,
+      "mismatches": 8,
+      "cycles": 157
+    },
+    {
+      "kind": "word_slice",
+      "source_offset": 0,
+      "dest_offset": 2,
+      "mismatches": 8,
+      "cycles": 157
+    },
+    {
+      "kind": "word_slice",
+      "source_offset": 0,
+      "dest_offset": 3,
+      "mismatches": 8,
+      "cycles": 157
+    }
+  ],
+  "rejected_fill_mismatches": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "failures": 18,
+  "toolchain": {
+    "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+    "assembler": "GNU assembler (GNU Binutils) 2.43.1",
+    "mgba_sha256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab",
+    "input_sources": {
+      "hw/fill_tinygo.go": "598a458c4fc8931b273c7974003914020746f5a104ff56d805a3892ff68c6173",
+      "hw/mmio_tinygo.go": "e82acd2a2e8f66b791f36b262fbf8ddaa551c112720e28ccea327edb8ecd0258",
+      "hw/copy_bytes.go": "9bc256c59efe3763698984f4c8aab1e624a2bfba93a8f91012f9e6c4a26ae4a7"
+    }
+  }
+}

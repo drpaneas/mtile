@@ -1,0 +1,19 @@
+$ MTILE_HASH_BASELINE_ONLY=1 go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintDiagnostic$ -count=1 -v
+=== RUN   TestHashFingerprintDiagnostic
+    hash_fingerprint_diagnostic_test.go:81: collision-mode0 baseline valid: median=317905 p95=352369 max=352369 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: numeric-mode0 baseline valid: median=174031 p95=174031 max=174031 heap=3188
+    hash_fingerprint_diagnostic_test.go:81: static-mode0 baseline valid: median=61661 p95=61661 max=61661 heap=1068
+    hash_fingerprint_diagnostic_test.go:81: distributed-mode0 baseline valid: median=77089 p95=77089 max=77089 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: same-tag-mode0 baseline valid: median=311155 p95=344701 max=344701 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: camera-mode0 baseline valid: median=1242 p95=1242 max=1242 heap=0
+    hash_fingerprint_diagnostic_test.go:81: collision-mode4 baseline valid: median=459820 p95=494668 max=494668 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: numeric-mode4 baseline valid: median=315861 p95=315861 max=315861 heap=3188
+    hash_fingerprint_diagnostic_test.go:81: static-mode4 baseline valid: median=197725 p95=197725 max=197725 heap=1068
+    hash_fingerprint_diagnostic_test.go:81: distributed-mode4 baseline valid: median=216316 p95=216316 max=216316 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: same-tag-mode4 baseline valid: median=453070 p95=487000 max=487000 heap=3684
+    hash_fingerprint_diagnostic_test.go:81: camera-mode4 baseline valid: median=187106 p95=189606 max=189606 heap=0
+--- PASS: TestHashFingerprintDiagnostic (28.23s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	29.219s
+
+exit_code=0 elapsed_seconds=29.716

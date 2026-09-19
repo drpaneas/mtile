@@ -1,0 +1,88 @@
+[
+  {
+    "label": "focused-race",
+    "command": [
+      "go",
+      "test",
+      "-race",
+      "./cmd/editor",
+      "./cmd/mtile",
+      "-run",
+      "TestFlightRecorder|TestRunEditForwardsAbsoluteStallTracePath",
+      "-cpu=1,4",
+      "-count=1"
+    ],
+    "environment": {},
+    "seconds": 5.454792166987318,
+    "exitCode": 0
+  },
+  {
+    "label": "real-trace",
+    "command": [
+      "go",
+      "test",
+      "./cmd/editor",
+      "-run",
+      "^TestFlightRecorderRealPreStallCapture$",
+      "-count=1",
+      "-v"
+    ],
+    "environment": {
+      "MTILE_FLIGHT_REPORT": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/flight-recorder"
+    },
+    "seconds": 2.004513667008723,
+    "exitCode": 0
+  },
+  {
+    "label": "build-trace-tool",
+    "command": [
+      "go",
+      "build",
+      "-o",
+      "/tmp/mtile-flight-trace",
+      "cmd/trace"
+    ],
+    "environment": {},
+    "seconds": 2.8907971669977996,
+    "exitCode": 0
+  },
+  {
+    "label": "parse-trace",
+    "command": [
+      "/tmp/mtile-flight-trace",
+      "-d=parsed",
+      "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/flight-recorder/pre-stall.trace"
+    ],
+    "exitCode": 0,
+    "seconds": 0.6399512499920093
+  },
+  {
+    "label": "deterministic-shutdown-race",
+    "command": [
+      "go",
+      "test",
+      "-race",
+      "./cmd/editor",
+      "-run",
+      "^TestFlightRecorderCloseWaitsForSnapshot$",
+      "-cpu=1,4",
+      "-count=1"
+    ],
+    "exitCode": 0,
+    "seconds": 4.472393000003649
+  },
+  {
+    "label": "build-render-harness",
+    "command": [
+      "go",
+      "test",
+      "-c",
+      "-tags=mtile_editor_bench",
+      "-o",
+      "/tmp/mtile-flight-editor.test",
+      "./cmd/editor"
+    ],
+    "exitCode": 0,
+    "seconds": 2.3882962920033606
+  }
+]

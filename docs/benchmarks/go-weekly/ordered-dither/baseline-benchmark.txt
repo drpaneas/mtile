@@ -1,0 +1,16 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/editor
+cpu: Apple M2 Pro
+BenchmarkImageImportNearest/16-12 	     727	    487720 ns/op	  196616 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     802	    456088 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     795	    446852 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     796	    448604 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     810	    448863 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      90	   3969609 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      90	   4249647 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      87	   3964380 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      90	   4001473 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      90	   3989591 ns/op	  196608 B/op	   16385 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/editor	4.727s

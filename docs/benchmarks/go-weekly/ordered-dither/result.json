@@ -1,0 +1,52 @@
+{
+  "experiment": 4,
+  "decision": "retain",
+  "date": "2026-09-19",
+  "host": "Apple M2 Pro, darwin/arm64, Go 1.27.1",
+  "default": "nearest; ordered dither opt-in with D during paste preview",
+  "qualityMedianBox4ImprovementPercent": 75.98140495867769,
+  "firstFullUIToggleP95Ms": {
+    "aurora": 15.330125,
+    "pico-8": 1.648625
+  },
+  "cachedFullUIToggleAllocations": {
+    "aurora": 0,
+    "pico-8": 0
+  },
+  "syntheticHighVariationComputeP95Ms": {
+    "16": 1.613875,
+    "256": 28.118708
+  },
+  "nearestImplementationUnchanged": true,
+  "nearestSourceSHA256": "080617c5d8953009f072aca7f5eb8ec833ea3b9da746854ac7b01b24e7140352",
+  "correctness": {
+    "authoredPixelArt": [
+      "Loop with 16-color palette",
+      "Testio with Aurora256"
+    ],
+    "exactRGB15": true,
+    "transparentMask": true,
+    "visibleIndexNeverZero": true,
+    "duplicateTieStable": true,
+    "repeated8x8TilePhase": true,
+    "previewCancelNoMutation": true,
+    "commitOneUndo": true,
+    "undoCancelsStalePreview": true,
+    "paletteSnapshot": true
+  },
+  "validation": {
+    "focusedTests": true,
+    "fullEditorAndEditorPackage": true,
+    "buildAndCLI": true,
+    "runtime": true,
+    "focusedRace": true,
+    "actualEditorRender": true,
+    "transpiler": "Prior experiment 2 full gate retained; no transpiler or runtime changes in experiment 4."
+  },
+  "limitations": [
+    "Raw per-pixel RGB15 MSE increases; 4x4 mean error is not a perceptual-quality guarantee.",
+    "Unique tile counts can increase; counts are reuse proxies, not measured cartridge deduplication or ROM savings.",
+    "Five repeated benchmark samples show unchanged default timing but are below benchstat six-sample minimum for a 95% confidence interval.",
+    "Initial preview additionally retains its decoded image, a palette snapshot, and cached mode status strings; enabling dither caches an additional indexed image."
+  ]
+}

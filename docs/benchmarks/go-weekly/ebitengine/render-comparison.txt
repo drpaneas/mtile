@@ -1,0 +1,31 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-render.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-render.txt │
+                        │                          sec/op                          │               sec/op                vs base               │
+EditorRender/Sprites-12                                                17.47m ± 1%                          16.68m ± 1%  -4.50% (p=0.000 n=10)
+EditorRender/Map-12                                                    17.10m ± 4%                          16.67m ± 0%  -2.53% (p=0.000 n=10)
+EditorRender/Code-12                                                   17.77m ± 2%                          16.67m ± 0%  -6.20% (p=0.000 n=10)
+geomean                                                                17.44m                               16.67m       -4.42%
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-render.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-render.txt │
+                        │                      render-sec/op                       │           render-sec/op            vs base                │
+EditorRender/Sprites-12                                               6.987m ±  9%                        7.767m ± 10%  +11.17% (p=0.009 n=10)
+EditorRender/Map-12                                                   15.87m ±  7%                        14.13m ±  1%  -10.98% (p=0.000 n=10)
+EditorRender/Code-12                                                  5.786m ± 14%                        5.001m ±  8%  -13.56% (p=0.019 n=10)
+geomean                                                               8.625m                              8.188m         -5.07%
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-render.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-render.txt │
+                        │                           B/op                           │                B/op                 vs base               │
+EditorRender/Sprites-12                                              3.914Mi ± 19%                        3.817Mi ± 13%  -2.47% (p=0.009 n=10)
+EditorRender/Map-12                                                  3.844Mi ±  0%                        3.851Mi ±  0%  +0.16% (p=0.001 n=10)
+EditorRender/Code-12                                                 3.732Mi ±  0%                        3.788Mi ±  0%  +1.52% (p=0.000 n=10)
+geomean                                                              3.829Mi                              3.819Mi        -0.27%
+
+                        │ /tmp/mtile-go-weekly-loop/ebitengine/baseline-render.txt │ /tmp/mtile-go-weekly-loop/ebitengine/candidate-render.txt │
+                        │                        allocs/op                         │             allocs/op              vs base                │
+EditorRender/Sprites-12                                                5.904k ± 0%                         5.234k ± 0%  -11.36% (p=0.000 n=10)
+EditorRender/Map-12                                                    33.59k ± 0%                         33.73k ± 0%   +0.41% (p=0.000 n=10)
+EditorRender/Code-12                                                   1.216k ± 0%                         1.927k ± 0%  +58.47% (p=0.000 n=10)
+geomean                                                                6.224k                              6.980k       +12.14%

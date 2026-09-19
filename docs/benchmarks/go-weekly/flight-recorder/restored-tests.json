@@ -1,0 +1,11 @@
+{
+  "command": [
+    "go",
+    "test",
+    "./cmd/editor",
+    "./cmd/mtile",
+    "-count=1"
+  ],
+  "seconds": 8.3256493749941,
+  "exitCode": 0
+}

@@ -160,6 +160,8 @@ func runBuild(args []string, out io.Writer) error {
 	runtimeDir := flags.String("runtime", "", "mtile runtime directory")
 	keepWork := flags.Bool("keep-work", false, "keep the temporary generated build workspace")
 	rendererName := flags.String("renderer", "", "override project renderer: mode4, mode0, or auto")
+	tileCanvas := flags.Bool("experimental-tilecanvas", false, "build this project with generic tiled backgrounds and a sparse OBJ canvas")
+	tileObjects := flags.Bool("experimental-tilecanvas-objects", false, "compatibility alias for -experimental-tilecanvas")
 	help, err := parseFlags(flags, args, out)
 	if err != nil {
 		return err
@@ -175,6 +177,7 @@ func runBuild(args []string, out io.Writer) error {
 		return err
 	}
 	service.KeepWork = *keepWork
+	service.ExperimentalTileCanvas = *tileCanvas || *tileObjects
 	if strings.TrimSpace(*rendererName) == "" {
 		service.UseProjectRenderer = true
 	} else {

@@ -1,0 +1,41 @@
+Passed 3012900 cases (6025800 ARM executions)
+u32 edges          n=403225 mean=90.11->29.52 max=369->278 regressions=0 maxRegression=0
+u32 random         n=100000 mean=146.66->23.71 max=369->158 regressions=0 maxRegression=0
+u32 small-divisor  n=100000 mean=368.99->161.94 max=369->270 regressions=0 maxRegression=0
+u32 powers-of-two  n=100000 mean=341.20->36.43 max=369->39 regressions=0 maxRegression=0
+s32 edges          n=403225 mean=128.77->47.89 max=394->294 regressions=0 maxRegression=0
+s32 random         n=100000 mean=216.48->47.83 max=394->190 regressions=0 maxRegression=0
+s32 small-divisor  n=100000 mean=393.99->177.98 max=394->294 regressions=0 maxRegression=0
+s32 powers-of-two  n=100000 mean=360.48->59.65 max=394->63 regressions=0 maxRegression=0
+u64 edges          n=403225 mean=469.47->164.18 max=1380->831 regressions=0 maxRegression=0
+u64 random         n=100000 mean=490.74->43.51 max=1274->267 regressions=0 maxRegression=0
+u64 small-divisor  n=100000 mean=1301.16->657.03 max=1330->819 regressions=0 maxRegression=0
+u64 powers-of-two  n=100000 mean=1255.41->438.60 max=1344->831 regressions=0 maxRegression=0
+u64 fixed-point    n=100000 mean=1269.14->273.01 max=1294->435 regressions=0 maxRegression=0
+s64 edges          n=403225 mean=571.38->193.76 max=1411->863 regressions=0 maxRegression=0
+s64 random         n=100000 mean=675.03->75.41 max=1307->299 regressions=0 maxRegression=0
+s64 small-divisor  n=100000 mean=1333.19->677.01 max=1367->851 regressions=0 maxRegression=0
+s64 powers-of-two  n=100000 mean=1278.00->458.03 max=1371->851 regressions=0 maxRegression=0
+s64 fixed-point    n=100000 mean=1302.14->305.01 max=1327->467 regressions=0 maxRegression=0
+u32(65536,60000) cycles=369->13
+u32(65536,65536) cycles=369->13
+u32(65536,32768) cycles=369->39
+u32(65536,3) cycles=369->150
+u32(65536,240) cycles=369->102
+s32(65536,60000) cycles=394->37
+s32(65536,65536) cycles=394->37
+s32(65536,32768) cycles=394->63
+s32(65536,3) cycles=394->174
+s32(65536,240) cycles=394->126
+u64(65536,60000) cycles=394->30
+u64(65536,65536) cycles=394->30
+u64(65536,32768) cycles=394->56
+u64(65536,3) cycles=394->167
+u64(65536,240) cycles=394->119
+s64(65536,60000) cycles=427->62
+s64(65536,65536) cycles=427->62
+s64(65536,32768) cycles=427->88
+s64(65536,3) cycles=427->199
+s64(65536,240) cycles=427->151
+Helper bytes: 532 -> 2024
+Artifacts: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/division

@@ -1,0 +1,47 @@
+diff --git a/runtime/heap_clear_test.go b/runtime/heap_clear_test.go
+index b777e51..af1276c 100644
+--- a/runtime/heap_clear_test.go
++++ b/runtime/heap_clear_test.go
+@@ -4,7 +4,7 @@ import "testing"
+ 
+ func TestHeapAllocationClearsOnlyRoundedPayload(t *testing.T) {
+ 	for _, shift := range []uint32{0, 1, 2, 3} {
+-		for _, size := range []uint16{0, 1, 2, 3, 4, 7, 15, 16, 17, 63, 64, 65, 392, 820, 3080} {
++		for _, size := range []uint16{0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 31, 32, 33, 63, 64, 65, 392, 820, 3080} {
+ 			var c Context
+ 			c.ensureHeap()
+ 			space := c.activeSpace()
+@@ -46,3 +46,33 @@ func TestHeapZeroLengthAllocationAtSpaceEnd(t *testing.T) {
+ 		t.Fatal("zero-byte allocation changed cursor")
+ 	}
+ }
++
++func TestHeapSmallAllocationAtSpaceEnd(t *testing.T) {
++	for size := uint16(1); size <= 17; size++ {
++		var c Context
++		c.ensureHeap()
++		space := c.activeSpace()
++		for i := range space {
++			space[i] = 0xa5
++		}
++		start := uint32(heapSize) - alignUp4(uint32(size))
++		c.heap.cursor = start
++		ref, err := c.heap.allocObject(ObjString, size)
++		if err != HeapOK {
++			t.Fatalf("size%d: %v", size, err)
++		}
++		header := c.heap.handles[ref]
++		if header.Offset != start || header.Size != size || c.heap.cursor != heapSize {
++			t.Fatalf("allocation metadata changed for size%d", size)
++		}
++		for i, b := range space {
++			want := byte(0xa5)
++			if uint32(i) >= start {
++				want = 0
++			}
++			if b != want {
++				t.Fatalf("size%d byte%d=%02x want%02x", size, i, b, want)
++			}
++		}
++	}
++}

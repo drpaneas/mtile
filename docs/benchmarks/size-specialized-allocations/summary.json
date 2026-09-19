@@ -1,0 +1,317 @@
+[
+  {
+    "candidate": "switch",
+    "workload": "camera-mode0",
+    "baseline": {
+      "median": 1242,
+      "p95": 1242,
+      "max": 1242,
+      "ROMBytes": 25416,
+      "IWRAMBytes": 10208,
+      "EWRAMBytes": 19960,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 1242,
+      "p95": 1242,
+      "max": 1242,
+      "ROMBytes": 25416,
+      "IWRAMBytes": 10208,
+      "EWRAMBytes": 19960,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.0,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 0,
+      "Live": 0,
+      "PeakLive": 0,
+      "Handles": 0,
+      "GC": 0
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "camera-mode4",
+    "baseline": {
+      "median": 187106,
+      "p95": 189606,
+      "max": 189606,
+      "ROMBytes": 28024,
+      "IWRAMBytes": 15128,
+      "EWRAMBytes": 75940,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 187106,
+      "p95": 189606,
+      "max": 189606,
+      "ROMBytes": 28024,
+      "IWRAMBytes": 15128,
+      "EWRAMBytes": 75940,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.0,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 0,
+      "Live": 0,
+      "PeakLive": 0,
+      "Handles": 0,
+      "GC": 0
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "hash-mode0",
+    "baseline": {
+      "median": 174031,
+      "p95": 174031,
+      "max": 174031,
+      "ROMBytes": 27616,
+      "IWRAMBytes": 11160,
+      "EWRAMBytes": 153060,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 174031,
+      "p95": 174031,
+      "max": 174031,
+      "ROMBytes": 27732,
+      "IWRAMBytes": 11276,
+      "EWRAMBytes": 153060,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.0,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 3188,
+      "Live": 0,
+      "PeakLive": 0,
+      "Handles": 1,
+      "GC": 0
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "hash-mode4",
+    "baseline": {
+      "median": 315861,
+      "p95": 315861,
+      "max": 315861,
+      "ROMBytes": 29000,
+      "IWRAMBytes": 13724,
+      "EWRAMBytes": 190180,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 315861,
+      "p95": 315861,
+      "max": 315861,
+      "ROMBytes": 29116,
+      "IWRAMBytes": 13840,
+      "EWRAMBytes": 190180,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.0,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 3188,
+      "Live": 0,
+      "PeakLive": 0,
+      "Handles": 1,
+      "GC": 0
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "large-mode0",
+    "baseline": {
+      "median": 158414,
+      "p95": 174502,
+      "max": 297169,
+      "ROMBytes": 32584,
+      "IWRAMBytes": 11668,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 158388,
+      "p95": 174498,
+      "max": 297143,
+      "ROMBytes": 32632,
+      "IWRAMBytes": 11716,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.01641269079753052,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 7412,
+      "Live": 1552,
+      "PeakLive": 1868,
+      "Handles": 85,
+      "GC": 9
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "large-mode4",
+    "baseline": {
+      "median": 299326,
+      "p95": 315412,
+      "max": 438317,
+      "ROMBytes": 34048,
+      "IWRAMBytes": 14248,
+      "EWRAMBytes": 190208,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 299254,
+      "p95": 315364,
+      "max": 438245,
+      "ROMBytes": 34080,
+      "IWRAMBytes": 14280,
+      "EWRAMBytes": 190208,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.0240540414130413,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 7412,
+      "Live": 1552,
+      "PeakLive": 1868,
+      "Handles": 85,
+      "GC": 9
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "small-mode0",
+    "baseline": {
+      "median": 143555,
+      "p95": 149437,
+      "max": 312684,
+      "ROMBytes": 35716,
+      "IWRAMBytes": 11668,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 143146,
+      "p95": 149374,
+      "max": 312632,
+      "ROMBytes": 35764,
+      "IWRAMBytes": 11716,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.28490822332903765,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 32880,
+      "Live": 1172,
+      "PeakLive": 1268,
+      "Handles": 1009,
+      "GC": 5
+    }
+  },
+  {
+    "candidate": "switch",
+    "workload": "small-mode4",
+    "baseline": {
+      "median": 283526,
+      "p95": 289430,
+      "max": 453228,
+      "ROMBytes": 37160,
+      "IWRAMBytes": 14248,
+      "EWRAMBytes": 190208,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 283024,
+      "p95": 289274,
+      "max": 453084,
+      "ROMBytes": 37192,
+      "IWRAMBytes": 14280,
+      "EWRAMBytes": 190208,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.1770560724589632,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 32880,
+      "Live": 1172,
+      "PeakLive": 1268,
+      "Handles": 1009,
+      "GC": 5
+    }
+  },
+  {
+    "candidate": "conditional",
+    "workload": "small-mode0",
+    "baseline": {
+      "median": 143555,
+      "p95": 149437,
+      "max": 312684,
+      "ROMBytes": 35716,
+      "IWRAMBytes": 11668,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "experiment": {
+      "median": 143329,
+      "p95": 149731,
+      "max": 312972,
+      "ROMBytes": 35780,
+      "IWRAMBytes": 11732,
+      "EWRAMBytes": 153088,
+      "missedFrames": 0
+    },
+    "medianSavingPercent": 0.15743094981017727,
+    "differingPixels": 0,
+    "watchesEqual": true,
+    "heapTracesEqual": true,
+    "sampleCount": 300,
+    "lastHeap": {
+      "Frame": 320,
+      "Allocated": 32880,
+      "Live": 1172,
+      "PeakLive": 1268,
+      "Handles": 1009,
+      "GC": 5
+    }
+  }
+]

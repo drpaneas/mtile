@@ -1,0 +1,16 @@
+--- internal/transpiler/transpiler.go
++++ internal/transpiler/transpiler.go
+@@ -5284,9 +5284,10 @@
+ 		if x.Op == luaparser.OpNegate {
+ 			// A variable forces signed 16:16 wrapping instead of Go constant
+ 			// overflow, including parenthesized literals and inlined globals.
+-			tmp := g.next("neg")
+-			g.pending = append(g.pending, tmp+" := "+value)
+-			return "-(" + tmp + ")"
++			if literal, ok := x.Expr.(*luaparser.NumberExpr); ok && fixedNumberLiteral(literal.Value) == -2147483648 {
++				return "rt.Number(-2147483648)"
++			}
++			return "-(" + value + ")"
+ 		}
+ 		return "(" + value + ").Bnot()"
+ 	case *luaparser.BinaryExpr:

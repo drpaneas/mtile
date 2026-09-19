@@ -1,0 +1,55 @@
+package build
+
+import (
+	"fmt"
+	"path/filepath"
+	"testing"
+)
+
+// Deployment validation uses the actual production method. The identical
+// callback/panic/recover overhead is included in both binaries; no TinyGo,
+// workspace creation, source hashing or per-iteration file output is included.
+type pgoActualBoundary struct{}
+
+func pgoActualStop(event Event) {
+	if event.Phase == PhaseWorkspace {
+		panic(pgoActualBoundary{})
+	}
+}
+
+func pgoActualPrepare(projectDir string) (err error) {
+	defer func() {
+		if value := recover(); value != nil {
+			if _, ok := value.(pgoActualBoundary); !ok {
+				panic(value)
+			}
+		}
+	}()
+	service := Service{UseProjectRenderer: true, Trace: pgoActualStop}
+	_, err = service.Build(projectDir, "unused.gba")
+	if err == nil {
+		return fmt.Errorf("actual build unexpectedly returned past the pre-workspace boundary")
+	}
+	return err
+}
+
+func benchmarkPGOActual(b *testing.B, names []string) {
+	root := pgoRoot(b)
+	paths := make([]string, len(names))
+	for i, name := range names {
+		paths[i] = filepath.Join(root, name)
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		for _, path := range paths {
+			if err := pgoActualPrepare(path); err != nil {
+				b.Fatal(err)
+			}
+		}
+	}
+}
+
+func BenchmarkPGOActualHeldout(b *testing.B) { benchmarkPGOActual(b, pgoHeldout) }
+func BenchmarkPGOActualHello(b *testing.B)   { benchmarkPGOActual(b, pgoControls[:1]) }
+func BenchmarkPGOActualNoalloc(b *testing.B) { benchmarkPGOActual(b, pgoControls[1:]) }

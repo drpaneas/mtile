@@ -1,0 +1,2 @@
+mGBA[GBA Debug]: MTILE_BOUNDS_READY
+mGBA[GBA Debug]: panic: runtime error at 0x08000848: index out of range

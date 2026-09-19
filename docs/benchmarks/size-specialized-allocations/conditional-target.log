@@ -1,0 +1,9 @@
+=== RUN   TestSizeSpecializedAllocationDiagnostic
+=== RUN   TestSizeSpecializedAllocationDiagnostic/small-mode0
+    size_specialized_allocation_diagnostic_test.go:218: baseline median=143555 p95=149437 max=312684 rom=35716 iwram=11668 ewram=153088 heap=32880 live=1172 handles=1009 gc=5 missed=0
+    size_specialized_allocation_diagnostic_test.go:218: candidate median=143329 p95=149731 max=312972 rom=35780 iwram=11732 ewram=153088 heap=32880 live=1172 handles=1009 gc=5 missed=0
+    size_specialized_allocation_diagnostic_test.go:223: saving=0.16% differing_pixels=0
+--- PASS: TestSizeSpecializedAllocationDiagnostic (4.72s)
+    --- PASS: TestSizeSpecializedAllocationDiagnostic/small-mode0 (4.64s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	5.567s

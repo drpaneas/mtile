@@ -1,0 +1,23 @@
+$ go test ./internal/transpiler -run ^TestDifferentialExecution$ -count=1 -v
+=== RUN   TestDifferentialExecution
+=== RUN   TestDifferentialExecution/optimized
+    differential_execution_test.go:107: generated harness failed: exit status 1
+        # generated [generated.test]
+        ./main.go:1125:9: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:1140:16: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:6315:27: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:6335:27: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:6482:18: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:6511:18: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:8251:9: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        ./main.go:8266:9: -(rt.Number(-2147483648)) (constant 2147483648 of int32 type "github.com/drpaneas/mtile/runtime".Number) overflows int32
+        FAIL	generated [build failed]
+        FAIL
+=== RUN   TestDifferentialExecution/generic
+    differential_execution_test.go:108: 142 value/condition expressions + 5 statement/literal witnesses: transpile=4.5895ms; generated format/build/execute=1.510872459s
+--- FAIL: TestDifferentialExecution (1.68s)
+    --- FAIL: TestDifferentialExecution/optimized (0.16s)
+    --- PASS: TestDifferentialExecution/generic (1.52s)
+FAIL
+FAIL	github.com/drpaneas/mtile/internal/transpiler	2.287s
+FAIL

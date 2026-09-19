@@ -75,7 +75,11 @@ type Service struct {
 	// UseProjectRenderer reads project.json's renderer policy. Renderer remains
 	// an explicit programmatic override for renderbench and build tests.
 	UseProjectRenderer bool
-	// Set only for the explicitly selected editor project, never by AUTO.
+	// ExperimentalTileCanvas is the explicit `mtile build
+	// -experimental-tilecanvas` opt-in. It is not a project renderer value
+	// or AUTO profile.
+	ExperimentalTileCanvas bool
+	// Set only for an explicit tile-canvas opt-in, never by AUTO.
 	tileCanvasExperiment bool
 }
 

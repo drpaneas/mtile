@@ -42,6 +42,7 @@ type developLayout struct {
 	Build      editor.Rect
 	Reset      editor.Rect
 	Stop       editor.Rect
+	Message    editor.Rect
 	Code       codeLayout
 	Play       playLayout
 }
@@ -67,8 +68,14 @@ func newDevelopLayout() developLayout {
 		resolvedMinimumCodeW = 500
 	}
 	header := editor.Rect{X: 0, Y: contentY, W: screenWidth, H: headerH}
-	sidebar := editor.Rect{X: 0, Y: contentY + headerH, W: resolvedSidebarW, H: statusBarRect.Y - contentY - headerH}
+	// Reserve the message line even when empty, so notifications cannot
+	// overlap the sidebar hint or diagnostics, or move the workspace around.
+	messageH := developTextHeight + 12
+	message := editor.Rect{X: 0, Y: statusBarRect.Y - messageH, W: screenWidth, H: messageH}
+	sidebar := editor.Rect{X: 0, Y: contentY + headerH, W: resolvedSidebarW, H: message.Y - contentY - headerH}
 	bodyY := contentY + headerH + padding
+	// Take message space from diagnostics, preserving the source viewport
+	// and the cartridge preview's integer scale.
 	mainBottom := statusBarRect.Y - bottomH - padding
 	mainH := max(1, mainBottom-bodyY)
 
@@ -114,7 +121,7 @@ func newDevelopLayout() developLayout {
 	sourceX := fileRect.X + fileRect.W + 8
 	sourceMode := editor.Rect{X: sourceX, Y: fileRect.Y, W: max(1, build.X-sourceX-8), H: fileRect.H}
 	search := editor.Rect{X: textRect.X + textRect.W - 390, Y: textRect.Y + 8, W: 370, H: 34}
-	diagnostics := editor.Rect{X: codeRect.X, Y: mainBottom + padding, W: screenWidth - codeRect.X - padding, H: statusBarRect.Y - mainBottom - padding}
+	diagnostics := editor.Rect{X: codeRect.X, Y: mainBottom + padding, W: screenWidth - codeRect.X - padding, H: message.Y - mainBottom - padding*2}
 	code := codeLayout{
 		Header: header, Sidebar: sidebar, File: fileRect,
 		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Vertical: vertical, Format: codeFormatRect(tabs),
@@ -124,7 +131,7 @@ func newDevelopLayout() developLayout {
 		Header: header, Reload: build, Reset: reset, Stop: stop,
 		Stage: stage, Bezel: bezel, Screen: screen, Inspector: telemetry,
 	}
-	return developLayout{Header: header, SourceMode: sourceMode, Build: build, Reset: reset, Stop: stop, Code: code, Play: play}
+	return developLayout{Header: header, SourceMode: sourceMode, Build: build, Reset: reset, Stop: stop, Message: message, Code: code, Play: play}
 }
 
 func (g *Game) updateDevelopMode() {
@@ -205,6 +212,12 @@ func (g *Game) releaseDevelopGameInput() {
 func (g *Game) drawDevelopMode(screen *ebiten.Image) {
 	layout := newDevelopLayout()
 	fillRect(screen, editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}, colorInk)
+	// Paint this before the adjacent panels: their border strokes straddle
+	// the shared edge and must remain visible above the message background.
+	fillRect(screen, layout.Message, colorPanel)
+	// Close the dark workspace below its padded panes, joining the sidebar
+	// separator without drawing across the separate message row.
+	fillRect(screen, editor.Rect{X: layout.Code.Sidebar.W, Y: layout.Message.Y - 1, W: screenWidth - layout.Code.Sidebar.W, H: 1}, colorBorder)
 	g.drawDevelopHeader(screen, layout)
 	if layout.Code.Sidebar.W > 0 {
 		g.drawCodeSidebar(screen, layout.Code)

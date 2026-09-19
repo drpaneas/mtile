@@ -1,0 +1,56 @@
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/sheet
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/palette
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/palette-reset
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/helper-palette
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/helper-sheet
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/conditional
+=== RUN   TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/draw-helper
+--- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/sheet (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/palette (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/palette-reset (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/helper-palette (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/helper-sheet (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/conditional (0.00s)
+    --- PASS: TestMode0AudioCommitRejectsPerFrameWorkWithFourBGs/draw-helper (0.00s)
+=== RUN   TestMode0AudioCommitKeepsSupportedControls
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/four-dirty-maps-audio
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/init-mutations
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/init-helper-palette
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/one-materialized-of-four
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/three-materialized-of-four
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/unused-authored-audio
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/no-native-assets
+=== RUN   TestMode0AudioCommitKeepsSupportedControls/unreachable-palette-helper
+--- PASS: TestMode0AudioCommitKeepsSupportedControls (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/four-dirty-maps-audio (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/init-mutations (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/init-helper-palette (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/one-materialized-of-four (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/three-materialized-of-four (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/unused-authored-audio (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/no-native-assets (0.00s)
+    --- PASS: TestMode0AudioCommitKeepsSupportedControls/unreachable-palette-helper (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.320s
+=== RUN   TestBuildMode0AudioCommitGuardMapsOriginalModulePosition
+=== RUN   TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/mode0
+=== RUN   TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/auto
+=== RUN   TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/mode4
+--- PASS: TestBuildMode0AudioCommitGuardMapsOriginalModulePosition (0.02s)
+    --- PASS: TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/mode0 (0.01s)
+    --- PASS: TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/auto (0.01s)
+    --- PASS: TestBuildMode0AudioCommitGuardMapsOriginalModulePosition/mode4 (0.01s)
+=== RUN   TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls
+=== RUN   TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/init-only
+=== RUN   TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/unused-audio-assets
+=== RUN   TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/one-drawn-bg
+=== RUN   TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/four-dirty-bg-audio
+--- PASS: TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls (0.04s)
+    --- PASS: TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/init-only (0.01s)
+    --- PASS: TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/unused-audio-assets (0.01s)
+    --- PASS: TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/one-drawn-bg (0.01s)
+    --- PASS: TestBuildMode0AudioCommitGuardKeepsInitAndUnusedControls/four-dirty-bg-audio (0.01s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/build	0.800s

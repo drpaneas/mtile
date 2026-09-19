@@ -1,0 +1,222 @@
+{
+  "baseline": {
+    "insert-collision": [
+      {
+        "ns/op": 6848.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 6877.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 6885.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 6856.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 6860.0,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "insert-distributed": [
+      {
+        "ns/op": 1477.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 1467.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 1472.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 1465.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 1461.0,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "image-dynamic": [
+      {
+        "ns/op": 23.36,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 23.18,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 23.24,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 22.95,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 23.31,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "image-static": [
+      {
+        "ns/op": 22.19,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 22.05,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 22.08,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 22.12,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 22.21,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ]
+  },
+  "candidate": {
+    "insert-collision": [
+      {
+        "ns/op": 5255.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 5124.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 5141.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 5121.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 5246.0,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "insert-distributed": [
+      {
+        "ns/op": 2114.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 2272.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 2078.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 2071.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 2105.0,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "image-dynamic": [
+      {
+        "ns/op": 658.9,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 654.3,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 659.0,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 656.7,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 666.0,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ],
+    "image-static": [
+      {
+        "ns/op": 34.58,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 33.7,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 33.67,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 33.87,
+        "B/op": 0,
+        "allocs/op": 0
+      },
+      {
+        "ns/op": 34.06,
+        "B/op": 0,
+        "allocs/op": 0
+      }
+    ]
+  }
+}

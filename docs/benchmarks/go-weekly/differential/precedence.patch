@@ -1,0 +1,11 @@
+--- internal/luaparser/parser.go
++++ internal/luaparser/parser.go
+@@ -755,7 +755,7 @@
+ 	case "-":
+ 		return OpSubtract, 9, false
+ 	case "*":
+-		return OpMultiply, 10, false
++		return OpMultiply, 9, false
+ 	case "/":
+ 		return OpDivide, 10, false
+ 	case "\\":

@@ -1,0 +1,17 @@
+=== RUN   TestMode0PresentWindowNativeDiagnostic
+    mode0_present_window_diagnostic_test.go:40: evidence: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-present
+=== RUN   TestMode0PresentWindowNativeDiagnostic/clean
+    mode0_present_window_diagnostic_test.go:215: clean: warm maximum commit=2410 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-present/clean
+=== RUN   TestMode0PresentWindowNativeDiagnostic/dirty-maps
+    mode0_present_window_diagnostic_test.go:215: dirty-maps: warm maximum commit=35474 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/final-present/dirty-maps
+=== RUN   TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense
+    mode0_present_window_diagnostic_test.go:163: all-mutable-audio-dense: forced Mode0 rejected; AUTO matches Mode4 on 59 first/last scans
+=== RUN   TestMode0PresentWindowNativeDiagnostic/all-packed-audio-dense
+    mode0_present_window_diagnostic_test.go:163: all-packed-audio-dense: forced Mode0 rejected; AUTO matches Mode4 on 59 first/last scans
+--- PASS: TestMode0PresentWindowNativeDiagnostic (29.22s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/clean (5.04s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/dirty-maps (5.23s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense (10.26s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/all-packed-audio-dense (8.63s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	30.175s

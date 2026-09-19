@@ -1,0 +1,18 @@
+$ GOCACHE=/tmp/mtile-generated-gocache go test ./...
+ok  	github.com/drpaneas/mtile/cmd/editor	1.274s
+ok  	github.com/drpaneas/mtile/cmd/mtile	7.519s
+ok  	github.com/drpaneas/mtile/cmd/renderbench	(cached)
+ok  	github.com/drpaneas/mtile/fonts	(cached)
+ok  	github.com/drpaneas/mtile/internal/assetsync	(cached)
+ok  	github.com/drpaneas/mtile/internal/build	16.373s
+ok  	github.com/drpaneas/mtile/internal/codeeditor	(cached)
+ok  	github.com/drpaneas/mtile/internal/editor	(cached)
+ok  	github.com/drpaneas/mtile/internal/emulator	(cached)
+ok  	github.com/drpaneas/mtile/internal/gbapu	(cached)
+?   	github.com/drpaneas/mtile/internal/hostclipboard	[no test files]
+ok  	github.com/drpaneas/mtile/internal/luaparser	(cached)
+ok  	github.com/drpaneas/mtile/internal/midicontrol	(cached)
+ok  	github.com/drpaneas/mtile/internal/performance	(cached)
+ok  	github.com/drpaneas/mtile/internal/sourcebundle	(cached)
+
+exit_code=-15 elapsed_seconds=74.065

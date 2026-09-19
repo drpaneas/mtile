@@ -1,0 +1,126 @@
+{
+  "baseline": {
+    "nativeTotalsMatch": true,
+    "elfSHA256": "75b6999bbcc9dda914e4a196be922b3749e69cdae490b2d093fc324c7b519a2b",
+    "functionsReadelfAndMapAgree": {
+      "(*github.com/drpaneas/mtile/runtime.Context).hashFind": 656,
+      "(*github.com/drpaneas/mtile/runtime.Context).TableSet": 1172,
+      "(*github.com/drpaneas/mtile/runtime.Context).growTableWithRoots": 2368
+    },
+    "aliasGroupsReadelfAgree": [
+      {
+        "names": [
+          "memcpy",
+          "memmove"
+        ],
+        "sizeCountedOnce": 296
+      },
+      {
+        "names": [
+          "__aeabi_uidiv",
+          "__aeabi_uidivmod",
+          "__udivsi3"
+        ],
+        "sizeCountedOnce": 280
+      },
+      {
+        "names": [
+          "__aeabi_memset",
+          "__aeabi_memset4",
+          "__aeabi_memset8"
+        ],
+        "sizeCountedOnce": 16
+      },
+      {
+        "names": [
+          "__aeabi_memclr",
+          "__aeabi_memclr4",
+          "__aeabi_memclr8"
+        ],
+        "sizeCountedOnce": 12
+      },
+      {
+        "names": [
+          "__aeabi_memcpy",
+          "__aeabi_memcpy4",
+          "__aeabi_memcpy8"
+        ],
+        "sizeCountedOnce": 4
+      },
+      {
+        "names": [
+          "__aeabi_memmove",
+          "__aeabi_memmove4",
+          "__aeabi_memmove8"
+        ],
+        "sizeCountedOnce": 4
+      }
+    ]
+  },
+  "candidate": {
+    "nativeTotalsMatch": true,
+    "elfSHA256": "317d65a80ecd0c1332c8f4598a8edc80e4872e2bd389d62f66da5b9a8df7ad36",
+    "functionsReadelfAndMapAgree": {
+      "(*github.com/drpaneas/mtile/runtime.Context).hashFind": 760,
+      "(*github.com/drpaneas/mtile/runtime.Context).TableSet": 1276,
+      "(*github.com/drpaneas/mtile/runtime.Context).growTableWithRoots": 2448
+    },
+    "aliasGroupsReadelfAgree": [
+      {
+        "names": [
+          "memcpy",
+          "memmove"
+        ],
+        "sizeCountedOnce": 296
+      },
+      {
+        "names": [
+          "__aeabi_uidiv",
+          "__aeabi_uidivmod",
+          "__udivsi3"
+        ],
+        "sizeCountedOnce": 280
+      },
+      {
+        "names": [
+          "__aeabi_memset",
+          "__aeabi_memset4",
+          "__aeabi_memset8"
+        ],
+        "sizeCountedOnce": 16
+      },
+      {
+        "names": [
+          "__aeabi_memclr",
+          "__aeabi_memclr4",
+          "__aeabi_memclr8"
+        ],
+        "sizeCountedOnce": 12
+      },
+      {
+        "names": [
+          "__aeabi_memcpy",
+          "__aeabi_memcpy4",
+          "__aeabi_memcpy8"
+        ],
+        "sizeCountedOnce": 4
+      },
+      {
+        "names": [
+          "__aeabi_memmove",
+          "__aeabi_memmove4",
+          "__aeabi_memmove8"
+        ],
+        "sizeCountedOnce": 4
+      }
+    ]
+  },
+  "comparisonMatches": true,
+  "delta": {
+    "romLoadBytes": 288,
+    "iwramBytes": 104,
+    "ewramBytes": 0,
+    "debugMailboxBytes": 0,
+    "otherAllocatedBytes": 0
+  }
+}

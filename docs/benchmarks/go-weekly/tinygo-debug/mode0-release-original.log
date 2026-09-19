@@ -1,0 +1,12 @@
+{
+  "buildSeconds": 1.519911875,
+  "ewramBytes": 19956,
+  "ewramFreeBytes": 241676,
+  "generatedGoSHA256": "45c875b83b4522b1f511f475a17355c354c8a4515ea885f922de62c09d94f8e8",
+  "iwramBytes": 10200,
+  "mapPath": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2537275072/game.map",
+  "romBytes": 24376,
+  "romPath": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-tinygo-debug-caedx4w9/mode0-release-original.gba",
+  "romSHA256": "9b8abbbacc1c002d7787c1d1c090ebea35e5149c35751e6e0f29620bc029fe4c",
+  "workDir": "/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-2537275072"
+}

@@ -1,0 +1,792 @@
+--- a/cmd/editor/main.go
++++ b/cmd/editor/main.go
+@@ -14,10 +14,17 @@
+ 
+ func main() {
+ 	dir := flag.String("project", ".", "path to the native asset project directory")
++	traceStall := flag.String("trace-stall", "", "write one execution trace after a completed Update takes at least 100ms (new file only)")
+ 	flag.Parse()
+ 
+ 	g, err := newGame(*dir)
+ 	if err != nil {
++		log.Fatalf("editor: %v", err)
++	}
++	runGame, closeTrace, err := editorWithFlightRecorder(g, *traceStall)
++	if err != nil {
++		g.closePlayMode()
++		g.closeNativePerformance()
+ 		log.Fatalf("editor: %v", err)
+ 	}
+ 	ebiten.SetWindowSize(screenWidth, screenHeight)
+@@ -29,7 +36,8 @@
+ 	// Metal command buffer and swap entirely. Dynamic surfaces (transport,
+ 	// recording, MIDI and the emulator) still request every frame from Update.
+ 	ebiten.SetScreenClearedEveryFrame(false)
+-	runErr := ebiten.RunGame(g)
++	runErr := ebiten.RunGame(runGame)
++	closeTrace()
+ 	g.closePlayMode()
+ 	g.closeNativePerformance()
+ 	// Persist before reporting a fatal error too: log.Fatalf calls os.Exit
+--- a/cmd/mtile/main.go
++++ b/cmd/mtile/main.go
+@@ -232,6 +232,7 @@
+ func runEdit(args []string, out, errOut io.Writer) error {
+ 	flags := flag.NewFlagSet("edit", flag.ContinueOnError)
+ 	editor := flags.String("editor", "", "editor executable (default: MTILE_EDITOR or sibling mtile-editor/editor)")
++	traceStall := flags.String("trace-stall", "", "write one editor execution trace after a completed Update takes at least 100ms (new file only)")
+ 	tileCanvas := flags.Bool("experimental-tilecanvas", false, "preview this project with generic tiled backgrounds and a sparse OBJ canvas")
+ 	tileObjects := flags.Bool("experimental-tilecanvas-objects", false, "compatibility alias for -experimental-tilecanvas")
+ 	help, err := parseFlags(flags, args, out)
+@@ -251,6 +252,13 @@
+ 	command, commandArgs, workDir, err := editorCommand(*editor, dir)
+ 	if err != nil {
+ 		return err
++	}
++	if *traceStall != "" {
++		tracePath, err := filepath.Abs(*traceStall)
++		if err != nil {
++			return err
++		}
++		commandArgs = append(commandArgs, "-trace-stall", tracePath)
+ 	}
+ 	cmd := exec.Command(command, commandArgs...)
+ 	cmd.Dir = workDir
+--- /dev/null
++++ b/cmd/editor/flight_recorder.go
+@@ -0,0 +1,155 @@
++package main
++
++import (
++	"context"
++	"errors"
++	"fmt"
++	"io"
++	"log"
++	"os"
++	"path/filepath"
++	"runtime/trace"
++	"sync"
++	"sync/atomic"
++	"time"
++
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++const stallTraceThreshold = 100 * time.Millisecond
++
++type flightRecorder interface {
++	Start() error
++	WriteTo(io.Writer) (int64, error)
++	Stop()
++}
++
++// editorWithFlightRecorder selects the ordinary game once at startup. The
++// disabled path has no per-frame branch, clock read, or trace instrumentation.
++func editorWithFlightRecorder(game ebiten.Game, path string) (ebiten.Game, func(), error) {
++	if path == "" {
++		return game, func() {}, nil
++	}
++	recorder := trace.NewFlightRecorder(trace.FlightRecorderConfig{
++		MinAge: 5 * time.Second, MaxBytes: 8 << 20,
++	})
++	return wrapFlightRecorder(game, path, recorder, log.Printf)
++}
++
++func wrapFlightRecorder(game ebiten.Game, path string, recorder flightRecorder, report func(string, ...any)) (ebiten.Game, func(), error) {
++	abs, err := filepath.Abs(path)
++	if err != nil {
++		return nil, nil, err
++	}
++	if _, err := os.Lstat(abs); err == nil {
++		return nil, nil, fmt.Errorf("stall trace destination already exists: %s", abs)
++	} else if !errors.Is(err, os.ErrNotExist) {
++		return nil, nil, fmt.Errorf("check stall trace destination: %w", err)
++	}
++	if err := recorder.Start(); err != nil {
++		return nil, nil, fmt.Errorf("start stall flight recorder: %w", err)
++	}
++	s := &stallRecorder{recorder: recorder, path: abs, report: report}
++	s.observing.Store(true)
++	return &flightRecorderGame{Game: game, recorder: s, now: time.Now}, s.close, nil
++}
++
++type flightRecorderGame struct {
++	ebiten.Game
++	recorder *stallRecorder
++	now      func() time.Time
++}
++
++// Update observes completed calls only. Permanent hangs and Draw stalls do
++// not trigger a snapshot. The execution trace still includes other goroutines.
++func (g *flightRecorderGame) Update() error {
++	if !g.recorder.observing.Load() {
++		return g.Game.Update()
++	}
++	start := g.now()
++	region := trace.StartRegion(context.Background(), "mtile.editor.Update")
++	err := g.Game.Update()
++	region.End()
++	elapsed := g.now().Sub(start)
++	if elapsed >= stallTraceThreshold {
++		g.recorder.capture(elapsed)
++	}
++	return err
++}
++
++type stallRecorder struct {
++	recorder  flightRecorder
++	path      string
++	report    func(string, ...any)
++	observing atomic.Bool
++	mu        sync.Mutex
++	closed    bool
++	started   bool
++	worker    sync.WaitGroup
++	closeOnce sync.Once
++}
++
++func (s *stallRecorder) capture(elapsed time.Duration) {
++	if !s.observing.CompareAndSwap(true, false) {
++		return
++	}
++	s.mu.Lock()
++	if s.closed {
++		s.mu.Unlock()
++		return
++	}
++	s.started = true
++	s.worker.Add(1)
++	s.mu.Unlock()
++	trace.Log(context.Background(), "mtile.stall", "completed Update exceeded 100ms")
++	go func() {
++		defer s.worker.Done()
++		// Stop releases the moving window only after WriteTo has consumed it.
++		defer s.recorder.Stop()
++		err := s.writeSnapshot()
++		if err != nil {
++			s.report("editor: stall trace failed (%s): %v", s.path, err)
++			return
++		}
++		s.report("editor: saved stall trace %s (Update %s)", s.path, elapsed)
++	}()
++}
++
++func (s *stallRecorder) writeSnapshot() error {
++	// Recheck atomically at capture time; startup's existence check alone
++	// cannot protect a file created while the editor was running.
++	f, err := os.OpenFile(s.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
++	if err != nil {
++		return err
++	}
++	created, statErr := f.Stat()
++	_, writeErr := s.recorder.WriteTo(f)
++	err = errors.Join(statErr, writeErr, f.Close())
++	if err != nil && created != nil {
++		// Remove our partial output, never a different file moved over it.
++		if current, checkErr := os.Lstat(s.path); checkErr == nil && os.SameFile(created, current) {
++			err = errors.Join(err, os.Remove(s.path))
++		}
++	}
++	return err
++}
++
++func (s *stallRecorder) captured() bool {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	return s.started
++}
++
++func (s *stallRecorder) close() {
++	s.closeOnce.Do(func() {
++		s.observing.Store(false)
++		s.mu.Lock()
++		s.closed = true
++		started := s.started
++		s.mu.Unlock()
++		s.worker.Wait()
++		if !started {
++			s.recorder.Stop()
++		}
++	})
++}
+--- /dev/null
++++ b/cmd/editor/flight_recorder_test.go
+@@ -0,0 +1,293 @@
++package main
++
++import (
++	"context"
++	"errors"
++	"fmt"
++	"io"
++	"os"
++	"path/filepath"
++	"runtime/trace"
++	"strings"
++	"sync"
++	"testing"
++	"testing/synctest"
++	"time"
++
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++type flightTestGame struct{ update func() error }
++
++func (g *flightTestGame) Update() error            { return g.update() }
++func (*flightTestGame) Draw(*ebiten.Image)         {}
++func (*flightTestGame) Layout(int, int) (int, int) { return 1, 1 }
++
++type fakeFlightRecorder struct {
++	mu                    sync.Mutex
++	starts, writes, stops int
++	startErr, writeErr    error
++	writing, release      chan struct{}
++	beforeWrite           func(io.Writer)
++}
++
++func (r *fakeFlightRecorder) Start() error {
++	r.mu.Lock()
++	defer r.mu.Unlock()
++	r.starts++
++	return r.startErr
++}
++func (r *fakeFlightRecorder) WriteTo(w io.Writer) (int64, error) {
++	r.mu.Lock()
++	r.writes++
++	r.mu.Unlock()
++	if r.writing != nil {
++		close(r.writing)
++		<-r.release
++	}
++	if r.beforeWrite != nil {
++		r.beforeWrite(w)
++	}
++	if r.writeErr != nil {
++		n, _ := io.WriteString(w, "partial")
++		return int64(n), r.writeErr
++	}
++	n, err := io.WriteString(w, "test trace")
++	return int64(n), err
++}
++func (r *fakeFlightRecorder) Stop() {
++	r.mu.Lock()
++	defer r.mu.Unlock()
++	r.stops++
++}
++
++func TestFlightRecorderDisabledPreservesExactGame(t *testing.T) {
++	g := &Game{}
++	actual, close, err := editorWithFlightRecorder(g, "")
++	if err != nil || actual != g {
++		t.Fatalf("disabled wrapper changed game: %T %v", actual, err)
++	}
++	close()
++}
++
++func TestFlightRecorderThresholdAndUpdateError(t *testing.T) {
++	for _, elapsed := range []time.Duration{stallTraceThreshold - time.Nanosecond, stallTraceThreshold} {
++		t.Run(elapsed.String(), func(t *testing.T) {
++			path := filepath.Join(t.TempDir(), "trace.out")
++			wantErr := errors.New("game update error")
++			updates := 0
++			game := &flightTestGame{update: func() error { updates++; return wantErr }}
++			r := &fakeFlightRecorder{}
++			wrapped, close, err := wrapFlightRecorder(game, path, r, t.Logf)
++			if err != nil {
++				t.Fatal(err)
++			}
++			g := wrapped.(*flightRecorderGame)
++			clockCalls := 0
++			g.now = func() time.Time { clockCalls++; return time.Unix(0, int64(clockCalls)*int64(elapsed)) }
++			if err := g.Update(); err != wantErr {
++				t.Fatalf("Update error = %v", err)
++			}
++			if elapsed >= stallTraceThreshold {
++				if err := g.Update(); err != wantErr || clockCalls != 2 {
++					t.Fatal("one-shot did not bypass observation")
++				}
++			}
++			close()
++			close()
++			wantWrites := 0
++			if elapsed >= stallTraceThreshold {
++				wantWrites = 1
++			}
++			if r.writes != wantWrites || r.stops != 1 {
++				t.Fatalf("writes=%d stops=%d", r.writes, r.stops)
++			}
++			if wantWrites != 0 {
++				info, err := os.Stat(path)
++				if err != nil || info.Mode().Perm() != 0o600 {
++					t.Fatalf("trace permissions: %v %v", info, err)
++				}
++			} else if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
++				t.Fatal("no-stall shutdown created a file")
++			}
++		})
++	}
++}
++
++func TestFlightRecorderExclusiveCaptureAndStartFailure(t *testing.T) {
++	game := &flightTestGame{update: func() error { return nil }}
++	path := filepath.Join(t.TempDir(), "trace.out")
++	if err := os.WriteFile(path, []byte("existing"), 0o644); err != nil {
++		t.Fatal(err)
++	}
++	r := &fakeFlightRecorder{}
++	if _, _, err := wrapFlightRecorder(game, path, r, t.Logf); err == nil || r.starts != 0 {
++		t.Fatal("existing destination accepted")
++	}
++	path = filepath.Join(t.TempDir(), "trace.out")
++	r = &fakeFlightRecorder{startErr: errors.New("start failed")}
++	if _, _, err := wrapFlightRecorder(game, path, r, t.Logf); err == nil {
++		t.Fatal("start failure lost")
++	}
++	for _, writeFailure := range []bool{false, true} {
++		path := filepath.Join(t.TempDir(), "trace.out")
++		r := &fakeFlightRecorder{}
++		if writeFailure {
++			r.writeErr = io.ErrClosedPipe
++		}
++		var report string
++		wrapped, close, err := wrapFlightRecorder(game, path, r, func(f string, a ...any) { report = fmt.Sprintf(f, a...) })
++		if err != nil {
++			t.Fatal(err)
++		}
++		if !writeFailure {
++			// A destination created after startup must still never be replaced.
++			if err := os.WriteFile(path, []byte("late existing"), 0o644); err != nil {
++				t.Fatal(err)
++			}
++		}
++		wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
++		close()
++		if !strings.Contains(report, "stall trace failed") || r.stops != 1 {
++			t.Fatalf("failure lifecycle: %q stops=%d", report, r.stops)
++		}
++		if !writeFailure {
++			data, _ := os.ReadFile(path)
++			if string(data) != "late existing" || r.writes != 0 {
++				t.Fatal("capture overwrote existing destination")
++			}
++		} else if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
++			t.Fatal("failed capture left partial output")
++		}
++	}
++}
++
++func TestFlightRecorderCloseWaitsForSnapshot(t *testing.T) {
++	synctest.Test(t, func(t *testing.T) {
++		r := &fakeFlightRecorder{writing: make(chan struct{}), release: make(chan struct{})}
++		wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, filepath.Join(t.TempDir(), "trace.out"), r, t.Logf)
++		if err != nil {
++			t.Fatal(err)
++		}
++		s := wrapped.(*flightRecorderGame).recorder
++		s.capture(stallTraceThreshold)
++		<-r.writing
++		done := make(chan struct{})
++		go func() { shutdown(); close(done) }()
++		synctest.Wait()
++		select {
++		case <-done:
++			t.Fatal("shutdown did not wait for writer")
++		default:
++		}
++		close(r.release)
++		<-done
++		if r.writes != 1 || r.stops != 1 {
++			t.Fatal("snapshot lifecycle not one-shot")
++		}
++	})
++}
++
++func TestFlightRecorderFailurePreservesReplacement(t *testing.T) {
++	path := filepath.Join(t.TempDir(), "trace.out")
++	r := &fakeFlightRecorder{writeErr: io.ErrClosedPipe}
++	r.beforeWrite = func(io.Writer) {
++		if err := os.Rename(path, path+".moved"); err != nil {
++			t.Error(err)
++			return
++		}
++		if err := os.WriteFile(path, []byte("replacement"), 0o600); err != nil {
++			t.Error(err)
++		}
++	}
++	wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, path, r, t.Logf)
++	if err != nil {
++		t.Fatal(err)
++	}
++	wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
++	shutdown()
++	data, err := os.ReadFile(path)
++	if err != nil || string(data) != "replacement" {
++		t.Fatal("cleanup removed replacement file")
++	}
++}
++
++func TestFlightRecorderCloseFailureRemovesPartialFile(t *testing.T) {
++	path := filepath.Join(t.TempDir(), "trace.out")
++	r := &fakeFlightRecorder{beforeWrite: func(w io.Writer) { _ = w.(*os.File).Close() }}
++	wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, path, r, t.Logf)
++	if err != nil {
++		t.Fatal(err)
++	}
++	wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
++	shutdown()
++	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
++		t.Fatal("failed close left partial file")
++	}
++}
++
++func TestFlightRecorderConcurrentCaptureAndClose(t *testing.T) {
++	for range 30 {
++		r := &fakeFlightRecorder{}
++		wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, filepath.Join(t.TempDir(), "trace.out"), r, t.Logf)
++		if err != nil {
++			t.Fatal(err)
++		}
++		s := wrapped.(*flightRecorderGame).recorder
++		var jobs sync.WaitGroup
++		for i := range 8 {
++			jobs.Add(1)
++			go func() {
++				defer jobs.Done()
++				if i%2 == 0 {
++					s.capture(stallTraceThreshold)
++				} else {
++					shutdown()
++				}
++			}()
++		}
++		jobs.Wait()
++		shutdown()
++		if r.writes > 1 || r.stops != 1 {
++			t.Fatalf("writes=%d stops=%d", r.writes, r.stops)
++		}
++	}
++}
++
++// MTILE_FLIGHT_REPORT preserves a real trace for independent stdlib decoding.
++func TestFlightRecorderRealPreStallCapture(t *testing.T) {
++	dir := os.Getenv("MTILE_FLIGHT_REPORT")
++	if dir == "" {
++		dir = t.TempDir()
++	}
++	path := filepath.Join(dir, "pre-stall.trace")
++	updates := 0
++	game := &flightTestGame{update: func() error {
++		updates++
++		if updates == 1 {
++			trace.Log(context.Background(), "mtile.test", "pre-stall-sentinel")
++		} else {
++			r := trace.StartRegion(context.Background(), "controlled-stall")
++			time.Sleep(120 * time.Millisecond)
++			r.End()
++		}
++		return nil
++	}}
++	wrapped, shutdown, err := editorWithFlightRecorder(game, path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer shutdown()
++	if err := wrapped.Update(); err != nil {
++		t.Fatal(err)
++	}
++	if err := wrapped.Update(); err != nil {
++		t.Fatal(err)
++	}
++	shutdown()
++	data, err := os.ReadFile(path)
++	if err != nil || !strings.HasPrefix(string(data), "go 1.") {
++		t.Fatalf("missing execution trace: %v", err)
++	}
++	t.Logf("captured %d bytes: %s", len(data), path)
++}
+--- /dev/null
++++ b/cmd/editor/flight_recorder_benchmark_test.go
+@@ -0,0 +1,236 @@
++//go:build mtile_editor_bench
++
++package main
++
++import (
++	"crypto/sha256"
++	"encoding/json"
++	"fmt"
++	"image"
++	"image/png"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"runtime"
++	"slices"
++	"strconv"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/hajimehoshi/ebiten/v2"
++)
++
++type flightTimingSample struct {
++	Pair         int     `json:"pair"`
++	Enabled      bool    `json:"enabled"`
++	WarmupFrames int     `json:"warmupFrames"`
++	FrameNanos   []int64 `json:"frameNanos"`
++	MeanNanos    float64 `json:"meanNanos"`
++	RGBSHA256    string  `json:"rgbSHA256"`
++	Invalid      string  `json:"invalid,omitempty"`
++}
++
++type flightMemorySample struct {
++	HeapAlloc, HeapInuse, RSSBytes uint64
++}
++
++type flightSceneReport struct {
++	Samples       []flightTimingSample          `json:"samples"`
++	PairedChanges []float64                     `json:"pairedChangesPercent"`
++	MedianChange  float64                       `json:"medianPairedChangePercent"`
++	Memory        map[string]flightMemorySample `json:"memory"`
++	AddedHeap     int64                         `json:"addedSteadyHeapAlloc"`
++}
++
++func flightMemory(t *testing.T) flightMemorySample {
++	t.Helper()
++	runtime.GC()
++	var stats runtime.MemStats
++	runtime.ReadMemStats(&stats)
++	rss, err := exec.Command("ps", "-o", "rss=", "-p", strconv.Itoa(os.Getpid())).Output()
++	if err != nil {
++		t.Fatal(err)
++	}
++	kb, err := strconv.ParseUint(strings.TrimSpace(string(rss)), 10, 64)
++	if err != nil {
++		t.Fatal(err)
++	}
++	return flightMemorySample{stats.HeapAlloc, stats.HeapInuse, kb * 1024}
++}
++
++// This opt-in diagnostic uses the existing render-thread harness. Only the
++// Update + forced Draw + ReadPixels fence is timed; dispatch, hashes, setup,
++// recorder startup/shutdown, and JSON output are outside measured durations.
++func TestFlightRecorderPerformance(t *testing.T) {
++	out := os.Getenv("MTILE_FLIGHT_BENCH")
++	if out == "" {
++		t.Skip("set MTILE_FLIGHT_BENCH to record the predeclared experiment")
++	}
++	if err := os.MkdirAll(out, 0o755); err != nil {
++		t.Fatal(err)
++	}
++	t.Setenv("MTILE_TINYGO", filepath.Join(t.TempDir(), "missing-tinygo"))
++	reports := map[string]*flightSceneReport{}
++	save := func() {
++		data, err := json.MarshalIndent(reports, "", "  ")
++		if err != nil {
++			t.Fatal(err)
++		}
++		if err := os.WriteFile(filepath.Join(out, "performance.json"), append(data, '\n'), 0o644); err != nil {
++			t.Fatal(err)
++		}
++	}
++	for _, scene := range []struct {
++		name string
++		mode editorMode
++	}{{"Sprites", modeSprites}, {"Map", modeMap}, {"Code", modeCode}} {
++		t.Run(scene.name, func(t *testing.T) {
++			dir := t.TempDir()
++			if err := os.CopyFS(dir, os.DirFS(filepath.Join("..", "..", "examples", "background-layers"))); err != nil {
++				t.Fatal(err)
++			}
++			g, err := newGame(dir)
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer g.closePlayMode()
++			defer g.closeNativePerformance()
++			g.preferences = defaultEditorPreferences()
++			g.applyPreferences()
++			g.Layout(1200, 800)
++			g.mode = scene.mode
++			if scene.mode == modeMap {
++				g.prepareMapView()
++			}
++			target := ebiten.NewImage(1200, 800)
++			defer target.Deallocate()
++			pixels := make([]byte, 1200*800*4)
++			report := &flightSceneReport{Memory: map[string]flightMemorySample{}}
++			reports[scene.name] = report
++			var expectedRGB string
++			frame := func(game ebiten.Game) (int64, string, error) {
++				var elapsed int64
++				var updateErr error
++				onRenderBenchmarkFrame(func() {
++					start := time.Now()
++					updateErr = game.Update()
++					g.requestRender()
++					game.Draw(target)
++					target.ReadPixels(pixels)
++					elapsed = time.Since(start).Nanoseconds()
++				})
++				return elapsed, fmt.Sprintf("%x", sha256.Sum256(pixels)), updateErr
++			}
++			warm := func(game ebiten.Game, duration time.Duration) int {
++				start, count := time.Now(), 0
++				for time.Since(start) < duration {
++					if _, _, err := frame(game); err != nil {
++						t.Fatal(err)
++					}
++					count++
++				}
++				return count
++			}
++			for pair := 0; pair < 6; pair++ {
++				var means [2]float64
++				order := []bool{false, true}
++				if pair%2 != 0 {
++					order = []bool{true, false}
++				}
++				for _, enabled := range order {
++					path := ""
++					if enabled {
++						path = filepath.Join(out, fmt.Sprintf("unexpected-%s-%d.trace", scene.name, pair))
++					}
++					game, shutdown, err := editorWithFlightRecorder(g, path)
++					if err != nil {
++						t.Fatal(err)
++					}
++					sample := flightTimingSample{Pair: pair, Enabled: enabled}
++					sample.WarmupFrames = warm(game, time.Second)
++					var total int64
++					for total < int64(300*time.Millisecond) || len(sample.FrameNanos) < 32 {
++						elapsed, rgb, updateErr := frame(game)
++						if updateErr != nil {
++							sample.Invalid = updateErr.Error()
++							break
++						}
++						if expectedRGB == "" {
++							expectedRGB = rgb
++						}
++						if rgb != expectedRGB {
++							sample.Invalid = "scene pixels changed"
++						}
++						sample.RGBSHA256 = rgb
++						sample.FrameNanos = append(sample.FrameNanos, elapsed)
++						total += elapsed
++						if enabled && game.(*flightRecorderGame).recorder.captured() {
++							sample.Invalid = "recorder triggered during warmup/measurement"
++						}
++						if sample.Invalid != "" {
++							break
++						}
++					}
++					shutdown()
++					if len(sample.FrameNanos) > 0 {
++						sample.MeanNanos = float64(total) / float64(len(sample.FrameNanos))
++					}
++					report.Samples = append(report.Samples, sample)
++					save()
++					if sample.Invalid != "" {
++						t.Fatal(sample.Invalid)
++					}
++					index := 0
++					if enabled {
++						index = 1
++					}
++					means[index] = sample.MeanNanos
++				}
++				report.PairedChanges = append(report.PairedChanges, 100*(means[1]/means[0]-1))
++				save()
++			}
++			sorted := slices.Clone(report.PairedChanges)
++			slices.Sort(sorted)
++			report.MedianChange = (sorted[2] + sorted[3]) / 2
++			f, err := os.Create(filepath.Join(out, scene.name+".png"))
++			if err != nil {
++				t.Fatal(err)
++			}
++			err = png.Encode(f, &image.RGBA{Pix: pixels, Stride: 1200 * 4, Rect: image.Rect(0, 0, 1200, 800)})
++			closeErr := f.Close()
++			if err != nil || closeErr != nil {
++				t.Fatalf("capture: %v %v", err, closeErr)
++			}
++			save()
++			t.Logf("%s paired changes=%v median=%+.3f%%", scene.name, report.PairedChanges, report.MedianChange)
++			if report.MedianChange > 5 {
++				t.Fatal("predeclared 5% overhead gate failed; stop without tuning")
++			}
++			// Memory is a separate 6-second active workload for each state.
++			warm(g, 6*time.Second)
++			report.Memory["disabled"] = flightMemory(t)
++			game, shutdown, err := editorWithFlightRecorder(g, filepath.Join(out, "unexpected-memory-"+scene.name+".trace"))
++			if err != nil {
++				t.Fatal(err)
++			}
++			warm(game, 6*time.Second)
++			report.Memory["enabled"] = flightMemory(t)
++			triggered := game.(*flightRecorderGame).recorder.captured()
++			shutdown()
++			warm(g, time.Second)
++			report.Memory["released"] = flightMemory(t)
++			report.AddedHeap = int64(report.Memory["enabled"].HeapAlloc) - int64(report.Memory["disabled"].HeapAlloc)
++			save()
++			if triggered {
++				t.Fatal("recorder triggered during separate memory sample")
++			}
++			if report.AddedHeap > 32<<20 {
++				t.Fatal("predeclared 32MiB steady live heap gate failed")
++			}
++		})
++		if t.Failed() {
++			return
++		}
++	}
++}
+--- /dev/null
++++ b/cmd/mtile/flight_recorder_test.go
+@@ -0,0 +1,42 @@
++package main
++
++import (
++	"bytes"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++)
++
++func TestRunEditForwardsAbsoluteStallTracePath(t *testing.T) {
++	dir := t.TempDir()
++	script := filepath.Join(dir, "editor.sh")
++	if err := os.WriteFile(script, []byte("#!/bin/sh\nprintf '%s\\n' \"$@\"\n"), 0o755); err != nil {
++		t.Fatal(err)
++	}
++	for _, path := range []string{"", "relative-stall.trace", filepath.Join(dir, "absolute.trace")} {
++		var out bytes.Buffer
++		args := []string{"edit", "-editor", script}
++		if path != "" {
++			args = append(args, "-trace-stall", path)
++		}
++		args = append(args, ".")
++		if err := run(args, &out, &bytes.Buffer{}); err != nil {
++			t.Fatal(err)
++		}
++		lines := strings.Split(strings.TrimSpace(out.String()), "\n")
++		if path == "" {
++			if strings.Contains(out.String(), "trace-stall") {
++				t.Fatal("disabled flag forwarded")
++			}
++		} else {
++			want, err := filepath.Abs(path)
++			if err != nil {
++				t.Fatal(err)
++			}
++			if len(lines) != 4 || lines[2] != "-trace-stall" || lines[3] != want {
++				t.Fatalf("forwarded arguments: %q", lines)
++			}
++		}
++	}
++}

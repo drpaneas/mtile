@@ -1,0 +1,22 @@
+=== RUN   TestObjectCanvasPackingExactColorsHolesAndOpaqueZero
+--- PASS: TestObjectCanvasPackingExactColorsHolesAndOpaqueZero (0.05s)
+=== RUN   TestObjectCanvasRejectsCapacityBeforeDestinationMutation
+--- PASS: TestObjectCanvasRejectsCapacityBeforeDestinationMutation (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.149s
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/audio	0.978s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/hw	0.498s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	2.085s [no tests to run]
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.417s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	2.390s [no tests to run]

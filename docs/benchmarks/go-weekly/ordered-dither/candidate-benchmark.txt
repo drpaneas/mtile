@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/editor
+cpu: Apple M2 Pro
+BenchmarkImageImportNearest/16-12 	     668	    483774 ns/op	  196610 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     808	    452244 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     789	    446874 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     805	    447160 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/16-12 	     814	    446606 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      87	   3986451 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      87	   3994906 ns/op	  196610 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      88	   3979082 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      87	   3970614 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportNearest/256-12         	      86	   3988763 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/16-12          	     260	   1384446 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/16-12          	     261	   1384421 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/16-12          	     258	   1389722 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/16-12          	     259	   1386289 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/16-12          	     258	   1390372 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/256-12         	      13	  25575167 ns/op	  196608 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/256-12         	      13	  25217984 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/256-12         	      13	  25394837 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/256-12         	      13	  25537513 ns/op	  196609 B/op	   16385 allocs/op
+BenchmarkImageImportOrdered/256-12         	      13	  25332029 ns/op	  196609 B/op	   16385 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/editor	8.944s

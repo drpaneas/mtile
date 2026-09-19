@@ -1,0 +1,293 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime/trace"
+	"strings"
+	"sync"
+	"testing"
+	"testing/synctest"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type flightTestGame struct{ update func() error }
+
+func (g *flightTestGame) Update() error            { return g.update() }
+func (*flightTestGame) Draw(*ebiten.Image)         {}
+func (*flightTestGame) Layout(int, int) (int, int) { return 1, 1 }
+
+type fakeFlightRecorder struct {
+	mu                    sync.Mutex
+	starts, writes, stops int
+	startErr, writeErr    error
+	writing, release      chan struct{}
+	beforeWrite           func(io.Writer)
+}
+
+func (r *fakeFlightRecorder) Start() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.starts++
+	return r.startErr
+}
+func (r *fakeFlightRecorder) WriteTo(w io.Writer) (int64, error) {
+	r.mu.Lock()
+	r.writes++
+	r.mu.Unlock()
+	if r.writing != nil {
+		close(r.writing)
+		<-r.release
+	}
+	if r.beforeWrite != nil {
+		r.beforeWrite(w)
+	}
+	if r.writeErr != nil {
+		n, _ := io.WriteString(w, "partial")
+		return int64(n), r.writeErr
+	}
+	n, err := io.WriteString(w, "test trace")
+	return int64(n), err
+}
+func (r *fakeFlightRecorder) Stop() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.stops++
+}
+
+func TestFlightRecorderDisabledPreservesExactGame(t *testing.T) {
+	g := &Game{}
+	actual, close, err := editorWithFlightRecorder(g, "")
+	if err != nil || actual != g {
+		t.Fatalf("disabled wrapper changed game: %T %v", actual, err)
+	}
+	close()
+}
+
+func TestFlightRecorderThresholdAndUpdateError(t *testing.T) {
+	for _, elapsed := range []time.Duration{stallTraceThreshold - time.Nanosecond, stallTraceThreshold} {
+		t.Run(elapsed.String(), func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "trace.out")
+			wantErr := errors.New("game update error")
+			updates := 0
+			game := &flightTestGame{update: func() error { updates++; return wantErr }}
+			r := &fakeFlightRecorder{}
+			wrapped, close, err := wrapFlightRecorder(game, path, r, t.Logf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			g := wrapped.(*flightRecorderGame)
+			clockCalls := 0
+			g.now = func() time.Time { clockCalls++; return time.Unix(0, int64(clockCalls)*int64(elapsed)) }
+			if err := g.Update(); err != wantErr {
+				t.Fatalf("Update error = %v", err)
+			}
+			if elapsed >= stallTraceThreshold {
+				if err := g.Update(); err != wantErr || clockCalls != 2 {
+					t.Fatal("one-shot did not bypass observation")
+				}
+			}
+			close()
+			close()
+			wantWrites := 0
+			if elapsed >= stallTraceThreshold {
+				wantWrites = 1
+			}
+			if r.writes != wantWrites || r.stops != 1 {
+				t.Fatalf("writes=%d stops=%d", r.writes, r.stops)
+			}
+			if wantWrites != 0 {
+				info, err := os.Stat(path)
+				if err != nil || info.Mode().Perm() != 0o600 {
+					t.Fatalf("trace permissions: %v %v", info, err)
+				}
+			} else if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+				t.Fatal("no-stall shutdown created a file")
+			}
+		})
+	}
+}
+
+func TestFlightRecorderExclusiveCaptureAndStartFailure(t *testing.T) {
+	game := &flightTestGame{update: func() error { return nil }}
+	path := filepath.Join(t.TempDir(), "trace.out")
+	if err := os.WriteFile(path, []byte("existing"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	r := &fakeFlightRecorder{}
+	if _, _, err := wrapFlightRecorder(game, path, r, t.Logf); err == nil || r.starts != 0 {
+		t.Fatal("existing destination accepted")
+	}
+	path = filepath.Join(t.TempDir(), "trace.out")
+	r = &fakeFlightRecorder{startErr: errors.New("start failed")}
+	if _, _, err := wrapFlightRecorder(game, path, r, t.Logf); err == nil {
+		t.Fatal("start failure lost")
+	}
+	for _, writeFailure := range []bool{false, true} {
+		path := filepath.Join(t.TempDir(), "trace.out")
+		r := &fakeFlightRecorder{}
+		if writeFailure {
+			r.writeErr = io.ErrClosedPipe
+		}
+		var report string
+		wrapped, close, err := wrapFlightRecorder(game, path, r, func(f string, a ...any) { report = fmt.Sprintf(f, a...) })
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !writeFailure {
+			// A destination created after startup must still never be replaced.
+			if err := os.WriteFile(path, []byte("late existing"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
+		close()
+		if !strings.Contains(report, "stall trace failed") || r.stops != 1 {
+			t.Fatalf("failure lifecycle: %q stops=%d", report, r.stops)
+		}
+		if !writeFailure {
+			data, _ := os.ReadFile(path)
+			if string(data) != "late existing" || r.writes != 0 {
+				t.Fatal("capture overwrote existing destination")
+			}
+		} else if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("failed capture left partial output")
+		}
+	}
+}
+
+func TestFlightRecorderCloseWaitsForSnapshot(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := &fakeFlightRecorder{writing: make(chan struct{}), release: make(chan struct{})}
+		wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, filepath.Join(t.TempDir(), "trace.out"), r, t.Logf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := wrapped.(*flightRecorderGame).recorder
+		s.capture(stallTraceThreshold)
+		<-r.writing
+		done := make(chan struct{})
+		go func() { shutdown(); close(done) }()
+		synctest.Wait()
+		select {
+		case <-done:
+			t.Fatal("shutdown did not wait for writer")
+		default:
+		}
+		close(r.release)
+		<-done
+		if r.writes != 1 || r.stops != 1 {
+			t.Fatal("snapshot lifecycle not one-shot")
+		}
+	})
+}
+
+func TestFlightRecorderFailurePreservesReplacement(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "trace.out")
+	r := &fakeFlightRecorder{writeErr: io.ErrClosedPipe}
+	r.beforeWrite = func(io.Writer) {
+		if err := os.Rename(path, path+".moved"); err != nil {
+			t.Error(err)
+			return
+		}
+		if err := os.WriteFile(path, []byte("replacement"), 0o600); err != nil {
+			t.Error(err)
+		}
+	}
+	wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, path, r, t.Logf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
+	shutdown()
+	data, err := os.ReadFile(path)
+	if err != nil || string(data) != "replacement" {
+		t.Fatal("cleanup removed replacement file")
+	}
+}
+
+func TestFlightRecorderCloseFailureRemovesPartialFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "trace.out")
+	r := &fakeFlightRecorder{beforeWrite: func(w io.Writer) { _ = w.(*os.File).Close() }}
+	wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, path, r, t.Logf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapped.(*flightRecorderGame).recorder.capture(stallTraceThreshold)
+	shutdown()
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("failed close left partial file")
+	}
+}
+
+func TestFlightRecorderConcurrentCaptureAndClose(t *testing.T) {
+	for range 30 {
+		r := &fakeFlightRecorder{}
+		wrapped, shutdown, err := wrapFlightRecorder(&flightTestGame{}, filepath.Join(t.TempDir(), "trace.out"), r, t.Logf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := wrapped.(*flightRecorderGame).recorder
+		var jobs sync.WaitGroup
+		for i := range 8 {
+			jobs.Add(1)
+			go func() {
+				defer jobs.Done()
+				if i%2 == 0 {
+					s.capture(stallTraceThreshold)
+				} else {
+					shutdown()
+				}
+			}()
+		}
+		jobs.Wait()
+		shutdown()
+		if r.writes > 1 || r.stops != 1 {
+			t.Fatalf("writes=%d stops=%d", r.writes, r.stops)
+		}
+	}
+}
+
+// MTILE_FLIGHT_REPORT preserves a real trace for independent stdlib decoding.
+func TestFlightRecorderRealPreStallCapture(t *testing.T) {
+	dir := os.Getenv("MTILE_FLIGHT_REPORT")
+	if dir == "" {
+		dir = t.TempDir()
+	}
+	path := filepath.Join(dir, "pre-stall.trace")
+	updates := 0
+	game := &flightTestGame{update: func() error {
+		updates++
+		if updates == 1 {
+			trace.Log(context.Background(), "mtile.test", "pre-stall-sentinel")
+		} else {
+			r := trace.StartRegion(context.Background(), "controlled-stall")
+			time.Sleep(120 * time.Millisecond)
+			r.End()
+		}
+		return nil
+	}}
+	wrapped, shutdown, err := editorWithFlightRecorder(game, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer shutdown()
+	if err := wrapped.Update(); err != nil {
+		t.Fatal(err)
+	}
+	if err := wrapped.Update(); err != nil {
+		t.Fatal(err)
+	}
+	shutdown()
+	data, err := os.ReadFile(path)
+	if err != nil || !strings.HasPrefix(string(data), "go 1.") {
+		t.Fatalf("missing execution trace: %v", err)
+	}
+	t.Logf("captured %d bytes: %s", len(data), path)
+}

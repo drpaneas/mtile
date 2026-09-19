@@ -1,0 +1,16 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/elfsize
+cpu: Apple M2 Pro
+BenchmarkELFParse/baseline-12         	    5872	     51024 ns/op	10151.10 MB/s	  105217 B/op	     999 allocs/op
+BenchmarkELFParse/baseline-12         	    6034	     50905 ns/op	10174.91 MB/s	  105217 B/op	     999 allocs/op
+BenchmarkELFParse/baseline-12         	    5880	     50071 ns/op	10344.32 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/baseline-12         	    5911	     49792 ns/op	10402.42 MB/s	  105217 B/op	     999 allocs/op
+BenchmarkELFParse/baseline-12         	    6446	     52766 ns/op	9816.01 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/candidate-12        	    6036	     50246 ns/op	10318.42 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/candidate-12        	    5946	     50805 ns/op	10204.88 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/candidate-12        	    6022	     51073 ns/op	10151.29 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/candidate-12        	    6392	     51522 ns/op	10062.94 MB/s	  105216 B/op	     999 allocs/op
+BenchmarkELFParse/candidate-12        	    5668	     51019 ns/op	10162.16 MB/s	  105216 B/op	     999 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/cmd/elfsize	3.443s

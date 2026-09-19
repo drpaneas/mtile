@@ -1,0 +1,155 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime/trace"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+const stallTraceThreshold = 100 * time.Millisecond
+
+type flightRecorder interface {
+	Start() error
+	WriteTo(io.Writer) (int64, error)
+	Stop()
+}
+
+// editorWithFlightRecorder selects the ordinary game once at startup. The
+// disabled path has no per-frame branch, clock read, or trace instrumentation.
+func editorWithFlightRecorder(game ebiten.Game, path string) (ebiten.Game, func(), error) {
+	if path == "" {
+		return game, func() {}, nil
+	}
+	recorder := trace.NewFlightRecorder(trace.FlightRecorderConfig{
+		MinAge: 5 * time.Second, MaxBytes: 8 << 20,
+	})
+	return wrapFlightRecorder(game, path, recorder, log.Printf)
+}
+
+func wrapFlightRecorder(game ebiten.Game, path string, recorder flightRecorder, report func(string, ...any)) (ebiten.Game, func(), error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	if _, err := os.Lstat(abs); err == nil {
+		return nil, nil, fmt.Errorf("stall trace destination already exists: %s", abs)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, nil, fmt.Errorf("check stall trace destination: %w", err)
+	}
+	if err := recorder.Start(); err != nil {
+		return nil, nil, fmt.Errorf("start stall flight recorder: %w", err)
+	}
+	s := &stallRecorder{recorder: recorder, path: abs, report: report}
+	s.observing.Store(true)
+	return &flightRecorderGame{Game: game, recorder: s, now: time.Now}, s.close, nil
+}
+
+type flightRecorderGame struct {
+	ebiten.Game
+	recorder *stallRecorder
+	now      func() time.Time
+}
+
+// Update observes completed calls only. Permanent hangs and Draw stalls do
+// not trigger a snapshot. The execution trace still includes other goroutines.
+func (g *flightRecorderGame) Update() error {
+	if !g.recorder.observing.Load() {
+		return g.Game.Update()
+	}
+	start := g.now()
+	region := trace.StartRegion(context.Background(), "mtile.editor.Update")
+	err := g.Game.Update()
+	region.End()
+	elapsed := g.now().Sub(start)
+	if elapsed >= stallTraceThreshold {
+		g.recorder.capture(elapsed)
+	}
+	return err
+}
+
+type stallRecorder struct {
+	recorder  flightRecorder
+	path      string
+	report    func(string, ...any)
+	observing atomic.Bool
+	mu        sync.Mutex
+	closed    bool
+	started   bool
+	worker    sync.WaitGroup
+	closeOnce sync.Once
+}
+
+func (s *stallRecorder) capture(elapsed time.Duration) {
+	if !s.observing.CompareAndSwap(true, false) {
+		return
+	}
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return
+	}
+	s.started = true
+	s.worker.Add(1)
+	s.mu.Unlock()
+	trace.Log(context.Background(), "mtile.stall", "completed Update exceeded 100ms")
+	go func() {
+		defer s.worker.Done()
+		// Stop releases the moving window only after WriteTo has consumed it.
+		defer s.recorder.Stop()
+		err := s.writeSnapshot()
+		if err != nil {
+			s.report("editor: stall trace failed (%s): %v", s.path, err)
+			return
+		}
+		s.report("editor: saved stall trace %s (Update %s)", s.path, elapsed)
+	}()
+}
+
+func (s *stallRecorder) writeSnapshot() error {
+	// Recheck atomically at capture time; startup's existence check alone
+	// cannot protect a file created while the editor was running.
+	f, err := os.OpenFile(s.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return err
+	}
+	created, statErr := f.Stat()
+	_, writeErr := s.recorder.WriteTo(f)
+	err = errors.Join(statErr, writeErr, f.Close())
+	if err != nil && created != nil {
+		// Remove our partial output, never a different file moved over it.
+		if current, checkErr := os.Lstat(s.path); checkErr == nil && os.SameFile(created, current) {
+			err = errors.Join(err, os.Remove(s.path))
+		}
+	}
+	return err
+}
+
+func (s *stallRecorder) captured() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.started
+}
+
+func (s *stallRecorder) close() {
+	s.closeOnce.Do(func() {
+		s.observing.Store(false)
+		s.mu.Lock()
+		s.closed = true
+		started := s.started
+		s.mu.Unlock()
+		s.worker.Wait()
+		if !started {
+			s.recorder.Stop()
+		}
+	})
+}

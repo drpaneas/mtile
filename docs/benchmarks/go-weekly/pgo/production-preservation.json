@@ -1,0 +1,8 @@
+{
+  "preexistingSourceFilesUnchanged": 581,
+  "changedExistingFiles": [],
+  "productionAddition": "cmd/mtile/default.pgo",
+  "profileBytes": 48300,
+  "profileSHA256": "682893860f209a26f98a83191d0283d3198d253adcd7c7ce3d01b0407fbbbb3c",
+  "testAddition": "internal/build/pgo_benchmark_test.go"
+}

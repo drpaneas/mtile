@@ -1,0 +1,66 @@
+--- a/runtime/table.go
++++ b/runtime/table.go
+@@ -408,6 +408,10 @@
+ 		hashLen = readU16(data, 4)
+ 	}
+ 	writeValue(data, hashKeyOff(arrayCapU, slot), key)
++	if key.Kind == KindString {
++		// Stored-key metadata lives in Value padding, not in a copied Value.
++		data[hashKeyOff(arrayCapU, slot)+1] = byte(c.hashValue(key) >> 24)
++	}
+ 	writeValue(data, hashValOff(arrayCapU, hashCap, slot), val)
+ 	writeU16(data, 4, hashLen+1)
+ 	return HeapOK
+@@ -514,7 +518,10 @@
+ 			}
+ 		}
+ 	}
+-	start := hashBucket(c.hashValue(key), uint16(hashCap))
++	hash := c.hashValue(key)
++	start := hashBucket(hash, uint16(hashCap))
++	stringKey := isStringKind(key.Kind)
++	tag := byte(hash >> 24)
+ 	i := start
+ 	for {
+ 		k := readValue(data, hashKeyOff(arrayCap, i))
+@@ -526,7 +533,9 @@
+ 				return 0, false
+ 			}
+ 		} else if (key.Kind == KindNumber && k.Kind == KindNumber && k.Num == key.Num) ||
+-			(key.Kind != KindNumber && c.ValuesEqual(k, key)) {
++			(key.Kind != KindNumber &&
++				(!stringKey || k.Kind != KindString || data[hashKeyOff(arrayCap, i)+1] == tag) &&
++				c.ValuesEqual(k, key)) {
+ 			// Numeric keys need only their exact fixed-point payload. Keep
+ 			// this common comparison inside the IWRAM probe loop instead of
+ 			// copying two Values into the generic ROM string/table decoder.
+@@ -734,6 +743,9 @@
+ 		freshArray := uint16(newArray)
+ 		freshHash := uint16(newHash)
+ 		writeValue(fresh, hashKeyOff(freshArray, slot), k)
++		if k.Kind == KindString {
++			fresh[hashKeyOff(freshArray, slot)+1] = byte(c.hashValue(k) >> 24)
++		}
+ 		writeValue(fresh, hashValOff(freshArray, freshHash, slot), v)
+ 		hashLen++
+ 	}
+--- a/runtime/table_literal_image.go
++++ b/runtime/table_literal_image.go
+@@ -57,6 +57,17 @@
+ 	ref, err := c.heap.allocObjectFilled(ObjTable, image)
+ 	if err != HeapOK {
+ 		return NilVal(), err
++	}
++	// Raw images may contain heap-string keys and unspecified Value padding.
++	// Normalize only dynamic keys after the copy. Hash reads cannot allocate;
++	// callers must already root any heap references embedded in their image.
++	data := c.freshObjectBytes(ref)
++	for i := 0; i < hashCap; i++ {
++		off := hashKeyOff(uint16(arrayCap), i)
++		key := readValue(data, off)
++		if key.Kind == KindString {
++			data[off+1] = byte(c.hashValue(key) >> 24)
++		}
+ 	}
+ 	return Value{Kind: KindTable, Ref: ref}, HeapOK
+ }

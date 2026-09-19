@@ -1,0 +1,27 @@
+--- a/runtime/heap.go
++++ b/runtime/heap.go
+@@ -275,6 +275,24 @@
+ 		base := unsafe.Add(unsafe.Pointer(&space[0]), off)
+ 		at := uint32(0)
+ 		if uintptr(base)&3 == 0 {
++			// Small strings usually need only one to four words. Constant
++			// stores avoid the generic loop's repeated size checks.
++			if aligned <= 16 {
++				switch aligned {
++				case 16:
++					*(*uint32)(unsafe.Add(base, 12)) = 0
++					fallthrough
++				case 12:
++					*(*uint32)(unsafe.Add(base, 8)) = 0
++					fallthrough
++				case 8:
++					*(*uint32)(unsafe.Add(base, 4)) = 0
++					fallthrough
++				case 4:
++					*(*uint32)(base) = 0
++				}
++				at = aligned
++			}
+ 			for aligned-at >= 16 {
+ 				pointer := unsafe.Add(base, at)
+ 				*(*uint32)(pointer) = 0

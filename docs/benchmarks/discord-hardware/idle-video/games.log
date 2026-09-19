@@ -1,0 +1,15 @@
+=== RUN   TestIdleTrialDiagnostic
+=== RUN   TestIdleTrialDiagnostic/pongmode4
+    idle_trial_diagnostic_test.go:63: pixels=0 median=185451/184884 p95=188281/187309 missed=0/0 rom=74428/75252 iwram=21548/21548 ewram=185344/185344
+=== RUN   TestIdleTrialDiagnostic/background-layersmode0
+    idle_trial_diagnostic_test.go:63: pixels=0 median=22338/22227 p95=42164/42053 missed=0/0 rom=31948/32848 iwram=10208/10212 ewram=32604/32604
+=== RUN   TestIdleTrialDiagnostic/background-layersmode4
+    idle_trial_diagnostic_test.go:59: candidate work=
+    idle_trial_diagnostic_test.go:60: debug telemetry produced 0/180 synchronized frame samples
+--- FAIL: TestIdleTrialDiagnostic (14.18s)
+    --- PASS: TestIdleTrialDiagnostic/pongmode4 (6.46s)
+    --- PASS: TestIdleTrialDiagnostic/background-layersmode0 (3.69s)
+    --- FAIL: TestIdleTrialDiagnostic/background-layersmode4 (4.03s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	15.084s
+FAIL

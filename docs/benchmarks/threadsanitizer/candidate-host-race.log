@@ -1,0 +1,7 @@
+ok  	github.com/drpaneas/mtile/cmd/editor	3.964s
+ok  	github.com/drpaneas/mtile/internal/emulator	2.268s
+ok  	github.com/drpaneas/mtile/internal/performance	1.544s
+ok  	github.com/drpaneas/mtile/internal/midicontrol	2.003s
+real 5.16
+user 3.08
+sys 1.51

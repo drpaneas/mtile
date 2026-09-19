@@ -1,0 +1,57 @@
+{
+  "environment": "native mGBA HLE BIOS; forced blank; ROM compressed source, EWRAM expanded destination; no physical hardware measurements",
+  "sizes_and_cycles": [
+    {
+      "name": "redundant",
+      "expanded_bytes": 16384,
+      "whole_bytes": 1980,
+      "whole_padded_bytes": 1980,
+      "frame_bytes": 3840,
+      "frame_padded_bytes": 3840,
+      "largest_frame_bytes": 60,
+      "raw_copy_cycles": 47291,
+      "validation_cycles": 142535,
+      "validated_expanded_bytes": 16384,
+      "bios_decode_cycles": 188988,
+      "validated_decode_cycles": 331600,
+      "frame_min_cycles": 7953,
+      "frame_max_cycles": 7953,
+      "all_frames_cycles": 508992,
+      "all_raw_frames_cycles": 57472,
+      "parity_guard_mismatches": 0,
+      "undersized_destination_failures": 0
+    },
+    {
+      "name": "incompressible",
+      "expanded_bytes": 16384,
+      "whole_bytes": 18434,
+      "whole_padded_bytes": 18436,
+      "frame_bytes": 18688,
+      "frame_padded_bytes": 18688,
+      "largest_frame_bytes": 292,
+      "raw_copy_cycles": 47291,
+      "validation_cycles": 1296442,
+      "validated_expanded_bytes": 16384,
+      "bios_decode_cycles": 628786,
+      "validated_decode_cycles": 1925305,
+      "frame_min_cycles": 30471,
+      "frame_max_cycles": 30471,
+      "all_frames_cycles": 1950144,
+      "all_raw_frames_cycles": 57472,
+      "parity_guard_mismatches": 0,
+      "undersized_destination_failures": 0
+    }
+  ],
+  "malformed_acceptance_or_write_failures": {
+    "signature": 0,
+    "zero_size": 0,
+    "truncated_header": 0,
+    "truncated_literal": 0,
+    "truncated_token": 0,
+    "negative_backreference": 0,
+    "overrun_token": 0
+  },
+  "failures": 0,
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "mgba_sha256": "75c1aac8e6319242eef602cd566ade48375dee4d613e01a03ccbf90835a69bab"
+}

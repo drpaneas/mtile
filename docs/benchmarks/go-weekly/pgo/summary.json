@@ -1,0 +1,102 @@
+{
+  "Heldout": {
+    "off": {
+      "median_ns/op": 15309107.0,
+      "min_ns/op": 14620656.0,
+      "max_ns/op": 16787234.0,
+      "cvPercent": 5.838068821358119,
+      "median_B/op": 17211090.0,
+      "median_allocs/op": 105693.5
+    },
+    "trained": {
+      "median_ns/op": 14616668.5,
+      "min_ns/op": 13792990.0,
+      "max_ns/op": 16333332.0,
+      "cvPercent": 6.3117968998231895,
+      "median_B/op": 17210675.0,
+      "median_allocs/op": 105239.5
+    },
+    "medianChangePercent": -4.52304958088019,
+    "pairedChangesPercent": [
+      -3.5476797803123183,
+      -5.456625375677627,
+      -2.703852224851333,
+      -3.882184468303962,
+      -6.082912857437083,
+      -2.9542483471742487,
+      -3.536311026033623,
+      -2.6230628776164333,
+      -5.087310387945476,
+      -7.058022775753614
+    ],
+    "improvedPairs": 10,
+    "gatePassed": true
+  },
+  "Hello": {
+    "off": {
+      "median_ns/op": 910899.0,
+      "min_ns/op": 880353.0,
+      "max_ns/op": 1163949.0,
+      "cvPercent": 10.204423709943827,
+      "median_B/op": 908434.5,
+      "median_allocs/op": 6480.0
+    },
+    "trained": {
+      "median_ns/op": 890560.0,
+      "min_ns/op": 838757.0,
+      "max_ns/op": 998493.0,
+      "cvPercent": 7.762680701634693,
+      "median_B/op": 908244.0,
+      "median_allocs/op": 6404.0
+    },
+    "medianChangePercent": -2.23284908645196,
+    "pairedChangesPercent": [
+      -4.455430734742205,
+      -3.3410868078226574,
+      -2.563709728571917,
+      -14.462575250290177,
+      -6.096806153436162,
+      1.8019605114924175,
+      -3.188380115703582,
+      -2.3341105028750753,
+      -4.814041123480505,
+      -4.876303368059576
+    ],
+    "improvedPairs": 9,
+    "gatePassed": true
+  },
+  "Noalloc": {
+    "off": {
+      "median_ns/op": 421932.5,
+      "min_ns/op": 390061.0,
+      "max_ns/op": 485383.0,
+      "cvPercent": 9.771340975397965,
+      "median_B/op": 399940.5,
+      "median_allocs/op": 2977.0
+    },
+    "trained": {
+      "median_ns/op": 397112.5,
+      "min_ns/op": 387205.0,
+      "max_ns/op": 475986.0,
+      "cvPercent": 9.972624066339808,
+      "median_B/op": 399578.5,
+      "median_allocs/op": 2885.0
+    },
+    "medianChangePercent": -5.8824575020886005,
+    "pairedChangesPercent": [
+      -2.155240444920714,
+      -1.1552303088574578,
+      -0.9151167598768661,
+      8.50227123160141,
+      -2.557644485209365,
+      -18.230345933005488,
+      -0.8585879082414261,
+      0.35737999953853183,
+      -3.1052550085161057,
+      -1.2647737559445593
+    ],
+    "improvedPairs": 8,
+    "gatePassed": true
+  },
+  "performanceGatePassed": true
+}

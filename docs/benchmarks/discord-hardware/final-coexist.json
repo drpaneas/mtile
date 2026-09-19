@@ -1,0 +1,20 @@
+{
+  "displayFrames": 1800,
+  "romSha256": "358affb93aa26033a836c17282878ae15200b897e8792dbc0eb1754004ed8c51",
+  "telemetry": {
+    "main.psgCoexistCommandsRejected": 0,
+    "main.psgCoexistEvents": 304,
+    "main.psgCoexistFailureFlags": 0,
+    "main.psgCoexistFirstFailureService": 0,
+    "main.psgCoexistFrameSkips": 0,
+    "main.psgCoexistMaxServiceCycles": 9590,
+    "main.psgCoexistMeanServiceCycles": 736,
+    "main.psgCoexistMinServiceCycles": 190,
+    "main.psgCoexistPreview": 257,
+    "main.psgCoexistQueueOverflows": 0,
+    "main.psgCoexistSeenHardware": 15,
+    "main.psgCoexistServiceCalls": 7689,
+    "main.psgCoexistStatus": 1347634946
+  },
+  "pass": true
+}

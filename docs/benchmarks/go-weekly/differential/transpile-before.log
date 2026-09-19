@@ -1,0 +1,48 @@
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      56	   5546144 ns/op	   4.42 MB/s	 6010616 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.612s
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      56	   5367263 ns/op	   4.57 MB/s	 6010609 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.610s
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      64	   5381309 ns/op	   4.56 MB/s	 6010613 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.966s
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      58	   5328144 ns/op	   4.60 MB/s	 6010604 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.615s
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      66	   5227903 ns/op	   4.69 MB/s	 6010626 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.941s
+$ go test ./internal/transpiler -run ^$ -bench ^BenchmarkDifferentialCorpusTranspile$ -benchtime=300ms -count=1 -cpu=1
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkDifferentialCorpusTranspile 	      63	   5386941 ns/op	   4.55 MB/s	 6010603 B/op	   63305 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.898s

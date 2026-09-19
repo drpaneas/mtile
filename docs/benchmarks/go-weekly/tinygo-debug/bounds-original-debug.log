@@ -1,0 +1,2 @@
+# runtime
+/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/gc.go:28:24: undefined: zeroSizeAllocPtr

@@ -1,0 +1,34 @@
+=== RUN   TestMode0PresentWindowNativeDiagnostic
+    mode0_present_window_diagnostic_test.go:40: evidence: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present
+=== RUN   TestMode0PresentWindowNativeDiagnostic/clean
+    mode0_present_window_diagnostic_test.go:175: clean: warm maximum commit=2410 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present/clean
+=== RUN   TestMode0PresentWindowNativeDiagnostic/dirty-maps
+    mode0_present_window_diagnostic_test.go:175: dirty-maps: warm maximum commit=35474 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present/dirty-maps
+=== RUN   TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick3: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick6: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick9: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick12: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick15: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick18: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick21: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick24: 1241 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick27: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick30: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick33: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick36: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick39: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick42: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick45: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick48: 1241 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick51: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick54: 316 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick57: 314 first-scan pixels
+    mode0_present_window_diagnostic_test.go:175: all-mutable-audio-dense: warm maximum commit=100599 cycles; safe/unsafe tested starts=38/19; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present/all-mutable-audio-dense
+--- FAIL: TestMode0PresentWindowNativeDiagnostic (21.01s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/clean (5.62s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/dirty-maps (5.62s)
+    --- FAIL: TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense (9.71s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	21.730s
+FAIL

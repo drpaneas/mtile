@@ -2,7 +2,10 @@
 
 package hw
 
-import "testing"
+import (
+	"testing"
+	"unsafe"
+)
 
 func TestHostVRAMOffsetRejectsExactEnd(t *testing.T) {
 	tests := []struct {
@@ -86,5 +89,47 @@ func TestHostPaletteOffsetRejectsExactEnd(t *testing.T) {
 				t.Fatalf("hostPaletteOffset(%#x, %d) ok = %t, want %t", tt.addr, tt.width, ok, tt.want)
 			}
 		})
+	}
+}
+
+func TestDMACopyAlignmentPreservesBytesAndGuards(t *testing.T) {
+	storage := [12]uint32{}
+	bytes := unsafe.Slice((*byte)(unsafe.Pointer(&storage[0])), len(storage)*4)
+	for i := range bytes {
+		bytes[i] = byte(i + 1)
+	}
+	for sourceOffset := 0; sourceOffset < 4; sourceOffset++ {
+		for destOffset := 0; destOffset < 4; destOffset++ {
+			ResetForTest()
+			for i := range hostVRAM[:48] {
+				hostVRAM[i] = 0xa5
+			}
+			CopyToVRAM32DMA(bytes[sourceOffset:], VRAM+8+uintptr(destOffset), 8)
+			for i, got := range hostVRAM[:48] {
+				want := byte(0xa5)
+				if destOffset == 0 && i >= 8 && i < 40 {
+					want = bytes[sourceOffset+i-8]
+				}
+				if got != want {
+					t.Fatalf("sourceOffset=%d destOffset=%d byte=%d got=%x want=%x", sourceOffset, destOffset, i, got, want)
+				}
+			}
+		}
+	}
+	for destOffset := 0; destOffset < 4; destOffset++ {
+		ResetForTest()
+		for i := range hostVRAM[:48] {
+			hostVRAM[i] = 0xa5
+		}
+		CopyWordsToVRAM32DMA(storage[:], VRAM+8+uintptr(destOffset), 8)
+		for i, got := range hostVRAM[:48] {
+			want := byte(0xa5)
+			if destOffset == 0 && i >= 8 && i < 40 {
+				want = bytes[i-8]
+			}
+			if got != want {
+				t.Fatalf("word source destOffset=%d byte=%d got=%x want=%x", destOffset, i, got, want)
+			}
+		}
 	}
 }

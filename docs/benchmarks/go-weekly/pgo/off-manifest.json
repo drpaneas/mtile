@@ -1,0 +1,168 @@
+[
+  {
+    "Project": "celeste",
+    "SourceFiles": [
+      "src/source_math.lua",
+      "src/presentation.lua",
+      "src/sound.lua",
+      "src/entities.lua",
+      "game.lua"
+    ],
+    "SourceBytes": 34107,
+    "GeneratedBytes": 565026,
+    "Globals": 49,
+    "Requested": "auto",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "895ebabca6d49391797a40241e07b867d0590d37261030ecde13e4dcc033b64d",
+      "audioBytes": "04ad0241274a117f62ac4ce8ed1e8675262507d404f2358eca3c9744a484af41",
+      "generatedGo": "1c319dba10760bf62f10e7f04ce102c336f14f5bda259f4bd4997e48897bcb71",
+      "globals": "f230172ef0cffb1e4b8a72394e39f6ab283b69748b432b2ab09e7e1fb4fbcec8",
+      "project": "09858ddfd58f395fdef29df6ab93c30b74813c11f7cd40c7a919a27881f6260c",
+      "renderer": "0965a3561fa56f99e41e6585db4cd6acdaf54c4f765b1f5308674867127bd5ee",
+      "sources": "8a075535a601e4908514fe0e6dc4bc9efd01b3d66f16ba7f574a54d295c1dc62"
+    }
+  },
+  {
+    "Project": "multi-file",
+    "SourceFiles": [
+      "src/player.lua",
+      "src/hud.lua",
+      "game.lua"
+    ],
+    "SourceBytes": 1502,
+    "GeneratedBytes": 71576,
+    "Globals": 2,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "078e3c3c2827808e8f8cec0f2c1eed8e81da61d4a27fef8294b4d1ecd1b673c5",
+      "audioBytes": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "generatedGo": "86b6cfc1265eceea4268783b645c2a4177e9d6e91af319e72b77b7c96a9ff7e7",
+      "globals": "ebcb95bf50f36da83eb51dd09f1efdf058a996dd43aea8f732c3a6652da43fd6",
+      "project": "c39c44dae7d77e07fbdbfcf810f1c8f008263a9201641727c41a0c63308eb9f7",
+      "renderer": "70d0e051ff02cb809fb9fa0043f0827c79607bad86d25d2eba45860a056bb753",
+      "sources": "928950c186527a0e52d86a1cf863d75512aeb327ba49e61568fdb910a8e9a3c6"
+    }
+  },
+  {
+    "Project": "audio-gb-song",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 318,
+    "GeneratedBytes": 21061,
+    "Globals": 0,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "3fb9233d489abbd022ed103ca3678a86a252833643bf5930fe10f842fb7297a3",
+      "audioBytes": "07e9bba1c63a7a01f935ee06d931c453e0864fc0fcc11ec445a8af60a36cc6c8",
+      "generatedGo": "9107580f1e6eeca3df1758d136593cf61b5e7422151273b551e46f3421e0b239",
+      "globals": "ce5543a557e76e706e9a9819cb991ef6407cf38af47c2d5a63aa3d95c1929a98",
+      "project": "c39c44dae7d77e07fbdbfcf810f1c8f008263a9201641727c41a0c63308eb9f7",
+      "renderer": "3d72dbbc9f3ad3b0dccdecf1f4c5e68d9759da574cf274c8a2208fb6ae6db3f4",
+      "sources": "85fc35c1cd1939a38d8ed5f63c9d0d2fdce8bfa2bde567722d35b1b1c5cec7dc"
+    }
+  },
+  {
+    "Project": "platformer",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 158,
+    "GeneratedBytes": 20985,
+    "Globals": 0,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "fee375e8e6737f5184ae7bf30efd9c24c235d3946d6e9f327ba89ec599e37506",
+      "audioBytes": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "generatedGo": "e48d0ff06a8fce49ea5b2c0e0a502ede6b4c079d64f98cc37c8af5bbedf26ccf",
+      "globals": "ce5543a557e76e706e9a9819cb991ef6407cf38af47c2d5a63aa3d95c1929a98",
+      "project": "c39c44dae7d77e07fbdbfcf810f1c8f008263a9201641727c41a0c63308eb9f7",
+      "renderer": "20aa2ed18ed01cd947614826310835a7e0b4904a3505fcb7d9980b545b68dc71",
+      "sources": "83e8035025f7e9d0bc624e743f401f1fc59888dddd5f22faf9a38258b01bd45b"
+    }
+  },
+  {
+    "Project": "pong",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 4343,
+    "GeneratedBytes": 79685,
+    "Globals": 23,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "2bf537860b454b91961fc49c1feb62f78d2729bc0635f09958f04833b3c11f75",
+      "audioBytes": "b81d00e65f747a4161b56ab92f400b81862c2bbefe84f220fcefab0399081798",
+      "generatedGo": "2a3311bda13c2e9d49c728bd9a959d338ef7557573bfb383caab8ff41877e8c1",
+      "globals": "5cea572a6f34d402d54857590935ed5d76e18a62a310ffe7dc139ade28e34338",
+      "project": "60d64d4e874d220be48b847b8e70cff015955dc493b578bdd588214a685a9259",
+      "renderer": "fc6f620c814266a25416ef1390c92c6335dcdf0d28d4aef0276042bee3df284c",
+      "sources": "961bffb12286db9cbc874e55f0016b4bcaebba0aa9af06a7532df75a84252474"
+    }
+  },
+  {
+    "Project": "mapdemo",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 1604,
+    "GeneratedBytes": 605353,
+    "Globals": 9,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "e4d8eec4554f9cf546add39c9e3dcb5d429d0ed565bd85d63f12d59494a86a3c",
+      "audioBytes": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "generatedGo": "6d4afb5ef788b606c983b879ac7be4203790f63f1cbaa555e6b15d66055182b4",
+      "globals": "96bf6ef7cf2a7ac67c21e1771d4240541cbc8f8c468c12d8604a04188fe334db",
+      "project": "c39c44dae7d77e07fbdbfcf810f1c8f008263a9201641727c41a0c63308eb9f7",
+      "renderer": "83eb071e6e32fa1a452539c29e13ec1ebc141bbc56533937bdfab06dbfbbbb23",
+      "sources": "2738f707a09efb2d1dbc5f1c1b907f3bb83c726a8b412f163d63c3bfd1a0038c"
+    }
+  },
+  {
+    "Project": "hello",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 584,
+    "GeneratedBytes": 41673,
+    "Globals": 2,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "a73f96ae02148c7c32c3b7288580f62c7b3e0539179f53c91140efaea7199e5e",
+      "audioBytes": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "generatedGo": "df1d2c460d95263dfb5be067450b765d4b1c52bbdbf45092663b1189cf876060",
+      "globals": "0b37e49497593efcb4387765328731dda4cdc30cf32c9ccf316ad57c37d9fb9e",
+      "project": "c39c44dae7d77e07fbdbfcf810f1c8f008263a9201641727c41a0c63308eb9f7",
+      "renderer": "6e656458ce3377af87ea0218ea9e985e84456050394649003adb7b9461a29838",
+      "sources": "af2cbb4bc0b5fef5e35f85160dae2c87662127fc3ba4b289a901dccca99e0735"
+    }
+  },
+  {
+    "Project": "noalloc-call-stress",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "SourceBytes": 805,
+    "GeneratedBytes": 20687,
+    "Globals": 1,
+    "Requested": "mode4",
+    "Selected": "mode4",
+    "Hashes": {
+      "assets": "0feeafd43588656a5908af9ec0248a3806a90fe4661f1914557cd5533a805a01",
+      "audioBytes": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "generatedGo": "013a982f686981ad404bb18bb0970459482aba593dafb12fd3fc43fe98a9696b",
+      "globals": "1b596e97040c2d08dfe733013c4efb56ba031f6aaddb14dd8157b7330de1cf67",
+      "project": "60d64d4e874d220be48b847b8e70cff015955dc493b578bdd588214a685a9259",
+      "renderer": "a89ddaacd365b28c219022afb5934487116fecb700126c447caf35d1e237122b",
+      "sources": "c322c138ec31d1f860c2a281bd37df86e55259330cf186cc56372af118c93aa1"
+    }
+  }
+]

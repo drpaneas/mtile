@@ -1,0 +1,319 @@
+There are 23 section headers, starting at offset 0x7e3a8:
+
+Section Headers:
+  [Nr] Name              Type            Address  Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        08000000 010000 007acc 00  AX  0   0  4
+  [ 2] .rodata           PROGBITS        08007acc 017acc 002364 00   A  0   0  4
+  [ 3] .stack            NOBITS          03000000 020000 002400 00   A  0   0  1
+  [ 4] .data             PROGBITS        03002400 022400 00098c 00  AX  0   0  4
+  [ 5] .ewram            NOBITS          02000000 030000 025948 00  WA  0   0  4
+  [ 6] .debug_mailbox    NOBITS          0203fe00 03fe00 000200 00  WA  0   0  1
+  [ 7] .bss              NOBITS          03002d8c 03fe00 000000 00  WA  0   0  1
+  [ 8] .debug_info       PROGBITS        00000000 03fe00 014857 00      0   0  1
+  [ 9] .debug_abbrev     PROGBITS        00000000 054657 000747 00      0   0  1
+  [10] .debug_aranges    PROGBITS        00000000 054d9e 000100 00      0   0  1
+  [11] .debug_ranges     PROGBITS        00000000 054e9e 002478 00      0   0  1
+  [12] .debug_line       PROGBITS        00000000 057316 006d77 00      0   0  1
+  [13] .debug_frame      PROGBITS        00000000 05e090 000740 00      0   0  4
+  [14] .debug_loc        PROGBITS        00000000 05e7d0 01038b 00      0   0  1
+  [15] .debug_str        PROGBITS        00000000 06eb5b 00750a 01  MS  0   0  1
+  [16] .debug_pubnames   PROGBITS        00000000 076065 004dc0 00      0   0  1
+  [17] .debug_pubtypes   PROGBITS        00000000 07ae25 0015f3 00      0   0  1
+  [18] .comment          PROGBITS        00000000 07c418 000080 01  MS  0   0  1
+  [19] .ARM.attributes   ARM_ATTRIBUTES  00000000 07c498 00003a 00      0   0  1
+  [20] .symtab           SYMTAB          00000000 07c4d4 001030 10     22 223  4
+  [21] .shstrtab         STRTAB          00000000 07d504 0000f0 00      0   0  1
+  [22] .strtab           STRTAB          00000000 07d5f4 000db2 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), y (purecode), p (processor specific)
+
+Elf file type is EXEC (Executable file)
+Entry point 0x8000000
+There are 7 program headers, starting at offset 52
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x010000 0x08000000 0x08000000 0x07acc 0x07acc R E 0x10000
+  LOAD           0x017acc 0x08007acc 0x08007acc 0x02364 0x02364 R   0x10000
+  LOAD           0x020000 0x03000000 0x03000000 0x00000 0x02400 R   0x10000
+  LOAD           0x022400 0x03002400 0x08009e30 0x0098c 0x0098c R E 0x10000
+  LOAD           0x030000 0x02000000 0x02000000 0x00000 0x25948 RW  0x10000
+  LOAD           0x03fe00 0x0203fe00 0x0203fe00 0x00000 0x00200 RW  0x10000
+  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x0
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .text 
+   01     .rodata 
+   02     .stack 
+   03     .data 
+   04     .ewram 
+   05     .debug_mailbox 
+   06     
+   None   .bss .debug_info .debug_abbrev .debug_aranges .debug_ranges .debug_line .debug_frame .debug_loc .debug_str .debug_pubnames .debug_pubtypes .comment .ARM.attributes .symtab .shstrtab .strtab 
+
+Symbol table '.symtab' contains 259 entries:
+   Num:    Value  Size Type    Bind   Vis       Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT   UND 
+     1: 08000000     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     2: 08000120     0 NOTYPE  LOCAL  DEFAULT     1 start_vector
+     3: 08000004     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     4: 08000120     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     5: 0800017c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     6: 0800019c     0 NOTYPE  LOCAL  DEFAULT     1 handleInterruptARM
+     7: 0800019c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+     8: 080001a4     0 NOTYPE  LOCAL  DEFAULT     1 $d
+     9: 03002400     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    10: 0300247c     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    11: 030025a4     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    12: 080001a8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    13: 080001c4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    14: 080001c8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    15: 00000000     0 FILE    LOCAL  DEFAULT   ABS main
+    16: 080001dc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    17: 080002cc     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    18: 080002d4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    19: 080002dc    92 FUNC    LOCAL  DEFAULT     1 runtime.preinit
+    20: 08000338     4 FUNC    LOCAL  DEFAULT     1 runtime.run
+    21: 080002dc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    22: 08000324     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    23: 08000338     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    24: 080036ac 17408 FUNC    LOCAL  DEFAULT     1 main.main
+    25: 030026bc   436 FUNC    LOCAL  DEFAULT     4 (*github.com/drpaneas/mtile/runtime.Context).tableData
+    26: 030026bc     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    27: 03002864     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    28: 02001ba0 31904 OBJECT  LOCAL  DEFAULT     5 main.ctx
+    29: 02009948 57344 OBJECT  LOCAL  DEFAULT     5 github.com/drpaneas/mtile/runtime.heapSpaceA
+    30: 02017948 57344 OBJECT  LOCAL  DEFAULT     5 github.com/drpaneas/mtile/runtime.heapSpaceB
+    31: 0800033c   160 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).objectBytes
+    32: 0800033c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    33: 080003d0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    34: 03002870   620 FUNC    LOCAL  DEFAULT     4 (*github.com/drpaneas/mtile/runtime.Heap).allocObject
+    35: 03002870     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    36: 080003dc   444 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Heap).prepareAllocation
+    37: 03002ad0     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    38: 080003dc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    39: 08000598  1060 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Heap).collectCore
+    40: 08000594     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    41: 08000598     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    42: 080009bc   436 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Heap).copyObject
+    43: 080009ac     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    44: 080009bc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    45: 08000b64     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    46: 08000b70   348 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).heapStringBytes
+    47: 08000b70     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    48: 08000cc0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    49: 08000ccc    52 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).PopTemps
+    50: 08000ccc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    51: 08000cfc     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    52: 08000d00  1068 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).stageMode0Tile
+    53: 08000d00     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    54: 08001128     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    55: 0800112c   292 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).InternStatic
+    56: 0800112c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    57: 08001244     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    58: 08001250   500 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).NewTableWithCaps
+    59: 08001250     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    60: 08001430     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    61: 08001444    64 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).PopLocals
+    62: 08001444     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    63: 08001480     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    64: 08001484  2368 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).growTableWithRoots
+    65: 08001484     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    66: 08001dc4   100 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).dropGrowHandle
+    67: 08001e28   396 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).hashInsertSlot
+    68: 08001fb4   148 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).adoptTableStorage
+    69: 08001db8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    70: 08001dc4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    71: 08001e24     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    72: 08001e28     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    73: 08002048   360 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).hashValue
+    74: 080021b0   592 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).ValuesEqual
+    75: 08001fb4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    76: 08002044     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    77: 08002048     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    78: 0800209c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    79: 080020b0     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    80: 080021a0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    81: 080021b0     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    82: 080023fc     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    83: 08002400   292 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).TableGet
+    84: 08002400     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    85: 03002adc   656 FUNC    LOCAL  DEFAULT     4 (*github.com/drpaneas/mtile/runtime.Context).hashFind
+    86: 03002adc     0 NOTYPE  LOCAL  DEFAULT     4 $a
+    87: 03002d68     0 NOTYPE  LOCAL  DEFAULT     4 $d
+    88: 08002524  1172 FUNC    LOCAL  DEFAULT     1 (*github.com/drpaneas/mtile/runtime.Context).TableSet
+    89: 08002524     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    90: 080029b8   476 FUNC    LOCAL  DEFAULT     1 main.gluPushRoots
+    91: 080029b8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    92: 08002b88     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    93: 08002b94   260 FUNC    LOCAL  DEFAULT     1 main.gluLen
+    94: 08002b94     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    95: 08002c94     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    96: 08002c98  1736 FUNC    LOCAL  DEFAULT     1 main.gluSub
+    97: 08002c98     0 NOTYPE  LOCAL  DEFAULT     1 $a
+    98: 0800334c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+    99: 08003360   844 FUNC    LOCAL  DEFAULT     1 main.gluTableAdd
+   100: 08003360     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   101: 080036ac     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   102: 08004660     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   103: 08004664     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   104: 080046d0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   105: 08009da0    25 OBJECT  LOCAL  DEFAULT     2 main$string.36
+   106: 02001ad4   204 OBJECT  LOCAL  DEFAULT     5 main.cartData
+   107: 02000000    64 OBJECT  LOCAL  DEFAULT     5 main.sheetRAM
+   108: 02000040  1200 OBJECT  LOCAL  DEFAULT     5 main.sheetIndexRAM
+   109: 080046e8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   110: 080047b8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   111: 0200187a   600 OBJECT  LOCAL  DEFAULT     5 main.flagRAM
+   112: 020004f0  5002 OBJECT  LOCAL  DEFAULT     5 main.mapRAM
+   113: 08007acc    64 OBJECT  LOCAL  DEFAULT     2 main.sheetROM
+   114: 080047c4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   115: 080048b8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   116: 08007b0c  1200 OBJECT  LOCAL  DEFAULT     2 main.sheetIndexROM
+   117: 080048bc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   118: 08004974     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   119: 08009346   600 OBJECT  LOCAL  DEFAULT     2 main.flagROM
+   120: 08007fbc  5002 OBJECT  LOCAL  DEFAULT     2 main.mapROM
+   121: 0800497c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   122: 08004994     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   123: 0800959e   512 OBJECT  LOCAL  DEFAULT     2 main.paletteROM
+   124: 08004998     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   125: 08004a8c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   126: 080097a0   512 OBJECT  LOCAL  DEFAULT     2 github.com/drpaneas/mtile/runtime.defaultPalette
+   127: 08004a94     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   128: 080051a0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   129: 08009d60    64 OBJECT  LOCAL  DEFAULT     2 main$string.35
+   130: 080051a4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   131: 08005204     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   132: 02009840   264 OBJECT  LOCAL  DEFAULT     5 main.game
+   133: 08009d20    64 OBJECT  LOCAL  DEFAULT     2 main$string.34
+   134: 08005210     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   135: 08005344     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   136: 08009ce0    64 OBJECT  LOCAL  DEFAULT     2 main$string.33
+   137: 0800534c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   138: 080053e0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   139: 080053e4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   140: 0800548c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   141: 08009ca0    64 OBJECT  LOCAL  DEFAULT     2 main$string.32
+   142: 08005490     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   143: 08005540     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   144: 08005544     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   145: 08005570     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   146: 08009c60    64 OBJECT  LOCAL  DEFAULT     2 main$string.31
+   147: 08005574     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   148: 080055a0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   149: 080055a4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   150: 08005648     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   151: 08009c20    64 OBJECT  LOCAL  DEFAULT     2 main$string.30
+   152: 0800564c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   153: 080056b4     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   154: 08009be0    64 OBJECT  LOCAL  DEFAULT     2 main$string.29
+   155: 080056c0     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   156: 08005840     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   157: 08009ba0    64 OBJECT  LOCAL  DEFAULT     2 main$string.28
+   158: 08005844     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   159: 08005854     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   160: 08009b60    64 OBJECT  LOCAL  DEFAULT     2 main$string.27
+   161: 08005860     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   162: 080059a0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   163: 08009b20    64 OBJECT  LOCAL  DEFAULT     2 main$string.26
+   164: 080059a4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   165: 08005adc     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   166: 08009ae0    64 OBJECT  LOCAL  DEFAULT     2 main$string.25
+   167: 08005ae8     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   168: 08005bac     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   169: 08009aa0    64 OBJECT  LOCAL  DEFAULT     2 main$string.24
+   170: 08005bb0     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   171: 08005c50     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   172: 08009a60    64 OBJECT  LOCAL  DEFAULT     2 main$string.23
+   173: 08009a20    64 OBJECT  LOCAL  DEFAULT     2 main$string.22
+   174: 080099e0    64 OBJECT  LOCAL  DEFAULT     2 main$string.21
+   175: 080099a0    64 OBJECT  LOCAL  DEFAULT     2 main$string.20
+   176: 08005c7c     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   177: 080061d8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   178: 08009dee    63 OBJECT  LOCAL  DEFAULT     2 main$string.47
+   179: 080061dc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   180: 0800683c     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   181: 08006840     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   182: 080072d8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   183: 080072ec     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   184: 08007a68     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   185: 0203fe00   512 OBJECT  LOCAL  DEFAULT     6 main.debugMailbox
+   186: 08009dbc    10 OBJECT  LOCAL  DEFAULT     2 main$string.37
+   187: 08009dc6     5 OBJECT  LOCAL  DEFAULT     2 main$string.38
+   188: 08009dcb     7 OBJECT  LOCAL  DEFAULT     2 main$string.39
+   189: 08009dd2     6 OBJECT  LOCAL  DEFAULT     2 main$string.40
+   190: 08009dd8    10 OBJECT  LOCAL  DEFAULT     2 main$string.42
+   191: 08009de2     6 OBJECT  LOCAL  DEFAULT     2 main$string.45
+   192: 08009de8     6 OBJECT  LOCAL  DEFAULT     2 main$string.46
+   193: 080001cc     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_memset
+   194: 080001cc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   195: 080001d0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   196: 080001d4     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_memmove
+   197: 080001d4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   198: 080001d8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   199: 08007aac     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk___aeabi_uidiv
+   200: 08007aac     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   201: 08007ab0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   202: 08007ab4     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Heap).allocObject
+   203: 08007ab4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   204: 08007ab8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   205: 08007abc     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).tableData
+   206: 08007abc     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   207: 08007ac0     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   208: 08007ac4     8 FUNC    LOCAL  DEFAULT     1 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).hashFind
+   209: 08007ac4     0 NOTYPE  LOCAL  DEFAULT     1 $a
+   210: 08007ac8     0 NOTYPE  LOCAL  DEFAULT     1 $d
+   211: 03002d6c     8 FUNC    LOCAL  DEFAULT     4 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Heap).prepareAllocation
+   212: 03002d6c     0 NOTYPE  LOCAL  DEFAULT     4 $a
+   213: 03002d70     0 NOTYPE  LOCAL  DEFAULT     4 $d
+   214: 03002d74     8 FUNC    LOCAL  DEFAULT     4 __ARMv5LongLdrPcThunk___aeabi_memclr4
+   215: 03002d74     0 NOTYPE  LOCAL  DEFAULT     4 $a
+   216: 03002d78     0 NOTYPE  LOCAL  DEFAULT     4 $d
+   217: 03002d7c     8 FUNC    LOCAL  DEFAULT     4 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).hashValue
+   218: 03002d7c     0 NOTYPE  LOCAL  DEFAULT     4 $a
+   219: 03002d80     0 NOTYPE  LOCAL  DEFAULT     4 $d
+   220: 03002d84     8 FUNC    LOCAL  DEFAULT     4 __ARMv5LongLdrPcThunk_(*github.com/drpaneas/mtile/runtime.Context).ValuesEqual
+   221: 03002d84     0 NOTYPE  LOCAL  DEFAULT     4 $a
+   222: 03002d88     0 NOTYPE  LOCAL  DEFAULT     4 $d
+   223: 080001dc   248 FUNC    GLOBAL DEFAULT     1 handleInterrupt
+   224: 080002d4     8 FUNC    GLOBAL DEFAULT     1 main
+   225: 03002d8c     0 NOTYPE  GLOBAL DEFAULT     7 _sbss
+   226: 03002d8c     0 NOTYPE  GLOBAL DEFAULT     7 _ebss
+   227: 03002400     0 NOTYPE  GLOBAL DEFAULT     4 _sdata
+   228: 08009e30     0 NOTYPE  GLOBAL DEFAULT   ABS _sidata
+   229: 03002d8c     0 NOTYPE  GLOBAL DEFAULT     4 _edata
+   230: 030025a4   280 FUNC    GLOBAL DEFAULT     4 __udivsi3
+   231: 030025a4   280 FUNC    GLOBAL DEFAULT     4 __aeabi_uidiv
+   232: 080001c8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy
+   233: 080001c8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy4
+   234: 080001c8     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memcpy8
+   235: 080001c4     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memmove
+   236: 080001c4     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memmove4
+   237: 080001c4     4 FUNC    GLOBAL DEFAULT     1 __aeabi_memmove8
+   238: 080001a8    16 FUNC    GLOBAL DEFAULT     1 __aeabi_memset
+   239: 080001a8    16 FUNC    GLOBAL DEFAULT     1 __aeabi_memset4
+   240: 080001a8    16 FUNC    GLOBAL DEFAULT     1 __aeabi_memset8
+   241: 080001b8    12 FUNC    GLOBAL DEFAULT     1 __aeabi_memclr
+   242: 080001b8    12 FUNC    GLOBAL DEFAULT     1 __aeabi_memclr4
+   243: 080001b8    12 FUNC    GLOBAL DEFAULT     1 __aeabi_memclr8
+   244: 030025a4   280 FUNC    GLOBAL DEFAULT     4 __aeabi_uidivmod
+   245: 08000000     0 NOTYPE  GLOBAL DEFAULT     1 _start
+   246: 03000400     0 NOTYPE  GLOBAL DEFAULT     3 _stack_top_irq
+   247: 03002400     0 NOTYPE  GLOBAL DEFAULT     3 _stack_top
+   248: 02000000     0 NOTYPE  GLOBAL DEFAULT     5 _ewram_start
+   249: 02025948     0 NOTYPE  GLOBAL DEFAULT     5 _ewram_end
+   250: 03002400   124 FUNC    GLOBAL DEFAULT     4 memset
+   251: 0300247c   296 FUNC    GLOBAL DEFAULT     4 memcpy
+   252: 0300247c   296 FUNC    GLOBAL DEFAULT     4 memmove
+   253: 00000400     0 NOTYPE  GLOBAL DEFAULT   ABS __stack_size_irq
+   254: 00002000     0 NOTYPE  GLOBAL DEFAULT   ABS __stack_size_usr
+   255: 0203fe00     0 NOTYPE  GLOBAL DEFAULT   ABS _heap_end
+   256: 02025948     0 NOTYPE  GLOBAL DEFAULT     5 _heap_start
+   257: 03002400     0 NOTYPE  GLOBAL DEFAULT     4 _globals_start
+   258: 03002d8c     0 NOTYPE  GLOBAL DEFAULT     7 _globals_end

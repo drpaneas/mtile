@@ -1,0 +1,35 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      21	  16667788 ns/op	   5280577 render-ns/op	 4010602 B/op	    5243 allocs/op
+BenchmarkEditorRender/Sprites-12         	      21	  16919798 ns/op	   7509923 render-ns/op	 4802588 B/op	    5234 allocs/op
+BenchmarkEditorRender/Sprites-12         	      32	  16499749 ns/op	   7560428 render-ns/op	 4525070 B/op	    5231 allocs/op
+BenchmarkEditorRender/Sprites-12         	      19	  16651357 ns/op	   7974276 render-ns/op	 3997690 B/op	    5229 allocs/op
+BenchmarkEditorRender/Sprites-12         	      21	  16452379 ns/op	   8210917 render-ns/op	 3993798 B/op	    5224 allocs/op
+BenchmarkEditorRender/Sprites-12         	      19	  16489061 ns/op	   8510140 render-ns/op	 4000373 B/op	    5232 allocs/op
+BenchmarkEditorRender/Sprites-12         	      21	  16927681 ns/op	   8429034 render-ns/op	 4002464 B/op	    5233 allocs/op
+BenchmarkEditorRender/Sprites-12         	      37	  16693982 ns/op	   7388961 render-ns/op	 4004507 B/op	    5236 allocs/op
+BenchmarkEditorRender/Sprites-12         	      21	  16910034 ns/op	   7362575 render-ns/op	 4002507 B/op	    5234 allocs/op
+BenchmarkEditorRender/Sprites-12         	      20	  16782360 ns/op	   8552533 render-ns/op	 4003048 B/op	    5235 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16655891 ns/op	  15090710 render-ns/op	16822785 B/op	   33736 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16661811 ns/op	  14261347 render-ns/op	 4035996 B/op	   33725 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16717974 ns/op	  14324440 render-ns/op	 4037891 B/op	   33733 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16691423 ns/op	  14121613 render-ns/op	 4037812 B/op	   33730 allocs/op
+BenchmarkEditorRender/Map-12             	      20	  16689235 ns/op	  14120775 render-ns/op	 4037776 B/op	   33725 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16660393 ns/op	  14001042 render-ns/op	 4039316 B/op	   33723 allocs/op
+BenchmarkEditorRender/Map-12             	      20	  16660733 ns/op	  14025610 render-ns/op	 4035971 B/op	   33724 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16682052 ns/op	  14140456 render-ns/op	 4037730 B/op	   33728 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16646387 ns/op	  14014198 render-ns/op	 4037643 B/op	   33723 allocs/op
+BenchmarkEditorRender/Map-12             	      21	  16688847 ns/op	  14148933 render-ns/op	 4037663 B/op	   33724 allocs/op
+BenchmarkEditorRender/Code-12            	      21	  16717389 ns/op	   4805923 render-ns/op	 3972440 B/op	    1926 allocs/op
+BenchmarkEditorRender/Code-12            	      21	  16661855 ns/op	   5097415 render-ns/op	 3974160 B/op	    1927 allocs/op
+BenchmarkEditorRender/Code-12            	      21	  16627976 ns/op	   4742857 render-ns/op	 3972500 B/op	    1928 allocs/op
+BenchmarkEditorRender/Code-12            	      20	  16650285 ns/op	   5380000 render-ns/op	 3972498 B/op	    1928 allocs/op
+BenchmarkEditorRender/Code-12            	      20	  16660779 ns/op	   5856662 render-ns/op	 3972500 B/op	    1928 allocs/op
+BenchmarkEditorRender/Code-12            	      24	  16777312 ns/op	   4875293 render-ns/op	 3973934 B/op	    1926 allocs/op
+BenchmarkEditorRender/Code-12            	      20	  16644842 ns/op	   5369769 render-ns/op	 3974300 B/op	    1930 allocs/op
+BenchmarkEditorRender/Code-12            	      20	  16671565 ns/op	   4714098 render-ns/op	 3972465 B/op	    1926 allocs/op
+BenchmarkEditorRender/Code-12            	      22	  16701044 ns/op	   4904411 render-ns/op	 3972471 B/op	    1927 allocs/op
+BenchmarkEditorRender/Code-12            	      20	  16671152 ns/op	   5379942 render-ns/op	 3974251 B/op	    1927 allocs/op
+PASS

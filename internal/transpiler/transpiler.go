@@ -2481,6 +2481,25 @@ func chunkCallsBuiltin(chunk *luaparser.Chunk, name string) bool {
 	return found
 }
 
+func functionCallsBuiltin(fn *functionInfo, name string) bool {
+	if fn == nil || fn.decl == nil {
+		return false
+	}
+	found := false
+	for _, stmt := range fn.decl.Body.Body {
+		collectStmtExprs(stmt, func(e luaparser.Expr) {
+			call, ok := e.(*luaparser.CallExpr)
+			if !ok {
+				return
+			}
+			if key, ok := callKey(call); ok && key == name {
+				found = true
+			}
+		})
+	}
+	return found
+}
+
 func (g *generator) compactSheet() {
 	g.sheetIndex = make([]uint16, g.spriteN)
 	if len(g.opts.Sheet) == 0 {
@@ -4172,6 +4191,12 @@ func (g *generator) emitFunction(b *sourceBuilder, fn *functionInfo) {
 	if slices.Contains(g.opts.IWRAMFunctions, fn.key) {
 		b.line("//go:noinline")
 		b.line("//go:section .iwram")
+	} else if functionCallsBuiltin(fn, "print") {
+		// Keep print() helpers out of the caller's native frame. TinyGo
+		// 0.42 moves locals above 256 bytes onto runtime.alloc, which
+		// -gc=none does not link; inlining print into gluDraw blanks the
+		// Mode 4 screen at InitHardware's 0xFF fill.
+		b.line("//go:noinline")
 	}
 	b.line("func (g *Game) " + fn.goName + "(c *rt.Context" + functionParams(fn) + ")" + functionReturnSignature(fn) + " {")
 	g.pushScope()
@@ -5257,13 +5282,11 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		}
 		value := g.emitNumberExpr(x.Expr)
 		if x.Op == luaparser.OpNegate {
-			// Negating the minimum Number as a Go constant overflows int32.
-			// Its two's-complement negation is the same bit pattern, so emit
-			// that wrapped value directly instead of asking Go to fold it.
-			if literal, ok := x.Expr.(*luaparser.NumberExpr); ok && fixedNumberLiteral(literal.Value) == -2147483648 {
-				return "rt.Number(-2147483648)"
-			}
-			return "-(" + value + ")"
+			// A variable forces signed 16:16 wrapping instead of Go constant
+			// overflow, including parenthesized literals and inlined globals.
+			tmp := g.next("neg")
+			g.pending = append(g.pending, tmp+" := "+value)
+			return "-(" + tmp + ")"
 		}
 		return "(" + value + ").Bnot()"
 	case *luaparser.BinaryExpr:

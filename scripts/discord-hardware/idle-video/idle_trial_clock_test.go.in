@@ -1,0 +1,19 @@
+package runtime
+
+import "testing"
+
+func TestIdleTrialNominalTimeContract(t *testing.T) {
+	var c Context
+	c.SetTickRate(30)
+	for i := 0; i < 30; i++ {
+		c.AdvanceTick()
+	}
+	if c.Time() != FromInt(1) || c.T() != FromInt(1) {
+		t.Fatal("time is nominal update clock")
+	}
+	const frameCycles = 1232 * 228
+	const secondCycles = 16777216
+	if 60*frameCycles <= secondCycles {
+		t.Fatal("60 physical scans must exceed one second")
+	}
+}

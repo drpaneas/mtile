@@ -1,0 +1,4 @@
+=== RUN   TestSpritePasteDitherRender
+--- PASS: TestSpritePasteDitherRender (1.09s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	2.283s

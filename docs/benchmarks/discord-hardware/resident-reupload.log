@@ -1,0 +1,8 @@
+=== RUN   TestMode0PresentWindowNativeDiagnostic
+    mode0_present_window_diagnostic_test.go:40: evidence: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/resident-reupload
+=== RUN   TestMode0PresentWindowNativeDiagnostic/clean
+    mode0_present_window_diagnostic_test.go:175: clean: warm maximum commit=35470 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/resident-reupload/clean
+--- PASS: TestMode0PresentWindowNativeDiagnostic (5.93s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/clean (5.90s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	6.538s

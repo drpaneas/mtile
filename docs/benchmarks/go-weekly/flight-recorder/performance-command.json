@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/tmp/mtile-flight-editor.test",
+    "-test.run=^TestFlightRecorderPerformance$",
+    "-test.count=1",
+    "-test.timeout=10m",
+    "-test.v"
+  ],
+  "cwd": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/cmd/editor",
+  "environment": {
+    "MTILE_FLIGHT_BENCH": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/docs/benchmarks/go-weekly/flight-recorder"
+  },
+  "seconds": 95.99768250000488,
+  "exitCode": 1
+}

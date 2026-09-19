@@ -204,6 +204,27 @@ func TestObjectCanvasFourBackgroundsSparsePlanesAndScrollOnlyReuse(t *testing.T)
 	}
 }
 
+func TestObjectCanvasDenseSlotsForSkippedBackgrounds(t *testing.T) {
+	// The transpiler packs map() calls into consecutive hardware slots. Skipping
+	// logical BG2 (Celeste commenting out map(2)) therefore emits MapBGAt(2, 3).
+	mask := uint8(0x0b)
+	c := objectCanvasMapContext(mask)
+	calls := []objectCanvasMapCall{
+		{bg: 0, w: 30, h: 20},
+		{bg: 1, w: 30, h: 20},
+		{bg: 3, w: 30, h: 20},
+	}
+	c.BeginRenderFrame()
+	c.Cls(11)
+	for slot, call := range calls {
+		c.MapBGAt(slot, call.bg, call.cx, call.cy, call.x, call.y, call.w, call.h, call.flags)
+	}
+	assertObjectCanvasMapsPresented(t, c, objectCanvasMapOracle(c, calls, 11), 11)
+	if got := hw.GetReg16(hw.DISPCNT); got&0x1f00 != 0x1700 {
+		t.Fatalf("packed BG0-BG2 plus OBJ: DISPCNT=%04x", got)
+	}
+}
+
 func TestObjectCanvasFiniteMapUpdateAndDrawTimeMutationSnapshots(t *testing.T) {
 	c := objectCanvasMapContext(15)
 	call := objectCanvasMapCall{bg: 2, w: 48, h: 20, flags: 2}

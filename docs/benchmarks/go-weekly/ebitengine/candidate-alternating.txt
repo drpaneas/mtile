@@ -1,0 +1,48 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      42	  16667562 ns/op	   6471374 render-ns/op	 4413988 B/op	    5248 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      36	  16688506 ns/op	   6557439 render-ns/op	 4480861 B/op	    5250 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      40	  16654223 ns/op	   8261459 render-ns/op	 4428749 B/op	    5242 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      40	  16519124 ns/op	   6425019 render-ns/op	 4436870 B/op	    5252 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      34	  16644471 ns/op	   4581614 render-ns/op	 4503944 B/op	    5244 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      33	  16886229 ns/op	   6212178 render-ns/op	 4521494 B/op	    5246 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      33	  16596866 ns/op	   6459677 render-ns/op	 4519550 B/op	    5244 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      39	  16606331 ns/op	   4471779 render-ns/op	 4439996 B/op	    5242 allocs/op
+PASS

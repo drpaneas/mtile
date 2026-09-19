@@ -1,0 +1,7 @@
+ok  	github.com/drpaneas/mtile/runtime	2.432s
+ok  	github.com/drpaneas/mtile/runtime/audio	1.490s
+ok  	github.com/drpaneas/mtile/runtime/hw	1.947s
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	0.758s
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.658s
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	1.061s

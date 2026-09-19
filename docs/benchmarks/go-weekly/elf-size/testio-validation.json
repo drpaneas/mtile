@@ -1,0 +1,26 @@
+{
+  "mode0": {
+    "elfSHA256": "501fe8c79a3c1f53362ebba406e0ac24efd0b3bb72589c35ca2f3716d48147a2",
+    "ROMFileBytes": 24376,
+    "toolTotals": {
+      "romLoadBytes": 24376,
+      "iwramBytes": 10200,
+      "ewramBytes": 19956,
+      "debugMailboxBytes": 0,
+      "otherAllocatedBytes": 0
+    },
+    "gnuSectionsAndLinkerMapMatch": true
+  },
+  "mode4": {
+    "elfSHA256": "df5f86190cd56f7b081458ebacfce59a25d4f3fd124d709cd0ea5017367f6c2d",
+    "ROMFileBytes": 26356,
+    "toolTotals": {
+      "romLoadBytes": 26356,
+      "iwramBytes": 13220,
+      "ewramBytes": 75936,
+      "debugMailboxBytes": 0,
+      "otherAllocatedBytes": 0
+    },
+    "gnuSectionsAndLinkerMapMatch": true
+  }
+}

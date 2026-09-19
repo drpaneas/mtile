@@ -1,0 +1,10 @@
+$ go test -tags=mtile_mode0 ./...
+ok  	github.com/drpaneas/mtile/runtime	3.349s
+ok  	github.com/drpaneas/mtile/runtime/audio	1.580s
+ok  	github.com/drpaneas/mtile/runtime/hw	2.305s
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	0.986s
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.935s
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	0.504s
+
+exit_code=0 elapsed_seconds=4.117

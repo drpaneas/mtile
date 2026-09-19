@@ -1,0 +1,6 @@
+package main
+
+func main() {
+	println("MTILE_PANIC_READY")
+	panic("MTILE_ARBITRARY_PANIC")
+}

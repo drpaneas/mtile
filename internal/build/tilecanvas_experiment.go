@@ -6,10 +6,16 @@ import (
 	"github.com/drpaneas/mtile/internal/transpiler"
 )
 
-// The edit command scopes this opt-in to one project in its child process.
-// Switching projects in that editor must not carry the experiment into an
-// unrelated cartridge. This is not a project renderer value or AUTO profile.
+// The edit command scopes this opt-in to one project in its child process
+// via MTILE_EXPERIMENTAL_TILECANVAS_PROJECT. `mtile build -experimental-tilecanvas`
+// sets ExperimentalTileCanvas on this Service instead. Switching projects in
+// the editor must not carry the experiment into an unrelated cartridge. This is
+// not a project renderer value or AUTO profile.
 func (s *Service) configureTileCanvasExperiment(projectDir string) {
+	if s.ExperimentalTileCanvas {
+		s.enableTileCanvasExperiment()
+		return
+	}
 	selected := os.Getenv("MTILE_EXPERIMENTAL_TILECANVAS_PROJECT")
 	if selected == "" {
 		return
@@ -19,6 +25,10 @@ func (s *Service) configureTileCanvasExperiment(projectDir string) {
 	if wantErr != nil || actualErr != nil || !wanted.IsDir() || !os.SameFile(wanted, actual) {
 		return
 	}
+	s.enableTileCanvasExperiment()
+}
+
+func (s *Service) enableTileCanvasExperiment() {
 	s.tileCanvasExperiment = true
 	s.Renderer = transpiler.RendererMode4
 	s.UseProjectRenderer = false

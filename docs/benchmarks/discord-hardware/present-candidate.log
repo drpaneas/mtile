@@ -1,0 +1,21 @@
+=== RUN   TestMode0PresentWindowNativeDiagnostic
+    mode0_present_window_diagnostic_test.go:40: evidence: /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present-candidate
+=== RUN   TestMode0PresentWindowNativeDiagnostic/clean
+    mode0_present_window_diagnostic_test.go:175: clean: warm maximum commit=2394 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present-candidate/clean
+=== RUN   TestMode0PresentWindowNativeDiagnostic/dirty-maps
+    mode0_present_window_diagnostic_test.go:175: dirty-maps: warm maximum commit=35454 cycles; safe/unsafe tested starts=57/0; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present-candidate/dirty-maps
+=== RUN   TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick7: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick21: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick30: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick36: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick51: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:159: unsafe admitted presentation at tick58: 0 first-scan pixels
+    mode0_present_window_diagnostic_test.go:175: all-mutable-audio-dense: warm maximum commit=93211 cycles; safe/unsafe tested starts=51/6; OAM proof=128; exact per-scan comparisons in /private/tmp/mtile-discord-experiments-ofgo5qwq/evidence/present-candidate/all-mutable-audio-dense
+--- FAIL: TestMode0PresentWindowNativeDiagnostic (21.57s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/clean (5.78s)
+    --- PASS: TestMode0PresentWindowNativeDiagnostic/dirty-maps (5.77s)
+    --- FAIL: TestMode0PresentWindowNativeDiagnostic/all-mutable-audio-dense (9.96s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	22.221s
+FAIL

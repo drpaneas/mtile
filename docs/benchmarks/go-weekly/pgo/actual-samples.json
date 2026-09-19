@@ -1,0 +1,326 @@
+[
+  {
+    "pair": 1,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 80,
+    "ns/op": 14864287.0,
+    "B/op": 17201939,
+    "allocs/op": 105681
+  },
+  {
+    "pair": 1,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1352,
+    "ns/op": 881804.0,
+    "B/op": 907648,
+    "allocs/op": 6479
+  },
+  {
+    "pair": 1,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 2947,
+    "ns/op": 394507.0,
+    "B/op": 400010,
+    "allocs/op": 2977
+  },
+  {
+    "pair": 1,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 86,
+    "ns/op": 13866909.0,
+    "B/op": 17198824,
+    "allocs/op": 105220
+  },
+  {
+    "pair": 1,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1431,
+    "ns/op": 845937.0,
+    "B/op": 906860,
+    "allocs/op": 6403
+  },
+  {
+    "pair": 1,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 3093,
+    "ns/op": 396248.0,
+    "B/op": 400058,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 2,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 73,
+    "ns/op": 14044212.0,
+    "B/op": 17200511,
+    "allocs/op": 105223
+  },
+  {
+    "pair": 2,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1359,
+    "ns/op": 858108.0,
+    "B/op": 908138,
+    "allocs/op": 6404
+  },
+  {
+    "pair": 2,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 3026,
+    "ns/op": 396002.0,
+    "B/op": 399808,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 2,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 80,
+    "ns/op": 14880278.0,
+    "B/op": 17204613,
+    "allocs/op": 105681
+  },
+  {
+    "pair": 2,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1368,
+    "ns/op": 883867.0,
+    "B/op": 907687,
+    "allocs/op": 6479
+  },
+  {
+    "pair": 2,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 3118,
+    "ns/op": 396500.0,
+    "B/op": 400178,
+    "allocs/op": 2977
+  },
+  {
+    "pair": 3,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 80,
+    "ns/op": 14845014.0,
+    "B/op": 17205534,
+    "allocs/op": 105684
+  },
+  {
+    "pair": 3,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1318,
+    "ns/op": 878046.0,
+    "B/op": 908489,
+    "allocs/op": 6480
+  },
+  {
+    "pair": 3,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 3105,
+    "ns/op": 395208.0,
+    "B/op": 400276,
+    "allocs/op": 2977
+  },
+  {
+    "pair": 3,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 84,
+    "ns/op": 14249927.0,
+    "B/op": 17200269,
+    "allocs/op": 105225
+  },
+  {
+    "pair": 3,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1370,
+    "ns/op": 838300.0,
+    "B/op": 907227,
+    "allocs/op": 6403
+  },
+  {
+    "pair": 3,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 3097,
+    "ns/op": 389828.0,
+    "B/op": 399647,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 4,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 86,
+    "ns/op": 13990263.0,
+    "B/op": 17201157,
+    "allocs/op": 105225
+  },
+  {
+    "pair": 4,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1460,
+    "ns/op": 842493.0,
+    "B/op": 907457,
+    "allocs/op": 6403
+  },
+  {
+    "pair": 4,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 2949,
+    "ns/op": 394596.0,
+    "B/op": 399486,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 4,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 81,
+    "ns/op": 14891338.0,
+    "B/op": 17199167,
+    "allocs/op": 105675
+  },
+  {
+    "pair": 4,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1279,
+    "ns/op": 877718.0,
+    "B/op": 908559,
+    "allocs/op": 6480
+  },
+  {
+    "pair": 4,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 2820,
+    "ns/op": 392855.0,
+    "B/op": 400200,
+    "allocs/op": 2977
+  },
+  {
+    "pair": 5,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 72,
+    "ns/op": 14611024.0,
+    "B/op": 17205978,
+    "allocs/op": 105683
+  },
+  {
+    "pair": 5,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1368,
+    "ns/op": 884334.0,
+    "B/op": 907708,
+    "allocs/op": 6479
+  },
+  {
+    "pair": 5,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 3067,
+    "ns/op": 397588.0,
+    "B/op": 400250,
+    "allocs/op": 2977
+  },
+  {
+    "pair": 5,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 84,
+    "ns/op": 13954493.0,
+    "B/op": 17202817,
+    "allocs/op": 105224
+  },
+  {
+    "pair": 5,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1414,
+    "ns/op": 854691.0,
+    "B/op": 908820,
+    "allocs/op": 6404
+  },
+  {
+    "pair": 5,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 3156,
+    "ns/op": 401326.0,
+    "B/op": 399539,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 6,
+    "variant": "trained",
+    "case": "Heldout",
+    "iterations": 86,
+    "ns/op": 13677117.0,
+    "B/op": 17200206,
+    "allocs/op": 105222
+  },
+  {
+    "pair": 6,
+    "variant": "trained",
+    "case": "Hello",
+    "iterations": 1440,
+    "ns/op": 835947.0,
+    "B/op": 908110,
+    "allocs/op": 6404
+  },
+  {
+    "pair": 6,
+    "variant": "trained",
+    "case": "Noalloc",
+    "iterations": 3148,
+    "ns/op": 392143.0,
+    "B/op": 399575,
+    "allocs/op": 2885
+  },
+  {
+    "pair": 6,
+    "variant": "off",
+    "case": "Heldout",
+    "iterations": 80,
+    "ns/op": 15306722.0,
+    "B/op": 17206269,
+    "allocs/op": 105683
+  },
+  {
+    "pair": 6,
+    "variant": "off",
+    "case": "Hello",
+    "iterations": 1240,
+    "ns/op": 887467.0,
+    "B/op": 908358,
+    "allocs/op": 6480
+  },
+  {
+    "pair": 6,
+    "variant": "off",
+    "case": "Noalloc",
+    "iterations": 2943,
+    "ns/op": 394765.0,
+    "B/op": 400114,
+    "allocs/op": 2977
+  }
+]

@@ -1,0 +1,19 @@
+$ go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintDiagnostic$ -count=1 -v
+=== RUN   TestHashFingerprintDiagnostic
+    hash_fingerprint_diagnostic_test.go:101: collision-mode0 median 317905 -> 81803 (+74.27% improvement), p95 352369 -> 82427 (-76.61%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: numeric-mode0 median 174031 -> 174031 (+0.00% improvement), p95 174031 -> 174031 (+0.00%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: static-mode0 median 61661 -> 61885 (-0.36% improvement), p95 61661 -> 61885 (+0.36%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: distributed-mode0 median 77089 -> 77435 (-0.45% improvement), p95 77089 -> 77435 (+0.45%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: same-tag-mode0 median 311155 -> 312957 (-0.58% improvement), p95 344701 -> 346711 (+0.58%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: camera-mode0 median 1242 -> 1242 (+0.00% improvement), p95 1242 -> 1242 (+0.00%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: collision-mode4 median 459820 -> 221030 (+51.93% improvement), p95 494668 -> 221654 (-55.19%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: numeric-mode4 median 315861 -> 315861 (+0.00% improvement), p95 315861 -> 315861 (+0.00%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: static-mode4 median 197725 -> 197949 (-0.11% improvement), p95 197725 -> 197949 (+0.11%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: distributed-mode4 median 216316 -> 216662 (-0.16% improvement), p95 216316 -> 216662 (+0.16%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: same-tag-mode4 median 453070 -> 454872 (-0.40% improvement), p95 487000 -> 489010 (+0.41%), memory_equal=true
+    hash_fingerprint_diagnostic_test.go:101: camera-mode4 median 187106 -> 187106 (+0.00% improvement), p95 189606 -> 189606 (+0.00%), memory_equal=true
+--- PASS: TestHashFingerprintDiagnostic (57.16s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/renderbench	57.584s
+
+exit_code=0 elapsed_seconds=57.846

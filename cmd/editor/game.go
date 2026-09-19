@@ -467,6 +467,11 @@ func (g *Game) restore(s undoSnapshot) {
 
 	g.stopAudioPreview()
 	g.resetMapAreaInteraction()
+	// Paste indices belong to the palette and sheet present at import time.
+	// Undo/redo may replace either, so discard the transient preview together.
+	if g.spritePaste != nil {
+		g.cancelSpritePastePlacement()
+	}
 	g.model.Sheet = s.Sheet
 	g.model.Map = s.Map
 	g.model.NativeAudio = s.NativeAudio
@@ -677,14 +682,15 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 		msg = truncateUIText(msg, statusBarRect.W-16)
 		drawText(screen, msg, statusBarRect.X+8, statusBarRect.Y+(statusBarRect.H-uiTextHeight)/2, colorText)
 	}
-	if g.statusMsg != "" {
-		if g.mode == modeCode {
-			status := truncateDevelopText(g.statusMsg, statusBarRect.W-16)
-			drawDevelopText(screen, status, statusBarRect.X+8, statusBarRect.Y-developTextHeight-6, statusMessageColor(g.statusMsg))
-		} else {
-			status := truncateUIText(g.statusMsg, statusBarRect.W-16)
-			drawText(screen, status, statusBarRect.X+8, statusBarRect.Y-uiTextHeight-6, statusMessageColor(g.statusMsg))
+	if g.mode == modeCode {
+		message := newDevelopLayout().Message
+		if g.statusMsg != "" {
+			status := truncateDevelopText(g.statusMsg, message.W-16)
+			drawDevelopText(screen, status, message.X+8, message.Y+(message.H-developTextHeight)/2, statusMessageColor(g.statusMsg))
 		}
+	} else if g.statusMsg != "" {
+		status := truncateUIText(g.statusMsg, statusBarRect.W-16)
+		drawText(screen, status, statusBarRect.X+8, statusBarRect.Y-uiTextHeight-6, statusMessageColor(g.statusMsg))
 	}
 }
 

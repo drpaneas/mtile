@@ -1,0 +1,14 @@
+go: writing stat cache: open /Users/pgeorgia/gocode/pkg/mod/cache/download/github.com/drpaneas/mtile/@v/v0.0.0-20260909171100-26182b69fcb5.info632585480.tmp: operation not permitted
+# github.com/ebitengine/oto/v3
+../../../../pkg/mod/github.com/ebitengine/oto/v3@v3.4.0/context.go:38:11: undefined: context
+../../../../pkg/mod/github.com/ebitengine/oto/v3@v3.4.0/context.go:100:21: undefined: newContext
+# github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:71:15: undefined: glfw.Window
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:91:18: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:94:18: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:97:18: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:103:19: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:110:17: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:113:17: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:116:17: undefined: glfw.WindowHint
+../../../../pkg/mod/github.com/hajimehoshi/ebiten/v2@v2.9.9/internal/graphicsdriver/opengl/graphics_linbsd.go:122:47: undefined: glfw.Window

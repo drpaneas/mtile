@@ -1,0 +1,7 @@
+$ /private/tmp/mtile-go-weekly-loop/pgo/off.test -test.run=^TestPGOPreparationManifest$ -test.v
+=== RUN   TestPGOPreparationManifest
+    pgo_benchmark_test.go:247: GOMAXPROCS=12 NumCPU=12
+--- PASS: TestPGOPreparationManifest (0.12s)
+PASS
+
+exit_code=0

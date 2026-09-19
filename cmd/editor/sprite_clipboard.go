@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"slices"
 
+	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/drpaneas/mtile/internal/hostclipboard"
 )
@@ -21,6 +23,12 @@ var readSpriteClipboardImagePNG = hostclipboard.ReadImagePNG
 // preview must never dirty the project.
 type spritePastePlacement struct {
 	pixels      []int
+	nearest     []int
+	ordered     []int
+	source      image.Image
+	palette     []assetsync.RGB15
+	dither      bool
+	status      [2]string
 	pixelWidth  int
 	pixelHeight int
 	startCol    int
@@ -95,8 +103,12 @@ func (g *Game) prepareSpritePasteImage(img image.Image) (*spritePastePlacement, 
 	}
 
 	startRow, startCol := g.baseSpriteRowCol()
+	pixels := editor.QuantizeImageToPalette(img, g.model.ActivePalette.Colors)
 	return &spritePastePlacement{
-		pixels:      editor.QuantizeImageToPalette(img, g.model.ActivePalette.Colors),
+		pixels:      pixels,
+		nearest:     pixels,
+		source:      img,
+		palette:     slices.Clone(g.model.ActivePalette.Colors),
 		pixelWidth:  width,
 		pixelHeight: height,
 		startCol:    startCol,
@@ -155,10 +167,36 @@ func (g *Game) spritePastePlacementStatus() string {
 	if placement == nil {
 		return ""
 	}
-	if err := g.spritePasteTargetError(placement, placement.startCol, placement.startRow); err != nil {
-		return "Cannot paste here: " + err.Error()
+	mode := 0
+	if placement.dither {
+		mode = 1
 	}
-	return fmt.Sprintf("Place %dx%d image: move over the spritesheet, click to paste, Esc to cancel", placement.pixelWidth, placement.pixelHeight)
+	if placement.status[mode] == "" {
+		message := fmt.Sprintf("Place %dx%d image: move, click to paste, Esc to cancel", placement.pixelWidth, placement.pixelHeight)
+		if err := g.spritePasteTargetError(placement, placement.startCol, placement.startRow); err != nil {
+			message = "Cannot paste here: " + err.Error()
+		}
+		placement.status[0] = message + " | Dither off (D)"
+		placement.status[1] = message + " | Dither on (D)"
+	}
+	return placement.status[mode]
+}
+
+func (g *Game) toggleSpritePasteDither() {
+	placement := g.spritePaste
+	if placement == nil {
+		return
+	}
+	if !placement.dither && placement.ordered == nil {
+		placement.ordered = editor.QuantizeImageToPaletteOrdered(placement.source, placement.palette)
+	}
+	placement.dither = !placement.dither
+	placement.pixels = placement.nearest
+	if placement.dither {
+		placement.pixels = placement.ordered
+	}
+	g.statusMsg = g.spritePastePlacementStatus()
+	g.requestRender()
 }
 
 func (g *Game) moveSpritePastePlacement(startCol, startRow int) {
@@ -170,6 +208,7 @@ func (g *Game) moveSpritePastePlacement(startCol, startRow int) {
 	}
 	g.spritePaste.startCol = startCol
 	g.spritePaste.startRow = startRow
+	g.spritePaste.status = [2]string{}
 	g.statusMsg = g.spritePastePlacementStatus()
 	g.requestRender()
 }

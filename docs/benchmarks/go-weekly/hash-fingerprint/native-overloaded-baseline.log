@@ -1,0 +1,9 @@
+$ go test ./cmd/renderbench -tags=runtimeperfdiagnostic -run ^TestHashFingerprintDiagnostic$ -count=1 -v
+=== RUN   TestHashFingerprintDiagnostic
+    hash_fingerprint_diagnostic_test.go:78: collision-mode0 baseline: invalid baseline/steady frame budget (samples=600 warmup=20 missed=20->620 max=1001563)
+--- FAIL: TestHashFingerprintDiagnostic (3.15s)
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/renderbench	3.547s
+FAIL
+
+exit_code=1 elapsed_seconds=3.808

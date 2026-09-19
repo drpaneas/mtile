@@ -1,0 +1,11 @@
+--- a/src/runtime/runtime_mgba.go
++++ b/src/runtime/runtime_mgba.go
+@@ -7,6 +7,8 @@
+ 	"runtime/volatile"
+ 	"unsafe"
+ )
++
++const zeroSizeAllocPtr uintptr = 16 // points somewhere in the BIOS which is not readable
+ 
+ var (
+ 	// Setting this memory address to 0xC0DE enables mGBA's debug printing

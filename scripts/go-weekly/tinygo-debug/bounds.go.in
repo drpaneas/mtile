@@ -1,0 +1,12 @@
+package main
+
+import "runtime/volatile"
+
+var badIndex volatile.Register32
+var values = [1]byte{7}
+
+func main() {
+	println("MTILE_BOUNDS_READY")
+	badIndex.Set(3)
+	println(values[badIndex.Get()])
+}
