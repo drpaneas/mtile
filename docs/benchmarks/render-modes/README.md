@@ -11,7 +11,9 @@ after the first-argument-BG API migration and dense allocation work;
 square hardware-OBJ lowerings; and `oam64-v1.json` plus `scanline38-v1.json`
 record the full OAM and near-limit scanline proofs.
 `dynamic-sprite-frames-v1.json` records non-contiguous runtime frame selection
-from the statically enumerated set `{1,32,35}`;
+from the statically enumerated set `{1,32,35}`. Compiler tests for
+`wrapping_sprite_frames.lua` close increment-and-wrap ids `{0..8}` on that same
+`spr()` runtime path.
 `inactive-sprite-slots-v1.json` records the bounded `{0,1}` inactive-slot path;
 `object-depth-lanes-v1.json` records four interleaved BG-relative OBJ lanes;
 `glyph-intern-v1.json` records 32 text occurrences sharing one static tile;

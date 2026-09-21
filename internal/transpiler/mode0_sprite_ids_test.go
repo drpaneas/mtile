@@ -1,8 +1,11 @@
 package transpiler
 
 import (
+	"slices"
 	"strings"
 	"testing"
+
+	"github.com/drpaneas/mtile/internal/luaparser"
 )
 
 func TestMode0AcceptsSpriteIDFromExplicitFiniteAssignments(t *testing.T) {
@@ -381,4 +384,245 @@ end
 	if !report.Mode0Objects || report.Mode0OAMEntries != 1 || report.Mode0OBJLineCycles != 8 {
 		t.Fatalf("report = %+v, want conservative one-entry/eight-cycle proof despite the zero candidate", report)
 	}
+}
+
+func TestMode0BoundedSpriteCounterClosesIncrementAndWrap(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   []int
+	}{
+		{
+			name: "nerdo-init-equality",
+			source: `
+function _init()
+  first=1
+  last=8
+  sprite=0
+end
+function _update()
+  sprite += 1
+  if sprite == 9 then sprite = 1 end
+end
+function _draw()
+  cls(0)
+  spr(sprite,10,10)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "top-level-add-equality",
+			source: `
+sprite = 0
+function _update()
+  sprite = sprite + 1
+  if sprite == 9 then sprite = 1 end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "greater-wrap",
+			source: `
+sprite = 0
+function _update()
+  sprite += 1
+  if sprite > 8 then sprite = 1 end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "frozen-bound-and-reset",
+			source: `
+first = 1
+last = 8
+sprite = 0
+function _update()
+  sprite += 1
+  if sprite == last + 1 then sprite = first end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "init-frozen-bound",
+			source: `
+function _init()
+  first = 1
+  last = 8
+  sprite = 0
+end
+function _update()
+  sprite += 1
+  if sprite == last + 1 then sprite = first end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "inlined-helper",
+			source: `
+sprite = 0
+function bump()
+  sprite += 1
+  if sprite == 9 then sprite = 1 end
+end
+function _update()
+  bump()
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7, 8},
+		},
+		{
+			name: "modulo-wrap",
+			source: `
+sprite = 0
+function _update()
+  sprite = (sprite + 1) % 8
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{0, 1, 2, 3, 4, 5, 6, 7},
+		},
+		{
+			name: "decrement-wrap",
+			source: `
+sprite = 8
+function _update()
+  sprite -= 1
+  if sprite == 0 then sprite = 8 end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`,
+			want: []int{1, 2, 3, 4, 5, 6, 7, 8},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := finiteSpriteIDs(t, test.source, "sprite")
+			if !slices.Equal(got, test.want) {
+				t.Fatalf("ids = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func TestMode0AcceptsIncrementAndWrapOnSheetThatExcludesSentinel(t *testing.T) {
+	source := `
+sprite = 0
+function _update()
+  sprite += 1
+  if sprite == 9 then sprite = 1 end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`
+	_, report, err := TranspileWithReport("wrap-tight.lua", source, Options{
+		Renderer: RendererAuto,
+		SheetW:   72,
+		SheetH:   8,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || report.Reason != reasonAutoMode0Eligible || !report.Mode0Objects {
+		t.Fatalf("AUTO report = %+v, want proven Mode 0 without the wrap sentinel", report)
+	}
+}
+
+func TestMode0AcceptsNerdoIncrementAndWrap(t *testing.T) {
+	source := `
+function _init()
+  first=1
+  last=8
+  sprite=0
+end
+
+function _update()
+  sprite += 1
+  if sprite == 9 then sprite = 1 end
+end
+
+function _draw()
+  cls(0)
+  spr(sprite,10,10)
+end
+`
+	_, report, err := TranspileWithReport("nerdo.lua", source, Options{
+		Renderer: RendererAuto,
+		SheetW:   240,
+		SheetH:   160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || report.Reason != reasonAutoMode0Eligible {
+		t.Fatalf("AUTO report = %+v, want Nerdo wrap proven for Mode 0", report)
+	}
+}
+
+func TestMode0RejectsBoundedCounterIfDrawRunsMidUpdate(t *testing.T) {
+	source := `
+sprite = 0
+function _update()
+  sprite += 1
+  _draw()
+  if sprite == 9 then sprite = 1 end
+end
+function _draw()
+  cls()
+  spr(sprite, 0, 0)
+end
+`
+	chunk, err := luaparser.ParseString("draw-from-update.lua", source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, ok, detail := newMode0SpriteIDAnalysis(chunk).finiteIDs(&luaparser.VarExpr{Name: "sprite"})
+	if ok || !strings.Contains(detail, "calls _draw") {
+		t.Fatalf("detail = %q, want bounded-counter proof to fail closed when _draw runs mid-update", detail)
+	}
+}
+
+func finiteSpriteIDs(t *testing.T, source, name string) []int {
+	t.Helper()
+	chunk, err := luaparser.ParseString(t.Name()+".lua", source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids, ok, detail := newMode0SpriteIDAnalysis(chunk).finiteIDs(&luaparser.VarExpr{Name: name})
+	if !ok {
+		t.Fatalf("finiteIDs(%s) failed: %s", name, detail)
+	}
+	return ids
 }

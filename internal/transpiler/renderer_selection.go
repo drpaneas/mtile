@@ -732,12 +732,8 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			if firstSpriteIndex < 0 {
 				firstSpriteIndex = opIndex
 			}
-			_, lastID, err := validateMode0SSprCall(op.call, opts.SheetW, opts.SheetH, cols)
-			if err != nil {
-				return 0, false, false, err
-			}
-			if lastID > maxSpriteID {
-				maxSpriteID = lastID
+			if op.lastID > maxSpriteID {
+				maxSpriteID = op.lastID
 			}
 			if mode0Layers > 0 && materializedMaps == 0 {
 				return 0, false, false, mode0CallError(op.call, reasonMode0SpriteShape,
@@ -1025,59 +1021,85 @@ func validateMode0SprCallWithEnv(call *luaparser.CallExpr, cols, rows int, analy
 	return maxLastID, maxW, maxH, nil
 }
 
+func mode0ProvenInt(expr luaparser.Expr, eval *mode0NumEval, env mode0NumEnv) (int, bool) {
+	if value, literal := staticNumberLiteral(expr); literal {
+		if value != math.Trunc(value) {
+			return 0, false
+		}
+		return int(value), true
+	}
+	if eval == nil {
+		return 0, false
+	}
+	values, ok := eval.nums(expr, env)
+	if !ok {
+		return 0, false
+	}
+	ints, ok := mode0IntsFromNums(values)
+	if !ok || len(ints) != 1 {
+		return 0, false
+	}
+	return ints[0], true
+}
+
 func validateMode0SSprCall(call *luaparser.CallExpr, sheetW, sheetH, cols int) (int, int, error) {
+	cells, lastID, _, _, err := validateMode0SSprCallWithEnv(call, sheetW, sheetH, cols, nil, nil)
+	return cells, lastID, err
+}
+
+func validateMode0SSprCallWithEnv(call *luaparser.CallExpr, sheetW, sheetH, cols int, eval *mode0NumEval, env mode0NumEnv) (int, int, int, int, error) {
 	if call == nil || len(call.Args) < 6 || len(call.Args) > 10 {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() requires 6 to 10 arguments")
+		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() requires 6 to 10 arguments")
 	}
 	readInt := func(index int, name string) (int, error) {
-		value, literal := staticNumberLiteral(call.Args[index])
-		if !literal || value != math.Trunc(value) {
-			return 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() "+name+" must be an integer literal")
+		value, ok := mode0ProvenInt(call.Args[index], eval, env)
+		if !ok {
+			return 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() "+name+" must be a proven integer")
 		}
-		return int(value), nil
+		return value, nil
 	}
 	sx, err := readInt(0, "sx")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 	sy, err := readInt(1, "sy")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 	sw, err := readInt(2, "sw")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 	sh, err := readInt(3, "sh")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, 0, err
 	}
 	if sx < 0 || sy < 0 || sx&7 != 0 || sy&7 != 0 || sw <= 0 || sh <= 0 || sw&7 != 0 || sh&7 != 0 || sx+sw > sheetW || sy+sh > sheetH {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must be an in-bounds, 8x8-aligned rectangle")
+		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must be an in-bounds, 8x8-aligned rectangle")
 	}
 	dw, dh := sw, sh
 	if len(call.Args) > 6 {
 		dw, err = readInt(6, "dw")
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, 0, 0, err
 		}
 	}
 	if len(call.Args) > 7 {
 		dh, err = readInt(7, "dh")
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, 0, 0, err
 		}
 	}
 	if dw != sw || dh != sh {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() does not scale; dw/dh must equal sw/sh")
+		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() does not scale; dw/dh must equal sw/sh")
 	}
 	w, h := sw/8, sh/8
 	id := (sy/8)*cols + sx/8
 	lastID := id + (h-1)*cols + w - 1
 	if lastID >= 512 {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must stay within OBJ tile IDs 0-511")
+		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must stay within OBJ tile IDs 0-511")
 	}
-	return w * h, lastID, nil
+	return w * h, lastID, w, h, nil
 }
 
 func validateMode0PrintCall(call *luaparser.CallExpr, kind mode0PrintTextKind) (int, error) {

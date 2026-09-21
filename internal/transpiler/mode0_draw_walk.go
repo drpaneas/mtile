@@ -201,13 +201,16 @@ func mode0OpsObjectCost(ops []mode0DrawOp) int {
 			}
 			total += width * height * copies
 		case "sspr":
-			call := op.call
-			if call == nil || len(call.Args) < 4 {
-				total += copies
-				continue
+			width, height := op.sprW, op.sprH
+			if width < 1 || height < 1 {
+				call := op.call
+				if call == nil || len(call.Args) < 4 {
+					total += copies
+					continue
+				}
+				width = mode0LiteralInt(call.Args[2]) / 8
+				height = mode0LiteralInt(call.Args[3]) / 8
 			}
-			width := mode0LiteralInt(call.Args[2]) / 8
-			height := mode0LiteralInt(call.Args[3]) / 8
 			if width < 1 {
 				width = 1
 			}
@@ -252,7 +255,18 @@ func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, co
 		}
 		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies, lastID: lastID, sprW: sprW, sprH: sprH})
 		return nil
-	case "sspr", "camera":
+	case "sspr":
+		lastID, sprW, sprH := -1, 1, 1
+		if w.cols > 0 {
+			_, last, width, height, err := validateMode0SSprCallWithEnv(call, w.cols*8, w.rows*8, w.cols, w.eval, env)
+			if err != nil {
+				return err
+			}
+			lastID, sprW, sprH = last, width, height
+		}
+		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies, lastID: lastID, sprW: sprW, sprH: sprH})
+		return nil
+	case "camera":
 		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies})
 		return nil
 	case "print":

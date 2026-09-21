@@ -8,12 +8,14 @@ import (
 	"github.com/drpaneas/mtile/internal/luaparser"
 )
 
-// mode0SpriteIDAnalysis proves the deliberately small dynamic-sprite subset:
-// a scalar visible from _draw, initialized unconditionally at top level or in
-// _init, and assigned only integer literals or immutable top-level integer
-// constants. It intentionally does not infer arithmetic ranges. In particular,
-// frame = frame + 1 is outside the proof even if a human can see a later wrap.
+// mode0SpriteIDAnalysis proves a scalar sprite id visible from _draw. The
+// enumerated path accepts unconditional top-level or _init initialization plus
+// assignments that are integer literals or immutable integer constants.
+// Arithmetic writes are admitted only when bounded-counter analysis can close
+// the values observed between complete _init/_update/_draw callbacks. An
+// unguarded `frame = frame + 1` remains outside the proof.
 type mode0SpriteIDAnalysis struct {
+	chunk              *luaparser.Chunk
 	writes             map[string][]mode0SpriteIDWrite
 	topLocals          map[string]int
 	shadowed           map[string]bool
@@ -21,6 +23,8 @@ type mode0SpriteIDAnalysis struct {
 	constants          map[string]int
 	constantWrite      map[string]mode0SpriteIDWrite
 	firstFunctionOrder int
+	bounded            map[string]boundedCounterResult
+	boundedBusy        map[string]bool
 }
 
 type mode0SpriteIDWrite struct {
@@ -34,6 +38,7 @@ type mode0SpriteIDWrite struct {
 
 func newMode0SpriteIDAnalysis(chunk *luaparser.Chunk) *mode0SpriteIDAnalysis {
 	a := &mode0SpriteIDAnalysis{
+		chunk:              chunk,
 		writes:             map[string][]mode0SpriteIDWrite{},
 		topLocals:          map[string]int{},
 		shadowed:           map[string]bool{},
@@ -41,6 +46,8 @@ func newMode0SpriteIDAnalysis(chunk *luaparser.Chunk) *mode0SpriteIDAnalysis {
 		constants:          map[string]int{},
 		constantWrite:      map[string]mode0SpriteIDWrite{},
 		firstFunctionOrder: -1,
+		bounded:            map[string]boundedCounterResult{},
+		boundedBusy:        map[string]bool{},
 	}
 	if chunk == nil {
 		return a
@@ -234,6 +241,14 @@ func (a *mode0SpriteIDAnalysis) discoverConstants() {
 // bool is false for any expression outside the intentionally explicit proof;
 // detail is suitable for the source-positioned Mode 0 diagnostic.
 func (a *mode0SpriteIDAnalysis) finiteIDs(expr luaparser.Expr) ([]int, bool, string) {
+	return a.lookupIDs(expr, true)
+}
+
+func (a *mode0SpriteIDAnalysis) enumeratedIDs(expr luaparser.Expr) ([]int, bool, string) {
+	return a.lookupIDs(expr, false)
+}
+
+func (a *mode0SpriteIDAnalysis) lookupIDs(expr luaparser.Expr, allowBounded bool) ([]int, bool, string) {
 	if value, literal := staticNumberLiteral(expr); literal && value == math.Trunc(value) {
 		return []int{int(value)}, true, ""
 	}
@@ -271,7 +286,8 @@ func (a *mode0SpriteIDAnalysis) finiteIDs(expr luaparser.Expr) ([]int, bool, str
 
 	initialized := false
 	values := map[int]bool{}
-	for _, write := range writes {
+	var open *mode0SpriteIDWrite
+	for i, write := range writes {
 		if !write.valid {
 			return nil, false, fmt.Sprintf("%s participates in a multiple or value-less assignment", name)
 		}
@@ -280,12 +296,26 @@ func (a *mode0SpriteIDAnalysis) finiteIDs(expr luaparser.Expr) ([]int, bool, str
 		}
 		value, ok := a.finiteWriteValue(write)
 		if !ok {
-			return nil, false, fmt.Sprintf("%s has a non-enumerated assignment at %s", name, write.position)
+			open = &writes[i]
+			continue
 		}
 		values[value] = true
 	}
 	if !initialized {
 		return nil, false, fmt.Sprintf("%s needs an unconditional top-level or _init assignment", name)
+	}
+	if open != nil {
+		if !allowBounded {
+			return nil, false, fmt.Sprintf("%s has a non-enumerated assignment at %s", name, open.position)
+		}
+		ids, ok, detail := a.boundedCounterIDs(name)
+		if ok {
+			return ids, true, ""
+		}
+		if detail == "" {
+			detail = fmt.Sprintf("%s has a non-enumerated assignment at %s", name, open.position)
+		}
+		return nil, false, detail
 	}
 	ids := make([]int, 0, len(values))
 	for value := range values {

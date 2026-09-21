@@ -129,11 +129,21 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 				addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
 			}
 		case "sspr":
-			sx := mode0LiteralInt(call.Args[0])
-			sy := mode0LiteralInt(call.Args[1])
-			w := mode0LiteralInt(call.Args[2]) / 8
-			h := mode0LiteralInt(call.Args[3]) / 8
-			id := (sy/8)*cols + sx/8
+			w, h := op.sprW, op.sprH
+			if w < 1 {
+				w = mode0LiteralInt(call.Args[2]) / 8
+			}
+			if h < 1 {
+				h = mode0LiteralInt(call.Args[3]) / 8
+			}
+			id := 0
+			if op.lastID >= 0 && w > 0 && h > 0 {
+				id = op.lastID - (h-1)*cols - w + 1
+			} else {
+				sx := mode0LiteralInt(call.Args[0])
+				sy := mode0LiteralInt(call.Args[1])
+				id = (sy/8)*cols + sx/8
+			}
 			packed := planner.use(id, mode0SSprCallPackedCells(call))
 			entries := w * h
 			if packed {

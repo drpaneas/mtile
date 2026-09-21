@@ -316,7 +316,8 @@ in the same change.
 ### Stage 4 compatibility boundary
 
 `spr(id, ...)` accepts a source ID whose complete integer set the analyzer can
-close: a literal, a scalar with an explicit finite integer set, a
+close: a literal, a scalar with an explicit finite integer set, a wrapping or
+modulo counter closed across complete lifecycle callbacks, a
 helper/local/parameter/field expression, public numeric builtins, arithmetic
 including `%` ranges, numeric array-literal indexes, and parameters narrowed by
 a returning comparison guard. The compiler enumerates the candidates, validates
@@ -324,7 +325,9 @@ every candidate rectangle and text/OBJ limit, and leaves runtime selection to
 the existing `SprV`/OAM path. Unbounded or unknown ids still fail. The
 `dynamic_sprite_frames` paired renderer workload
 cycles sixteen draw slots through `{1,32,35}` and is the permanent parity and
-throughput fixture. Dynamic source IDs currently disable the optional packed
+throughput fixture. `wrapping_sprite_frames` is the compiler fixture for the
+increment-and-wrap scalar form; it uses the same runtime `SprV` path.
+Dynamic source IDs currently disable the optional packed
 16x16/32x32 cache and use the deterministic ordinary metasprite budget.
 An enumerated `0` can be the inactive value for a one-cell dynamic slot: Mode 0
 emits no OAM entry while sprite 0 is fully source-color 0, but immediately

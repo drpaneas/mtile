@@ -269,6 +269,25 @@ func TestDynamicSpriteFramesWorkloadRemainsAutoEligible(t *testing.T) {
 	}
 }
 
+func TestWrappingSpriteFramesWorkloadRemainsAutoEligible(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "wrapping_sprite_frames.lua"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, err := transpiler.TranspileWithReport("wrapping_sprite_frames.lua", string(source), transpiler.Options{
+		Renderer: transpiler.RendererAuto,
+		SheetW:   72,
+		SheetH:   8,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || report.Mode0ObjectPacking ||
+		report.Mode0OAMEntries != 16 || report.Mode0OBJLineCycles != 32 {
+		t.Fatalf("renderer report = %+v, want wrapping-counter Mode 0 sprites with OAM=16 line=32", report)
+	}
+}
+
 func TestInactiveSpriteSlotsWorkloadRemainsAutoEligible(t *testing.T) {
 	source, err := os.ReadFile(filepath.Join("testdata", "workloads", "inactive_sprite_slots.lua"))
 	if err != nil {

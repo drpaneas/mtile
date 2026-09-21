@@ -118,7 +118,7 @@ func (e *mode0NumEval) nums(expr luaparser.Expr, env mode0NumEnv) ([]float64, bo
 			return values, true
 		}
 		if e.analysis != nil {
-			if ids, proven, _ := e.analysis.finiteIDs(n); proven {
+			if ids, proven, _ := e.analysis.enumeratedIDs(n); proven {
 				out := make([]float64, len(ids))
 				for i, id := range ids {
 					out[i] = float64(id)
@@ -367,6 +367,12 @@ func (e *mode0NumEval) arrayValues(expr luaparser.Expr, env mode0NumEnv) ([]floa
 		return mode0ArrayNums(n, e, env)
 	case *luaparser.VarExpr:
 		return e.namedArray(n.Name)
+	case *luaparser.FieldExpr:
+		variable, ok := unparenExpr(n.Base).(*luaparser.VarExpr)
+		if !ok {
+			return nil, false
+		}
+		return e.namedRecordArray(variable.Name, n.Name)
 	default:
 		return nil, false
 	}
@@ -390,13 +396,88 @@ func mode0ArrayNums(table *luaparser.TableExpr, eval *mode0NumEval, env mode0Num
 	return out, len(out) > 0
 }
 
+func mode0TableFieldName(field *luaparser.TableField) (string, bool) {
+	if field == nil || field.Array || field.Key == nil {
+		return "", false
+	}
+	key, ok := unparenExpr(field.Key).(*luaparser.StringExpr)
+	if !ok || key.Value == "" {
+		return "", false
+	}
+	return key.Value, true
+}
+
+func mode0NamedFieldArray(table *luaparser.TableExpr, fieldName string, eval *mode0NumEval, env mode0NumEnv) ([]float64, bool) {
+	if table == nil || fieldName == "" {
+		return nil, false
+	}
+	found := false
+	var values []float64
+	for _, field := range table.Fields {
+		name, ok := mode0TableFieldName(field)
+		if !ok || name != fieldName {
+			continue
+		}
+		if found {
+			return nil, false
+		}
+		nested, ok := unparenExpr(field.Value).(*luaparser.TableExpr)
+		if !ok {
+			return nil, false
+		}
+		values, ok = mode0ArrayNums(nested, eval, env)
+		if !ok {
+			return nil, false
+		}
+		found = true
+	}
+	return values, found
+}
+
+func mode0WriteTouchesNamedTable(expr luaparser.Expr, name string) bool {
+	switch n := unparenExpr(expr).(type) {
+	case *luaparser.VarExpr:
+		return n.Name == name
+	case *luaparser.FieldExpr:
+		return mode0WriteTouchesNamedTable(n.Base, name)
+	case *luaparser.IndexExpr:
+		return mode0WriteTouchesNamedTable(n.Base, name)
+	default:
+		return false
+	}
+}
+
 func (e *mode0NumEval) namedArray(name string) ([]float64, bool) {
+	table, ok := e.namedTable(name)
+	if !ok {
+		return nil, false
+	}
+	return mode0ArrayNums(table, e, nil)
+}
+
+func (e *mode0NumEval) namedRecordArray(name, field string) ([]float64, bool) {
+	table, ok := e.namedTable(name)
+	if !ok {
+		return nil, false
+	}
+	return mode0NamedFieldArray(table, field, e, nil)
+}
+
+func (e *mode0NumEval) namedTable(name string) (*luaparser.TableExpr, bool) {
 	if e.chunk == nil || name == "" {
 		return nil, false
 	}
-	var found []float64
+	var found *luaparser.TableExpr
 	seen := false
 	ok := true
+	record := func(table *luaparser.TableExpr) {
+		if table == nil || seen {
+			ok = false
+			return
+		}
+		found = table
+		seen = true
+	}
 	var visit func(luaparser.Stmt)
 	visit = func(stmt luaparser.Stmt) {
 		if stmt == nil || !ok {
@@ -413,41 +494,26 @@ func (e *mode0NumEval) namedArray(name string) ([]float64, bool) {
 					ok = false
 					return
 				}
-				values, proven := mode0ArrayNums(table, e, nil)
-				if !proven || seen {
-					ok = false
-					return
-				}
-				found = values
-				seen = true
+				record(table)
 			}
 		case *luaparser.AssignStmt:
 			for i, target := range s.Targets {
 				if i >= len(s.Values) {
 					continue
 				}
-				if index, isIndex := unparenExpr(target).(*luaparser.IndexExpr); isIndex {
-					if variable, isVar := unparenExpr(index.Base).(*luaparser.VarExpr); isVar && variable.Name == name {
-						ok = false
-						return
-					}
-				}
-				variable, isVar := unparenExpr(target).(*luaparser.VarExpr)
-				if !isVar || variable.Name != name {
+				if !mode0WriteTouchesNamedTable(target, name) {
 					continue
+				}
+				if _, isVar := unparenExpr(target).(*luaparser.VarExpr); !isVar {
+					ok = false
+					return
 				}
 				table, isTable := unparenExpr(s.Values[i]).(*luaparser.TableExpr)
 				if !isTable {
 					ok = false
 					return
 				}
-				values, proven := mode0ArrayNums(table, e, nil)
-				if !proven || seen {
-					ok = false
-					return
-				}
-				found = values
-				seen = true
+				record(table)
 			}
 		case *luaparser.FunctionDeclStmt:
 			if s.Body == nil {

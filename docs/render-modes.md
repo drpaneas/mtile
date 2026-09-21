@@ -87,14 +87,21 @@ prove all of these conditions:
   a helper/local/parameter/field expression built from those values, or a
   public numeric builtin (`flr`, `ceil`, `min`, `max`, `mid`, `abs`, `sin`,
   `cos`, `rnd`, and arithmetic, including `%` ranges). Array indexes of a
-  numeric table literal and parameters narrowed by a returning comparison
+  numeric table literal, indexes into a nested named numeric array field of an
+  immutable table (`idle.fr1[1]`), and parameters narrowed by a returning comparison
   guard (`if n < 1 or n > 5 then return`) are included. Width and height are
   proven integers from 1 to 32: either literals or the same finite integer
   sets as IDs. The object budget uses the worst proven width and height, so a
   call that may be 1x1 or 2x2 counts as four OAM entries. x/y and flips may
   be dynamic;
 - `sspr` uses a static, in-bounds, 8x8-aligned source rectangle and performs no
-  scaling; destination position and flips may be dynamic;
+  scaling. The rectangle is a proven singleton integer for `sx`/`sy`/`sw`/`sh`
+  (and `dw`/`dh` when present): an integer literal, or the same finite-number
+  proof as `spr` IDs restricted to one value, including indexes into a numeric
+  table literal (`idle={0,8,40,80}` then `sspr(idle[1],idle[2],idle[3],idle[4],x,y)`,
+  or a nested named numeric array (`idle={fr1={0,8,40,80}}` then `idle.fr1[1]`).
+  A set of more than one source value, an unproven index, or a mutated table is
+  not eligible. Destination position and flips may be dynamic;
 - `print` uses the four-argument form, a static printable-ASCII string or a
   proven decimal number, and a static 1..255 color for non-empty text (an empty
   string
@@ -192,8 +199,9 @@ and before/after CPU/upload measurements are recorded in
 
 A bounded runtime `spr(id, ...)` variable must be initialized by an
 unconditional top-level or direct `_init` assignment. Every assignment to that
-same scalar must be either an integer literal or an immutable top-level integer
-constant, so the compiler can enumerate the complete set before linking:
+same scalar must be either an integer literal, an immutable top-level integer
+constant, or arithmetic the compiler can close to a finite integer set. The
+enumerated form is:
 
 ```lua
 PLAYER_IDLE = 1
@@ -215,7 +223,19 @@ function _draw()
 end
 ```
 
-The set above is exactly `{1,32,35}`; IDs need not be adjacent. A `spr` id may
+The set above is exactly `{1,32,35}`; IDs need not be adjacent. Increment and
+decrement counters are closed by abstract interpretation across complete
+`_init`/`_update`/`_draw` callbacks, including Pico-8 `+=` / `-=`, wrap
+assignments such as `if sprite == 9 then sprite = 1 end` or `if sprite > 8`,
+modulo reduction, frozen integer bounds assigned once at top level or in
+`_init`, and helpers statically inlined from those callbacks. The proof is the
+values the variable can hold when `_draw` starts, so a wrap sentinel that only
+exists between statements inside `_update` is not a drawn id. An unguarded
+`sprite += 1` with no reset or modulus still fails. `_draw` called from
+`_update` or `_init` also fails closed, because the callback boundary no longer
+hides those intermediates.
+
+A `spr` id may
 also be a helper, local, parameter, or field expression whose integer set the
 analyzer can close: public numeric builtins (`flr`, `ceil`, `min`, `max`,
 `mid`, `abs`, `sin`, `cos`, `rnd`), arithmetic including `%` ranges, numeric
@@ -317,7 +337,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `circ` | Mode 4 only | Midpoint-circle pixels cannot generally be represented as a fixed tile or OBJ allocation. |
 | `circfill` | Mode 4 only | Arbitrary span-filled circles require bitmap rasterization. |
 | `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. Width and height use the worst proven 1..32 values in the object budget. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic/table/function-derived or otherwise unproven IDs use Mode 4. |
-| `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: normally tile-aligned source rectangles and hardware-supported destination transforms. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops or resampling/scaling require Mode 4. |
+| `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: an 8x8-aligned in-bounds source rectangle whose `sx`/`sy`/`sw`/`sh` (and `dw`/`dh` if present) are proven singleton integers, not merely similar crops. Literals and singleton table-index/helper results from the `spr` finite-number proof count, including indexes into a nested named numeric array field (`idle.fr1[1]` when `idle.fr1` is a single immutable `{0,8,40,80}`-style table). A multi-value set or unproven index does not. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops, resampling, or scaling require Mode 4. |
 | `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. Retained compact maps select a link-time compact runtime in both renderers; large maps select the fixed streaming runtime in Mode 0, while Mode 4 keeps the semantically identical generic path because target benchmarks reject the fixed variant there. |
 | `camera` | Both | It is logical draw state. Mode 0 can apply it through BG scroll and OBJ coordinates; other reachable calls still decide whether that frame is compatible. |
 | `clip` | Mode 0 conditional | Full-screen clipping is trivial. Other rectangles require the limited hardware window resources, and changing clips between draw groups must preserve call order. Unrepresentable sequences require Mode 4. |

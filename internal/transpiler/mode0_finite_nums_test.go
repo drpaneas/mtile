@@ -317,3 +317,104 @@ end
 		})
 	}
 }
+
+func TestMode0SSprProvesSingletonTableIndexes(t *testing.T) {
+	source := `
+function _init()
+  idle={0,8,40,80}
+end
+function _draw()
+  cls(0)
+  sspr(idle[1],idle[2],idle[3],idle[4],10,10)
+end
+`
+	opts := Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160}
+	_, report, err := TranspileWithReport("sspr-table.lua", source, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || !report.Mode0Objects {
+		t.Fatalf("report = %+v, want Mode 0 objects from proven sspr table indexes", report)
+	}
+	if report.Mode0OAMEntries != 50 {
+		t.Fatalf("OAM entries = %d, want 50 for a 40x80 metasprite", report.Mode0OAMEntries)
+	}
+}
+
+func TestMode0SSprRejectsUnprovenTableIndex(t *testing.T) {
+	_, report, err := TranspileWithReport("sspr-dynamic.lua", `
+function _init()
+  idle={0,8,40,80}
+end
+function _draw()
+  cls(0)
+  sspr(idle[n],idle[2],idle[3],idle[4],10,10)
+end
+`, Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_SPR_SHAPE]") {
+		t.Fatalf("report = %+v, want AUTO Mode 4 with M0_SPR_SHAPE", report)
+	}
+}
+
+func TestMode0SSprProvesNestedRecordArrayIndexes(t *testing.T) {
+	source := `
+function _init()
+  counter=0
+  idle={
+    fr1={0,8,40,80},
+    fr2={40,8,40,80},
+    fr3={80,8,40,80},
+    fr4={120,8,40,80}
+  }
+end
+function _update()
+  counter += 1
+  if counter == 21 then
+    counter=1
+  end
+end
+function _draw()
+  cls(0)
+  if counter <=5 then sspr(idle.fr1[1],idle.fr1[2],idle.fr1[3],idle.fr1[4],10,10)
+  elseif counter <= 10 then sspr(idle.fr2[1],idle.fr2[2],idle.fr2[3],idle.fr2[4],10,10)
+  elseif counter <= 15 then sspr(idle.fr3[1],idle.fr3[2],idle.fr3[3],idle.fr3[4],10,10)
+  else sspr(idle.fr4[1],idle.fr4[2],idle.fr4[3],idle.fr4[4],10,10) end
+end
+`
+	_, report, err := TranspileWithReport("sspr-nested.lua", source, Options{
+		Renderer: RendererAuto, SheetW: 240, SheetH: 160,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode0 || !report.Mode0Objects {
+		t.Fatalf("report = %+v, want Mode 0 from nested idle.fr1[1] frame tables", report)
+	}
+	if report.Mode0OAMEntries != 50 {
+		t.Fatalf("OAM entries = %d, want 50 for the worst exclusive 40x80 frame", report.Mode0OAMEntries)
+	}
+}
+
+func TestMode0SSprRejectsMutatedNestedRecordArray(t *testing.T) {
+	_, report, err := TranspileWithReport("sspr-nested-mut.lua", `
+function _init()
+  idle={fr1={0,8,40,80}}
+end
+function _update()
+  idle.fr1[1]=8
+end
+function _draw()
+  cls(0)
+  sspr(idle.fr1[1],idle.fr1[2],idle.fr1[3],idle.fr1[4],10,10)
+end
+`, Options{Renderer: RendererAuto, SheetW: 240, SheetH: 160})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_SPR_SHAPE]") {
+		t.Fatalf("report = %+v, want AUTO Mode 4 when idle.fr1 is mutated", report)
+	}
+}
