@@ -131,6 +131,16 @@ func TestPSprSeesSsetUpdate(t *testing.T) {
 	}
 }
 
+func TestInitRejectsPoseIndexOutOfRangeSpan(t *testing.T) {
+	image, ram := poseFixture()
+	// PoseParts has 2 entries; a span of Start:0 Count:3 reaches past the end.
+	image.PoseIndex = []PoseRange{{Start: 0, Count: 3}}
+	var c Context
+	if c.Init(image, ram) {
+		t.Fatal("Init accepted a PoseIndex span reaching past the end of PoseParts")
+	}
+}
+
 func TestPSprNilContextIsNoOp(t *testing.T) {
 	var c *Context
 	c.PSpr(0, 0, 0, false, false) // must not panic

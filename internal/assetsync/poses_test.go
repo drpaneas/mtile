@@ -54,6 +54,43 @@ func TestFlattenPosesRejectsOutOfRangeTile(t *testing.T) {
 	}
 }
 
+func TestFlattenPosesRejectsOutOfRangeXY(t *testing.T) {
+	dir := t.TempDir()
+	sheet := Spritesheet{Width: 8, Height: 8, Sprites: []SpriteRecord{testSprite(0, 0, 0, 8, 8, 0, 0)}}
+	mapData := Map{Width: 1, Height: 1, Cells: []int{0}}
+	writeTestProject(t, dir, canonicalPalette(), sheet, mapData)
+
+	posesJSON := `{"version":1,"poses":[{"name":"walk","parts":[{"tile":0,"x":32768,"y":0}]}]}`
+	if err := os.WriteFile(filepath.Join(dir, "assets", "poses.json"), []byte(posesJSON), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Load(dir)
+	if err == nil {
+		t.Fatal("out-of-range pose x did not fail Load")
+	}
+	for _, want := range []string{"poses.json", "pose 0", "part 0", "x"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("out-of-range pose x error = %v, want it to mention %q", err, want)
+		}
+	}
+
+	posesJSON = `{"version":1,"poses":[{"name":"walk","parts":[{"tile":0,"x":0,"y":-32769}]}]}`
+	if err := os.WriteFile(filepath.Join(dir, "assets", "poses.json"), []byte(posesJSON), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Load(dir)
+	if err == nil {
+		t.Fatal("out-of-range pose y did not fail Load")
+	}
+	for _, want := range []string{"poses.json", "pose 0", "part 0", "y"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("out-of-range pose y error = %v, want it to mention %q", err, want)
+		}
+	}
+}
+
 func TestLoadFlattensValidPoses(t *testing.T) {
 	dir := t.TempDir()
 	sheet, mapData := nativeFixture()

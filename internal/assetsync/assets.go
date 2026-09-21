@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -289,6 +290,12 @@ func flattenPoses(poses PoseFile, spriteN int) ([]FlatPose, []FlatPosePart, erro
 		for partIdx, part := range pose.Parts {
 			if part.Tile < 0 || part.Tile >= spriteN {
 				return nil, nil, fmt.Errorf("poses.json: pose %d part %d tile %d is outside 0..%d", poseIdx, partIdx, part.Tile, maxInt(spriteN-1, 0))
+			}
+			if part.X < math.MinInt16 || part.X > math.MaxInt16 {
+				return nil, nil, fmt.Errorf("poses.json: pose %d part %d x %d is outside %d..%d", poseIdx, partIdx, part.X, math.MinInt16, math.MaxInt16)
+			}
+			if part.Y < math.MinInt16 || part.Y > math.MaxInt16 {
+				return nil, nil, fmt.Errorf("poses.json: pose %d part %d y %d is outside %d..%d", poseIdx, partIdx, part.Y, math.MinInt16, math.MaxInt16)
 			}
 			var flags uint8
 			if part.FlipX {
