@@ -114,7 +114,7 @@ func builtinKeepsArrayLengths(name string) bool {
 		"btn", "btnp", "t", "time", "stat", "tonum", "ord", "printh", "sub", "tostr", "chr",
 		"sfx", "music", "sample", "gba_note", "gba_stop", "count", "all", "pairs",
 		"sget", "sset", "fget", "fset", "mget", "mset",
-		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "map", "print",
+		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "pspr", "map", "print",
 		"camera", "clip", "pal", "palt", "color", "cursor":
 		return true
 	}

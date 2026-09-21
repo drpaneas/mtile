@@ -211,7 +211,8 @@ var Builtins = map[string]BuiltinSpec{
 	"cls": {"ClsV", 0, 1, 0}, "pset": {"PsetV", 2, 3, 0}, "pget": {"PgetV", 2, 2, 1},
 	"line": {"LineV", 4, 5, 0}, "rect": {"RectV", 4, 5, 0}, "rectfill": {"RectfillV", 4, 5, 0},
 	"circ": {"CircV", 3, 4, 0}, "circfill": {"CircfillV", 3, 4, 0},
-	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0}, "map": {"MapBGAtV", 0, 8, 0},
+	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0}, "pspr": {"PSprV", 3, 5, 0},
+	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
 	"print": {"PrintV", 1, 4, 1},
@@ -5918,7 +5919,7 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 			return void(call)
 		}
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
-	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "clip", "color", "cursor":
+	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "pspr", "clip", "color", "cursor":
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "map":
 		if len(names) == 0 {

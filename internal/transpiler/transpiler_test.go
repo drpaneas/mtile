@@ -3254,3 +3254,17 @@ end
 		}
 	}
 }
+
+func TestPsprBuiltinEmitsPSprV(t *testing.T) {
+	src, err := Transpile("pspr.lua", "function _draw() pspr(0, 8, 12, true) end", Options{SheetW: 8, SheetH: 8, MapW: 1, MapH: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(src, "c.PSprV(") {
+		limit := len(src)
+		if limit > 2000 {
+			limit = 2000
+		}
+		t.Fatalf("generated source missing PSprV:\n%s", src[:limit])
+	}
+}

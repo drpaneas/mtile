@@ -27,7 +27,7 @@ const (
 // public API cannot silently enter AUTO mode without an explicit decision.
 func BuiltinRendererCompatibility(name string) RendererCompatibility {
 	switch name {
-	case "pset", "pget", "line", "rect", "rectfill", "circ", "circfill":
+	case "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "pspr":
 		return RendererMode4Only
 	case "cls", "spr", "sspr", "map", "clip", "pal", "palt", "print":
 		return RendererMode0Conditional

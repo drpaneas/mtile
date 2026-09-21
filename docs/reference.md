@@ -308,8 +308,8 @@ Renderer compatibility and the exact Mode 0 restrictions for every function
 are documented in [docs/render-modes.md](render-modes.md).
 
 Graphics: `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
-`circfill`, `spr`, `sspr`, `map`, `camera`, `clip`, `pal`, `palt`, `color`,
-`cursor`, `print`
+`circfill`, `spr`, `sspr`, `pspr`, `map`, `camera`, `clip`, `pal`, `palt`,
+`color`, `cursor`, `print`
 
 Assets: `sget`, `sset`, `fget`, `fset`, `mget`, `mset`
 
