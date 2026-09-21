@@ -18,6 +18,11 @@ type AssetImage struct {
 	SheetIndex    []uint16
 	Map           []uint16
 	Flags         []byte
+	// PoseIndex/PoseParts back PSpr: PoseIndex[id] names the contiguous
+	// PoseParts span for a multi-part pose. Both are empty when the cart
+	// declares no poses.
+	PoseIndex []PoseRange
+	PoseParts []PosePart
 }
 
 // AssetMemory is the RAM copy Init writes into. Generated main points the
@@ -51,6 +56,11 @@ type AssetMemory struct {
 	MapPackedPixels []byte
 	MapPackedSpans  []MapPackedSpan
 	MapPackedLayers [4]MapPackedLayer
+	// PoseIndex/PoseParts are Init-copied slice headers from AssetImage; the
+	// backing arrays stay in ROM (or wherever the image lives), since poses
+	// are not mutated at runtime.
+	PoseIndex []PoseRange
+	PoseParts []PosePart
 }
 
 // MapPackedSpan describes an opaque source run. X/Y retain map coordinates;
@@ -191,6 +201,9 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	if !packedMapStorageValid(image, ram, readOnlySheet, uint8(imageMask)) {
 		return false
 	}
+	if !poseIndexValid(image) {
+		return false
+	}
 	if !mapStorageStreaming && (mapStorageFixed || !image.MapStreaming) {
 		return len(ram.Map) == mapN && len(ram.MapChunks) == 0 && len(ram.MapEdits) == 0
 	}
@@ -229,6 +242,21 @@ func packedMapStorageValid(image *AssetImage, ram *AssetMemory, readOnlySheet bo
 		enabled = true
 	}
 	return enabled
+}
+
+// poseIndexValid checks the image's pose tables in isolation: every
+// PoseRange must name a span fully inside PoseParts. An empty PoseIndex is
+// always valid regardless of PoseParts, and Init assigns ram's pose slice
+// headers unconditionally, so ram's prior pose content (if any) never
+// factors into this check.
+func poseIndexValid(image *AssetImage) bool {
+	for _, r := range image.PoseIndex {
+		end := int(r.Start) + int(r.Count)
+		if int(r.Start) > len(image.PoseParts) || end > len(image.PoseParts) {
+			return false
+		}
+	}
+	return true
 }
 
 func normalizedMapLayers(layers int) int {

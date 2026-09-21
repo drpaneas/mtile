@@ -46,6 +46,16 @@ func (c *Context) SprV(n, x, y, w, h, flipX, flipY Value) {
 	)
 }
 
+func (c *Context) PSprV(id, x, y, flipX, flipY Value) {
+	c.PSpr(
+		id.Int(),
+		x.Int(),
+		y.Int(),
+		flipX.IsTrue(),
+		flipY.IsTrue(),
+	)
+}
+
 func (c *Context) SSprV(sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY Value) {
 	c.SSpr(
 		sx.Int(),

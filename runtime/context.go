@@ -131,6 +131,11 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 		copy(ram.Map, image.Map)
 	}
 	c.mapError = MapOK
+	// Poses are read-only cart metadata: no per-cart mutation path exists for
+	// them, so ram borrows the image's backing arrays instead of copying
+	// pixel/array data into EWRAM.
+	ram.PoseIndex = image.PoseIndex
+	ram.PoseParts = image.PoseParts
 	c.cart = ram
 	return true
 }
