@@ -102,6 +102,23 @@ type PoseFile struct {
 	Poses   []PoseRecord `json:"poses"`
 }
 
+// FlatPosePart is one draw step within a flattened pose: which sprite tile
+// to draw and the pixel offset and flip flags to draw it with. Flags packs
+// flipX in bit 0 and flipY in bit 1; the remaining bits are reserved and
+// always zero.
+type FlatPosePart struct {
+	Tile  uint16
+	X, Y  int16
+	Flags uint8
+}
+
+// FlatPose names a contiguous span within Assets.PoseParts: parts
+// [Start, Start+Count) draw the pose, in the same order as poses.json.
+type FlatPose struct {
+	Start uint16
+	Count uint16
+}
+
 // MapLayer is one fixed logical background plane. IDs are stable and range
 // from BG0 (back) through BG3 (front); array order is not semantic.
 type MapLayer struct {
@@ -141,6 +158,8 @@ type Assets struct {
 	SheetROM     []byte
 	MapROM       []uint16
 	FlagROM      []byte
+	PoseIndex    []FlatPose
+	PoseParts    []FlatPosePart
 }
 
 // Valid reports whether each component is a 5-bit GBA channel (0..31).

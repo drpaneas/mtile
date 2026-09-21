@@ -33,6 +33,16 @@ func Load(projectDir string) (*Assets, error) {
 	if err != nil {
 		return nil, err
 	}
+	poses, err := LoadPoses(projectDir)
+	if err != nil {
+		return nil, err
+	}
+	poseIndex, poseParts, err := flattenPoses(*poses, assets.SpriteN)
+	if err != nil {
+		return nil, err
+	}
+	assets.PoseIndex = poseIndex
+	assets.PoseParts = poseParts
 	audioVersion, err := DetectAudioVersion(projectDir)
 	if err != nil {
 		return nil, err
@@ -264,6 +274,39 @@ func flatten(project Project, sheet Spritesheet, mapData Map, palette Palette) (
 		MapROM:       flatMap,
 		FlagROM:      flags,
 	}, nil
+}
+
+// flattenPoses validates poses.json against the flattened sheet's sprite
+// count and packs it into the compact per-part format code generation
+// consumes: a single contiguous PoseParts array, with each FlatPose in
+// PoseIndex naming a [Start, Start+Count) span within it in poses.json
+// order. An empty PoseFile returns two zero-length, non-nil slices.
+func flattenPoses(poses PoseFile, spriteN int) ([]FlatPose, []FlatPosePart, error) {
+	poseIndex := make([]FlatPose, 0, len(poses.Poses))
+	poseParts := make([]FlatPosePart, 0, len(poses.Poses))
+	for poseIdx, pose := range poses.Poses {
+		start := len(poseParts)
+		for partIdx, part := range pose.Parts {
+			if part.Tile < 0 || part.Tile >= spriteN {
+				return nil, nil, fmt.Errorf("poses.json: pose %d part %d tile %d is outside 0..%d", poseIdx, partIdx, part.Tile, maxInt(spriteN-1, 0))
+			}
+			var flags uint8
+			if part.FlipX {
+				flags |= 1
+			}
+			if part.FlipY {
+				flags |= 2
+			}
+			poseParts = append(poseParts, FlatPosePart{
+				Tile:  uint16(part.Tile),
+				X:     int16(part.X),
+				Y:     int16(part.Y),
+				Flags: flags,
+			})
+		}
+		poseIndex = append(poseIndex, FlatPose{Start: uint16(start), Count: uint16(len(pose.Parts))})
+	}
+	return poseIndex, poseParts, nil
 }
 
 func validateSheet(sheet Spritesheet, paletteLen int) (width, height, sheetN, spriteN int, err error) {
