@@ -214,7 +214,7 @@ Status meanings:
 | 5 | Done | `spr()`/`sspr()` between logical backgrounds with automatically derived OAM priority and identical Mode 4 painter order. | Medium–large | Stage 2; analyzer, Mode 0 OBJ runtime, parity, benchmarks. |
 | 6 | Pending | Read-only editor preview of legacy and explicit map passes, captured cameras, derived BG slots, and object-depth lanes. | Medium | Stage 2 and static analysis exposed to the editor. |
 | 7 | Absorbed | The multi-plane schema/editor portion was pulled into Stage 2 by product decision; derived camera/pass preview remains Stage 6. | — | Stage 2. |
-| 8 | Pending | Separate logical BG/OBJ asset banks, 4bpp palette allocation, and native OBJ packing. | Very large | Stage 2 and a measured asset-allocation design. |
+| 8 | Partial | Separate logical BG/OBJ asset banks, 4bpp palette allocation, and native OBJ packing. | Very large | Stage 2 and a measured asset-allocation design. |
 | 9 | Deferred | Tile types, named states, events, entity components, terrain brushes, and higher-level scene behavior. | Engine-level | Stage 8 plus a separate product decision. |
 
 The dependency shape is intentionally not a single chain:
@@ -369,7 +369,13 @@ cycles, and records one cold-start missed frame.
 
 ### Stages 8–9 hold point
 
-Do not begin the asset-bank split or semantic tile/entity system while Stages
+Optional pose assets and the Mode 4 only `pspr` builtin have shipped: a pose
+is a ROM recipe of 8x8 spritesheet cells with signed offsets and flip flags,
+drawn by calling the existing `Spr` per part, so camera, clip, pal, and palt
+stay exact. The [`nerdo`](../examples/nerdo/game.lua) example now draws its
+four idle frames with `pspr` instead of four `sspr` rectangles. Separate
+logical BG/OBJ asset banks, 4bpp palette allocation, native OBJ packing, and
+OBJ VRAM working-set streaming remain held. Do not begin those while Stages
 3–6 are unsettled. They multiply allocator and renderer work and would turn
 the remaining background-tile problems into an engine architecture commitment.
 
