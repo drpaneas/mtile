@@ -78,6 +78,30 @@ type Spritesheet struct {
 	Sprites []SpriteRecord `json:"sprites"`
 }
 
+const (
+	MaxPoseCount     = 4096
+	MaxPoseParts     = 128
+	MaxPosePartTotal = 65535
+)
+
+type PosePartRecord struct {
+	Tile  int  `json:"tile"`
+	X     int  `json:"x"`
+	Y     int  `json:"y"`
+	FlipX bool `json:"flipX,omitempty"`
+	FlipY bool `json:"flipY,omitempty"`
+}
+
+type PoseRecord struct {
+	Name  string           `json:"name,omitempty"`
+	Parts []PosePartRecord `json:"parts"`
+}
+
+type PoseFile struct {
+	Version int          `json:"version"`
+	Poses   []PoseRecord `json:"poses"`
+}
+
 // MapLayer is one fixed logical background plane. IDs are stable and range
 // from BG0 (back) through BG3 (front); array order is not semantic.
 type MapLayer struct {
