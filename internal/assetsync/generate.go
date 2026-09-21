@@ -55,6 +55,10 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 	writeByteArray(&b, "flagROM", assets.FlagROM)
 	b.WriteString("//go:section .rodata\n")
 	writeUint16Array(&b, "paletteROM", assets.PaletteROM[:])
+	b.WriteString("//go:section .rodata\n")
+	writePoseIndexArray(&b, assets.PoseIndex)
+	b.WriteString("//go:section .rodata\n")
+	writePosePartArray(&b, assets.PoseParts)
 
 	if nativeAudioEnabled {
 		writeNativeAudioArrays(&b, assets.NativeAudio.Library)
@@ -95,6 +99,7 @@ func InitAssets(ctx *rt.Context) bool {
 	cartData.Sheet = sheetRAM[:]
 	cartData.Map = mapRAM[:]
 	cartData.Flags = flagRAM[:]
+	cartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]
 `)
 	if assets.MapStreaming {
 		b.WriteString("\tcartData.MapChunks = mapChunksRAM[:]\n\tcartData.MapEdits = mapEditsRAM[:]\n")
@@ -104,6 +109,7 @@ func InitAssets(ctx *rt.Context) bool {
 		SpriteCols: SpriteCols, SpriteRows: SpriteRows,
 		MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, SpriteN: SpriteN, MapStreaming: MapStreaming,
 		Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
+		PoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],
 	}
 	if !ctx.Init(&image, &cartData) {
 		return false
@@ -329,6 +335,26 @@ func writeUint16Array(b *strings.Builder, name string, values []uint16) {
 		if i%12 == 11 || i == len(values)-1 {
 			b.WriteByte('\n')
 		}
+	}
+	b.WriteString("}\n\n")
+}
+
+// writePoseIndexArray and writePosePartArray emit pspr's pose ROM tables.
+// Poses are read-only cart metadata with no per-cart mutation path, so both
+// stay in .rodata; an empty slice still yields a legal [0]rt.T{} array so
+// poseIndexROM[:]/posePartROM[:] remain valid slice expressions.
+func writePoseIndexArray(b *strings.Builder, values []FlatPose) {
+	fmt.Fprintf(b, "var poseIndexROM = [%d]rt.PoseRange{\n", len(values))
+	for _, v := range values {
+		fmt.Fprintf(b, "\t{Start: %d, Count: %d},\n", v.Start, v.Count)
+	}
+	b.WriteString("}\n\n")
+}
+
+func writePosePartArray(b *strings.Builder, values []FlatPosePart) {
+	fmt.Fprintf(b, "var posePartROM = [%d]rt.PosePart{\n", len(values))
+	for _, v := range values {
+		fmt.Fprintf(b, "\t{Tile: %d, X: %d, Y: %d, Flags: %d},\n", v.Tile, v.X, v.Y, v.Flags)
 	}
 	b.WriteString("}\n\n")
 }

@@ -238,6 +238,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		return result, fmt.Errorf("load assets: %w", err)
 	}
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
+	poseIndex, poseParts := flattenAssetPoses(assets)
 	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
 		PackageName:                        "main",
 		IWRAMFunctions:                     project.IWRAMFunctions,
@@ -259,6 +260,8 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
+		PoseIndex:   poseIndex,
+		PoseParts:   poseParts,
 		Palette:     assets.PaletteROM[:],
 		NativeAudio: assets.NativeAudio,
 		Debug:       s.Debug,
@@ -436,6 +439,21 @@ func loadBuildAssets(projectDir string) (*assetsync.Assets, error) {
 		return nil, fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", version)
 	}
 	return assetsync.Load(projectDir)
+}
+
+// flattenAssetPoses maps assetsync's flat pose tables onto the runtime's
+// public pose types. Field names and layout are identical by design, so
+// this is a direct 1:1 copy, not a reinterpretation.
+func flattenAssetPoses(assets *assetsync.Assets) ([]runtimebundle.PoseRange, []runtimebundle.PosePart) {
+	poseIndex := make([]runtimebundle.PoseRange, len(assets.PoseIndex))
+	for i, p := range assets.PoseIndex {
+		poseIndex[i] = runtimebundle.PoseRange{Start: p.Start, Count: p.Count}
+	}
+	poseParts := make([]runtimebundle.PosePart, len(assets.PoseParts))
+	for i, p := range assets.PoseParts {
+		poseParts[i] = runtimebundle.PosePart{Tile: p.Tile, X: p.X, Y: p.Y, Flags: p.Flags}
+	}
+	return poseIndex, poseParts
 }
 
 func validateBuildAssetFootprint(sheet assetsync.Spritesheet, mapData assetsync.Map) error {

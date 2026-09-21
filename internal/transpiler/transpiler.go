@@ -172,6 +172,11 @@ type Options struct {
 	Sheet        []byte
 	Map          []uint16
 	Flags        []byte
+	// PoseIndex/PoseParts supply pspr's multi-part sprite tables. Poses are
+	// read-only cart metadata with no per-cart mutation path, so both stay
+	// in .rodata: there is no matching EWRAM budget entry for them.
+	PoseIndex []runtimeapi.PoseRange
+	PoseParts []runtimeapi.PosePart
 	// Palette is the expanded 256-entry BGR555 palette for native projects.
 	// An omitted palette preserves the runtime's built-in palette behavior for
 	// the earlier transpiler tests and small hand-written cartridges.
@@ -3893,6 +3898,10 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line(fmt.Sprintf("var mapROM = [ %d ]uint16{%s}", mapCells, u16Literal(g.mapCompact, mapCells)))
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var flagROM = [ %d ]byte{%s}", g.spriteN, byteLiteral(g.opts.Flags, g.spriteN)))
+	b.line("//go:section .rodata")
+	b.line(fmt.Sprintf("var poseIndexROM = [ %d ]rt.PoseRange{%s}", len(g.opts.PoseIndex), poseRangeLiteral(g.opts.PoseIndex)))
+	b.line("//go:section .rodata")
+	b.line(fmt.Sprintf("var posePartROM = [ %d ]rt.PosePart{%s}", len(g.opts.PoseParts), posePartLiteral(g.opts.PoseParts)))
 	if len(g.mode0TextKeys) != 0 {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var mode0TextKeysROM = [%d]uint16{%s}", len(g.mode0TextKeys), u16Literal(g.mode0TextKeys, len(g.mode0TextKeys))))
@@ -4036,6 +4045,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\tcartImage := rt.AssetImage{")
 	b.line("\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,")
 	b.line("\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],")
+	b.line("\t\tPoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],")
 	if !g.sheetMutable {
 		b.line("\t\tSheetIndex: sheetIndexROM[:],")
 	}
@@ -4052,6 +4062,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tcartData.SheetSolid = sheetSolidROM[:]")
 	}
 	b.line("\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]")
+	b.line("\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]")
 	if g.mapRasterEligible() {
 		b.line("\tcartData.MapRasterPixels, cartData.MapRasterSpans = mapRasterPixelsRAM[:], mapRasterSpansRAM[:]")
 	}
@@ -6654,6 +6665,22 @@ func u16Literal(data []uint16, n int) string {
 			v = data[i]
 		}
 		parts[i] = fmt.Sprintf("0x%04x", v)
+	}
+	return strings.Join(parts, ",")
+}
+
+func poseRangeLiteral(data []runtimeapi.PoseRange) string {
+	parts := make([]string, len(data))
+	for i, r := range data {
+		parts[i] = fmt.Sprintf("{Start: %d, Count: %d}", r.Start, r.Count)
+	}
+	return strings.Join(parts, ",")
+}
+
+func posePartLiteral(data []runtimeapi.PosePart) string {
+	parts := make([]string, len(data))
+	for i, p := range data {
+		parts[i] = fmt.Sprintf("{Tile: %d, X: %d, Y: %d, Flags: %d}", p.Tile, p.X, p.Y, p.Flags)
 	}
 	return strings.Join(parts, ",")
 }
