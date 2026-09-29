@@ -32,6 +32,7 @@ func TestLegacyGraphicsOnlySaveDoesNotCreateOptionalAudioFiles(t *testing.T) {
 		filepath.Join("assets", "audio", "sfx.json"),
 		filepath.Join("assets", "audio", "music.json"),
 		filepath.Join("assets", "audio", "samples", "manifest.json"),
+		filepath.Join("assets", "poses.json"),
 	} {
 		if _, err := os.Stat(filepath.Join(dir, relative)); !os.IsNotExist(err) {
 			t.Fatalf("legacy save unexpectedly created %s (error %v)", relative, err)
@@ -641,5 +642,100 @@ func TestLayeredMapEditingPromotionResizeUndoDataShape(t *testing.T) {
 	}
 	if !reloaded.Map.IsLayered() || reloaded.MapCell(3, 1, 0) != 3 {
 		t.Fatalf("layered save/load lost BG3: %#v", reloaded.Map)
+	}
+}
+
+func TestCreateObjSheetPersistsAndPaintsTileZero(t *testing.T) {
+	dir := editorFixture(t)
+	m, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.ObjSheet != nil {
+		t.Fatal("fixture unexpectedly had an object sheet")
+	}
+	if err := m.CreateObjSheet(assetsync.DefaultObjSheetW, assetsync.DefaultObjSheetH); err != nil {
+		t.Fatal(err)
+	}
+	if m.ObjSheet == nil || m.ObjSheet.Width != ObjPageWidth || m.ObjSheet.Height != ObjPageHeight {
+		t.Fatalf("created object sheet = %+v", m.ObjSheet)
+	}
+	if err := m.SetObjSpritePixel(0, 0, 0, 7); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Save(); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.ObjSheet == nil || reloaded.ObjSheet.Width != ObjPageWidth {
+		t.Fatalf("reloaded object sheet = %+v", reloaded.ObjSheet)
+	}
+	if err := reloaded.SetObjSpritePixel(0, 1, 0, 8); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSpriteIsReservedOnObjectSheet(t *testing.T) {
+	if !SpriteIsReserved(0) || !SpriteIsReserved(480) {
+		t.Fatal("BG sheet must still lock tile 0 and print glyphs")
+	}
+	if SpriteIsReservedOn(0, true) || SpriteIsReservedOn(480, true) {
+		t.Fatal("object sheet must not lock tile 0 or print glyph IDs")
+	}
+}
+
+func TestOpenLoadsPosesAndMissingFileIsEmpty(t *testing.T) {
+	dir := editorFixture(t)
+	empty, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if empty.Poses.Version != 1 || len(empty.Poses.Poses) != 0 {
+		t.Fatalf("missing poses.json = %+v", empty.Poses)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "assets"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	payload := `{"version":1,"poses":[{"name":"idle_0","parts":[{"tile":0,"x":0,"y":0}]}]}`
+	if err := os.WriteFile(filepath.Join(dir, "assets", "poses.json"), []byte(payload), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(loaded.Poses.Poses) != 1 || loaded.Poses.Poses[0].Name != "idle_0" {
+		t.Fatalf("loaded poses = %+v", loaded.Poses)
+	}
+	if len(loaded.Poses.Poses[0].Parts) != 1 || loaded.Poses.Poses[0].Parts[0].Tile != 0 {
+		t.Fatalf("loaded parts = %+v", loaded.Poses.Poses[0].Parts)
+	}
+}
+
+func TestSavePersistsEditedPoses(t *testing.T) {
+	dir := editorFixture(t)
+	m, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Poses = assetsync.PoseFile{Version: 1, Poses: []assetsync.PoseRecord{
+		{Name: "idle_0", Parts: []assetsync.PosePartRecord{{Tile: 1, X: 8, Y: 16}}},
+	}}
+	if err := m.Save(); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reloaded.Poses.Poses) != 1 || reloaded.Poses.Poses[0].Name != "idle_0" {
+		t.Fatalf("reloaded poses = %+v", reloaded.Poses)
+	}
+	part := reloaded.Poses.Poses[0].Parts[0]
+	if part.Tile != 1 || part.X != 8 || part.Y != 16 {
+		t.Fatalf("reloaded part = %+v", part)
 	}
 }

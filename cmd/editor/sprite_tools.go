@@ -346,7 +346,7 @@ func (g *Game) fillSpriteSelection(startX, startY, replacement int) bool {
 	if !ok {
 		return false
 	}
-	if editor.SpriteIsReserved(id) {
+	if g.spriteIsReserved(id) {
 		g.statusMsg = reservedSpriteLockedMessage(id)
 		return false
 	}
@@ -367,7 +367,7 @@ func (g *Game) fillSpriteSelection(startX, startY, replacement int) bool {
 		}
 		seen[p.y*w+p.x] = true
 		pixelID, _, _, valid := g.selectionPixelTarget(p.x, p.y)
-		if !valid || editor.SpriteIsReserved(pixelID) {
+		if !valid || g.spriteIsReserved(pixelID) {
 			continue
 		}
 		value, _ := g.selectionPixelAt(p.x, p.y)
@@ -514,7 +514,7 @@ func (g *Game) selectionReservedSprite() (int, bool) {
 	for row := 0; row < g.spriteGridRows(); row++ {
 		for col := 0; col < g.spriteGridCols(); col++ {
 			id := (baseRow+row)*cols + (baseCol + col)
-			if editor.SpriteIsReserved(id) {
+			if g.spriteIsReserved(id) {
 				return id, true
 			}
 		}

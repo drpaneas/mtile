@@ -134,6 +134,99 @@ ID limit is 65,536 cells including empty ID 0). `spr`, `sspr`, `map`, and
 `sget` preserve logical sheet coordinates; the compact representation is an
 internal build/runtime detail.
 
+## Pose sprites and animation storage
+
+`pspr(id, x, y [, flip_x [, flip_y]])` draws the zero-based pose in
+`assets/poses.json`. Each pose lists 8x8 tile IDs, pixel offsets from its origin,
+and optional per-part flips. Call-level flips mirror inside the pose's calculated
+tile bounds, keeping that rectangle in place at the same `(x, y)`. Missing or
+out-of-range IDs draw nothing. Camera, painter order, palette, and transparency
+follow the renderer contract.
+
+When `assets/objsheet.json` exists, pose IDs reference tiles in that animation
+sheet; otherwise they reference the shared spritesheet. `spr`, `sspr`, `sget`,
+`sset`, and map flags continue to use the shared sheet. Animation pixels are
+immutable during gameplay and remain in compact ROM in both renderers.
+
+The editor organizes this bank into 512×320-pixel OBJ pages (2,560 tiles).
+`PAGE+` adds full pages until only 1,536 of the 65,536 source slots remain,
+then adds a final 512×192 page. Page size is an authoring layout, not a live
+GBA VRAM allocation.
+`assets/animation.json` stores page rectangles and registered clips with names,
+ordered global pose IDs, speed (1–60 FPS), and optional `loop` (default `true`).
+Changing a clip's order does not change pose IDs.
+
+`anim(name, x, y [, flip_x [, flip_y [, elapsed_seconds]]])` draws the current
+frame of a registered clip using the pose renderer. For example:
+
+```lua
+function _init()
+ attack_started = time()
+end
+
+function _draw()
+ cls()
+ anim("idle", 40, 80)
+ anim("attack", 160, 80, true, false, time()-attack_started)
+end
+```
+
+Flipping needs no manual width or position adjustment:
+
+```lua
+anim("walk", 100, 60, facing_left)
+```
+
+The build calculates one fixed rectangle enclosing the local 8×8 part bounds
+of every pose in the clip. Both flip directions mirror inside that rectangle,
+so changing to a narrower frame does not move the flip axis. A standalone
+`pspr` uses just its own pose's bounds. These bounds include tile padding and
+authored offsets, including negative offsets; they do not depend on where the
+artwork is stored on an OBJ page. Unflipped coordinates are unchanged.
+
+The generated ROM tables store the horizontal and vertical adjustments
+(`min + max` on each axis). Gameplay performs no bounds scan or allocation,
+and a flip alone does not reload resident OBJ tiles. Bounds are regenerated
+when poses or clips change and the game is rebuilt. Existing games that added
+manual flip offsets must remove those offsets when rebuilding with this version.
+
+Without `elapsed_seconds`, clips advance from the shared game update clock at
+their saved FPS; changing the name does not restart this clock. Supply elapsed
+seconds to restart a clip or give characters independent timing. Negative
+elapsed time selects the first frame. Looping clips wrap; `loop: false` holds
+the last frame. This call creates no entity or playback state.
+
+Clip names are case-sensitive. A missing literal name is a build error
+(`ANIM_UNKNOWN_CLIP`); a missing dynamic name or an empty registered clip draws
+nothing. Both renderers support dynamic names. Mode 0 budgets every registered
+clip they could select, while literal names budget only that clip. The normal
+`pspr` VRAM/OAM/scanline/transfer limits still apply.
+
+Literal clip names are resolved at build time, so `anim("idle", x, y)` does not
+search clip names during drawing. `pspr` and `anim` allocate no Lua objects;
+allocation-free games can omit the Lua heap altogether. Expressions passed to
+these calls may still allocate, such as constructing a clip name at runtime.
+
+At build time, identical nonblank 8×8 pixel patterns share one ROM payload;
+blank tiles need none. The source cell IDs and independently editable copies
+are preserved. Multiple poses may also reference the same source tile, in
+which case editing that tile changes every linked pose. This storage sharing
+does not reduce the renderer's active-pose working-set requirements.
+
+The animation bank supports 65,536 cells in any eight-pixel-aligned aspect
+ratio. Its four-byte compact indices represent every cell, including a fully
+painted final tile. Pose starts use 32-bit offsets, so animation libraries can
+contain more than 65,535 total parts. Pose IDs are bounded by Lua's signed 16.16
+integer range (0–32,767), individual recipes by their 16-bit part count, and the
+complete cartridge by ROM capacity. These storage limits do not imply that all
+frames can be displayed simultaneously.
+
+In Mode 0, complete nonoverlapping rectangles are packed into larger hardware
+objects, and only current poses are staged and streamed. A 64x64 rectangular
+pose can use one OAM entry. Sparse, overlapping, or individually flipped art
+may need more objects. Mode 4 keeps the original ordered cell recipe. Consult
+[render modes](render-modes.md) for exact eligibility and AUTO fallback.
+
 ## Game loop
 
 `game.lua` may define:
@@ -308,7 +401,7 @@ Renderer compatibility and the exact Mode 0 restrictions for every function
 are documented in [docs/render-modes.md](render-modes.md).
 
 Graphics: `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
-`circfill`, `spr`, `sspr`, `pspr`, `map`, `camera`, `clip`, `pal`, `palt`,
+`circfill`, `spr`, `sspr`, `pspr`, `anim`, `map`, `camera`, `clip`, `pal`, `palt`,
 `color`, `cursor`, `print`
 
 Assets: `sget`, `sset`, `fget`, `fset`, `mget`, `mset`

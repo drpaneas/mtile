@@ -631,7 +631,7 @@ func (g *Game) selectCodeSearchMatch() {
 
 func (g *Game) activeCodeLayout() codeLayout {
 	if g != nil && g.mode == modeCode {
-		return newDevelopLayout().Code
+		return newDevelopPanelLayout(g.developPanel).Code
 	}
 	return newCodeLayout()
 }

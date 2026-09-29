@@ -344,8 +344,7 @@ func buildMode0TextAtlas(draw *luaparser.FunctionDeclStmt) mode0TextAtlas {
 
 func buildMode0TextAtlasForSource(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, opts Options) mode0TextAtlas {
 	if chunk != nil && draw != nil {
-		cols, rows := opts.SheetW/8, opts.SheetH/8
-		if ops, _, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), cols, rows); err == nil {
+		if ops, _, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), opts); err == nil {
 			return atlasFromMode0TextKeys(mode0TextAtlasKeysForOps(ops))
 		}
 	}

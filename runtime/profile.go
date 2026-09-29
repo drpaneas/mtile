@@ -57,6 +57,15 @@ type PerformanceStats struct {
 	HeapHandles     uint32
 	HeapHandleLimit uint32
 	HeapError       HeapError
+	// Preview-only OBJ cache telemetry, populated by DebugSnapshot rather
+	// than the frame profiler or release rendering paths.
+	OBJTelemetryValid        bool
+	OBJStreamAvailable       bool
+	OBJStreamResidencyValid  bool
+	OBJStreamResidentBytes   uint32
+	OBJStreamResidentSlots   uint32
+	OBJUploadedBytes         uint32
+	OBJStreamResidentPoseIDs [4]uint16
 }
 
 func (c *Context) SetProfiling(enabled bool) {

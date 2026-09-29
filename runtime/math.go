@@ -266,7 +266,10 @@ func (c *Context) Time() Number {
 	if rate == 0 {
 		rate = 60
 	}
-	return FromInt(int(c.updateTick)).Div(FromInt(rate))
+	// Convert ticks to seconds before narrowing to signed 16.16. Narrowing
+	// the tick counter first wrapped time after 32768 updates (~18 minutes
+	// at 30 Hz), breaking elapsed-time animation and other timers.
+	return Number((uint64(c.updateTick) << 16) / uint64(rate))
 }
 
 // SetTickRate tells Time() how many update ticks are one second. The

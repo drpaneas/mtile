@@ -1,0 +1,227 @@
+{
+  "configuration": "Release Mode0; actual Nerdo idle clip; no debug telemetry",
+  "baseline": {
+    "romBytes": 35408,
+    "romSha256": "7c349652c2df8e5b0cd0a9b9d9a1c4ca03fb36cdda6c7b746fe0393e6023bfae",
+    "ewramUsed": 155316,
+    "ewramFree": 106316,
+    "iwramUsedIncludingReservedStacks": 10416,
+    "objROMWordAligned": false,
+    "symbols": {
+      "main.main": {
+        "address": "0x8001684",
+        "bytes": 9112
+      },
+      "main.sheetIndexROM": {
+        "address": "0x8003a2c",
+        "bytes": 1200
+      },
+      "main.sheetROM": {
+        "address": "0x8003a2c",
+        "bytes": 0
+      },
+      "main.flagROM": {
+        "address": "0x8003edc",
+        "bytes": 600
+      },
+      "main.mapROM": {
+        "address": "0x8003edc",
+        "bytes": 0
+      },
+      "main.poseIndexROM": {
+        "address": "0x8004134",
+        "bytes": 32
+      },
+      "main.posePartROM": {
+        "address": "0x8004154",
+        "bytes": 1352
+      },
+      "main.animationClipROM": {
+        "address": "0x800469c",
+        "bytes": 20
+      },
+      "main.animationFrameROM": {
+        "address": "0x80046b0",
+        "bytes": 8
+      },
+      "main.poseOBJIndexROM": {
+        "address": "0x80046b8",
+        "bytes": 64
+      },
+      "main.poseOBJPartsROM": {
+        "address": "0x80046f8",
+        "bytes": 400
+      },
+      "main.poseOBJTilesROM": {
+        "address": "0x8004888",
+        "bytes": 338
+      },
+      "main.objSheetROM": {
+        "address": "0x80049da",
+        "bytes": 10752
+      },
+      "main.objSheetIndexROM": {
+        "address": "0x80073dc",
+        "bytes": 4096
+      },
+      ".stack": {
+        "address": "0x3000000",
+        "bytes": 9216
+      },
+      "main.sheetRAM": {
+        "address": "0x2000000",
+        "bytes": 0
+      },
+      "main.sheetIndexRAM": {
+        "address": "0x2000000",
+        "bytes": 1200
+      },
+      "main.mapRAM": {
+        "address": "0x20004b0",
+        "bytes": 0
+      },
+      "main.flagRAM": {
+        "address": "0x20004b0",
+        "bytes": 600
+      },
+      "main.poseOBJStageRAM": {
+        "address": "0x2000708",
+        "bytes": 2816
+      },
+      "main.cartData": {
+        "address": "0x2001208",
+        "bytes": 348
+      },
+      "main.ctx": {
+        "address": "0x2001364",
+        "bytes": 35652
+      },
+      "main.game.0": {
+        "address": "0x2009ea8",
+        "bytes": 12
+      },
+      "github.com/drpaneas/mtile/runtime.heapSpaceA": {
+        "address": "0x2009eb4",
+        "bytes": 57344
+      },
+      "github.com/drpaneas/mtile/runtime.heapSpaceB": {
+        "address": "0x2017eb4",
+        "bytes": 57344
+      },
+      "_ewram_end": {
+        "address": "0x2025eb4",
+        "bytes": 0
+      },
+      "_ebss": {
+        "address": "0x30028b0",
+        "bytes": 0
+      }
+    }
+  },
+  "final": {
+    "romBytes": 32848,
+    "romSha256": "5e6bdae8c192bf93bc5d83bc678aa6b2a8fe5e42f7b1bc3132b89836d9a237d8",
+    "ewramUsed": 12236,
+    "ewramFree": 249396,
+    "iwramUsedIncludingReservedStacks": 10416,
+    "objROMWordAligned": true,
+    "symbols": {
+      "main.main": {
+        "address": "0x800106c",
+        "bytes": 8112
+      },
+      "main.sheetIndexROM": {
+        "address": "0x800302c",
+        "bytes": 1200
+      },
+      "main.sheetROM": {
+        "address": "0x800302c",
+        "bytes": 0
+      },
+      "main.flagROM": {
+        "address": "0x80034dc",
+        "bytes": 600
+      },
+      "main.mapROM": {
+        "address": "0x80034dc",
+        "bytes": 0
+      },
+      "main.poseIndexROM": {
+        "address": "0x8003734",
+        "bytes": 32
+      },
+      "main.posePartROM": {
+        "address": "0x8003754",
+        "bytes": 1352
+      },
+      "main.animationClipROM": {
+        "address": "0x8003c9c",
+        "bytes": 20
+      },
+      "main.animationFrameROM": {
+        "address": "0x8003cb0",
+        "bytes": 8
+      },
+      "main.poseOBJIndexROM": {
+        "address": "0x8003cb8",
+        "bytes": 64
+      },
+      "main.poseOBJPartsROM": {
+        "address": "0x8003cf8",
+        "bytes": 400
+      },
+      "main.poseOBJTilesROM": {
+        "address": "0x8003e88",
+        "bytes": 338
+      },
+      "main.objSheetROM": {
+        "address": "0x8003fdc",
+        "bytes": 10752
+      },
+      "main.objSheetIndexROM": {
+        "address": "0x80069dc",
+        "bytes": 4096
+      },
+      ".stack": {
+        "address": "0x3000000",
+        "bytes": 9216
+      },
+      "main.sheetRAM": {
+        "address": "0x2000000",
+        "bytes": 0
+      },
+      "main.sheetIndexRAM": {
+        "address": "0x2000000",
+        "bytes": 1200
+      },
+      "main.mapRAM": {
+        "address": "0x20004b0",
+        "bytes": 0
+      },
+      "main.flagRAM": {
+        "address": "0x20004b0",
+        "bytes": 600
+      },
+      "main.poseOBJStageRAM": {
+        "address": "0x2000708",
+        "bytes": 2816
+      },
+      "main.cartData": {
+        "address": "0x2001208",
+        "bytes": 348
+      },
+      "main.ctx": {
+        "address": "0x2001364",
+        "bytes": 7272
+      },
+      "_ewram_end": {
+        "address": "0x2002fcc",
+        "bytes": 0
+      },
+      "_ebss": {
+        "address": "0x30028b0",
+        "bytes": 0
+      }
+    }
+  }
+}

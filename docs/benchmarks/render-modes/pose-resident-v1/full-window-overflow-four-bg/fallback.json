@@ -1,0 +1,7 @@
+{
+  "autoDiagnostic": "transpiler: game.lua:15:2: [M0_RESOURCE_LIMIT] Mode 0 pose streaming with 4 BG layers and 0 sheet mutations needs a conservative 117536-cycle commit, exceeding the 82544-cycle VBlank window; reduce simultaneous uploads or use Mode 4",
+  "autoRenderer": "mode4",
+  "capturedFrames": 120,
+  "differingPixels": 0,
+  "forcedMode0Diagnostic": "transpile game.lua: transpiler: game.lua:15:2: [M0_RESOURCE_LIMIT] Mode 0 pose streaming with 4 BG layers and 0 sheet mutations needs a conservative 117536-cycle commit, exceeding the 82544-cycle VBlank window; reduce simultaneous uploads or use Mode 4"
+}

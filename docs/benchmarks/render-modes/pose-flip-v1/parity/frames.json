@@ -1,0 +1,6122 @@
+[
+  {
+    "frame": 3,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 4,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 5,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 6,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 7,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 8,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 9,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 10,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 11,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 12,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 13,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 14,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 15,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 16,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 17,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 18,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 19,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 20,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 21,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 22,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 23,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 24,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 25,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 26,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 27,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 28,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 29,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 30,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 31,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 32,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 33,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 34,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 35,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 36,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 37,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 38,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 39,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 40,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 41,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 42,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 43,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 44,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 45,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 46,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 47,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 48,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 49,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 50,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 51,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 52,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 53,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 54,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 55,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 56,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 57,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 58,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 59,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 60,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 61,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 62,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 63,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 64,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 65,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 66,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 67,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 68,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 69,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 70,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 71,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 72,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 73,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 74,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 75,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 76,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 77,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 78,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 79,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 80,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 81,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 82,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 83,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 84,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 85,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 86,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 87,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 88,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 89,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 90,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 91,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 92,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 93,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 94,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 95,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 96,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 97,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 98,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 99,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 100,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 101,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 102,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 103,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 104,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 105,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 106,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 107,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 108,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 109,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 110,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 111,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 112,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 113,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 114,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 115,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 38,
+        "Right": 134,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 116,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 117,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 118,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 180,
+        "Top": 36,
+        "Right": 196,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 119,
+    "flipX": true,
+    "flipY": true,
+    "poses": [
+      0,
+      1,
+      2
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 94,
+        "Top": 30,
+        "Right": 142,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 36,
+        "Right": 188,
+        "Bottom": 84
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 120,
+    "flipX": false,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 30,
+        "Right": 126,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 121,
+    "flipX": true,
+    "flipY": false,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 110,
+        "Top": 30,
+        "Right": 134,
+        "Bottom": 46
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  },
+  {
+    "frame": 122,
+    "flipX": false,
+    "flipY": true,
+    "poses": [
+      0,
+      0,
+      0
+    ],
+    "expectedBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "actualBounds": [
+      {
+        "Left": 30,
+        "Top": 30,
+        "Right": 54,
+        "Bottom": 46
+      },
+      {
+        "Left": 102,
+        "Top": 38,
+        "Right": 126,
+        "Bottom": 54
+      },
+      {
+        "Left": 172,
+        "Top": 52,
+        "Right": 196,
+        "Bottom": 68
+      }
+    ],
+    "oracleDifferences": 0
+  }
+]

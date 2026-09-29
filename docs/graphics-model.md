@@ -9,7 +9,8 @@ non-empty `map(...)` call is always the logical BG number.
 
 One project currently owns:
 
-- one 8bpp spritesheet addressed as complete 8x8 cells;
+- one shared 8bpp spritesheet addressed as complete 8x8 cells;
+- an optional ROM-backed animation sheet, pose recipes, and named animation clips;
 - one logical map asset, either one legacy plane or four versioned BG planes,
   whose cells contain spritesheet IDs;
 - one eight-bit flag value per spritesheet cell; and
@@ -28,6 +29,17 @@ cell as background art and `spr()`/`sspr()` read a cell as object art. A cell
 may be used by both. Mode 0 then stages the required pixels into the GBA's
 separate BG and OBJ VRAM regions; Mode 4 software-composites both operations
 into one framebuffer.
+
+The object bank uses 512×320-pixel OBJ pages (2,560 tiles). `PAGE+` adds another
+full page while space remains; after 25 full pages, the final page is 512×192
+(1,536 tiles), using all 65,536 source slots. Pages organize the ROM library;
+they are not hardware VRAM allocations. All active objects still share the GBA
+hardware budgets. The editor repacks old sheets into this layout while
+preserving pose appearance and IDs. The Poses tab registers artwork; the Animations tab builds
+named clips from poses across pages. `assets/animation.json` stores page metadata
+and clip names, pose order, FPS and loop behavior. Builds compile clips for
+`anim(name, x, y)` and deduplicate equal nonblank tile pixels. Source copies stay
+independently editable; poses referencing one source tile share its edits.
 
 ## `map()` contract
 
@@ -369,14 +381,26 @@ cycles, and records one cold-start missed frame.
 
 ### Stages 8–9 hold point
 
-Optional pose assets and the Mode 4 only `pspr` builtin have shipped: a pose
-is a ROM recipe of 8x8 spritesheet cells with signed offsets and flip flags,
-drawn by calling the existing `Spr` per part, so camera, clip, pal, and palt
-stay exact. The [`nerdo`](../examples/nerdo/game.lua) example now draws its
-four idle frames with `pspr` instead of four `sspr` rectangles. Separate
-logical BG/OBJ asset banks, 4bpp palette allocation, native OBJ packing, and
-OBJ VRAM working-set streaming remain held. Do not begin those while Stages
-3–6 are unsettled. They multiply allocator and renderer work and would turn
+Optional pose assets, an optional 8bpp object sheet (`assets/objsheet.json`),
+and Mode 0 conditional `pspr` have shipped. A pose is a ROM recipe of 8x8
+cells with signed offsets and flip flags. Public flips stay inside calculated
+local tile bounds: a pose uses its own bounds, and a clip uses the union of all
+its poses so the flip axis stays fixed throughout playback. The build stores
+the two coordinate adjustments in ROM; drawing needs no bounds scan or extra
+tile upload just to change facing. Mode 4 blits those cells from the
+object sheet when present, otherwise the spritesheet. Proven Mode 0 carts
+compile exact larger hardware objects from complete pose rectangles and
+stream their pixels into disjoint OBJ VRAM windows. Ordinary sprites and
+multiple poses can share a frame. Sprite Lab separates Shared tiles, Poses and
+Animations tabs, with uniform OBJ pages, PNG clipboard imports, named clips
+playable from Lua, and tile-reuse highlighting. Page additions and switches need no restart; artwork,
+poses, pages, and clips participate in undo and normal project saves.
+Pose pixels are staged before VBlank in a buffer sized to the compiled working
+set, then committed in bulk. See [the renderer contract](render-modes.md) and
+[the implementation plan](pspr-capacity-plan.md) for budgets and verification.
+4bpp palette allocation and cross-character VRAM sharing
+remain held. Do not begin those while Stages
+3-6 are unsettled. They multiply allocator and renderer work and would turn
 the remaining background-tile problems into an engine architecture commitment.
 
 The long-term semantic design remains recorded in

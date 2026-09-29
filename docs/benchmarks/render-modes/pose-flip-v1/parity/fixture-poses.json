@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "poses": [
+    {
+      "name": "shared",
+      "parts": [
+        {
+          "tile": 0,
+          "x": -8,
+          "y": -8,
+          "flipX": true
+        },
+        {
+          "tile": 1,
+          "x": 0,
+          "y": -8
+        },
+        {
+          "tile": 2,
+          "x": 8,
+          "y": -8,
+          "flipY": true
+        },
+        {
+          "tile": 3,
+          "x": -8,
+          "y": 0,
+          "flipY": true
+        },
+        {
+          "tile": 4,
+          "x": 8,
+          "y": 0,
+          "flipX": true,
+          "flipY": true
+        }
+      ]
+    },
+    {
+      "name": "wide",
+      "parts": [
+        {
+          "tile": 5,
+          "x": -16,
+          "y": -8
+        },
+        {
+          "tile": 6,
+          "x": 24,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "name": "tall",
+      "parts": [
+        {
+          "tile": 7,
+          "x": 0,
+          "y": -24
+        },
+        {
+          "tile": 8,
+          "x": 8,
+          "y": 16
+        }
+      ]
+    }
+  ]
+}

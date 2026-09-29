@@ -114,6 +114,8 @@ func (g *Game) startRun() {
 	g.runEWRAMUsed = 0
 	g.runEWRAMFree = 0
 	g.runIWRAMUsed = 0
+	g.runMemoryReady = false
+	g.runPoseMemory = build.PoseMemoryReport{}
 	g.runMu.Unlock()
 	projectDir := g.model.Dir
 	go func() {
@@ -320,6 +322,9 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		g.runEWRAMUsed = launch.result.EWRAMUsed
 		g.runEWRAMFree = launch.result.EWRAMFree
 		g.runIWRAMUsed = launch.result.IWRAMUsed
+		g.runMemoryReady = true
+		g.runPoseMemory = launch.result.PoseMemory
+		g.runPoseMemory.PoseNames = append([]string(nil), launch.result.PoseMemory.PoseNames...)
 		g.runGeneratedGo = launch.result.GeneratedGo
 		g.runRendererRequested = launch.result.RendererRequested.String()
 		g.runRendererSelected = launch.result.Renderer.String()

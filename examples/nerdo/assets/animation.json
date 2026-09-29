@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "name": "OBJ 1",
+      "x": 0,
+      "y": 0,
+      "width": 512,
+      "height": 320
+    }
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "frames": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "fps": 6,
+      "loop": true
+    }
+  ]
+}

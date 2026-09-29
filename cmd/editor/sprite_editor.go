@@ -12,7 +12,28 @@ import (
 )
 
 func (g *Game) updateSpriteMode() {
+	if g.updatePoseNameTyping() {
+		mx, my := ebiten.CursorPosition()
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !g.poseNameEditClickKeepsFocus(mx, my) {
+			g.commitPoseNameEdit()
+			if g.poseNameEditing {
+				return
+			}
+		} else {
+			return
+		}
+	}
 	mx, my := ebiten.CursorPosition()
+	if g.updateSpriteBankToggle(mx, my) {
+		return
+	}
+	if g.animationWorkspaceActive() {
+		g.updateAnimationWorkspace(mx, my)
+		return
+	}
+	if g.objEditing && g.updateObjPageHeader(mx, my) {
+		return
+	}
 	if g.spritePaste != nil {
 		g.updateSpritesheetPanel(mx, my)
 		g.updateCopyPaste()
@@ -21,8 +42,13 @@ func (g *Game) updateSpriteMode() {
 	g.updateSpriteCanvasView(mx, my)
 	g.updateSpriteTools(mx, my)
 	g.updatePixelCanvas(mx, my)
-	g.updateFlags(mx, my)
+	if !g.objEditing {
+		g.updateFlags(mx, my)
+	} else {
+		g.updateObjTileReuse(mx, my)
+	}
 	g.updateSpritesheetPanel(mx, my)
+	g.updatePoseStrip(mx, my)
 	g.updatePaletteSwatches(mx, my)
 	g.updateColorPicker(mx, my)
 	g.updateSpriteKeyboard()
@@ -31,6 +57,16 @@ func (g *Game) updateSpriteMode() {
 
 func (g *Game) drawSpriteMode(screen *ebiten.Image) {
 	g.drawSpriteWorkspaceHeader(screen)
+	if g.animationWorkspaceActive() {
+		g.drawAnimationWorkspace(screen)
+		return
+	}
+	// OBJ sheets are stored sparsely. Flatten once per requested draw rather
+	// than searching thousands of records for each displayed pixel.
+	if g.objEditing && g.model != nil && g.model.ObjSheet != nil {
+		g.objDrawPixels = g.objectTileUsage().pixels
+		defer func() { g.objDrawPixels = nil }()
+	}
 	drawSpriteWorkbenchPanel(screen, spriteCanvasPanelRect)
 	drawSpriteWorkbenchPanel(screen, spriteToolsPanelRect)
 	drawSpriteWorkbenchPanel(screen, spritePalettePanelRect)
@@ -42,8 +78,13 @@ func (g *Game) drawSpriteMode(screen *ebiten.Image) {
 	g.drawPixelCanvas(screen)
 	g.drawSpriteCanvasChrome(screen)
 	g.drawSpriteTools(screen)
-	g.drawFlags(screen)
+	if !g.objEditing {
+		g.drawFlags(screen)
+	} else {
+		g.drawObjTileReuse(screen)
+	}
 	g.drawSpritesheetPanel(screen)
+	g.drawPoseStrip(screen)
 	g.drawPaletteSwatches(screen)
 	g.drawColorPicker(screen)
 }
@@ -56,7 +97,79 @@ func (g *Game) drawSpriteWorkspaceHeader(screen *ebiten.Image) {
 	logoW, _ := drawMtileHeaderLogo(screen, r.X+16, r.Y+13, 190, 38)
 	titleX := r.X + 16 + logoW + 24
 	drawTextScale(screen, "SPRITE LAB", titleX, r.Y+3, 2, colorSprite)
-	drawSmallText(screen, "PIXEL ART · TILESET AUTHORING", titleX, r.Y+39, rgba(colorSprite, 220))
+	subtitle := "SHARED TILES · map / spr / sspr"
+	if g.objEditing {
+		subtitle = "POSES · DRAW / PASTE → REGISTER POSE"
+		if g.animationWorkspaceActive() {
+			subtitle = "ANIMATIONS · CHOOSE POSES → PREVIEW → REGISTER CLIP"
+		}
+	}
+	bg, _, _ := spriteWorkspaceTabRects()
+	subtitle = truncateUIText(subtitle, bg.X-titleX-16)
+	drawSmallText(screen, subtitle, titleX, r.Y+39, rgba(colorSprite, 220))
+	g.drawSpriteBankToggle(screen)
+	g.drawPoseBankHint(screen)
+}
+
+func spriteBankToggleRects() (bg, obj editor.Rect) {
+	bg, obj, _ = spriteWorkspaceTabRects()
+	return bg, obj
+}
+
+func spriteWorkspaceTabRects() (shared, poses, animations editor.Rect) {
+	r := spriteHeaderRect
+	animations = editor.Rect{X: r.X + r.W - 152, Y: r.Y + 16, W: 132, H: 28}
+	poses = editor.Rect{X: animations.X - 112, Y: animations.Y, W: 104, H: 28}
+	shared = editor.Rect{X: poses.X - 140, Y: poses.Y, W: 132, H: 28}
+	return shared, poses, animations
+}
+
+func (g *Game) drawSpriteBankToggle(screen *ebiten.Image) {
+	bg, poses, animations := spriteWorkspaceTabRects()
+	drawBankToggle(screen, bg, "SHARED TILES", !g.objEditing)
+	drawBankToggle(screen, poses, "POSES", g.objEditing && !g.animationWorkspaceActive())
+	drawBankToggle(screen, animations, "ANIMATIONS", g.animationWorkspaceActive())
+}
+
+func drawBankToggle(screen *ebiten.Image, r editor.Rect, label string, active bool) {
+	fill := color.RGBA{R: 24, G: 25, B: 48, A: 255}
+	ink := colorDim
+	if active {
+		fill = colorSprite
+		ink = color.RGBA{R: 18, G: 18, B: 32, A: 255}
+	}
+	fillRoundedRect(screen, r, 6, fill)
+	strokeRoundedRect(screen, r, 6, colorBorder)
+	drawSmallTextCentered(screen, label, r, ink)
+}
+
+func (g *Game) updateSpriteBankToggle(mx, my int) bool {
+	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return false
+	}
+	bg, poses, animations := spriteWorkspaceTabRects()
+	switch {
+	case rectContains(bg, mx, my):
+		g.setAnimationWorkspaceActive(false)
+		_ = g.setObjEditing(false)
+	case rectContains(poses, mx, my), rectContains(animations, mx, my):
+		if !g.objEditing {
+			if err := g.setObjEditing(true); err != nil {
+				g.statusMsg = err.Error()
+				return true
+			}
+		}
+		g.setAnimationWorkspaceActive(rectContains(animations, mx, my))
+	default:
+		return false
+	}
+	g.spritePaste = nil
+	g.copiedSprite.cut = nil
+	g.sheetSelectionDragging = false
+	g.objPageNameEditing = false
+	g.cancelPoseNameEdit()
+	g.requestRender()
+	return true
 }
 
 func drawSpriteWorkbenchPanel(screen *ebiten.Image, r editor.Rect) {
@@ -125,25 +238,59 @@ func (g *Game) spriteGridCols() int {
 	if g == nil || g.gridCols < gridCellsMin {
 		return gridCellsMin
 	}
-	if g.gridCols > gridCellsMax {
-		return gridCellsMax
+	limit := g.spriteSelectionLimitCols()
+	if g.objEditing && g.spriteCols() > 0 {
+		p := g.currentObjPageRect()
+		limit = min(limit, (p.X+p.W)/8-g.currentSprite%g.spriteCols())
 	}
-	return g.gridCols
+	return max(1, min(g.gridCols, limit))
 }
 
 func (g *Game) spriteGridRows() int {
 	if g == nil || g.gridRows < gridCellsMin {
 		return gridCellsMin
 	}
-	if g.gridRows > gridCellsMax {
-		return gridCellsMax
+	limit := g.spriteSelectionLimitRows()
+	if g.objEditing && g.spriteCols() > 0 {
+		p := g.currentObjPageRect()
+		limit = min(limit, (p.Y+p.H)/8-g.currentSprite/g.spriteCols())
 	}
-	return g.gridRows
+	return max(1, min(g.gridRows, limit))
+}
+
+func (g *Game) spriteSelectionLimitCols() int {
+	if g != nil && g.objEditing {
+		return max(gridCellsMin, g.currentObjPageRect().W/8)
+	}
+	return gridCellsMax
+}
+
+func (g *Game) spriteSelectionLimitRows() int {
+	if g != nil && g.objEditing {
+		return max(gridCellsMin, g.currentObjPageRect().H/8)
+	}
+	return gridCellsMax
 }
 
 func (g *Game) gridPixelsW() int { return 8 * g.spriteGridCols() }
 
 func (g *Game) gridPixelsH() int { return 8 * g.spriteGridRows() }
+
+// selectionPixelBlock is the in-sheet pixel rectangle of the current
+// multi-sprite selection. Bracket-key grids can outrun the sheet edge;
+// copy, paste, and erase use only the cells that still exist.
+func (g *Game) selectionPixelBlock() (startCol, startRow, width, height int, ok bool) {
+	if g == nil || g.spriteN() <= 0 || g.currentSprite < 0 || g.currentSprite >= g.spriteN() {
+		return 0, 0, 0, 0, false
+	}
+	startRow, startCol = g.baseSpriteRowCol()
+	tileCols := min(g.spriteGridCols(), g.spriteCols()-startCol)
+	tileRows := min(g.spriteGridRows(), g.spriteRows()-startRow)
+	if tileCols <= 0 || tileRows <= 0 {
+		return 0, 0, 0, 0, false
+	}
+	return startCol, startRow, tileCols * 8, tileRows * 8, true
+}
 
 func (g *Game) canvasPixelScale() float64 {
 	gridW, gridH := g.gridPixelsW(), g.gridPixelsH()
@@ -390,14 +537,20 @@ func (g *Game) paintPixel(id, px, py, colorIndex int) bool {
 	if cols == 0 || id < 0 || id >= g.spriteN() {
 		return false
 	}
-	if editor.SpriteIsReserved(id) {
+	if g.spriteIsReserved(id) {
 		g.statusMsg = reservedSpriteLockedMessage(id)
 		return false
 	}
 	if g.pixelAt((id%cols)*8+px, (id/cols)*8+py) == colorIndex {
 		return false
 	}
-	if err := g.model.SetSpritePixel(id, px, py, colorIndex); err != nil {
+	var err error
+	if g.objEditing {
+		err = g.model.SetObjSpritePixel(id, px, py, colorIndex)
+	} else {
+		err = g.model.SetSpritePixel(id, px, py, colorIndex)
+	}
+	if err != nil {
 		g.statusMsg = err.Error()
 		return false
 	}
@@ -530,7 +683,7 @@ func (g *Game) drawReservedSpriteCanvasLock(screen *ebiten.Image) {
 		return
 	}
 	id := baseRow*cols + baseCol
-	if id == editor.ReservedSpriteID {
+	if !g.objEditing && id == editor.ReservedSpriteID {
 		r := g.canvasPixelBounds(0, 0, 8, 8)
 		var visible bool
 		r, visible = intersectEditorRects(r, canvasRect)
@@ -566,7 +719,7 @@ func (g *Game) drawReservedSpriteCanvasLock(screen *ebiten.Image) {
 		drawSmallText(screen, "SELECT SPRITE 1 TO DRAW", card.X+76, card.Y+68, colorDim)
 		return
 	}
-	if !editor.SpriteIsReserved(id) || g.spriteGridRows() != 1 || g.spriteGridCols() != 1 {
+	if !g.spriteIsReserved(id) || g.spriteGridRows() != 1 || g.spriteGridCols() != 1 {
 		return
 	}
 	r := g.canvasPixelBounds(0, 0, 8, 8)
@@ -734,15 +887,27 @@ func (g *Game) drawFlags(screen *ebiten.Image) {
 }
 
 func (g *Game) sheetGridCanvas() editor.Rect {
+	height := max(1, sheetPanelRect.H-spritePanelContentOffset()-10)
+	y := spritePanelContentY(sheetPanelRect)
+	if g.objEditing {
+		height = max(1, height-animationDockHeight-poseStripGap-objPageBarHeight)
+		y += objPageBarHeight
+	} else if g.showsPoseStrip() {
+		height = max(1, height-poseStripHeight()-poseStripGap)
+	}
 	return editor.Rect{
 		X: sheetPanelRect.X + 10,
-		Y: spritePanelContentY(sheetPanelRect),
+		Y: y,
 		W: max(1, sheetPanelRect.W-20),
-		H: max(1, sheetPanelRect.H-spritePanelContentOffset()-10),
+		H: height,
 	}
 }
 
 func (g *Game) fitSheetCamera() {
+	if g.objEditing {
+		g.fitObjPageCamera()
+		return
+	}
 	canvas := g.sheetGridCanvas()
 	cols, rows := g.spriteCols(), g.spriteRows()
 	if cols <= 0 || rows <= 0 || canvas.W <= 0 || canvas.H <= 0 {
@@ -762,6 +927,10 @@ func (g *Game) fitSheetCamera() {
 // axis to the panel's leading edge. A fitted sheet should read like an editor
 // grid that starts below its header, not a preview floating in letterboxing.
 func (g *Game) clampSheetCamera(canvas editor.Rect) {
+	if g.objEditing {
+		g.clampObjPageCamera(canvas)
+		return
+	}
 	cols, rows := g.spriteCols(), g.spriteRows()
 	g.sheetCam.Clamp(cols, rows, canvas)
 	spanX, spanY := g.sheetCam.VisibleSpan(canvas)
@@ -778,23 +947,33 @@ func (g *Game) clampSheetCamera(canvas editor.Rect) {
 // cursor can be outside the sheet while dragging; both axes stay bounded by
 // the sheet and by the editor's 16x16 selection limit.
 func spritesheetDragSelection(anchorCol, anchorRow, cursorCol, cursorRow, sheetCols, sheetRows int) (col, row, cols, rows int, ok bool) {
+	return spritesheetDragSelectionLimit(anchorCol, anchorRow, cursorCol, cursorRow, sheetCols, sheetRows, gridCellsMax, gridCellsMax)
+}
+
+func spritesheetDragSelectionLimit(anchorCol, anchorRow, cursorCol, cursorRow, sheetCols, sheetRows, limitCols, limitRows int) (col, row, cols, rows int, ok bool) {
 	if sheetCols <= 0 || sheetRows <= 0 || anchorCol < 0 || anchorCol >= sheetCols || anchorRow < 0 || anchorRow >= sheetRows {
 		return 0, 0, 0, 0, false
 	}
-	cursorCol = min(max(cursorCol, max(0, anchorCol-gridCellsMax+1)), min(sheetCols-1, anchorCol+gridCellsMax-1))
-	cursorRow = min(max(cursorRow, max(0, anchorRow-gridCellsMax+1)), min(sheetRows-1, anchorRow+gridCellsMax-1))
+	cursorCol = min(max(cursorCol, max(0, anchorCol-limitCols+1)), min(sheetCols-1, anchorCol+limitCols-1))
+	cursorRow = min(max(cursorRow, max(0, anchorRow-limitRows+1)), min(sheetRows-1, anchorRow+limitRows-1))
 	col, row = min(anchorCol, cursorCol), min(anchorRow, cursorRow)
 	return col, row, max(anchorCol, cursorCol) - col + 1, max(anchorRow, cursorRow) - row + 1, true
 }
 
 func (g *Game) selectSpritesheetDrag(cursorCol, cursorRow, sheetCols, sheetRows int) {
-	col, row, cols, rows, ok := spritesheetDragSelection(
+	if g.objEditing {
+		p := g.currentObjPageRect()
+		cursorCol = min(max(cursorCol, p.X/8), (p.X+p.W)/8-1)
+		cursorRow = min(max(cursorRow, p.Y/8), (p.Y+p.H)/8-1)
+	}
+	col, row, cols, rows, ok := spritesheetDragSelectionLimit(
 		g.sheetSelectionAnchorCol,
 		g.sheetSelectionAnchorRow,
 		cursorCol,
 		cursorRow,
 		sheetCols,
 		sheetRows,
+		g.spriteSelectionLimitCols(), g.spriteSelectionLimitRows(),
 	)
 	if !ok {
 		return
@@ -802,6 +981,7 @@ func (g *Game) selectSpritesheetDrag(cursorCol, cursorRow, sheetCols, sheetRows 
 	g.currentSprite = row*sheetCols + col
 	g.gridCols, g.gridRows = cols, rows
 	g.clampSpriteCanvasPan()
+	g.syncPoseSelectionFromSprite(g.currentSprite)
 }
 
 func (g *Game) updateSpritesheetPanel(mx, my int) {
@@ -810,11 +990,12 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 
 	if rectContains(canvas, mx, my) {
 		if _, yoff := ebiten.Wheel(); yoff != 0 {
-			g.sheetCam.Pan(0, -yoff, canvas, cols, rows)
+			g.sheetCam.Y -= yoff
+			g.clampSheetCamera(canvas)
 		}
 		if g.spritePaste != nil {
 			col, row, ok := g.sheetCam.ScreenToTile(mx, my, canvas)
-			if ok && col >= 0 && row >= 0 && col < cols && row < rows {
+			if ok && col >= 0 && row >= 0 && col < cols && row < rows && (!g.objEditing || g.objPageContains(col, row)) {
 				g.moveSpritePastePlacement(col, row)
 				if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 					_ = g.commitSpritePastePlacement()
@@ -826,7 +1007,18 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 		}
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			col, row, ok := g.sheetCam.ScreenToTile(mx, my, canvas)
-			if ok && col >= 0 && row >= 0 && col < cols && row < rows {
+			if ok && col >= 0 && row >= 0 && col < cols && row < rows && (!g.objEditing || g.objPageContains(col, row)) {
+				if g.showsPoseStrip() && ebiten.IsKeyPressed(ebiten.KeyShift) {
+					g.togglePoseTile(row*cols + col)
+					g.sheetSelectionDragging = false
+					g.clampSheetCamera(canvas)
+					return
+				}
+				if g.beginPoseNameEditAt(mx, my) {
+					g.sheetSelectionDragging = false
+					g.clampSheetCamera(canvas)
+					return
+				}
 				g.sheetSelectionDragging = true
 				g.sheetSelectionAnchorCol, g.sheetSelectionAnchorRow = col, row
 				g.selectSpritesheetDrag(col, row, cols, rows)
@@ -851,35 +1043,57 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 	canvas := g.sheetGridCanvas()
 	cols, rows := g.spriteCols(), g.spriteRows()
-	title := "SPRITESHEET"
+	title := "SHARED TILES"
+	if g.showsPoseStrip() {
+		title = fmt.Sprintf("TILE SHEET  ·  %d FRAMES", len(g.authoredPoses()))
+	}
 	titleX, titleY := spritePanelTitlePosition(sheetPanelRect)
-	drawText(screen, title, titleX, titleY, colorText)
-	meta := fmt.Sprintf("%d × %d  ·  %d SPRITES", cols, rows, cols*rows)
+	meta := fmt.Sprintf("%d × %d  ·  %d TILES", cols, rows, cols*rows)
 	metaY := spritePanelMetaY(sheetPanelRect)
-	drawSmallText(screen, meta, titleX+uiTextWidth(title)+smallTextWidth("  "), metaY, colorDim)
+	if g.objEditing {
+		g.drawObjPageHeader(screen)
+	} else {
+		drawText(screen, title, titleX, titleY, colorText)
+		drawSmallText(screen, meta, titleX+uiTextWidth(title)+smallTextWidth("  "), metaY, colorDim)
+	}
 	fillRoundedRect(screen, canvas, 5, colorInk)
 	strokeRoundedRect(screen, canvas, 5, rgba(colorBorder, 180))
-	drawCheckerboardColors(screen, canvas, colorSheetCheckerA, colorSheetCheckerB)
+	board := g.sheetContentClip(canvas)
+	drawCheckerboardColors(screen, board, colorSheetCheckerA, colorSheetCheckerB)
 
 	minC, minR, maxC, maxR := g.sheetCam.VisibleBounds(canvas, cols, rows)
+	if g.objEditing {
+		p := g.currentObjPageRect()
+		minC, minR = max(minC, p.X/8), max(minR, p.Y/8)
+		maxC, maxR = min(maxC, (p.X+p.W)/8), min(maxR, (p.Y+p.H)/8)
+	}
 	tileW, tileH := g.sheetCam.TileSize(), g.sheetCam.TileSizeY()
 	for row := minR; row < maxR; row++ {
 		for col := minC; col < maxC; col++ {
 			cell := sheetCameraRect(g.sheetCam, canvas, col, row, 1, 1)
 			id := row*cols + col
 			g.drawSpriteThumb(screen, id, float64(cell.X), float64(cell.Y), float64(cell.W), float64(cell.H), cell)
-			if spriteSheetCellShowsLock(id) {
+			if !g.objEditing && spriteSheetCellShowsLock(id) {
 				drawSpriteLockOverlay(screen, cell)
 			}
 		}
 	}
 	sheetLeft, sheetTop := g.sheetCam.WorldToScreen(0, 0, canvas)
+	gridW, gridH := cols*8, rows*8
+	if g.objEditing {
+		p := g.currentObjPageRect()
+		sheetLeft, sheetTop = g.sheetCam.WorldToScreen(p.X/8, p.Y/8, canvas)
+		gridW, gridH = p.W, p.H
+	}
 	// Keep the sheet at tile-level resolution. Drawing every source-pixel line
 	// at this fitted scale overwhelms the checkerboard and makes the sheet look
 	// much brighter than the editing canvas.
-	drawSpritePixelGrid(screen, sheetLeft, sheetTop, tileW/8, tileH/8, cols*8, rows*8, canvas, false)
+	drawSpritePixelGrid(screen, sheetLeft, sheetTop, tileW/8, tileH/8, gridW, gridH, board, false)
+	g.drawPoseSheetOverlays(screen, canvas)
 	g.drawSpritePastePreview(screen, canvas)
 	g.drawSelectionBorder(screen, canvas)
+	g.drawObjTileMatches(screen, canvas)
+	g.drawSpriteCutSource(screen, canvas)
 }
 
 // drawSpritePastePreview renders the clipboard image at its prospective sheet
@@ -892,7 +1106,8 @@ func (g *Game) drawSpritePastePreview(screen *ebiten.Image, canvas editor.Rect) 
 		return
 	}
 	region := sheetCameraRect(g.sheetCam, canvas, placement.startCol, placement.startRow, placement.tileCols(), placement.tileRows())
-	visible, ok := intersectEditorRects(region, canvas)
+	clip := g.sheetContentClip(canvas)
+	visible, ok := intersectEditorRects(region, clip)
 	if !ok {
 		return
 	}
@@ -912,13 +1127,13 @@ func (g *Game) drawSpritePastePreview(screen *ebiten.Image, canvas editor.Rect) 
 			}
 			x, w := scaledRun(originX, px, scaleX)
 			y, h := scaledRun(originY, py, scaleY)
-			target, targetVisible := intersectEditorRects(editor.Rect{X: x, Y: y, W: w, H: h}, canvas)
+			target, targetVisible := intersectEditorRects(editor.Rect{X: x, Y: y, W: w, H: h}, clip)
 			if targetVisible {
 				fillRect(screen, target, rgba(g.swatch(pixel), 185))
 			}
 		}
 	}
-	if outline, outlineVisible := spritesheetSelectionOutlineRect(region, canvas); outlineVisible {
+	if outline, outlineVisible := spritesheetSelectionOutlineRect(region, clip); outlineVisible {
 		strokeRect(screen, outline, rgba(accent, 245))
 		if outline.W > 4 && outline.H > 4 {
 			strokeRect(screen, editor.Rect{X: outline.X + 1, Y: outline.Y + 1, W: outline.W - 2, H: outline.H - 2}, rgba(accent, 115))
@@ -1018,7 +1233,7 @@ func scaledRun(origin float64, i int, scale float64) (start, size int) {
 func (g *Game) drawSelectionBorder(screen *ebiten.Image, canvas editor.Rect) {
 	baseRow, baseCol := g.baseSpriteRowCol()
 	selection := sheetCameraRect(g.sheetCam, canvas, baseCol, baseRow, g.spriteGridCols(), g.spriteGridRows())
-	r, ok := spritesheetSelectionOutlineRect(selection, canvas)
+	r, ok := spritesheetSelectionOutlineRect(selection, g.sheetContentClip(canvas))
 	if !ok {
 		return
 	}
@@ -1033,9 +1248,11 @@ func spritesheetSelectionOutlineRect(selection, canvas editor.Rect) (editor.Rect
 	return editor.Rect{X: visible.X + 1, Y: visible.Y + 1, W: visible.W - 2, H: visible.H - 2}, true
 }
 
-func cycleGridCells(n, delta int) int {
-	span := gridCellsMax - gridCellsMin + 1
-	if n < gridCellsMin || n > gridCellsMax {
+func cycleGridCells(n, delta int) int { return cycleGridCellsLimit(n, delta, gridCellsMax) }
+
+func cycleGridCellsLimit(n, delta, limit int) int {
+	span := limit - gridCellsMin + 1
+	if n < gridCellsMin || n > limit {
 		n = gridCellsMin
 	}
 	n += delta
@@ -1047,11 +1264,11 @@ func cycleGridCells(n, delta int) int {
 }
 
 func (g *Game) nudgeGridCols(delta int) {
-	g.gridCols = cycleGridCells(g.spriteGridCols(), delta)
+	g.gridCols = cycleGridCellsLimit(g.spriteGridCols(), delta, g.spriteSelectionLimitCols())
 }
 
 func (g *Game) nudgeGridRows(delta int) {
-	g.gridRows = cycleGridCells(g.spriteGridRows(), delta)
+	g.gridRows = cycleGridCellsLimit(g.spriteGridRows(), delta, g.spriteSelectionLimitRows())
 }
 
 func (g *Game) updateSpriteKeyboard() {
@@ -1113,12 +1330,16 @@ func (g *Game) updateSpriteKeyboard() {
 	if newRow < 0 || newRow >= g.spriteRows() || newCol < 0 || newCol >= g.spriteCols() {
 		return
 	}
+	if g.objEditing && !g.objPageContains(newCol, newRow) {
+		return
+	}
 	g.currentSprite = newRow*g.spriteCols() + newCol
+	g.syncPoseSelectionFromSprite(g.currentSprite)
 	g.lastNav = now
 }
 
 func (g *Game) updateCopyPaste() {
-	if g.spritePaste != nil && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	if (g.spritePaste != nil || g.copiedSprite.cut != nil) && inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		g.cancelSpritePastePlacement()
 		return
 	}
@@ -1128,6 +1349,9 @@ func (g *Game) updateCopyPaste() {
 		return
 	}
 	if !mod {
+		if g.spritePaste == nil && (inpututil.IsKeyJustPressed(ebiten.KeyDelete) || inpututil.IsKeyJustPressed(ebiten.KeyBackspace)) {
+			g.eraseCurrentSpriteSelection()
+		}
 		return
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
@@ -1135,53 +1359,92 @@ func (g *Game) updateCopyPaste() {
 		g.statusMsg = ""
 		g.copyCurrentSprite()
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyV) {
+	if g.objEditing && inpututil.IsKeyJustPressed(ebiten.KeyX) {
+		g.cutCurrentSprite()
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyV) || (g.objEditing && inpututil.IsKeyJustPressed(ebiten.KeyP)) {
 		g.pasteSpriteClipboard()
 	}
 }
 
 func (g *Game) copyCurrentSprite() {
-	cols := g.spriteCols()
-	if cols == 0 || g.currentSprite < 0 || g.currentSprite >= g.spriteN() {
+	g.spritePaste = nil
+	sheet := g.activeSheet()
+	startCol, startRow, width, height, ok := g.selectionPixelBlock()
+	if sheet == nil || !ok {
 		g.hasCopied = false
+		g.copiedSprite = spriteCopyBuffer{}
 		return
 	}
-	baseCol, baseRow := g.currentSprite%cols, g.currentSprite/cols
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 8; x++ {
-			g.copiedSprite[y][x] = g.pixelAt(baseCol*8+x, baseRow*8+y)
-		}
-	}
+	pixels := spriteSelectionPixels(sheet, startCol, startRow, width, height)
+	g.copiedSprite = spriteCopyBuffer{width: width, height: height, pixels: pixels}
 	g.hasCopied = true
+	g.captureSpriteCopyClipboard()
+	if g.objEditing {
+		g.statusMsg = "Tiles copied · Cmd/Ctrl+P or V, then click a destination · Esc cancels"
+		g.requestRender()
+	}
 }
 
-// pasteCurrentSprite applies the copy buffer to currentSprite. It validates
-// every buffered color index against the active palette before writing any
-// pixel: the buffer may have been copied while a wider palette was active
-// (up to 256 colors), and pasting under a narrower one without this
-// preflight would let paintPixel silently apply only the in-range pixels
-// while leaving the rest of the sprite untouched, with no clear indication
-// that the paste was incomplete.
 func (g *Game) pasteCurrentSprite() {
-	if !g.hasCopied {
+	if !g.hasCopied || g.copiedSprite.width <= 0 || g.copiedSprite.height <= 0 {
 		return
 	}
-	if editor.SpriteIsReserved(g.currentSprite) {
-		g.statusMsg = reservedSpriteLockedMessage(g.currentSprite)
+	startRow, startCol := g.baseSpriteRowCol()
+	placement := &spritePastePlacement{
+		pixels:      append([]int(nil), g.copiedSprite.pixels...),
+		pixelWidth:  g.copiedSprite.width,
+		pixelHeight: g.copiedSprite.height,
+		startCol:    startCol,
+		startRow:    startRow,
+	}
+	if err := g.spritePasteTargetError(placement, startCol, startRow); err != nil {
+		id := startRow*g.spriteCols() + startCol
+		if g.spriteIsReserved(id) {
+			g.statusMsg = reservedSpriteLockedMessage(id)
+			return
+		}
+		g.statusMsg = err.Error()
 		return
 	}
-	limit := g.paintableColorCount()
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 8; x++ {
-			if c := g.copiedSprite[y][x]; c < 0 || c >= limit {
-				g.statusMsg = fmt.Sprintf("copied sprite uses color %d, outside the active palette's %d colors", c, limit)
-				return
-			}
-		}
+	changed, err := g.setActiveSpritePixelBlock(startCol, startRow, placement.pixelWidth, placement.pixelHeight, placement.pixels)
+	if err != nil {
+		g.statusMsg = err.Error()
+		return
 	}
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 8; x++ {
-			g.paintPixel(g.currentSprite, x, y, g.copiedSprite[y][x])
+	g.gridCols, g.gridRows = placement.tileCols(), placement.tileRows()
+	g.spriteShapeActive = false
+	g.statusMsg = ""
+	if !changed {
+		return
+	}
+	g.dirty = true
+	if err := g.refreshPreview(); err != nil {
+		g.statusMsg = err.Error()
+	}
+}
+
+func (g *Game) eraseCurrentSpriteSelection() {
+	startCol, startRow, width, height, ok := g.selectionPixelBlock()
+	if !ok {
+		return
+	}
+	changed, err := g.model.EraseSpritePixelBlock(g.objEditing, startCol, startRow, width, height)
+	if err != nil {
+		id := startRow*g.spriteCols() + startCol
+		if g.spriteIsReserved(id) {
+			g.statusMsg = reservedSpriteLockedMessage(id)
+			return
 		}
+		g.statusMsg = err.Error()
+		return
+	}
+	g.statusMsg = ""
+	if !changed {
+		return
+	}
+	g.dirty = true
+	if err := g.refreshPreview(); err != nil {
+		g.statusMsg = err.Error()
 	}
 }

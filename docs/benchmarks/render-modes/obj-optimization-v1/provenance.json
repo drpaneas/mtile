@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "nativePlayerSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "harness": "cmd/renderbench/obj_optimization_diagnostic_test.go",
+  "harnessSHA256": "388b4156055379b5f1ebfee6edf49fe72c75e7e4ea1fc8f2d337e27ecbdc7386",
+  "gitRevision": "b69fc87ace499b490183c7ebca4383db80ecfaa4",
+  "sourceTreeWasDirty": true,
+  "baselineSourceDirectory": "/private/tmp/mtile-obj-optimization-20260924/baseline-source",
+  "phase1SourceDirectory": "/private/tmp/mtile-obj-optimization-20260924/optimized-source",
+  "nativeArtifactDirectories": {
+    "baseline": "/private/tmp/mtile-obj-optimization-20260924/baseline-native",
+    "phase1": "/private/tmp/mtile-obj-optimization-20260924/optimized-native",
+    "phase2": "/private/tmp/mtile-obj-optimization-20260924/phase2-native"
+  },
+  "sourceManifests": {
+    "baseline-source-manifest.json": {
+      "path": "/private/tmp/mtile-obj-optimization-20260924/baseline-source-manifest.json",
+      "sha256": "5b3531ad1bc6a38d91b54af684648a2567c3e92bcbbe216547b57b9678f4cedb"
+    },
+    "optimized-source-manifest.json": {
+      "path": "/private/tmp/mtile-obj-optimization-20260924/optimized-source-manifest.json",
+      "sha256": "4f9783973c002cacd0f10ffc10a24508186edc866da3215cb50fd646d716a01a"
+    },
+    "phase2-source-manifest.json": {
+      "path": "/private/tmp/mtile-obj-optimization-20260924/phase2-source-manifest.json",
+      "sha256": "6fec7d4f8eb7626f233aca3730b212f21e4e4a8fcd231484d29f2c1b5e9c7461"
+    }
+  },
+  "changedProductionFiles": [
+    {
+      "path": "internal/transpiler/animation.go",
+      "baselineSHA256": "4744eeea8a0440b1de3c7181fc848963ef391a475dc2104f35e9338324d3158f",
+      "phase1SHA256": "c2d256bc893bb8ea0c113b11c4cbcf2bbc642f905510afc2665c5d4375e4871d"
+    },
+    {
+      "path": "internal/transpiler/transpiler.go",
+      "baselineSHA256": "ae7e56346a7db5d10983d913d23ad00b48bf74249dd631725f172ecc8cae72d7",
+      "phase1SHA256": "1ba67174874eb0b82b8fc784f355c895a1fc95144602ea370473eb17ae56263f"
+    },
+    {
+      "path": "runtime/animation.go",
+      "baselineSHA256": "a8d205eb5f7e7315cf816828610060582bbb53b459d5446af32ceb37726a2e0b",
+      "phase1SHA256": "a8a6616921a6ede806797f446eb75ef8256e786e09274dd822283a274e8eb35d"
+    },
+    {
+      "path": "runtime/mode0_obj_pack.go",
+      "baselineSHA256": "c5a2bc275fc3e1e5fbf38ca2362a8c85747957e905394ab2f6827e507172a578",
+      "phase1SHA256": "00e28e84179ecf53ecafbab33af94555494813053e524b61e750b3cfe5d0f523"
+    },
+    {
+      "path": "runtime/mode0_obj_pack_disabled.go",
+      "baselineSHA256": "0bce2c2554a680652dd42072bafbf5e9b9cc96a70e33223a66418eca6bf5205f",
+      "phase1SHA256": "ae40e7aaf729b4cf1f34fcf7d3a6ad3158f8d2a1903a2b7476983232947c12b5"
+    },
+    {
+      "path": "runtime/mode0_pose.go",
+      "baselineSHA256": "534568eb35cefbd46743f6c285cff4ef049745aea722d822e605830e28942538",
+      "phase1SHA256": "4ec5dcf933c316463571e7781dcd98022d28322b5f83b4e4833a791c2f65d6b2"
+    },
+    {
+      "path": "runtime/mode0_text.go",
+      "baselineSHA256": "68c62cd6ebc9e24106318c118883ce066f544e8d6297a96794e2faac557b14d6",
+      "phase1SHA256": "24cd1f14019a3e9c40f4590bf6fa926b059997da73024d37a8ab5f20198aa95f"
+    },
+    {
+      "path": "runtime/mode0_text_disabled.go",
+      "baselineSHA256": "6f8cb368aea9e64aa8664bd2574161b139ed19452e0cb6a082cc8ae6b28b2c4a",
+      "phase1SHA256": "3e85f15817602b71c2a82b5c2213c0e0e592fcc1da8ac56c89c6dc0bc3e21b4c"
+    }
+  ],
+  "configuration": {
+    "debug": true,
+    "warmupRuntimeFrames": 2,
+    "capturedRuntimeFrames": 120,
+    "runtimeFramesPerSecond": 30,
+    "frameBudgetCycles": 561792,
+    "usableVBlankCycles": 82544,
+    "sameSourceProjectsBothPhases": true,
+    "allSampledGameFramesExactBeforeAfter": true,
+    "allLCDScansExactBeforeAfter": true,
+    "nativeArtifacts": [
+      "ROM",
+      "ELF",
+      "linker map",
+      "generated Go",
+      "target JSON",
+      "module file",
+      "final PNG"
+    ],
+    "ewramUsableBytes": 261632,
+    "iwramUsableBytes": 32672,
+    "ewramPhysicalBytes": 262144,
+    "iwramPhysicalBytes": 32768,
+    "memoryNote": "Static linked RAM includes runtime state; IWRAM includes reserved stacks. Free counts exclude the reserved EWRAM debug mailbox and IWRAM tail."
+  },
+  "library180": {
+    "heroes": 6,
+    "posesPerHero": 30,
+    "poseWidth": 40,
+    "poseHeight": 80,
+    "poseCount": 180,
+    "poseParts": 9000,
+    "uniqueNonemptyCells": 9000,
+    "pixelROMBytes": 576000,
+    "simultaneouslyDrawnPoses": 2,
+    "clips": 6,
+    "clipFPS": 8,
+    "sheetWidth": 480,
+    "sheetHeight": 1200,
+    "note": "The synthetic cartridge storage layout is independent of editor page organization.",
+    "measuredMode0OAMEntries": 10,
+    "measuredMode0OBJLineCycles": 80,
+    "sourceUniqueCellsIndependentlyCounted": true
+  },
+  "phase2SourceDirectory": "/private/tmp/mtile-obj-optimization-20260924/phase2-source",
+  "phase2ChangedProductionFiles": [
+    {
+      "path": "internal/assetsync/generate.go",
+      "baselineSHA256": "0c4634b7d7bc3dc322e0f4307c79573d10298da2a5f215665ca448e19b44a153",
+      "phase2SHA256": "a4d11afdea88f5ec9c434e53a3ad0b7250f14426bfa721cf8e2180d74cb5ef92"
+    },
+    {
+      "path": "internal/assetsync/objsheet_generate.go",
+      "baselineSHA256": null,
+      "phase2SHA256": "7eb3724e7c979093ab98d7067676153e6342ec90973e50aed5e8b6d58fe59ae3"
+    },
+    {
+      "path": "internal/transpiler/animation.go",
+      "baselineSHA256": "4744eeea8a0440b1de3c7181fc848963ef391a475dc2104f35e9338324d3158f",
+      "phase2SHA256": "c2d256bc893bb8ea0c113b11c4cbcf2bbc642f905510afc2665c5d4375e4871d"
+    },
+    {
+      "path": "internal/transpiler/transpiler.go",
+      "baselineSHA256": "ae7e56346a7db5d10983d913d23ad00b48bf74249dd631725f172ecc8cae72d7",
+      "phase2SHA256": "40555fc55384b6fb0423f87c3c04574edaed13b2a82142aca865ed3130922092"
+    },
+    {
+      "path": "runtime/animation.go",
+      "baselineSHA256": "a8d205eb5f7e7315cf816828610060582bbb53b459d5446af32ceb37726a2e0b",
+      "phase2SHA256": "a8a6616921a6ede806797f446eb75ef8256e786e09274dd822283a274e8eb35d"
+    },
+    {
+      "path": "runtime/mode0_obj_pack.go",
+      "baselineSHA256": "c5a2bc275fc3e1e5fbf38ca2362a8c85747957e905394ab2f6827e507172a578",
+      "phase2SHA256": "00e28e84179ecf53ecafbab33af94555494813053e524b61e750b3cfe5d0f523"
+    },
+    {
+      "path": "runtime/mode0_obj_pack_disabled.go",
+      "baselineSHA256": "0bce2c2554a680652dd42072bafbf5e9b9cc96a70e33223a66418eca6bf5205f",
+      "phase2SHA256": "ae40e7aaf729b4cf1f34fcf7d3a6ad3158f8d2a1903a2b7476983232947c12b5"
+    },
+    {
+      "path": "runtime/mode0_pose.go",
+      "baselineSHA256": "534568eb35cefbd46743f6c285cff4ef049745aea722d822e605830e28942538",
+      "phase2SHA256": "4ec5dcf933c316463571e7781dcd98022d28322b5f83b4e4833a791c2f65d6b2"
+    },
+    {
+      "path": "runtime/mode0_text.go",
+      "baselineSHA256": "68c62cd6ebc9e24106318c118883ce066f544e8d6297a96794e2faac557b14d6",
+      "phase2SHA256": "24cd1f14019a3e9c40f4590bf6fa926b059997da73024d37a8ab5f20198aa95f"
+    },
+    {
+      "path": "runtime/mode0_text_disabled.go",
+      "baselineSHA256": "6f8cb368aea9e64aa8664bd2574161b139ed19452e0cb6a082cc8ae6b28b2c4a",
+      "phase2SHA256": "3e85f15817602b71c2a82b5c2213c0e0e592fcc1da8ac56c89c6dc0bc3e21b4c"
+    }
+  ],
+  "finalPhase": "phase2",
+  "recordedEvidenceTest": "cmd/renderbench/obj_optimization_evidence_test.go"
+}

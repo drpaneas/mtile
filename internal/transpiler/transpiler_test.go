@@ -2318,7 +2318,6 @@ end
 	}{
 		{name: "ordinary-table", source: `items={1}\nfunction _update() add(items,2) end`},
 		{name: "dynamic-string", source: `message=0\nfunction _update() message=tostr(7) end`},
-		{name: "boxed-global", source: `message="static"\nfunction _draw() cls(0) end`},
 		{name: "rollback", source: heapless, options: Options{DisableHeapElision: true}},
 	} {
 		t.Run(test.name, func(t *testing.T) {

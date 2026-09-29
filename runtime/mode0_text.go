@@ -18,6 +18,10 @@ func mode0TextObjectTileReserved(id int) bool {
 	return id >= mode0TextTileBase && id < mode0TextTileBase+mode0TextLimit
 }
 
+func mode0TextObjectWindowReserved(base, count int) bool {
+	return count > 0 && base < mode0TextTileBase+mode0TextLimit && base+count > mode0TextTileBase
+}
+
 func (c *Context) beginMode0Text() {}
 
 func (c *Context) presentMode0Text() uint32 { return 0 }

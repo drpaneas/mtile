@@ -59,6 +59,15 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 	writePoseIndexArray(&b, assets.PoseIndex)
 	b.WriteString("//go:section .rodata\n")
 	writePosePartArray(&b, assets.PoseParts)
+	writeAnimationArrays(&b, assets)
+	if assets.ObjSpriteN > 0 {
+		compact, index := CompactObjectSheetCells(assets.ObjSheetROM, assets.ObjSheetW, assets.ObjSpriteN)
+		fmt.Fprintf(&b, "const (\n\tObjSheetW = %d\n\tObjSheetH = %d\n\tObjSpriteCols = %d\n\tObjSpriteRows = %d\n\tObjSpriteN = %d\n)\n\n",
+			assets.ObjSheetW, assets.ObjSheetH, assets.ObjSpriteCols, assets.ObjSpriteRows, assets.ObjSpriteN)
+		b.WriteString(ObjectSheetROMDeclaration(compact))
+		b.WriteString("//go:section .rodata\n")
+		writeUint32Array(&b, "objSheetIndexROM", index)
+	}
 
 	if nativeAudioEnabled {
 		writeNativeAudioArrays(&b, assets.NativeAudio.Library)
@@ -100,7 +109,13 @@ func InitAssets(ctx *rt.Context) bool {
 	cartData.Map = mapRAM[:]
 	cartData.Flags = flagRAM[:]
 	cartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]
+	cartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]
 `)
+	if assets.ObjSpriteN > 0 {
+		b.WriteString("\tcartData.ObjSheetW, cartData.ObjSheetH = ObjSheetW, ObjSheetH\n")
+		b.WriteString("\tcartData.ObjSpriteCols, cartData.ObjSpriteRows, cartData.ObjSpriteN = ObjSpriteCols, ObjSpriteRows, ObjSpriteN\n")
+		b.WriteString("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM.Pixels[:], objSheetIndexROM[:]\n")
+	}
 	if assets.MapStreaming {
 		b.WriteString("\tcartData.MapChunks = mapChunksRAM[:]\n\tcartData.MapEdits = mapEditsRAM[:]\n")
 	}
@@ -110,7 +125,13 @@ func InitAssets(ctx *rt.Context) bool {
 		MapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, SpriteN: SpriteN, MapStreaming: MapStreaming,
 		Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
 		PoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],
+		AnimationClips: animationClipROM[:], AnimationFrames: animationFrameROM[:],
+`)
+	if assets.ObjSpriteN > 0 {
+		b.WriteString("\t\tObjSheetW: ObjSheetW, ObjSheetH: ObjSheetH, ObjSpriteCols: ObjSpriteCols, ObjSpriteRows: ObjSpriteRows, ObjSpriteN: ObjSpriteN,\n")
+		b.WriteString("\t\tObjSheet: objSheetROM.Pixels[:], ObjSheetIndex: objSheetIndexROM[:],\n")
 	}
+	b.WriteString(`	}
 	if !ctx.Init(&image, &cartData) {
 		return false
 	}
@@ -339,6 +360,20 @@ func writeUint16Array(b *strings.Builder, name string, values []uint16) {
 	b.WriteString("}\n\n")
 }
 
+func writeUint32Array(b *strings.Builder, name string, values []uint32) {
+	fmt.Fprintf(b, "var %s = [%d]uint32{\n", name, len(values))
+	for i, value := range values {
+		if i%8 == 0 {
+			b.WriteString("\t")
+		}
+		fmt.Fprintf(b, "0x%08x, ", value)
+		if i%8 == 7 || i == len(values)-1 {
+			b.WriteByte('\n')
+		}
+	}
+	b.WriteString("}\n\n")
+}
+
 // writePoseIndexArray and writePosePartArray emit pspr's pose ROM tables.
 // Poses are read-only cart metadata with no per-cart mutation path, so both
 // stay in .rodata; an empty slice still yields a legal [0]rt.T{} array so
@@ -346,7 +381,7 @@ func writeUint16Array(b *strings.Builder, name string, values []uint16) {
 func writePoseIndexArray(b *strings.Builder, values []FlatPose) {
 	fmt.Fprintf(b, "var poseIndexROM = [%d]rt.PoseRange{\n", len(values))
 	for _, v := range values {
-		fmt.Fprintf(b, "\t{Start: %d, Count: %d},\n", v.Start, v.Count)
+		fmt.Fprintf(b, "\t{Start: %d, Count: %d, FlipOffsetX: %d, FlipOffsetY: %d},\n", v.Start, v.Count, v.FlipOffsetX, v.FlipOffsetY)
 	}
 	b.WriteString("}\n\n")
 }

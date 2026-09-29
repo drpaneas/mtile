@@ -98,3 +98,52 @@ func TestSetSpritePixelBlockKeepsTransparentUnauthoredTilesSparse(t *testing.T) 
 		t.Fatalf("empty paste changed=%t sprites=%d, want no authored record", changed, len(m.Sheet.Sprites))
 	}
 }
+
+func TestSetObjSpritePixelBlockWritesTileZero(t *testing.T) {
+	m := spriteBlockTestModel()
+	m.ObjSheet = &assetsync.Spritesheet{Width: 32, Height: 16}
+	pixels := make([]int, 16*8)
+	for i := range pixels {
+		pixels[i] = 3
+	}
+	changed, err := m.SetObjSpritePixelBlock(0, 0, 16, 8, pixels)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !changed {
+		t.Fatal("object-sheet block reported no change")
+	}
+	sprite, ok := spriteRecordByID(*m.ObjSheet, 0)
+	if !ok || sprite.Pixels[0][0] != 3 {
+		t.Fatalf("object tile 0 = %#v, want color 3", sprite)
+	}
+}
+
+func TestEraseSpritePixelBlockSkipsReservedAndClearsOthers(t *testing.T) {
+	m := spriteBlockTestModel()
+	if err := m.SetSpritePixel(1, 0, 0, 7); err != nil {
+		t.Fatal(err)
+	}
+	changed, err := m.EraseSpritePixelBlock(false, 0, 0, 16, 8)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !changed {
+		t.Fatal("erase of sprite 1 reported no change")
+	}
+	if sprite, ok := spriteRecordByID(m.Sheet, 1); !ok || sprite.Pixels[0][0] != 0 {
+		t.Fatalf("sprite 1 after erase = %#v, want color 0", sprite)
+	}
+
+	before := cloneSpritesheet(m.Sheet)
+	changed, err = m.EraseSpritePixelBlock(false, 0, 0, 8, 8)
+	if err == nil || !strings.Contains(err.Error(), "sprite 0") {
+		t.Fatalf("reserved erase err=%v, want sprite 0", err)
+	}
+	if changed {
+		t.Fatal("reserved-only erase reported a change")
+	}
+	if !reflect.DeepEqual(m.Sheet, before) {
+		t.Fatal("reserved-only erase mutated the spritesheet")
+	}
+}

@@ -23,12 +23,13 @@ const (
 	developBuild
 	developRuntime
 	developWatches
+	developMemory
 	developGenerated
 	developPanelCount
 )
 
 func (p developPanel) label() string {
-	return [...]string{"PROBLEMS", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "GENERATED GO"}[p]
+	return [...]string{"PROBLEMS", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "MEMORY", "GENERATED GO"}[p]
 }
 
 var developDiagnosticLocation = regexp.MustCompile(`(?:^|[ (])([^ :()]+\.lua):(\d+):(\d+)`)
@@ -48,17 +49,26 @@ type developLayout struct {
 }
 
 func newDevelopLayout() developLayout {
+	return newDevelopPanelLayout(developProblems)
+}
+
+func newDevelopPanelLayout(panel developPanel) developLayout {
 	const (
 		headerH                  = 72
 		sidebarW                 = 228
 		padding                  = 12
-		bottomH                  = 176
 		minimumCodeW             = 600
 		previewBezelW            = 76
 		previewBezelH            = 86
 		previewTitleH            = 30
 		previewVerticalClearance = 2
 	)
+	bottomH := 176
+	if panel == developMemory {
+		// Give the comparison room without covering the running cartridge.
+		// Compact windows retain enough stage height for a 1x GBA preview.
+		bottomH = min(336, 176+max(0, screenHeight-840))
+	}
 	contentY := editorTabsHeight
 	compact := screenWidth < 1400
 	resolvedSidebarW := sidebarW
@@ -139,7 +149,7 @@ func (g *Game) updateDevelopMode() {
 		return
 	}
 	g.pumpPlaySession()
-	layout := newDevelopLayout()
+	layout := newDevelopPanelLayout(g.developPanel)
 	mx, my := ebiten.CursorPosition()
 	clicked := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	if clicked {
@@ -165,9 +175,13 @@ func (g *Game) updateDevelopMode() {
 	if rectContains(layout.Code.Diagnostics, mx, my) {
 		_, wheelY := ebiten.Wheel()
 		if wheelY != 0 {
-			lines := g.developPanelLines(g.developPanel)
-			visible := max(1, (layout.Code.Diagnostics.H-45)/codeLineHeight)
-			g.developScroll[g.developPanel] = min(max(0, g.developScroll[g.developPanel]-int(wheelY*3)), max(0, len(lines)-visible))
+			if g.developPanel == developMemory {
+				g.scrollDevelopMemory(layout, -int(wheelY*3))
+			} else {
+				lines := g.developPanelLines(g.developPanel)
+				visible := max(1, (layout.Code.Diagnostics.H-45)/codeLineHeight)
+				g.developScroll[g.developPanel] = min(max(0, g.developScroll[g.developPanel]-int(wheelY*3)), max(0, len(lines)-visible))
+			}
 		}
 	}
 
@@ -210,7 +224,7 @@ func (g *Game) releaseDevelopGameInput() {
 }
 
 func (g *Game) drawDevelopMode(screen *ebiten.Image) {
-	layout := newDevelopLayout()
+	layout := newDevelopPanelLayout(g.developPanel)
 	fillRect(screen, editor.Rect{X: 0, Y: editorTabsHeight, W: screenWidth, H: statusBarRect.Y - editorTabsHeight}, colorInk)
 	// Paint this before the adjacent panels: their border strokes straddle
 	// the shared edge and must remain visible above the message background.
@@ -800,6 +814,10 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 		drawDevelopTextCentered(screen, label, tab, clr)
 	}
 	drawLine(screen, r.X+8, r.Y+34, r.X+r.W-8, r.Y+34, colorBorder)
+	if g.developPanel == developMemory {
+		g.drawDevelopMemory(screen, layout)
+		return
+	}
 	lines := g.developPanelLines(g.developPanel)
 	visible := max(1, (r.H-45)/codeLineHeight)
 	start := min(g.developScroll[g.developPanel], max(0, len(lines)-visible))
@@ -831,7 +849,7 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 
 func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
 	r := layout.Code.Diagnostics
-	widths := [...]int{112, 96, 92, 106, 112, 150}
+	widths := [...]int{112, 96, 92, 106, 112, 104, 150}
 	tabs := make([]editor.Rect, 0, len(widths))
 	x := r.X + 1
 	for _, width := range widths {
@@ -867,6 +885,9 @@ func (g *Game) hasDevelopProblems() bool {
 }
 
 func (g *Game) developPanelLines(panel developPanel) []string {
+	if panel == developMemory {
+		return g.developMemoryLines()
+	}
 	g.runMu.Lock()
 	status, runError, sourceError := g.runStatus, g.runError, g.sourceAnalysisError
 	romPath, romSize := g.runROMPath, g.runROMSize
@@ -994,7 +1015,7 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 func (g *Game) openDevelopDiagnostic() {
 	if g.codeDiagnosticLine != 0 {
 		g.code.SetCursor(g.code.Offset(max(0, g.codeDiagnosticLine-1), max(0, g.codeDiagnosticColumn-1)), false)
-		g.keepCodeCursorVisible(newDevelopLayout().Code)
+		g.keepCodeCursorVisible(newDevelopPanelLayout(g.developPanel).Code)
 		return
 	}
 	g.runMu.Lock()
@@ -1018,5 +1039,5 @@ func (g *Game) openDevelopDiagnostic() {
 		return
 	}
 	g.code.SetCursor(g.code.Offset(max(0, line-1), max(0, column-1)), false)
-	g.keepCodeCursorVisible(newDevelopLayout().Code)
+	g.keepCodeCursorVisible(newDevelopPanelLayout(g.developPanel).Code)
 }

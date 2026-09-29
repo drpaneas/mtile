@@ -64,7 +64,13 @@ type RendererReport struct {
 	// one-layer cartridges do not reserve four layers of EWRAM.
 	Mode0Layers  int
 	Mode0Objects bool
-	Mode0Text    bool
+	// Pose streaming stages pixels before VBlank. Its buffer is linked only
+	// for carts that actually draw hardware poses.
+	Mode0PoseStreaming bool
+	// Resident libraries upload all reachable layouts once during force-blanked
+	// initialization, sharing exact packed pixel runs between poses and sites.
+	Mode0PoseResident bool
+	Mode0Text         bool
 	// Mode0ObjectPacking enables the internal 16x16/32x32 OBJ cache. Packed
 	// shapes consume one OAM entry while retaining their true pixel-width cost
 	// in the scanline-cycle proof.
@@ -120,6 +126,7 @@ const (
 	reasonMode0ClsShape        = "M0_CLS_SHAPE"
 	reasonMode0MapShape        = "M0_MAP_SHAPE"
 	reasonMode0SpriteShape     = "M0_SPR_SHAPE"
+	reasonMode0PsprShape       = "M0_PSPR_SHAPE"
 	reasonMode0TextShape       = "M0_PRINT_SHAPE"
 	reasonMode0ObjectBudget    = "M0_OBJ_BUDGET"
 	reasonMode0ResourceLimit   = "M0_RESOURCE_LIMIT"
@@ -162,6 +169,9 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 		report.Reason = reasonAutoMode0Eligible
 		report.Mode0Layers = layers
 		report.Mode0Objects = objects
+		report.Mode0PoseStreaming = objects && (chunkCallsBuiltin(chunk, "pspr") || chunkCallsBuiltin(chunk, "anim"))
+		report.Mode0PoseResident = report.Mode0PoseStreaming && mode0ResidentPosesForChunk(chunk, opts) != nil
+		report.Mode0PoseStreaming = report.Mode0PoseStreaming && !report.Mode0PoseResident
 		report.Mode0Text = text
 		budget := mode0ObjectBudgetForChunk(chunk, opts)
 		report.Mode0ObjectPacking = budget.PackingEnabled
@@ -177,6 +187,9 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 		report.Reason = reasonMode0ForcedProven
 		report.Mode0Layers = layers
 		report.Mode0Objects = objects
+		report.Mode0PoseStreaming = objects && (chunkCallsBuiltin(chunk, "pspr") || chunkCallsBuiltin(chunk, "anim"))
+		report.Mode0PoseResident = report.Mode0PoseStreaming && mode0ResidentPosesForChunk(chunk, opts) != nil
+		report.Mode0PoseStreaming = report.Mode0PoseStreaming && !report.Mode0PoseResident
 		report.Mode0Text = text
 		budget := mode0ObjectBudgetForChunk(chunk, opts)
 		report.Mode0ObjectPacking = budget.PackingEnabled
@@ -562,7 +575,7 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	var initFunction, update, draw *luaparser.FunctionDeclStmt
 	spriteIDs := newMode0SpriteIDAnalysis(chunk)
 	var firstErr error
-	var clsCalls, mapCalls, sprCalls, ssprCalls, printCalls, ssetCalls int
+	var clsCalls, mapCalls, sprCalls, ssprCalls, printCalls, ssetCalls, psprCalls int
 	var visitStmt func(luaparser.Stmt)
 	visitStmt = func(stmt luaparser.Stmt) {
 		if firstErr != nil {
@@ -618,6 +631,8 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 				printCalls++
 			case "sset":
 				ssetCalls++
+			case "pspr", "anim":
+				psprCalls++
 			case "clip":
 				firstErr = validateMode0ClipCall(call)
 			case "pal":
@@ -629,7 +644,7 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			case RendererMode4Only:
 				firstErr = mode0CallError(call, reasonMode0Mode4Builtin, name+"() requires the Mode 4 framebuffer")
 			case RendererMode0Conditional:
-				if name != "cls" && name != "map" && name != "spr" && name != "sspr" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
+				if name != "cls" && name != "map" && name != "spr" && name != "sspr" && name != "pspr" && name != "anim" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
 					firstErr = mode0CallError(call, reasonMode0UnsupportedCall, name+"() is not in the Mode 0 tile-v1 proof")
 				}
 			}
@@ -673,14 +688,14 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if draw == nil || clsCalls != 1 || mapCalls > 4 {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires one direct cls() and at most four direct map() calls in _draw", reasonMode0DrawShape)
 	}
-	if hidden := callGraph.firstBuiltinFromFunction("_init", "spr", "sspr", "print", "cls", "map"); hidden != nil {
-		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/print() belong to _draw")
+	if hidden := callGraph.firstBuiltinFromFunction("_init", "spr", "sspr", "pspr", "anim", "print", "cls", "map"); hidden != nil {
+		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/pspr()/print() belong to _draw")
 	}
-	if hidden := callGraph.firstBuiltinFromFunction("_update", "spr", "sspr", "print", "cls", "map"); hidden != nil {
-		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/print() belong to _draw")
+	if hidden := callGraph.firstBuiltinFromFunction("_update", "spr", "sspr", "pspr", "anim", "print", "cls", "map"); hidden != nil {
+		return 0, false, false, mode0CallError(hidden, reasonMode0DrawShape, "Mode 0 cls()/map()/spr()/sspr()/pspr()/print() belong to _draw")
 	}
 
-	ops, unbounded, err := mode0WalkDraw(chunk, draw, spriteIDs, cols, rows)
+	ops, unbounded, err := mode0WalkDraw(chunk, draw, spriteIDs, opts)
 	if err != nil {
 		return 0, false, false, err
 	}
@@ -739,6 +754,14 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 				return 0, false, false, mode0CallError(op.call, reasonMode0SpriteShape,
 					"Mode 0 cannot place an object behind every materialized background; draw at least one non-empty map before spr()/sspr()")
 			}
+		case "pspr":
+			if firstSpriteIndex < 0 {
+				firstSpriteIndex = opIndex
+			}
+			if mode0Layers > 0 && materializedMaps == 0 {
+				return 0, false, false, mode0CallError(op.call, reasonMode0PsprShape,
+					"Mode 0 cannot place an object behind every materialized background; draw at least one non-empty map before pspr()")
+			}
 		case "print":
 			if firstPrintIndex < 0 {
 				firstPrintIndex = opIndex
@@ -753,8 +776,8 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if directCls != 1 || directMap != mapCalls {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] cls() and map() must be unconditional direct statements in _draw", draw.Pos(), reasonMode0DrawShape)
 	}
-	if firstSpriteIndex < 0 && firstPrintIndex < 0 && (sprCalls > 0 || ssprCalls > 0 || printCalls > 0) {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/sspr()/print() belong to _draw", draw.Pos(), reasonMode0DrawShape)
+	if firstSpriteIndex < 0 && firstPrintIndex < 0 && (sprCalls > 0 || ssprCalls > 0 || psprCalls > 0 || printCalls > 0) {
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/sspr()/pspr()/print() belong to _draw", draw.Pos(), reasonMode0DrawShape)
 	}
 	clsStmt := indexOfDirectMode0Call(draw, "cls")
 	if clsStmt < 0 {
@@ -777,6 +800,12 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	}
 	if firstPrintIndex >= 0 && lastMapIndex >= 0 && firstPrintIndex < lastMapIndex {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 print() calls must follow cls() and every map() call", draw.Pos(), reasonMode0TextShape)
+	}
+	if err := validateMode0PsprProof(chunk, ops, opts, sprCalls, ssprCalls); err != nil {
+		return 0, false, false, err
+	}
+	if err := validateMode0PoseCommit(chunk, ops, opts, mode0Layers, directUpdateSset); err != nil {
+		return 0, false, false, err
 	}
 	budget := mode0ObjectBudgetFromOps(chunk, draw, ops, unbounded, opts)
 	if budget.TextTiles > mode0TextTileLimit {

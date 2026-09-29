@@ -23,6 +23,17 @@ const (
 	debugHeapHandles     = debugHeapBase + 16
 	debugHeapHandleLimit = debugHeapBase + 20
 	debugHeapError       = debugHeapBase + 24
+	// The OBJ1 extension occupies the formerly unused tail. Header version,
+	// total size, heap offsets and all sixteen watch slots remain unchanged.
+	debugOBJBase         = debugHeapError + 4
+	debugOBJMagic        = uint32(0x314a424f) // little-endian "OBJ1"
+	debugOBJFlags        = debugOBJBase + 4
+	debugOBJResident     = debugOBJBase + 8
+	debugOBJSlots        = debugOBJBase + 12
+	debugOBJUploaded     = debugOBJBase + 16
+	debugOBJPoseIDs      = debugOBJBase + 20
+	debugOBJAvailable    = uint32(1 << 0)
+	debugOBJResidencySet = uint32(1 << 1)
 )
 
 // DebugMailbox is deliberately a byte array: its wire layout is independent
@@ -73,6 +84,24 @@ func (m *DebugMailbox) Begin(stats PerformanceStats) {
 	debugPut32(m[:], debugHeapHandles, stats.HeapHandles)
 	debugPut32(m[:], debugHeapHandleLimit, stats.HeapHandleLimit)
 	debugPut32(m[:], debugHeapError, uint32(stats.HeapError))
+	clear(m[debugOBJBase:])
+	if stats.OBJTelemetryValid {
+		debugPut32(m[:], debugOBJBase, debugOBJMagic)
+		var flags uint32
+		if stats.OBJStreamAvailable {
+			flags |= debugOBJAvailable
+		}
+		if stats.OBJStreamResidencyValid {
+			flags |= debugOBJResidencySet
+		}
+		debugPut32(m[:], debugOBJFlags, flags)
+		debugPut32(m[:], debugOBJResident, stats.OBJStreamResidentBytes)
+		debugPut32(m[:], debugOBJSlots, stats.OBJStreamResidentSlots)
+		debugPut32(m[:], debugOBJUploaded, stats.OBJUploadedBytes)
+		for index, id := range stats.OBJStreamResidentPoseIDs {
+			debugPut16(m[:], debugOBJPoseIDs+index*2, id)
+		}
+	}
 	m[debugWatchCount] = 0
 }
 

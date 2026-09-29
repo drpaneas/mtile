@@ -1,0 +1,11 @@
+{
+  "autoDiagnostic": "transpiler: game.lua:8:2: [M0_RESOURCE_LIMIT] Mode 0 pose streaming with 0 BG layers and 0 sheet mutations needs a conservative 114304-cycle commit, exceeding the 82544-cycle VBlank window; reduce simultaneous uploads or use Mode 4",
+  "autoRenderer": "mode4",
+  "capturedFrames": 120,
+  "differingPixels": 0,
+  "forcedMode0Diagnostic": "transpile game.lua: transpiler: game.lua:8:2: [M0_RESOURCE_LIMIT] Mode 0 pose streaming with 0 BG layers and 0 sheet mutations needs a conservative 114304-cycle commit, exceeding the 82544-cycle VBlank window; reduce simultaneous uploads or use Mode 4",
+  "capturedAt": "2026-09-23",
+  "fixture": "full-window-audio",
+  "workloadSource": "cmd/renderbench/pspr_stream_diagnostic_test.go",
+  "pass": true
+}

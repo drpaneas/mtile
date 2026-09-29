@@ -39,6 +39,14 @@ func writeTestEntry(t *testing.T, dir string) {
 	}
 }
 
+func filledCopyBuffer(width, height, color00 int) spriteCopyBuffer {
+	pixels := make([]int, width*height)
+	if len(pixels) > 0 {
+		pixels[0] = color00
+	}
+	return spriteCopyBuffer{width: width, height: height, pixels: pixels}
+}
+
 func wideColors(n int) []assetsync.RGB15 {
 	colors := make([]assetsync.RGB15, n)
 	for i := range colors {
@@ -387,7 +395,7 @@ func TestReservedSpriteZeroCannotBePaintedOrPasted(t *testing.T) {
 	}
 
 	g.hasCopied = true
-	g.copiedSprite[0][0] = 7
+	g.copiedSprite = filledCopyBuffer(8, 8, 7)
 	g.currentSprite = editor.ReservedSpriteID
 	g.statusMsg = ""
 	g.pasteCurrentSprite()
@@ -414,7 +422,7 @@ func TestReservedMode0TextSpriteCannotBePaintedOrPasted(t *testing.T) {
 	}
 
 	g.hasCopied = true
-	g.copiedSprite[0][0] = 7
+	g.copiedSprite = filledCopyBuffer(8, 8, 7)
 	g.currentSprite = id
 	g.statusMsg = ""
 	g.pasteCurrentSprite()
@@ -811,6 +819,155 @@ func TestCopyPasteCopiesPixelsToAnotherSprite(t *testing.T) {
 	}
 }
 
+func TestCopyPasteCopiesMultiTileSelection(t *testing.T) {
+	g := newTestGame(t, 32, 32, 2, 2) // 4x4 sprites (ids 0..15)
+	colors := map[int]int{1: 3, 2: 4, 5: 5, 6: 6}
+	for id, color := range colors {
+		if err := g.model.SetSpritePixel(id, 0, 0, color); err != nil {
+			t.Fatal(err)
+		}
+		if err := g.model.SetSpritePixel(id, 7, 7, color); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.currentSprite = 1
+	g.gridCols, g.gridRows = 2, 2
+	g.copyCurrentSprite()
+	if !g.hasCopied || g.copiedSprite.width != 16 || g.copiedSprite.height != 16 {
+		t.Fatalf("copy buffer = %dx%d, want 16x16", g.copiedSprite.width, g.copiedSprite.height)
+	}
+	if g.copiedSprite.pixel(0, 0) != 3 || g.copiedSprite.pixel(8, 0) != 4 || g.copiedSprite.pixel(0, 8) != 5 || g.copiedSprite.pixel(8, 8) != 6 {
+		t.Fatalf("copy missed the 2x2 selection: (0,0)=%d (8,0)=%d (0,8)=%d (8,8)=%d",
+			g.copiedSprite.pixel(0, 0), g.copiedSprite.pixel(8, 0), g.copiedSprite.pixel(0, 8), g.copiedSprite.pixel(8, 8))
+	}
+
+	g.currentSprite = 5
+	g.pasteCurrentSprite()
+	if g.statusMsg != "" {
+		t.Fatalf("paste of a 2x2 selection reported an error: %s", g.statusMsg)
+	}
+	if g.gridCols != 2 || g.gridRows != 2 {
+		t.Fatalf("paste selection = %dx%d, want 2x2", g.gridCols, g.gridRows)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	for _, check := range []struct {
+		x, y, want int
+	}{
+		{8, 8, 3},
+		{16, 8, 4},
+		{8, 16, 5},
+		{16, 16, 6},
+		{15, 15, 3},
+		{23, 15, 4},
+	} {
+		if got := g.pixelAt(check.x, check.y); got != check.want {
+			t.Fatalf("pasted pixel (%d,%d) = %d, want %d", check.x, check.y, got, check.want)
+		}
+	}
+}
+
+func TestEraseSpriteSelectionClearsTilesAndSkipsReserved(t *testing.T) {
+	g := newTestGame(t, 32, 32, 2, 2)
+	if err := g.model.SetSpritePixel(1, 0, 0, 9); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetSpritePixel(2, 0, 0, 8); err != nil {
+		t.Fatal(err)
+	}
+	g.currentSprite = 1
+	g.gridCols, g.gridRows = 2, 1
+	g.eraseCurrentSpriteSelection()
+	if g.statusMsg != "" {
+		t.Fatalf("erase reported %q", g.statusMsg)
+	}
+	if !g.dirty {
+		t.Fatal("erase did not mark the project dirty")
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.pixelAt(8, 0); got != 0 {
+		t.Fatalf("erased sprite 1 pixel = %d, want 0", got)
+	}
+	if got := g.pixelAt(16, 0); got != 0 {
+		t.Fatalf("erased sprite 2 pixel = %d, want 0", got)
+	}
+
+	if err := g.model.SetSpritePixel(1, 0, 0, 9); err != nil {
+		t.Fatal(err)
+	}
+	g.currentSprite = 0
+	g.gridCols, g.gridRows = 2, 1
+	g.statusMsg = ""
+	g.eraseCurrentSpriteSelection()
+	if g.statusMsg != "" {
+		t.Fatalf("mixed erase reported %q, want skip of reserved sprite 0", g.statusMsg)
+	}
+	if err := g.refreshPreview(); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.pixelAt(0, 0); got != 0 {
+		t.Fatalf("sprite 0 pixel = %d, want unchanged 0", got)
+	}
+	if got := g.pixelAt(8, 0); got != 0 {
+		t.Fatalf("mixed erase left sprite 1 = %d, want 0", got)
+	}
+
+	g.currentSprite = 0
+	g.gridCols, g.gridRows = 1, 1
+	g.statusMsg = ""
+	g.dirty = false
+	g.eraseCurrentSpriteSelection()
+	if g.statusMsg != spriteZeroLockedMessage {
+		t.Fatalf("reserved erase status = %q, want %q", g.statusMsg, spriteZeroLockedMessage)
+	}
+	if g.dirty {
+		t.Fatal("reserved-only erase marked the project dirty")
+	}
+}
+
+func TestCopyPasteAndEraseWorkOnObjectSheetIncludingTileZero(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	if err := g.setObjEditing(true); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetObjSpritePixel(0, 0, 0, 4); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.model.SetObjSpritePixel(1, 0, 0, 5); err != nil {
+		t.Fatal(err)
+	}
+	g.currentSprite = 0
+	g.gridCols, g.gridRows = 2, 1
+	g.copyCurrentSprite()
+	if !g.hasCopied || g.copiedSprite.width != 16 || g.copiedSprite.pixel(0, 0) != 4 || g.copiedSprite.pixel(8, 0) != 5 {
+		t.Fatalf("OBJ copy buffer = %dx%d pixels %d,%d", g.copiedSprite.width, g.copiedSprite.height, g.copiedSprite.pixel(0, 0), g.copiedSprite.pixel(8, 0))
+	}
+
+	g.currentSprite = 2
+	g.pasteCurrentSprite()
+	if g.statusMsg != "" {
+		t.Fatalf("OBJ paste error: %s", g.statusMsg)
+	}
+	if got := spriteSheetPixel(*g.model.ObjSheet, 16, 0); got != 4 {
+		t.Fatalf("pasted OBJ tile 2 = %d, want 4", got)
+	}
+	if got := spriteSheetPixel(*g.model.ObjSheet, 24, 0); got != 5 {
+		t.Fatalf("pasted OBJ tile 3 = %d, want 5", got)
+	}
+
+	g.gridCols, g.gridRows = 2, 1
+	g.eraseCurrentSpriteSelection()
+	if g.statusMsg != "" {
+		t.Fatalf("OBJ erase error: %s", g.statusMsg)
+	}
+	if spriteSheetPixel(*g.model.ObjSheet, 16, 0) != 0 || spriteSheetPixel(*g.model.ObjSheet, 24, 0) != 0 {
+		t.Fatal("OBJ erase left pixels behind")
+	}
+}
+
 // TestPasteRejectsColorsOutsideNarrowerActivePalette guards a gap where
 // pasteCurrentSprite applied its buffer pixel-by-pixel with no preflight.
 // The copy buffer is plain Game UI state, not part of the validated sheet,
@@ -838,8 +995,8 @@ func TestPasteRejectsColorsOutsideNarrowerActivePalette(t *testing.T) {
 	}
 	g.currentSprite = 1
 	g.copyCurrentSprite()
-	if !g.hasCopied || g.copiedSprite[0][0] != 200 {
-		t.Fatalf("copy did not capture color 200: hasCopied=%v pixel=%d", g.hasCopied, g.copiedSprite[0][0])
+	if !g.hasCopied || g.copiedSprite.pixel(0, 0) != 200 {
+		t.Fatalf("copy did not capture color 200: hasCopied=%v pixel=%d", g.hasCopied, g.copiedSprite.pixel(0, 0))
 	}
 
 	// Undo the out-of-range paint so the sheet is compatible with a
@@ -1304,7 +1461,7 @@ func TestDesktopSpriteInspectorBalancesFlagsAndColorPicker(t *testing.T) {
 	if colorPickerTitle != "CHANGE COLOR" {
 		t.Fatalf("color picker title = %q, want CHANGE COLOR", colorPickerTitle)
 	}
-	if want := spritePanelContentOffset() + spriteButtonHeight + spritePanelPadding; spriteFlagsPanelRect.H != want {
+	if want := spritePanelContentOffset() + spriteButtonHeight + spritePanelPadding + 2*(uiSmallTextHeight+6); spriteFlagsPanelRect.H != want {
 		t.Fatalf("flags panel height = %d, want %d", spriteFlagsPanelRect.H, want)
 	}
 	lastFlag := flagCheckboxRect(7)
@@ -1521,5 +1678,48 @@ func TestSpritesheetSelectionOutlineStaysInsideCanvasAndSelection(t *testing.T) 
 	visible, _ := intersectEditorRects(selection, canvas)
 	if outline.X <= visible.X || outline.Y <= visible.Y || outline.X+outline.W >= visible.X+visible.W || outline.Y+outline.H >= visible.Y+visible.H {
 		t.Fatalf("outline %#v is not strictly inside visible selection %#v", outline, visible)
+	}
+}
+
+func TestObjEditingPaintsTileZeroAndPersists(t *testing.T) {
+	g := newTestGame(t, 128, 64, 16, 16)
+	if g.objEditing || g.model.ObjSheet != nil {
+		t.Fatal("new project should start on the BG sheet")
+	}
+	if err := g.setObjEditing(true); err != nil {
+		t.Fatal(err)
+	}
+	if !g.objEditing || g.model.ObjSheet == nil {
+		t.Fatal("OBJ toggle should create the object sheet")
+	}
+	if g.spriteCols() != assetsync.DefaultObjSheetW/8 || g.spriteRows() != assetsync.DefaultObjSheetH/8 {
+		t.Fatalf("object sheet grid = %dx%d", g.spriteCols(), g.spriteRows())
+	}
+	if g.spriteIsReserved(0) || g.spriteIsReserved(480) {
+		t.Fatal("object-sheet cells must be paint-legal")
+	}
+	if !g.paintPixel(0, 0, 0, 3) {
+		t.Fatal("object tile 0 should be paintable")
+	}
+	g.persist()
+	reloaded, err := editor.Open(g.model.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.ObjSheet == nil {
+		t.Fatal("objsheet.json was not saved")
+	}
+	found := false
+	for _, sprite := range reloaded.ObjSheet.Sprites {
+		if sprite.ID != 0 {
+			continue
+		}
+		found = true
+		if sprite.Pixels[0][0] != 3 {
+			t.Fatalf("object tile 0 pixel = %d", sprite.Pixels[0][0])
+		}
+	}
+	if !found {
+		t.Fatal("object tile 0 was not authored")
 	}
 }

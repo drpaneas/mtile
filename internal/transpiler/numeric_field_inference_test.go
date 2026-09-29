@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/sourcebundle"
+	rt "github.com/drpaneas/mtile/runtime"
 )
 
 const numericFieldSumHarness = `package main
@@ -387,10 +389,33 @@ func TestCelesteControllerKeepsNumericFieldLocals(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	generated, err := Transpile(bundle.Entry, bundle.Source, Options{
-		MapW: 60, MapH: 20, MapLayers: 4, Map: make([]uint16, 60*20*4),
-		SheetW: 240, SheetH: 128,
-	})
+	assets, err := assetsync.Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	opts := Options{
+		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
+		SheetW: assets.SheetW, SheetH: assets.SheetH,
+		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
+		Palette:   assets.PaletteROM[:],
+		ObjSheetW: assets.ObjSheetW, ObjSheetH: assets.ObjSheetH, ObjSheet: assets.ObjSheetROM,
+		AnimationFrames: assets.AnimationFrames,
+	}
+	for _, pose := range assets.PoseIndex {
+		opts.PoseIndex = append(opts.PoseIndex, rt.PoseRange{
+			Start: pose.Start, Count: pose.Count, FlipOffsetX: pose.FlipOffsetX, FlipOffsetY: pose.FlipOffsetY,
+		})
+	}
+	for _, part := range assets.PoseParts {
+		opts.PoseParts = append(opts.PoseParts, rt.PosePart{Tile: part.Tile, X: part.X, Y: part.Y, Flags: part.Flags})
+	}
+	for _, clip := range assets.AnimationClips {
+		opts.AnimationClips = append(opts.AnimationClips, rt.AnimationClip{
+			Name: clip.Name, Start: clip.Start, Count: clip.Count, FPS: clip.FPS, Loop: clip.Loop,
+			FlipOffsetX: clip.FlipOffsetX, FlipOffsetY: clip.FlipOffsetY,
+		})
+	}
+	generated, err := Transpile(bundle.Entry, bundle.Source, opts)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/drpaneas/mtile/internal/luaparser"
+	runtimeapi "github.com/drpaneas/mtile/runtime"
 )
 
 const (
@@ -78,8 +79,7 @@ func mode0ObjectBudgetForDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 	if draw == nil {
 		return mode0ObjectBudget{}
 	}
-	cols, rows := opts.SheetW/8, opts.SheetH/8
-	ops, unbounded, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), cols, rows)
+	ops, unbounded, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), opts)
 	if err != nil {
 		return mode0ObjectBudget{}
 	}
@@ -90,15 +90,50 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 	packing := mode0ObjectPackingEligible(chunk, opts)
 	budget := mode0ObjectBudget{PackingEnabled: packing}
 	planner := mode0PackingBudgetPlanner{enabled: packing}
+	// Cache contents depend on earlier choices (and persist across frames).
+	// In a branched scene packing is guaranteed only if every possible source
+	// fits together; otherwise account for ordinary sprites' cell fallback.
+	if !mode0BranchPackingGuaranteed(ops, opts) {
+		planner.enabled = false
+	}
 	var staticCycles [mode0OBJCoordinatePeriod]int
 	dynamicCycles := 0
 	cols := opts.SheetW / 8
 	cameraRebase := mode0DrawOpsRebaseCameraBetweenObjects(ops)
 	textXDynamic := chunkCallsBuiltin(chunk, "camera")
+	var branches []mode0BranchCost
+	current := func() mode0ObjectEnvelope {
+		envelope := mode0ObjectEnvelope{entries: budget.OAMEntries, text: budget.TextEntries}
+		for line, cycles := range staticCycles {
+			envelope.lines[line] = cycles + dynamicCycles
+		}
+		return envelope
+	}
+	load := func(envelope mode0ObjectEnvelope) {
+		budget.OAMEntries, budget.TextEntries = envelope.entries, envelope.text
+		staticCycles, dynamicCycles = envelope.lines, 0
+	}
 
 	for _, op := range ops {
+		switch op.name {
+		case mode0BranchStart:
+			branches = append(branches, mode0BranchCost{prefix: current()})
+			load(mode0ObjectEnvelope{})
+			continue
+		case mode0BranchNext:
+			branch := &branches[len(branches)-1]
+			branch.alternatives.include(current())
+			load(mode0ObjectEnvelope{})
+			continue
+		case mode0BranchEnd:
+			branch := &branches[len(branches)-1]
+			branch.alternatives.include(current())
+			load(branch.prefix.add(branch.alternatives))
+			branches = branches[:len(branches)-1]
+			continue
+		}
 		call := op.call
-		if op.atlasOnly {
+		if op.atlasOnly || op.allocationOnly {
 			continue
 		}
 		copies := op.copies
@@ -157,6 +192,20 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 			for i := 0; i < copies; i++ {
 				addMode0SpriteLineProfile(&staticCycles, &dynamicCycles, yExpr, w, h, packed)
 			}
+		case "pspr":
+			entries := op.psprParts
+			if entries < 0 {
+				entries = 0
+			}
+			budget.OAMEntries += entries * copies
+			var yExpr luaparser.Expr
+			if call != nil && len(call.Args) > 2 && !cameraRebase {
+				yExpr = call.Args[2]
+			}
+			profile := mode0PoseLineProfile(op, opts)
+			for i := 0; i < copies; i++ {
+				mergeMode0LineProfile(&staticCycles, &dynamicCycles, yExpr, &profile)
+			}
 		case "print":
 			entries, ok := mode0PrintOAMEntries(call, op.printKind)
 			if !ok {
@@ -183,6 +232,105 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 	return budget
 }
 
+// Alternative paths need separate maxima for entry counts and every hardware
+// scanline. A branch with fewer objects can still have a greater line cost.
+type mode0ObjectEnvelope struct {
+	entries, text int
+	lines         [mode0OBJCoordinatePeriod]int
+}
+
+type mode0BranchCost struct {
+	prefix, alternatives mode0ObjectEnvelope
+}
+
+func (e *mode0ObjectEnvelope) include(other mode0ObjectEnvelope) {
+	e.entries = max(e.entries, other.entries)
+	e.text = max(e.text, other.text)
+	for line, cycles := range other.lines {
+		e.lines[line] = max(e.lines[line], cycles)
+	}
+}
+
+func (e mode0ObjectEnvelope) add(other mode0ObjectEnvelope) mode0ObjectEnvelope {
+	e.entries += other.entries
+	e.text += other.text
+	for line, cycles := range other.lines {
+		e.lines[line] += cycles
+	}
+	return e
+}
+
+func mode0BranchPackingGuaranteed(ops []mode0DrawOp, opts Options) bool {
+	hasBranch := false
+	for _, op := range ops {
+		if op.name == mode0BranchStart {
+			hasBranch = true
+			break
+		}
+	}
+	if !hasBranch {
+		return true
+	}
+	planner := mode0PackingBudgetPlanner{enabled: true}
+	cols := opts.SheetW / 8
+	for _, op := range ops {
+		if op.call == nil {
+			continue
+		}
+		id, cells := 0, 0
+		switch op.name {
+		case "spr":
+			id = mode0LiteralInt(op.call.Args[0])
+			cells = mode0SprCallPackedCells(op.call)
+		case "sspr":
+			id = mode0LiteralInt(op.call.Args[1])/8*cols + mode0LiteralInt(op.call.Args[0])/8
+			cells = mode0SSprCallPackedCells(op.call)
+		}
+		if (cells == 2 || cells == 4) && !planner.use(id, cells) {
+			return false
+		}
+	}
+	return true
+}
+
+// Take the maximum at each line over every reachable pose and facing, rather
+// than incorrectly placing every 8x8 part on the pose's origin scanline.
+func mode0PoseLineProfile(op mode0DrawOp, opts Options) (worst [mode0OBJCoordinatePeriod]int) {
+	flips := []bool{false}
+	if op.call != nil && len(op.call.Args) > 4 {
+		if flag, ok := unparenExpr(op.call.Args[4]).(*luaparser.BoolExpr); ok {
+			flips = []bool{flag.Value}
+		} else {
+			flips = []bool{false, true}
+		}
+	}
+	for _, id := range op.psprIDs {
+		if id < 0 || id >= len(opts.PoseIndex) {
+			continue
+		}
+		pose := opts.PoseIndex[id]
+		start, end := int(pose.Start), int(pose.Start)+int(pose.Count)
+		if start < 0 || end < start || end > len(opts.PoseParts) {
+			continue
+		}
+		objects, _ := runtimeapi.BuildPoseOBJPlan(opts.PoseParts[start:end])
+		for _, flip := range flips {
+			var profile [mode0OBJCoordinatePeriod]int
+			for _, object := range objects {
+				y := int(object.Y)
+				if flip {
+					y = -y - int(object.Height)
+				}
+				addMode0ProfileRun(&profile, y, int(object.Height), int(object.Width))
+			}
+			for line, cycles := range profile {
+				worst[line] = max(worst[line], cycles)
+			}
+		}
+	}
+	return worst
+}
+
 func mode0DrawOpsRebaseCameraBetweenObjects(ops []mode0DrawOp) bool {
 	seenObject := false
 	cameraAfterObject := false
@@ -190,7 +338,7 @@ func mode0DrawOpsRebaseCameraBetweenObjects(ops []mode0DrawOp) bool {
 		if op.name == "camera" && seenObject {
 			cameraAfterObject = true
 		}
-		if op.name != "spr" && op.name != "sspr" && op.name != "print" {
+		if op.name != "spr" && op.name != "sspr" && op.name != "pspr" && op.name != "print" {
 			continue
 		}
 		if cameraAfterObject {

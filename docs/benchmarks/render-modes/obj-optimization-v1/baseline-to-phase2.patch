@@ -1,0 +1,454 @@
+--- a/internal/assetsync/generate.go
++++ b/internal/assetsync/generate.go
+@@ -64,8 +64,7 @@
+ 		compact, index := CompactObjectSheetCells(assets.ObjSheetROM, assets.ObjSheetW, assets.ObjSpriteN)
+ 		fmt.Fprintf(&b, "const (\n\tObjSheetW = %d\n\tObjSheetH = %d\n\tObjSpriteCols = %d\n\tObjSpriteRows = %d\n\tObjSpriteN = %d\n)\n\n",
+ 			assets.ObjSheetW, assets.ObjSheetH, assets.ObjSpriteCols, assets.ObjSpriteRows, assets.ObjSpriteN)
+-		b.WriteString("//go:section .rodata\n")
+-		writeByteArray(&b, "objSheetROM", compact)
++		b.WriteString(ObjectSheetROMDeclaration(compact))
+ 		b.WriteString("//go:section .rodata\n")
+ 		writeUint32Array(&b, "objSheetIndexROM", index)
+ 	}
+@@ -115,7 +114,7 @@
+ 	if assets.ObjSpriteN > 0 {
+ 		b.WriteString("\tcartData.ObjSheetW, cartData.ObjSheetH = ObjSheetW, ObjSheetH\n")
+ 		b.WriteString("\tcartData.ObjSpriteCols, cartData.ObjSpriteRows, cartData.ObjSpriteN = ObjSpriteCols, ObjSpriteRows, ObjSpriteN\n")
+-		b.WriteString("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM[:], objSheetIndexROM[:]\n")
++		b.WriteString("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM.Pixels[:], objSheetIndexROM[:]\n")
+ 	}
+ 	if assets.MapStreaming {
+ 		b.WriteString("\tcartData.MapChunks = mapChunksRAM[:]\n\tcartData.MapEdits = mapEditsRAM[:]\n")
+@@ -130,7 +129,7 @@
+ `)
+ 	if assets.ObjSpriteN > 0 {
+ 		b.WriteString("\t\tObjSheetW: ObjSheetW, ObjSheetH: ObjSheetH, ObjSpriteCols: ObjSpriteCols, ObjSpriteRows: ObjSpriteRows, ObjSpriteN: ObjSpriteN,\n")
+-		b.WriteString("\t\tObjSheet: objSheetROM[:], ObjSheetIndex: objSheetIndexROM[:],\n")
++		b.WriteString("\t\tObjSheet: objSheetROM.Pixels[:], ObjSheetIndex: objSheetIndexROM[:],\n")
+ 	}
+ 	b.WriteString(`	}
+ 	if !ctx.Init(&image, &cartData) {
+--- a/internal/assetsync/objsheet_generate.go
++++ b/internal/assetsync/objsheet_generate.go
+@@ -0,0 +1,24 @@
++package assetsync
++
++import (
++	"fmt"
++	"strconv"
++	"strings"
++)
++
++// ObjectSheetROMDeclaration aligns immutable tile pixels for the ARM word-copy
++// path. A plain byte array can land at an odd halfword after pose metadata,
++// forcing every 64-byte tile copy through memcpy's byte loop. The zero-sized
++// uint32 field guarantees alignment without padding the pixel slice or copying
++// the bank into RAM. Both asset generators use this declaration.
++func ObjectSheetROMDeclaration(pixels []byte) string {
++	var b strings.Builder
++	b.WriteString("//go:section .rodata\n")
++	fmt.Fprintf(&b, "var objSheetROM = struct { _ [0]uint32; Pixels [%d]byte }{Pixels: [%d]byte{", len(pixels), len(pixels))
++	for _, pixel := range pixels {
++		b.WriteString(strconv.Itoa(int(pixel)))
++		b.WriteByte(',')
++	}
++	b.WriteString("}}\n")
++	return b.String()
++}
+--- a/internal/transpiler/animation.go
++++ b/internal/transpiler/animation.go
+@@ -2,10 +2,42 @@
+ 
+ import (
+ 	"fmt"
++	"strconv"
+ 	"strings"
+ 
+ 	"github.com/drpaneas/mtile/internal/luaparser"
+ )
++
++// Literal clip names are immutable asset keys, so resolve them once at build
++// time instead of interning and searching the same string on every draw.
++func staticAnimationID(args []luaparser.Expr, opts Options) (int, bool) {
++	if len(args) == 0 {
++		return 0, false
++	}
++	name, literal := unparenExpr(args[0]).(*luaparser.StringExpr)
++	if !literal {
++		return 0, false
++	}
++	for id, clip := range opts.AnimationClips {
++		if clip.Name == name.Value {
++			return id, true
++		}
++	}
++	return 0, false
++}
++
++func (g *generator) animationMethod(args []luaparser.Expr) (method, id string) {
++	if index, literal := staticAnimationID(args, g.opts); literal {
++		return "AnimID", strconv.Itoa(index)
++	}
++	// A whole-program no-allocation proof means a dynamic name can only be a
++	// static string (or a non-string no-op). Avoid retaining the Lua heap just
++	// because the generic decoder also knows how to read allocated strings.
++	if !g.heapEnabled {
++		return "AnimStatic", ""
++	}
++	return "Anim", ""
++}
+ 
+ func validateAnimationCall(call *luaparser.CallExpr, opts Options) error {
+ 	if len(call.Args) == 0 {
+--- a/internal/transpiler/transpiler.go
++++ b/internal/transpiler/transpiler.go
+@@ -2175,14 +2175,10 @@
+ 
+ // requiresHeap is intentionally stricter than merely finding a table literal.
+ // It reuses the transitive no-allocation proof and accounts only for the table
+-// forms that earlier passes completely scalar-replaced. Any boxed global stays
+-// conservative because generated root registration initializes the heap.
++// forms that earlier passes completely scalar-replaced. Boxed globals can hold
++// static strings, booleans and nil without a heap; they only need GC roots when
++// some part of this closed program can allocate a heap value.
+ func (g *generator) requiresHeap() bool {
+-	for _, name := range g.globals {
+-		if g.numericRecords[name] == nil && g.globalKinds[name] == monoValue {
+-			return true
+-		}
+-	}
+ 	for _, fn := range g.funcList {
+ 		if !fn.noAlloc {
+ 			return true
+@@ -2270,7 +2266,7 @@
+ 		"sfx", "music", "sample", "gba_note", "gba_stop",
+ 		"del", "deli", "count", "all", "pairs",
+ 		"sget", "sset", "fget", "fset", "mget", "mset",
+-		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "map",
++		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "pspr", "anim", "map",
+ 		"camera", "clip", "pal", "palt", "color", "cursor":
+ 		return true
+ 	}
+@@ -3527,7 +3523,23 @@
+ }
+ 
+ func (g *generator) collectStmtStatics(stmt luaparser.Stmt) {
+-	collectStmtExprs(stmt, g.collectExprStatic)
++	var clipNames map[*luaparser.StringExpr]bool
++	collectStmtExprs(stmt, func(expr luaparser.Expr) {
++		if call, ok := expr.(*luaparser.CallExpr); ok {
++			if name, _ := callKey(call); name == "anim" {
++				if _, literal := staticAnimationID(call.Args, g.opts); literal {
++					if clipNames == nil {
++						clipNames = make(map[*luaparser.StringExpr]bool)
++					}
++					clipNames[unparenExpr(call.Args[0]).(*luaparser.StringExpr)] = true
++				}
++			}
++		}
++		if str, ok := expr.(*luaparser.StringExpr); ok && clipNames[str] {
++			return
++		}
++		g.collectExprStatic(expr)
++	})
+ }
+ 
+ func (g *generator) collectBlockStatics(block *luaparser.Block) {
+@@ -3916,8 +3928,7 @@
+ 	}
+ 	if g.objSpriteN > 0 {
+ 		b.line(fmt.Sprintf("const (\n\tObjSheetW = %d; ObjSheetH = %d; ObjSpriteCols = ObjSheetW / 8; ObjSpriteRows = ObjSheetH / 8; ObjSpriteN = ObjSpriteCols * ObjSpriteRows\n)", g.opts.ObjSheetW, g.opts.ObjSheetH))
+-		b.line("//go:section .rodata")
+-		b.line(fmt.Sprintf("var objSheetROM = [ %d ]byte{%s}", len(g.objSheetCompact), byteLiteral(g.objSheetCompact, len(g.objSheetCompact))))
++		b.line(assetsync.ObjectSheetROMDeclaration(g.objSheetCompact))
+ 		b.line("//go:section .rodata")
+ 		b.line(fmt.Sprintf("var objSheetIndexROM = [ %d ]uint32{%s}", g.objSpriteN, u32Literal(g.objSheetIndex, g.objSpriteN)))
+ 	}
+@@ -4014,7 +4025,7 @@
+ 		if g.numericRecords[name] != nil || g.numericConstants[name] != nil {
+ 			continue
+ 		}
+-		if g.globalKinds[name] == monoValue {
++		if g.heapEnabled && g.globalKinds[name] == monoValue {
+ 			b.line("\tc.RegisterGlobal(&g." + g.globalGo[name] + ")")
+ 		}
+ 	}
+@@ -4074,7 +4085,7 @@
+ 	}
+ 	if g.objSpriteN > 0 {
+ 		b.line("\t\tObjSheetW: ObjSheetW, ObjSheetH: ObjSheetH, ObjSpriteCols: ObjSpriteCols, ObjSpriteRows: ObjSpriteRows, ObjSpriteN: ObjSpriteN,")
+-		b.line("\t\tObjSheet: objSheetROM[:], ObjSheetIndex: objSheetIndexROM[:],")
++		b.line("\t\tObjSheet: objSheetROM.Pixels[:], ObjSheetIndex: objSheetIndexROM[:],")
+ 	}
+ 	if !g.sheetMutable {
+ 		b.line("\t\tSheetIndex: sheetIndexROM[:],")
+@@ -4100,7 +4111,7 @@
+ 	if g.objSpriteN > 0 {
+ 		b.line("\tcartData.ObjSheetW, cartData.ObjSheetH = ObjSheetW, ObjSheetH")
+ 		b.line("\tcartData.ObjSpriteCols, cartData.ObjSpriteRows, cartData.ObjSpriteN = ObjSpriteCols, ObjSpriteRows, ObjSpriteN")
+-		b.line("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM[:], objSheetIndexROM[:]")
++		b.line("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM.Pixels[:], objSheetIndexROM[:]")
+ 	}
+ 	if g.mapRasterEligible() {
+ 		b.line("\tcartData.MapRasterPixels, cartData.MapRasterSpans = mapRasterPixelsRAM[:], mapRasterSpansRAM[:]")
+@@ -5915,20 +5926,28 @@
+ }
+ 
+ func (g *generator) emitMode0Pspr(call *luaparser.CallExpr, value bool) string {
+-	adjusted := g.sequenceAdjustedExprs(call.Args)
++	width, method, clipID := 5, "PSpr", ""
++	if name, _ := callKey(call); name == "anim" {
++		width = 6
++		method, clipID = g.animationMethod(call.Args)
++	}
++	sequenced := call.Args
++	if clipID != "" {
++		sequenced = sequenced[1:]
++	}
++	adjusted := g.sequenceAdjustedExprs(sequenced)
+ 	names := make([]string, len(adjusted))
+ 	for i, item := range adjusted {
+ 		names[i] = adjustedLuaValue(item)
+ 	}
++	if clipID != "" {
++		names = append([]string{clipID}, names...)
++	}
+ 	arg := func(i int) string {
+ 		if i >= len(names) {
+ 			return "rt.Value{}"
+ 		}
+ 		return names[i]
+-	}
+-	width, method := 5, "PSpr"
+-	if name, _ := callKey(call); name == "anim" {
+-		width, method = 6, "Anim"
+ 	}
+ 	parts := make([]string, width)
+ 	for i := range parts {
+@@ -5979,6 +5998,13 @@
+ 		}
+ 	}
+ 	sequencedExprs := argExprs
++	animationMethod, animationID := "", ""
++	if name == "anim" {
++		animationMethod, animationID = g.animationMethod(argExprs)
++		if animationID != "" {
++			sequencedExprs = argExprs[1:]
++		}
++	}
+ 	if skipMapLayerOperand {
+ 		sequencedExprs = argExprs[1:]
+ 	}
+@@ -5990,6 +6016,9 @@
+ 	if skipMapLayerOperand {
+ 		names = append([]string{""}, names...)
+ 	}
++	if animationID != "" {
++		names = append([]string{animationID}, names...)
++	}
+ 	callPos := luaparser.Position{}
+ 	if len(argExprs) > 0 {
+ 		callPos = argExprs[0].Pos()
+@@ -6021,7 +6050,9 @@
+ 			return void(call)
+ 		}
+ 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
+-	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "pspr", "anim", "clip", "color", "cursor":
++	case "anim":
++		return void("c." + animationMethod + "V(" + argsUpTo(Builtins[name].MaxArgs) + ")")
++	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "pspr", "clip", "color", "cursor":
+ 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
+ 	case "map":
+ 		if len(names) == 0 {
+--- a/runtime/animation.go
++++ b/runtime/animation.go
+@@ -28,42 +28,62 @@
+ 	if c == nil || c.cart == nil {
+ 		return -1
+ 	}
+-	bytes := c.stringBytes(name)
+-	for _, clip := range c.cart.AnimationClips {
+-		if len(bytes) != len(clip.Name) {
++	return c.animationPoseNamed(c.stringBytes(name), elapsed)
++}
++
++func (c *Context) animationPoseStatic(name, elapsed Value) int {
++	if c == nil || c.cart == nil {
++		return -1
++	}
++	return c.animationPoseNamed(c.staticStringBytes(name), elapsed)
++}
++
++func (c *Context) animationPoseNamed(name []byte, elapsed Value) int {
++	for id, clip := range c.cart.AnimationClips {
++		if len(name) != len(clip.Name) {
+ 			continue
+ 		}
+ 		match := true
+-		for i, b := range bytes {
++		for i, b := range name {
+ 			if b != clip.Name[i] {
+ 				match = false
+ 				break
+ 			}
+ 		}
+-		if !match {
+-			continue
++		if match {
++			return c.animationPoseID(id, elapsed)
+ 		}
+-		if clip.Count == 0 || clip.FPS == 0 || uint64(clip.Start)+uint64(clip.Count) > uint64(len(c.cart.AnimationFrames)) {
+-			return -1
+-		}
+-		var frame uint64
+-		if elapsed.Kind == KindNil {
+-			rate := c.tickRate
+-			if rate == 0 {
+-				rate = 60
+-			}
+-			frame = uint64(c.updateTick) * uint64(clip.FPS) / uint64(rate)
+-		} else if elapsed.Num > 0 && elapsed.Kind == KindNumber {
+-			frame = uint64(elapsed.Num) * uint64(clip.FPS) >> 16
+-		}
+-		if clip.Loop {
+-			frame %= uint64(clip.Count)
+-		} else if frame >= uint64(clip.Count) {
+-			frame = uint64(clip.Count) - 1
+-		}
+-		return int(c.cart.AnimationFrames[uint64(clip.Start)+frame])
+ 	}
+ 	return -1
++}
++
++// The compiler resolves literal clip names to this allocation-free path.
++// Keeping it separate from name decoding lets the linker discard string/heap
++// machinery entirely for pose-only cartridges.
++func (c *Context) animationPoseID(id int, elapsed Value) int {
++	if c == nil || c.cart == nil || id < 0 || id >= len(c.cart.AnimationClips) {
++		return -1
++	}
++	clip := c.cart.AnimationClips[id]
++	if clip.Count == 0 || clip.FPS == 0 || uint64(clip.Start)+uint64(clip.Count) > uint64(len(c.cart.AnimationFrames)) {
++		return -1
++	}
++	var frame uint64
++	if elapsed.Kind == KindNil {
++		rate := c.tickRate
++		if rate == 0 {
++			rate = 60
++		}
++		frame = uint64(c.updateTick) * uint64(clip.FPS) / uint64(rate)
++	} else if elapsed.Num > 0 && elapsed.Kind == KindNumber {
++		frame = uint64(elapsed.Num) * uint64(clip.FPS) >> 16
++	}
++	if clip.Loop {
++		frame %= uint64(clip.Count)
++	} else if frame >= uint64(clip.Count) {
++		frame = uint64(clip.Count) - 1
++	}
++	return int(c.cart.AnimationFrames[uint64(clip.Start)+frame])
+ }
+ 
+ func (c *Context) AnimV(name, x, y, flipX, flipY, elapsed Value) {
+@@ -77,3 +97,31 @@
+ func (c *Context) AnimSiteFromBaseV(base, windowBase, stride, name, x, y, flipX, flipY, elapsed Value) {
+ 	c.PSprSiteFromBase(base.Int(), windowBase.Int(), stride.Int(), c.animationPose(name, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
+ }
++
++// AnimIDV and its site variants are internal compiler targets: clip IDs use
++// native integers, independent of Lua's signed 16.16 numeric range.
++func (c *Context) AnimIDV(id int, x, y, flipX, flipY, elapsed Value) {
++	c.PSpr(c.animationPoseID(id, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
++
++func (c *Context) AnimIDSiteV(site, windowBase Value, id int, x, y, flipX, flipY, elapsed Value) {
++	c.PSprSite(site.Int(), windowBase.Int(), c.animationPoseID(id, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
++
++func (c *Context) AnimIDSiteFromBaseV(base, windowBase, stride Value, id int, x, y, flipX, flipY, elapsed Value) {
++	c.PSprSiteFromBase(base.Int(), windowBase.Int(), stride.Int(), c.animationPoseID(id, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
++
++// Heapless programs may still choose among static names dynamically. This
++// decoder deliberately cannot reach allocated strings or the Lua semispaces.
++func (c *Context) AnimStaticV(name, x, y, flipX, flipY, elapsed Value) {
++	c.PSpr(c.animationPoseStatic(name, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
++
++func (c *Context) AnimStaticSiteV(site, windowBase, name, x, y, flipX, flipY, elapsed Value) {
++	c.PSprSite(site.Int(), windowBase.Int(), c.animationPoseStatic(name, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
++
++func (c *Context) AnimStaticSiteFromBaseV(base, windowBase, stride, name, x, y, flipX, flipY, elapsed Value) {
++	c.PSprSiteFromBase(base.Int(), windowBase.Int(), stride.Int(), c.animationPoseStatic(name, elapsed), x.Int(), y.Int(), flipX.IsTrue(), flipY.IsTrue())
++}
+--- a/runtime/mode0_obj_pack.go
++++ b/runtime/mode0_obj_pack.go
+@@ -32,6 +32,10 @@
+ 
+ func mode0PackedObjectReservedSource(id int) bool {
+ 	return id >= mode0PackedObjectTileBase && id < mode0PackedObjectTileEnd
++}
++
++func mode0PackedObjectWindowReserved(base, count int) bool {
++	return count > 0 && base < mode0PackedObjectTileEnd && base+count > mode0PackedObjectTileBase
+ }
+ 
+ func (c *Context) mode0PackedObjectTile(id, cells int) (int, bool) {
+--- a/runtime/mode0_obj_pack_disabled.go
++++ b/runtime/mode0_obj_pack_disabled.go
+@@ -8,6 +8,7 @@
+ func (c *Context) prepareMode0PackedObjects()  {}
+ 
+ func mode0PackedObjectReservedSource(id int) bool                  { return false }
++func mode0PackedObjectWindowReserved(base, count int) bool         { return false }
+ func (c *Context) mode0PackedObjectTile(id, cells int) (int, bool) { return 0, false }
+ func (c *Context) dirtyMode0PackedObject(id int)                   {}
+ func (c *Context) presentMode0PackedObjects() uint32               { return 0 }
+--- a/runtime/mode0_pose.go
++++ b/runtime/mode0_pose.go
+@@ -59,12 +59,9 @@
+ 	if base < 0 || count < 0 || base > mode0PsprWindowLimit-count {
+ 		return false
+ 	}
+-	for tile := base; tile < base+count; tile++ {
+-		if mode0PackedObjectReservedSource(tile) || mode0TextObjectTileReserved(tile) {
+-			return false
+-		}
+-	}
+-	return true
++	// Each optional atlas occupies one contiguous range. Check its overlap
++	// once, rather than revisiting every tile of an unchanged pose each draw.
++	return !mode0PackedObjectWindowReserved(base, count) && !mode0TextObjectWindowReserved(base, count)
+ }
+ 
+ func (c *Context) hasMode0PsprUploads() bool {
+--- a/runtime/mode0_text.go
++++ b/runtime/mode0_text.go
+@@ -16,6 +16,10 @@
+ 
+ func mode0TextObjectTileReserved(id int) bool {
+ 	return id >= mode0TextTileBase && id < mode0TextTileBase+mode0TextLimit
++}
++
++func mode0TextObjectWindowReserved(base, count int) bool {
++	return count > 0 && base < mode0TextTileBase+mode0TextLimit && base+count > mode0TextTileBase
+ }
+ 
+ func (c *Context) beginMode0Text() {}
+--- a/runtime/mode0_text_disabled.go
++++ b/runtime/mode0_text_disabled.go
+@@ -4,9 +4,10 @@
+ 
+ type mode0TextState struct{}
+ 
+-func mode0TextObjectTileReserved(id int) bool { return false }
+-func (c *Context) beginMode0Text()            {}
+-func (c *Context) presentMode0Text() uint32   { return 0 }
++func mode0TextObjectTileReserved(id int) bool            { return false }
++func mode0TextObjectWindowReserved(base, count int) bool { return false }
++func (c *Context) beginMode0Text()                       {}
++func (c *Context) presentMode0Text() uint32              { return 0 }
+ func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool) {
+ 	return 0, false
+ }

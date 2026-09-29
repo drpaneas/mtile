@@ -134,8 +134,18 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	// Poses are read-only cart metadata: no per-cart mutation path exists for
 	// them, so ram borrows the image's backing arrays instead of copying
 	// pixel/array data into EWRAM.
+	ram.AnimationClips, ram.AnimationFrames = image.AnimationClips, image.AnimationFrames
 	ram.PoseIndex = image.PoseIndex
 	ram.PoseParts = image.PoseParts
+	ram.PoseOBJIndex = image.PoseOBJIndex
+	ram.PoseOBJParts = image.PoseOBJParts
+	ram.PoseOBJTiles = image.PoseOBJTiles
+	ram.PoseOBJResident, ram.PoseOBJResidentBase = image.PoseOBJResident, image.PoseOBJResidentBase
+	ram.ObjSheetW, ram.ObjSheetH = image.ObjSheetW, image.ObjSheetH
+	ram.ObjSpriteCols, ram.ObjSpriteRows = image.ObjSpriteCols, image.ObjSpriteRows
+	ram.ObjSpriteN = image.ObjSpriteN
+	ram.ObjSheet = image.ObjSheet
+	ram.ObjSheetIndex = image.ObjSheetIndex
 	c.cart = ram
 	return true
 }

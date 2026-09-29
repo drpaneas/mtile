@@ -175,8 +175,16 @@ type Options struct {
 	// PoseIndex/PoseParts supply pspr's multi-part sprite tables. Poses are
 	// read-only cart metadata with no per-cart mutation path, so both stay
 	// in .rodata: there is no matching EWRAM budget entry for them.
-	PoseIndex []runtimeapi.PoseRange
-	PoseParts []runtimeapi.PosePart
+	PoseIndex       []runtimeapi.PoseRange
+	AnimationClips  []runtimeapi.AnimationClip
+	AnimationFrames []uint16
+	PoseParts       []runtimeapi.PosePart
+	// ObjSheet is the optional dense object warehouse. ObjSheetW == 0 means
+	// poses index the spritesheet. Generated carts always compact this into
+	// read-only ROM; there is no EWRAM copy.
+	ObjSheetW int
+	ObjSheetH int
+	ObjSheet  []byte
 	// Palette is the expanded 256-entry BGR555 palette for native projects.
 	// An omitted palette preserves the runtime's built-in palette behavior for
 	// the earlier transpiler tests and small hand-written cartridges.
@@ -216,7 +224,10 @@ var Builtins = map[string]BuiltinSpec{
 	"cls": {"ClsV", 0, 1, 0}, "pset": {"PsetV", 2, 3, 0}, "pget": {"PgetV", 2, 2, 1},
 	"line": {"LineV", 4, 5, 0}, "rect": {"RectV", 4, 5, 0}, "rectfill": {"RectfillV", 4, 5, 0},
 	"circ": {"CircV", 3, 4, 0}, "circfill": {"CircfillV", 3, 4, 0},
-	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0}, "pspr": {"PSprV", 3, 5, 0},
+	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0},
+	// Flips automatically preserve the pose bounds, or the union bounds of a
+	// named clip; callers keep the same x/y anchor in either facing direction.
+	"pspr": {"PSprV", 3, 5, 0}, "anim": {"AnimV", 3, 6, 0},
 	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
@@ -521,6 +532,14 @@ type generator struct {
 	sheetCompact     []byte
 	sheetIndex       []uint16
 	sheetSolid       []uint16
+	objSpriteN       int
+	objSheetCompact  []byte
+	objSheetIndex    []uint32
+	psprPlan         map[*luaparser.CallExpr]mode0PsprAllocation
+	poseOBJIndex     []runtimeapi.PoseOBJRange
+	poseOBJParts     []runtimeapi.PoseOBJ
+	poseOBJTiles     []uint16
+	poseOBJResident  *mode0ResidentPosePlan
 	packedMap        [4]packedMapPlane
 	mapCompact       []uint16
 	mode0TextKeys    []uint16
@@ -593,6 +612,7 @@ func (g *generator) lookupKind(name string) monoKind {
 }
 
 func (g *generator) prepare() error {
+	g.opts = withPoseFlipOffsets(g.opts)
 	if g.opts.PackageName == "" {
 		g.opts.PackageName = "main"
 	}
@@ -674,7 +694,7 @@ func (g *generator) prepare() error {
 		}
 	}
 	g.inputEnabled = chunkCallsBuiltin(g.chunk, "btn") || chunkCallsBuiltin(g.chunk, "btnp")
-	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time")
+	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time") || chunkCallsBuiltin(g.chunk, "anim")
 	if len(g.opts.Palette) == 256 {
 		canonical := assetsync.CanonicalPaletteROM()
 		g.paletteIsDefault = slices.Equal(g.opts.Palette, canonical[:])
@@ -700,6 +720,20 @@ func (g *generator) prepare() error {
 		g.compactSheet()
 		if g.opts.Renderer != RendererMode0 && g.opts.MapDrawMask != 0 {
 			g.sheetSolid = solidSheetColors(g.sheetCompact)
+		}
+	}
+	g.compactObjSheet()
+	if g.opts.Renderer == RendererMode0 {
+		if info := g.funcs["_draw"]; info != nil && info.decl != nil {
+			if ops, _, err := mode0WalkDraw(g.chunk, info.decl, newMode0SpriteIDAnalysis(g.chunk), g.opts); err == nil {
+				g.psprPlan = mode0PsprEmitPlan(ops)
+				g.poseOBJResident = planMode0ResidentPoses(g.chunk, ops, g.opts)
+				if g.poseOBJResident != nil {
+					g.poseOBJIndex, g.poseOBJParts = g.poseOBJResident.index, g.poseOBJResident.parts
+				} else {
+					g.preparePoseOBJPlans()
+				}
+			}
 		}
 	}
 	for _, info := range g.funcList {
@@ -2151,14 +2185,10 @@ func (g *generator) stmtNoAlloc(stmt luaparser.Stmt) bool {
 
 // requiresHeap is intentionally stricter than merely finding a table literal.
 // It reuses the transitive no-allocation proof and accounts only for the table
-// forms that earlier passes completely scalar-replaced. Any boxed global stays
-// conservative because generated root registration initializes the heap.
+// forms that earlier passes completely scalar-replaced. Boxed globals can hold
+// static strings, booleans and nil without a heap; they only need GC roots when
+// some part of this closed program can allocate a heap value.
 func (g *generator) requiresHeap() bool {
-	for _, name := range g.globals {
-		if g.numericRecords[name] == nil && g.globalKinds[name] == monoValue {
-			return true
-		}
-	}
 	for _, fn := range g.funcList {
 		if !fn.noAlloc {
 			return true
@@ -2246,7 +2276,7 @@ func builtinNoAlloc(name string) bool {
 		"sfx", "music", "sample", "gba_note", "gba_stop",
 		"del", "deli", "count", "all", "pairs",
 		"sget", "sset", "fget", "fset", "mget", "mset",
-		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "map",
+		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "pspr", "anim", "map",
 		"camera", "clip", "pal", "palt", "color", "cursor":
 		return true
 	}
@@ -2507,33 +2537,17 @@ func functionCallsBuiltin(fn *functionInfo, name string) bool {
 }
 
 func (g *generator) compactSheet() {
-	g.sheetIndex = make([]uint16, g.spriteN)
-	if len(g.opts.Sheet) == 0 {
+	g.sheetCompact, g.sheetIndex = assetsync.CompactSheetCells(g.opts.Sheet, g.opts.SheetW, g.spriteN)
+}
+
+func (g *generator) compactObjSheet() {
+	if g.opts.ObjSheetW < 8 || g.opts.ObjSheetH < 8 {
 		return
 	}
-	cols := g.opts.SheetW / 8
-	for id := 0; id < g.spriteN; id++ {
-		cellX, cellY := id%cols, id/cols
-		nonzero := false
-		for row := 0; row < 8 && !nonzero; row++ {
-			start := (cellY*8+row)*g.opts.SheetW + cellX*8
-			for _, pixel := range g.opts.Sheet[start : start+8] {
-				if pixel != 0 {
-					nonzero = true
-					break
-				}
-			}
-		}
-		if !nonzero {
-			continue
-		}
-		slot := len(g.sheetCompact) / 64
-		g.sheetIndex[id] = uint16(slot + 1)
-		for row := 0; row < 8; row++ {
-			start := (cellY*8+row)*g.opts.SheetW + cellX*8
-			g.sheetCompact = append(g.sheetCompact, g.opts.Sheet[start:start+8]...)
-		}
-	}
+	cols := g.opts.ObjSheetW / 8
+	rows := g.opts.ObjSheetH / 8
+	g.objSpriteN = cols * rows
+	g.objSheetCompact, g.objSheetIndex = assetsync.CompactObjectSheetCells(g.opts.ObjSheet, g.opts.ObjSheetW, g.objSpriteN)
 }
 
 func functionKey(fn *luaparser.FunctionDeclStmt) string {
@@ -3519,7 +3533,23 @@ func (g *generator) collectBlockGlobals(block *luaparser.Block) {
 }
 
 func (g *generator) collectStmtStatics(stmt luaparser.Stmt) {
-	collectStmtExprs(stmt, g.collectExprStatic)
+	var clipNames map[*luaparser.StringExpr]bool
+	collectStmtExprs(stmt, func(expr luaparser.Expr) {
+		if call, ok := expr.(*luaparser.CallExpr); ok {
+			if name, _ := callKey(call); name == "anim" {
+				if _, literal := staticAnimationID(call.Args, g.opts); literal {
+					if clipNames == nil {
+						clipNames = make(map[*luaparser.StringExpr]bool)
+					}
+					clipNames[unparenExpr(call.Args[0]).(*luaparser.StringExpr)] = true
+				}
+			}
+		}
+		if str, ok := expr.(*luaparser.StringExpr); ok && clipNames[str] {
+			return
+		}
+		g.collectExprStatic(expr)
+	})
 }
 
 func (g *generator) collectBlockStatics(block *luaparser.Block) {
@@ -3902,6 +3932,16 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line(fmt.Sprintf("var poseIndexROM = [ %d ]rt.PoseRange{%s}", len(g.opts.PoseIndex), poseRangeLiteral(g.opts.PoseIndex)))
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var posePartROM = [ %d ]rt.PosePart{%s}", len(g.opts.PoseParts), posePartLiteral(g.opts.PoseParts)))
+	g.renderAnimationTables(b)
+	if len(g.poseOBJIndex) > 0 {
+		g.renderPoseOBJPlans(b)
+	}
+	if g.objSpriteN > 0 {
+		b.line(fmt.Sprintf("const (\n\tObjSheetW = %d; ObjSheetH = %d; ObjSpriteCols = ObjSheetW / 8; ObjSpriteRows = ObjSheetH / 8; ObjSpriteN = ObjSpriteCols * ObjSpriteRows\n)", g.opts.ObjSheetW, g.opts.ObjSheetH))
+		b.line(assetsync.ObjectSheetROMDeclaration(g.objSheetCompact))
+		b.line("//go:section .rodata")
+		b.line(fmt.Sprintf("var objSheetIndexROM = [ %d ]uint32{%s}", g.objSpriteN, u32Literal(g.objSheetIndex, g.objSpriteN)))
+	}
 	if len(g.mode0TextKeys) != 0 {
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var mode0TextKeysROM = [%d]uint16{%s}", len(g.mode0TextKeys), u16Literal(g.mode0TextKeys, len(g.mode0TextKeys))))
@@ -3931,6 +3971,9 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line(fmt.Sprintf("//go:section .ewram\nvar mapRAM [%d]uint16", mapCells))
 	}
 	b.line(fmt.Sprintf("//go:section .ewram\nvar flagRAM [%d]byte", g.spriteN))
+	if _, tiles := g.poseOBJStageWindow(); tiles > 0 {
+		b.line(fmt.Sprintf("//go:section .ewram\nvar poseOBJStageRAM [%d]uint32", tiles*16))
+	}
 	b.line("//go:section .ewram\nvar cartData rt.AssetMemory")
 	b.line("//go:section .ewram\nvar ctx rt.Context")
 	b.line("//go:section .ewram\nvar game Game")
@@ -3992,7 +4035,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		if g.numericRecords[name] != nil || g.numericConstants[name] != nil {
 			continue
 		}
-		if g.globalKinds[name] == monoValue {
+		if g.heapEnabled && g.globalKinds[name] == monoValue {
 			b.line("\tc.RegisterGlobal(&g." + g.globalGo[name] + ")")
 		}
 	}
@@ -4046,6 +4089,17 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,")
 	b.line("\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],")
 	b.line("\t\tPoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],")
+	b.line("\t\tAnimationClips: animationClipROM[:], AnimationFrames: animationFrameROM[:],")
+	if len(g.poseOBJIndex) > 0 {
+		b.line("\t\tPoseOBJIndex: poseOBJIndexROM[:], PoseOBJParts: poseOBJPartsROM[:], PoseOBJTiles: poseOBJTilesROM[:],")
+		if g.poseOBJResident != nil {
+			b.line(fmt.Sprintf("\t\tPoseOBJResident: poseOBJResidentROM[:], PoseOBJResidentBase: %d,", g.poseOBJResident.base))
+		}
+	}
+	if g.objSpriteN > 0 {
+		b.line("\t\tObjSheetW: ObjSheetW, ObjSheetH: ObjSheetH, ObjSpriteCols: ObjSpriteCols, ObjSpriteRows: ObjSpriteRows, ObjSpriteN: ObjSpriteN,")
+		b.line("\t\tObjSheet: objSheetROM.Pixels[:], ObjSheetIndex: objSheetIndexROM[:],")
+	}
 	if !g.sheetMutable {
 		b.line("\t\tSheetIndex: sheetIndexROM[:],")
 	}
@@ -4063,6 +4117,15 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	}
 	b.line("\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]")
 	b.line("\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]")
+	b.line("\tcartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]")
+	if base, tiles := g.poseOBJStageWindow(); tiles > 0 {
+		b.line(fmt.Sprintf("\tcartData.PoseOBJStage, cartData.PoseOBJStageBase = poseOBJStageRAM[:], %d", base))
+	}
+	if g.objSpriteN > 0 {
+		b.line("\tcartData.ObjSheetW, cartData.ObjSheetH = ObjSheetW, ObjSheetH")
+		b.line("\tcartData.ObjSpriteCols, cartData.ObjSpriteRows, cartData.ObjSpriteN = ObjSpriteCols, ObjSpriteRows, ObjSpriteN")
+		b.line("\tcartData.ObjSheet, cartData.ObjSheetIndex = objSheetROM.Pixels[:], objSheetIndexROM[:]")
+	}
 	if g.mapRasterEligible() {
 		b.line("\tcartData.MapRasterPixels, cartData.MapRasterSpans = mapRasterPixelsRAM[:], mapRasterSpansRAM[:]")
 	}
@@ -4145,9 +4208,9 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\tctx.PresentRender()")
 	if g.opts.Debug {
 		if g.heapEnabled {
-			b.line("\t\tdebugMailbox.Begin(ctx.PerformanceStats())")
+			b.line("\t\tdebugMailbox.Begin(ctx.DebugSnapshot())")
 		} else {
-			b.line("\t\theaplessStats := ctx.PerformanceStats()")
+			b.line("\t\theaplessStats := ctx.DebugSnapshot()")
 			b.line("\t\theaplessStats.HeapCapacity, heaplessStats.HeapHandleLimit = 0, 0")
 			b.line("\t\tdebugMailbox.Begin(heaplessStats)")
 		}
@@ -5833,6 +5896,15 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		if at := g.knownAppendPositions[call]; at != "" {
 			return g.emitKnownTableAppend(call, at)
 		}
+		if name == "anim" {
+			if err := validateAnimationCall(call, g.opts); err != nil {
+				g.setErr(err)
+				return "rt.NilVal()"
+			}
+		}
+		if (name == "pspr" || name == "anim") && g.opts.Renderer == RendererMode0 {
+			return g.emitMode0Pspr(call, value)
+		}
 		return g.emitBuiltin(name, call.Args, value)
 	}
 	var fn *functionInfo
@@ -5866,6 +5938,60 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 	return g.emitUserCall(call, fn)
 }
 
+func (g *generator) emitMode0Pspr(call *luaparser.CallExpr, value bool) string {
+	width, method, clipID := 5, "PSpr", ""
+	if name, _ := callKey(call); name == "anim" {
+		width = 6
+		method, clipID = g.animationMethod(call.Args)
+	}
+	sequenced := call.Args
+	if clipID != "" {
+		sequenced = sequenced[1:]
+	}
+	adjusted := g.sequenceAdjustedExprs(sequenced)
+	names := make([]string, len(adjusted))
+	for i, item := range adjusted {
+		names[i] = adjustedLuaValue(item)
+	}
+	if clipID != "" {
+		names = append([]string{clipID}, names...)
+	}
+	arg := func(i int) string {
+		if i >= len(names) {
+			return "rt.Value{}"
+		}
+		return names[i]
+	}
+	parts := make([]string, width)
+	for i := range parts {
+		parts[i] = arg(i)
+	}
+	args := strings.Join(parts, ",")
+	allocation, allocated := g.psprPlan[call]
+	void := func(expr string) string {
+		if !value {
+			return expr
+		}
+		g.pending = append(g.pending, expr)
+		return "rt.NilVal()"
+	}
+	if g.poseOBJResident != nil {
+		return void("c." + method + "V(" + args + ")")
+	}
+	if !allocated {
+		if g.current != nil && !lifecycleReachable(g.chunk)[g.current.key] {
+			// Unreachable helpers are emitted too, but consume no draw slots.
+			return void("c." + method + "V(" + args + ")")
+		}
+		g.setErr(mode0CallError(call, reasonMode0PsprShape, "Mode 0 pspr() has no proven draw allocation"))
+		return "rt.NilVal()"
+	}
+	if allocation.count > 1 {
+		return void(fmt.Sprintf("c.%sSiteFromBaseV(rt.IntVal(%d), rt.IntVal(%d), rt.IntVal(%d), %s)", method, allocation.site, allocation.window, allocation.stride, args))
+	}
+	return void(fmt.Sprintf("c.%sSiteV(rt.IntVal(%d), rt.IntVal(%d), %s)", method, allocation.site, allocation.window, args))
+}
+
 func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bool) string {
 	// A proven map-layer operand has already served its purpose by selecting a
 	// fixed compact-plane path. Literals and immutable numeric constants are
@@ -5888,6 +6014,13 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		}
 	}
 	sequencedExprs := argExprs
+	animationMethod, animationID := "", ""
+	if name == "anim" {
+		animationMethod, animationID = g.animationMethod(argExprs)
+		if animationID != "" {
+			sequencedExprs = argExprs[1:]
+		}
+	}
 	if skipMapLayerOperand {
 		sequencedExprs = argExprs[1:]
 	}
@@ -5898,6 +6031,9 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 	}
 	if skipMapLayerOperand {
 		names = append([]string{""}, names...)
+	}
+	if animationID != "" {
+		names = append([]string{animationID}, names...)
 	}
 	callPos := luaparser.Position{}
 	if len(argExprs) > 0 {
@@ -5930,6 +6066,8 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 			return void(call)
 		}
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
+	case "anim":
+		return void("c." + animationMethod + "V(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "cls", "pset", "line", "rect", "rectfill", "circ", "circfill", "sspr", "pspr", "clip", "color", "cursor":
 		return void("c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")")
 	case "map":
@@ -6672,7 +6810,7 @@ func u16Literal(data []uint16, n int) string {
 func poseRangeLiteral(data []runtimeapi.PoseRange) string {
 	parts := make([]string, len(data))
 	for i, r := range data {
-		parts[i] = fmt.Sprintf("{Start: %d, Count: %d}", r.Start, r.Count)
+		parts[i] = fmt.Sprintf("{Start: %d, Count: %d, FlipOffsetX: %d, FlipOffsetY: %d}", r.Start, r.Count, r.FlipOffsetX, r.FlipOffsetY)
 	}
 	return strings.Join(parts, ",")
 }

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "capturedUTC": "2026-09-24T00:00:18.821245+00:00",
+  "nativeCaptureDirectory": "/private/tmp/mtile-pose-memory-fixed-20260924",
+  "sourceSHA256": {
+    "cmd/renderbench/pose_memory_diagnostic_test.go": "9bb92607c650c46270132dd9635e53d4017bcd8a6c833e274f5c9e53786dc426",
+    "runtime/debug_snapshot.go": "23d384c74049842528b95a21dd5b2fc9636231280b04c05352e34f133311d9b0",
+    "runtime/debug_obj_stream.go": "76fedbcefc0f4973beee8ec5963d958d00b91aa9aa6cc1d1a095e2b606c829fa",
+    "runtime/debug_obj_stream_disabled.go": "a5769aff9b31901020f3bbcf5aef767f89830f7c875e90c7d77de264c8582218",
+    "runtime/debug.go": "69f5fa80345cdb02ca89f0f8fe64b09d88d4d9f92d95f8c6a1896f3034983536",
+    "runtime/profile.go": "f331b2286fd659b65c1361df8a6b7848deb58ef65401957dcf0380cd18589b25",
+    "internal/emulator/session.go": "98ed222e2458e598fc4e7f63efae4f8d7f8a88de69a155a66f40e91563520f50",
+    "internal/build/pose_memory.go": "9085bb71a148033243c72f538aee53063e196ab261e2cb6ac5a02bc2c0577742",
+    "internal/build/build.go": "0a0bcfcbb09f595d60c7239e4ed1d8608f5dbb4a15b978e3d16f0fa7601bec38",
+    "internal/transpiler/transpiler.go": "9db0d505ec8736da39fc07ec9bb65076b687c7aecc72ea21370e7975b62259b3",
+    "cmd/mtile-player/main.c": "05aa4a48c3cc867a18bf6f04724713a99877393e25b8253b8626a34e4d1ef47c"
+  },
+  "nativePlayerSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "baselineDebugEvidence": "/private/tmp/mtile-obj-optimization-20260924/phase2-native/nerdo/report.json",
+  "baselineReleaseROM": "/private/tmp/mtile-nerdo-optimized-release.gba",
+  "imagesNote": "representativeFrames[].image names refer to PNGs in nativeCaptureDirectory; ROMs and kept ELF/map workspaces are linked by report.json.",
+  "verification": {
+    "sampledGameFrames": 120,
+    "warmupGameFrames": 2,
+    "distinctAuthoredPoses": 4,
+    "poseChangesWithUpload": 32,
+    "unchangedPosesWithZeroUpload": 87,
+    "medianLCDRefreshesPerGameFrame": 2,
+    "maximumLCDRefreshesPerGameFrame": 2,
+    "samePixelsAsBaseline": true,
+    "releaseROMIdentical": true
+  },
+  "profilingLimitation": "LastFrame measures game work and display commit. DebugSnapshot and mailbox publication run afterward, outside this counter; these comparisons do not measure the full debug-only residency scan cost.",
+  "reproduction": "MTILE_POSE_MEMORY_REPORT=/tmp/mtile-pose-memory-new go test -tags=runtimeperfdiagnostic ./cmd/renderbench -run ^TestPoseMemoryTargetDiagnostic$ -count=1 -v",
+  "optionalBaselineEnvironment": [
+    "MTILE_POSE_MEMORY_BASELINE: path to a matching obj-optimization report.json",
+    "MTILE_POSE_MEMORY_RELEASE_BASELINE: path to matching pre-change release .gba"
+  ]
+}

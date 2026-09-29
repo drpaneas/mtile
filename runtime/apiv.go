@@ -56,6 +56,31 @@ func (c *Context) PSprV(id, x, y, flipX, flipY Value) {
 	)
 }
 
+func (c *Context) PSprSiteV(site, windowBase, id, x, y, flipX, flipY Value) {
+	c.PSprSite(
+		site.Int(),
+		windowBase.Int(),
+		id.Int(),
+		x.Int(),
+		y.Int(),
+		flipX.IsTrue(),
+		flipY.IsTrue(),
+	)
+}
+
+func (c *Context) PSprSiteFromBaseV(base, windowBase, windowStride, id, x, y, flipX, flipY Value) {
+	c.PSprSiteFromBase(
+		base.Int(),
+		windowBase.Int(),
+		windowStride.Int(),
+		id.Int(),
+		x.Int(),
+		y.Int(),
+		flipX.IsTrue(),
+		flipY.IsTrue(),
+	)
+}
+
 func (c *Context) SSprV(sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY Value) {
 	c.SSpr(
 		sx.Int(),

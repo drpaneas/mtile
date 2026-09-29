@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/drpaneas/mtile/internal/luaparser"
+	runtimeapi "github.com/drpaneas/mtile/runtime"
 )
 
 const (
@@ -110,7 +111,7 @@ func (e *mode0NumEval) nums(expr luaparser.Expr, env mode0NumEnv) ([]float64, bo
 	}
 	expr = unparenExpr(expr)
 	if value, ok := staticNumberLiteral(expr); ok {
-		return []float64{value}, true
+		return []float64{float64(fixedNumberLiteral(value)) / 65536}, true
 	}
 	switch n := expr.(type) {
 	case *luaparser.VarExpr:
@@ -121,7 +122,7 @@ func (e *mode0NumEval) nums(expr luaparser.Expr, env mode0NumEnv) ([]float64, bo
 			if ids, proven, _ := e.analysis.enumeratedIDs(n); proven {
 				out := make([]float64, len(ids))
 				for i, id := range ids {
-					out[i] = float64(id)
+					out[i] = float64(runtimeapi.FromInt(id)) / 65536
 				}
 				return out, true
 			}
@@ -137,7 +138,7 @@ func (e *mode0NumEval) nums(expr luaparser.Expr, env mode0NumEnv) ([]float64, bo
 		}
 		out := make([]float64, len(values))
 		for i, value := range values {
-			out[i] = -value
+			out[i] = float64(-runtimeapi.Number(fixedNumberLiteral(value))) / 65536
 		}
 		return out, true
 	case *luaparser.BinaryExpr:
@@ -190,31 +191,37 @@ func (e *mode0NumEval) binary(op luaparser.Operator, left, right []float64) ([]f
 }
 
 func mode0ApplyOp(op luaparser.Operator, a, b float64) (float64, bool) {
+	// Match the same signed 16.16 operations emitted into a cartridge. Pure
+	// float arithmetic can prove a different pose ID after overflow or fixed
+	// point rounding, causing overlapping windows or omitted hardware objects.
+	x, y := runtimeapi.Number(fixedNumberLiteral(a)), runtimeapi.Number(fixedNumberLiteral(b))
+	var result runtimeapi.Number
 	switch op {
 	case luaparser.OpAdd:
-		return a + b, true
+		result = x + y
 	case luaparser.OpSubtract:
-		return a - b, true
+		result = x - y
 	case luaparser.OpMultiply:
-		return a * b, true
+		result = x.Mul(y)
 	case luaparser.OpDivide:
-		if b == 0 {
+		if y == 0 {
 			return 0, false
 		}
-		return a / b, true
+		result = x.Div(y)
 	case luaparser.OpIntegerDivide:
-		if b == 0 {
+		if y == 0 {
 			return 0, false
 		}
-		return math.Floor(a / b), true
+		result = x.IDiv(y)
 	case luaparser.OpModulo:
-		if b == 0 {
+		if y == 0 {
 			return 0, false
 		}
-		return a - math.Floor(a/b)*b, true
+		result = x.Mod(y)
 	default:
 		return 0, false
 	}
+	return float64(result) / 65536, true
 }
 
 func (e *mode0NumEval) call(call *luaparser.CallExpr, env mode0NumEnv) ([]float64, bool) {
@@ -1214,13 +1221,13 @@ func (e *mode0NumEval) interval(expr luaparser.Expr, env mode0NumEnv) (float64, 
 		}
 		switch n.Op {
 		case luaparser.OpAdd:
-			return loL + loR, hiL + hiR, true
+			return mode0FixedInterval(loL+loR, hiL+hiR)
 		case luaparser.OpSubtract:
-			return loL - hiR, hiL - loR, true
+			return mode0FixedInterval(loL-hiR, hiL-loR)
 		case luaparser.OpMultiply:
 			cands := []float64{loL * loR, loL * hiR, hiL * loR, hiL * hiR}
 			sort.Float64s(cands)
-			return cands[0], cands[3], true
+			return mode0FixedInterval(cands[0], cands[3])
 		}
 	case *luaparser.UnaryExpr:
 		if n.Op == luaparser.OpNegate {
@@ -1228,10 +1235,19 @@ func (e *mode0NumEval) interval(expr luaparser.Expr, env mode0NumEnv) (float64, 
 			if !ok {
 				return 0, 0, false
 			}
-			return -hi, -lo, true
+			return mode0FixedInterval(-hi, -lo)
 		}
 	}
 	return 0, 0, false
+}
+
+// A wrapping result is not a monotonic real interval. Decline that shortcut
+// and let pose proof use its whole-library bound instead of a false subset.
+func mode0FixedInterval(lo, hi float64) (float64, float64, bool) {
+	if lo < -32768 || hi > 32767.99998474121 || math.IsNaN(lo) || math.IsNaN(hi) {
+		return 0, 0, false
+	}
+	return math.Floor(lo*65536) / 65536, math.Ceil(hi*65536) / 65536, true
 }
 
 func (e *mode0NumEval) intervalInts(lo, hi float64, closedHigh bool) ([]float64, bool) {

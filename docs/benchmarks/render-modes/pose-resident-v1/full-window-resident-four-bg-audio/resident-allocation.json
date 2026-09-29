@@ -1,0 +1,19 @@
+{
+  "PoseCount": 2,
+  "ClipCount": 0,
+  "PoseNames": [
+    "full0",
+    "full1"
+  ],
+  "Source": "obj",
+  "SourcePixelBytes": 512,
+  "UniquePixelBytes": 512,
+  "PixelROMBytes": 1024,
+  "ResidentVRAMBytes": 512,
+  "MetadataROMBytes": 660,
+  "StageRAMBytes": 0,
+  "LinkedMemoryAvailable": true,
+  "PixelsLinked": true,
+  "MetadataLinked": true,
+  "StageLinked": false
+}

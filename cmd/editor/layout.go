@@ -118,9 +118,10 @@ func setEditorLayout(width, height int) bool {
 	contentOffset := spritePanelContentOffset()
 	canvasFooterHeight := spriteCanvasFooterGap + uiSmallTextHeight + spritePanelPadding
 	buttonPanelHeight := contentOffset + spriteButtonHeight + spritePanelPadding
+	flagsPanelHeight := buttonPanelHeight + 2*(uiSmallTextHeight+6)
 	pickerMinHeight := contentOffset + 2*pickerSliderRowHeight + pickerSliderHeight + spritePanelPadding
 	desktopChromeHeight := contentOffset + canvasFooterHeight + 4*spriteSectionGap +
-		2*buttonPanelHeight + (contentOffset + paletteSwatchColumns*16 + spritePanelPadding) + pickerMinHeight
+		buttonPanelHeight + flagsPanelHeight + (contentOffset + paletteSwatchColumns*16 + spritePanelPadding) + pickerMinHeight
 	compactSpriteLayout := spriteRailRect.H < 320+desktopChromeHeight
 	// Preserve a large desktop canvas at every text size. Use a slightly
 	// smaller whole-tile canvas before falling back to the compact topology.
@@ -131,7 +132,7 @@ func setEditorLayout(width, height int) bool {
 		paletteSwatchWidth = 12
 		paletteSwatchHeight = 12
 		compactChromeHeight := contentOffset + canvasFooterHeight + 3*spriteSectionGap +
-			2*buttonPanelHeight + contentOffset + paletteSwatchColumns*paletteSwatchHeight + spritePanelPadding
+			buttonPanelHeight + flagsPanelHeight + contentOffset + paletteSwatchColumns*paletteSwatchHeight + spritePanelPadding
 		canvasSize = max(8, min(240, (spriteRailRect.H-compactChromeHeight)/8*8))
 	}
 
@@ -184,14 +185,14 @@ func setEditorLayout(width, height int) bool {
 			X: spriteRailRect.X,
 			Y: spritePalettePanelRect.Y + spritePalettePanelRect.H + spriteSectionGap,
 			W: spriteRailRect.W,
-			H: max(buttonPanelHeight, statusBarRect.Y-(spritePalettePanelRect.Y+spritePalettePanelRect.H)-spriteSectionGap-10),
+			H: max(flagsPanelHeight, statusBarRect.Y-(spritePalettePanelRect.Y+spritePalettePanelRect.H)-spriteSectionGap-10),
 		}
 	} else {
 		spriteFlagsPanelRect = editor.Rect{
 			X: spriteRailRect.X,
 			Y: spritePalettePanelRect.Y + spritePalettePanelRect.H + spriteSectionGap,
 			W: spriteRailRect.W,
-			H: buttonPanelHeight,
+			H: flagsPanelHeight,
 		}
 		spritePickerPanelRect = editor.Rect{
 			X: spriteRailRect.X,

@@ -27,8 +27,13 @@ const (
 // public API cannot silently enter AUTO mode without an explicit decision.
 func BuiltinRendererCompatibility(name string) RendererCompatibility {
 	switch name {
-	case "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "pspr":
+	case "pset", "pget", "line", "rect", "rectfill", "circ", "circfill":
 		return RendererMode4Only
+	case "pspr", "anim":
+		// Both backends use build-derived bounds for automatic flip anchoring
+		// (a pose's bounds or a whole clip's union). Mode 0 still requires the
+		// documented bounded draw sites, OAM budget, and tile streaming proof.
+		return RendererMode0Conditional
 	case "cls", "spr", "sspr", "map", "clip", "pal", "palt", "print":
 		return RendererMode0Conditional
 	case "camera", "color", "cursor", "sget", "sset", "fget", "fset":

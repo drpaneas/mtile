@@ -34,16 +34,30 @@ func Load(projectDir string) (*Assets, error) {
 	if err != nil {
 		return nil, err
 	}
+	objSheet, err := LoadObjSheet(projectDir)
+	if err != nil {
+		return nil, err
+	}
+	if err := attachObjSheet(assets, objSheet, len(palette.Colors)); err != nil {
+		return nil, err
+	}
 	poses, err := LoadPoses(projectDir)
 	if err != nil {
 		return nil, err
 	}
-	poseIndex, poseParts, err := flattenPoses(*poses, assets.SpriteN)
+	poseIndex, poseParts, err := flattenPoses(*poses, poseBankN(assets), poseBankName(assets))
 	if err != nil {
 		return nil, err
 	}
 	assets.PoseIndex = poseIndex
+	assets.PoseNames = make([]string, len(poses.Poses))
+	for id, pose := range poses.Poses {
+		assets.PoseNames[id] = pose.Name
+	}
 	assets.PoseParts = poseParts
+	if err := attachAnimations(projectDir, assets); err != nil {
+		return nil, err
+	}
 	audioVersion, err := DetectAudioVersion(projectDir)
 	if err != nil {
 		return nil, err
@@ -282,14 +296,18 @@ func flatten(project Project, sheet Spritesheet, mapData Map, palette Palette) (
 // consumes: a single contiguous PoseParts array, with each FlatPose in
 // PoseIndex naming a [Start, Start+Count) span within it in poses.json
 // order. An empty PoseFile returns two zero-length, non-nil slices.
-func flattenPoses(poses PoseFile, spriteN int) ([]FlatPose, []FlatPosePart, error) {
+func flattenPoses(poses PoseFile, spriteN int, bankName string) ([]FlatPose, []FlatPosePart, error) {
+	if bankName == "" {
+		bankName = "spritesheet"
+	}
 	poseIndex := make([]FlatPose, 0, len(poses.Poses))
 	poseParts := make([]FlatPosePart, 0, len(poses.Poses))
 	for poseIdx, pose := range poses.Poses {
 		start := len(poseParts)
+		var bounds PoseFlipBounds
 		for partIdx, part := range pose.Parts {
 			if part.Tile < 0 || part.Tile >= spriteN {
-				return nil, nil, fmt.Errorf("poses.json: pose %d part %d tile %d is outside 0..%d", poseIdx, partIdx, part.Tile, maxInt(spriteN-1, 0))
+				return nil, nil, fmt.Errorf("poses.json: pose %d part %d tile %d is outside %s 0..%d", poseIdx, partIdx, part.Tile, bankName, maxInt(spriteN-1, 0))
 			}
 			if part.X < math.MinInt16 || part.X > math.MaxInt16 {
 				return nil, nil, fmt.Errorf("poses.json: pose %d part %d x %d is outside %d..%d", poseIdx, partIdx, part.X, math.MinInt16, math.MaxInt16)
@@ -310,8 +328,10 @@ func flattenPoses(poses PoseFile, spriteN int) ([]FlatPose, []FlatPosePart, erro
 				Y:     int16(part.Y),
 				Flags: flags,
 			})
+			bounds.AddTile(int16(part.X), int16(part.Y))
 		}
-		poseIndex = append(poseIndex, FlatPose{Start: uint16(start), Count: uint16(len(pose.Parts))})
+		offsetX, offsetY := bounds.Offsets()
+		poseIndex = append(poseIndex, FlatPose{Start: uint32(start), Count: uint16(len(pose.Parts)), FlipOffsetX: offsetX, FlipOffsetY: offsetY})
 	}
 	return poseIndex, poseParts, nil
 }

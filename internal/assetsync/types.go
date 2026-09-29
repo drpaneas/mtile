@@ -18,6 +18,11 @@ const (
 	NewProjectRendererName = "auto"
 	MaxPaletteNameLength   = 32
 	MaxSpriteN             = 65536
+	// OBJ graphics live in ROM. Tile IDs use uint16; they do not share the
+	// map cache's EWRAM budget, and sheets can use any aspect ratio.
+	MaxObjSheetCells = MaxSpriteN
+	DefaultObjSheetW = 512
+	DefaultObjSheetH = 320
 	// MapStreamingThresholdCells must match runtime.MapStreamingThresholdCells.
 	// Maps above this size use the fixed ROM-backed chunk cache instead of a
 	// full EWRAM copy. Keep the value here so assetsync does not import runtime.
@@ -79,9 +84,12 @@ type Spritesheet struct {
 }
 
 const (
-	MaxPoseCount     = 4096
-	MaxPoseParts     = 128
-	MaxPosePartTotal = 65535
+	// Lua fixed-point integers represent nonnegative pose IDs through 32767.
+	MaxPoseCount = 32768
+	MaxPoseParts = 65535
+	// Each flattened part occupies 8 bytes in the 32 MiB cartridge address space.
+	MaxPosePartTotal = (32 * 1024 * 1024) / 8
+	MaxPoseNameBytes = 32
 )
 
 type PosePartRecord struct {
@@ -115,8 +123,18 @@ type FlatPosePart struct {
 // FlatPose names a contiguous span within Assets.PoseParts: parts
 // [Start, Start+Count) draw the pose, in the same order as poses.json.
 type FlatPose struct {
-	Start uint16
-	Count uint16
+	Start                    uint32
+	Count                    uint16
+	FlipOffsetX, FlipOffsetY int32
+}
+
+// FlatAnimationClip addresses immutable global pose IDs in AnimationFrames.
+type FlatAnimationClip struct {
+	Name                     string
+	Start, Count             uint32
+	FPS                      uint8
+	Loop                     bool
+	FlipOffsetX, FlipOffsetY int32
 }
 
 // MapLayer is one fixed logical background plane. IDs are stable and range
@@ -144,22 +162,33 @@ type Assets struct {
 	AudioVersion int
 	NativeAudio  *NativeAudioAssets
 
-	Palette      Palette
-	PaletteROM   [256]uint16
-	SheetW       int
-	SheetH       int
-	SpriteCols   int
-	SpriteRows   int
-	SpriteN      int
-	MapW         int
-	MapH         int
-	MapLayers    int
-	MapStreaming bool
-	SheetROM     []byte
-	MapROM       []uint16
-	FlagROM      []byte
-	PoseIndex    []FlatPose
-	PoseParts    []FlatPosePart
+	Palette       Palette
+	PaletteROM    [256]uint16
+	SheetW        int
+	SheetH        int
+	SpriteCols    int
+	SpriteRows    int
+	SpriteN       int
+	MapW          int
+	MapH          int
+	MapLayers     int
+	MapStreaming  bool
+	SheetROM      []byte
+	MapROM        []uint16
+	FlagROM       []byte
+	ObjSheetW     int
+	ObjSheetH     int
+	ObjSpriteCols int
+	ObjSpriteRows int
+	ObjSpriteN    int
+	ObjSheetROM   []byte
+	PoseIndex     []FlatPose
+	PoseParts     []FlatPosePart
+	// PoseNames are build/debugger labels from the same validated source as
+	// PoseIndex; they are not added to the cartridge's runtime pose records.
+	PoseNames       []string
+	AnimationClips  []FlatAnimationClip
+	AnimationFrames []uint16
 }
 
 // Valid reports whether each component is a 5-bit GBA channel (0..31).

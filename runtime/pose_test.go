@@ -16,7 +16,7 @@ func poseFixture() (*AssetImage, *AssetMemory) {
 	image := &AssetImage{
 		SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1, SpriteN: 2,
 		Sheet: sheet, MapW: 1, MapH: 1, Map: []uint16{0}, Flags: []byte{0, 0},
-		PoseIndex: []PoseRange{{Start: 0, Count: 2}},
+		PoseIndex: []PoseRange{{Start: 0, Count: 2, FlipOffsetX: 16, FlipOffsetY: 8}},
 		PoseParts: []PosePart{
 			{Tile: 0, X: 0, Y: 0},
 			{Tile: 1, X: 8, Y: 0, Flags: PoseFlipX},
@@ -47,8 +47,8 @@ func TestPSprMatchesSprSequenceAndFlip(t *testing.T) {
 	pose.Cls(0)
 	spr.Cls(0)
 	pose.PSpr(0, 10, 20, true, false)
-	spr.Spr(0, 10+(-0-8), 20, 1, 1, true, false)  // part0 flipped in X
-	spr.Spr(1, 10+(-8-8), 20, 1, 1, false, false) // part1 FlipX xor true
+	spr.Spr(0, 10+16-0-8, 20, 1, 1, true, false)  // part0 flipped within 16px bounds
+	spr.Spr(1, 10+16-8-8, 20, 1, 1, false, false) // part1 FlipX xor true
 	for i := range pose.framebuffer {
 		if pose.framebuffer[i] != spr.framebuffer[i] {
 			t.Fatalf("pixel %d: pose=%d spr=%d", i, pose.framebuffer[i], spr.framebuffer[i])
@@ -149,4 +149,56 @@ func TestPSprNilContextIsNoOp(t *testing.T) {
 func TestPSprBeforeInitIsNoOp(t *testing.T) {
 	var c Context
 	c.PSpr(0, 0, 0, false, false) // must not panic; c.cart is nil
+}
+
+func TestPSprReadsObjectSheetNotSpritesheet(t *testing.T) {
+	sheet := make([]byte, 128)
+	sheet[1] = 3
+	sheet[64+1] = 4
+	objCell := make([]byte, 64)
+	objCell[1] = 11
+	image := &AssetImage{
+		SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1, SpriteN: 2,
+		Sheet: sheet, MapW: 1, MapH: 1, Map: []uint16{0}, Flags: []byte{0, 0},
+		PoseIndex: []PoseRange{{Start: 0, Count: 1}},
+		PoseParts: []PosePart{{Tile: 0, X: 0, Y: 0}},
+		ObjSheetW: 8, ObjSheetH: 8, ObjSpriteCols: 1, ObjSpriteRows: 1, ObjSpriteN: 1,
+		ObjSheet: objCell, ObjSheetIndex: []uint32{1},
+	}
+	ram := &AssetMemory{
+		SheetW: 16, SheetH: 8, SpriteCols: 2, SpriteRows: 1, SpriteN: 2,
+		MapW: 1, MapH: 1,
+		Sheet: make([]byte, 128), Map: make([]uint16, 1), Flags: make([]byte, 2),
+	}
+	var pose Context
+	if !pose.Init(image, ram) {
+		t.Fatal("init")
+	}
+	pose.Cls(0)
+	pose.PSpr(0, 0, 0, false, false)
+	if got := pose.framebuffer[1]; got != 11 {
+		t.Fatalf("object-sheet pixel = %d, want 11 (spritesheet has 3 at the same cell)", got)
+	}
+}
+
+func TestPSprUsesFullUint16TileAndWidePoseRanges(t *testing.T) {
+	image, ram := poseFixture()
+	image.ObjSheetW, image.ObjSheetH = 2048, 2048
+	image.ObjSpriteCols, image.ObjSpriteRows, image.ObjSpriteN = 256, 256, 65536
+	image.ObjSheet = make([]byte, 65536*64)
+	image.ObjSheetIndex = make([]uint32, 65536)
+	image.ObjSheetIndex[65535] = 65536
+	image.ObjSheet[65535*64] = 11
+	image.PoseParts = make([]PosePart, 65537)
+	image.PoseParts[65536] = PosePart{Tile: 65535}
+	image.PoseIndex = []PoseRange{{Start: 65536, Count: 1}}
+	var c Context
+	if !c.Init(image, ram) {
+		t.Fatal("wide pose and full object bank rejected")
+	}
+	c.Cls(0)
+	c.PSpr(0, 0, 0, false, false)
+	if got := c.framebuffer[0]; got != 11 {
+		t.Fatalf("last bank tile pixel=%d, want11", got)
+	}
 }

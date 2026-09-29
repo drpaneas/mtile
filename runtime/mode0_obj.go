@@ -16,6 +16,7 @@ const (
 
 type mode0ObjectState struct {
 	mode0TextState
+	mode0PoseStreamState
 	// mode0OAM must stay 4-byte aligned: presentMode0Objects uploads it with
 	// DMA32, whose hardware source address cannot begin on a halfword boundary.
 	mode0OAM [hw.OAMBytes]byte
@@ -24,6 +25,16 @@ type mode0ObjectState struct {
 	mode0PreviousObjs      int
 	mode0OAMDirty          bool
 	mode0ObjectZeroVisible bool
+	mode0PsprLastID        [mode0PsprSiteLimit]int
+	mode0PsprSeq           [mode0PsprSiteLimit]uint16
+	mode0PsprPending       [mode0PsprSiteLimit]mode0PsprPending
+	mode0PsprTiles         [mode0PsprWindowLimit]uint16
+	mode0PsprOwner         [mode0PsprWindowLimit]uint8
+	mode0PsprSiteCount     int
+	mode0PsprDMAFirst      int
+	mode0PsprDMALast       int
+	mode0PsprFallback      bool
+	mode0PoseResidentReady bool
 }
 
 func mode0ObjectDisplayBits() uint16 {
@@ -94,6 +105,7 @@ func (c *Context) initMode0Objects() {
 	if c == nil || c.cart == nil {
 		return
 	}
+	c.mode0PoseResidentReady = false
 	for offset := 0; offset < 32*1024; offset += 4 {
 		hw.SetVRAM32(hw.OBJVRAM+uintptr(offset), 0)
 	}
@@ -117,6 +129,9 @@ func (c *Context) initMode0Objects() {
 		}
 	}
 	c.applyMode0ObjectPalette()
+	for site := range c.mode0PsprLastID {
+		c.mode0PsprLastID[site] = -1
+	}
 }
 
 func (c *Context) uploadMode0ObjectTile(id int, tile []byte) uint32 {
@@ -127,6 +142,10 @@ func (c *Context) uploadMode0ObjectTile(id int, tile []byte) uint32 {
 	if id == 0 {
 		c.mode0ObjectZeroVisible = mode0ObjectTileHasVisiblePixel(tile)
 	}
+	// Background-sheet mutations also update the legacy resident OBJ bank.
+	// A streamed pose may currently own that destination, so restore its ROM
+	// pixels in the later pose upload pass even when its pose ID is unchanged.
+	c.invalidateMode0PsprTile(id)
 	hw.CopyToVRAM32DMA(tile[:64], hw.OBJVRAM+uintptr(id*64), 16)
 	return 64
 }
@@ -145,7 +164,11 @@ func mode0ObjectTileHasVisiblePixel(tile []byte) bool {
 }
 
 func (c *Context) mode0ObjectTileMutated(id int) {
-	if c == nil || id != 0 {
+	if c == nil {
+		return
+	}
+	c.invalidateMode0PsprSource(id)
+	if id != 0 {
 		return
 	}
 	if !c.stageMode0Tile(0) {
@@ -182,6 +205,7 @@ func (c *Context) mode0ObjectPriorityBits() uint16 {
 
 func (c *Context) beginMode0Objects() {
 	c.beginMode0Text()
+	c.mode0PsprSeq = [mode0PsprSiteLimit]uint16{}
 	for index := 0; index < c.mode0PreviousObjs; index++ {
 		mode0PutOAM16(&c.mode0OAM, index*8, mode0ObjectDisable)
 	}
@@ -333,7 +357,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 }
 
 func (c *Context) presentMode0Objects() uint32 {
-	c.mode0UploadStats.LastOBJTileBytes += c.presentMode0PackedObjects() + c.presentMode0Text()
+	c.mode0UploadStats.LastOBJTileBytes += c.presentMode0PackedObjects() + c.presentMode0Text() + c.presentMode0PsprStreams()
 	if !c.mode0OAMDirty {
 		return 0
 	}

@@ -8,6 +8,7 @@ func (c *Context) hasMode0PackedUploads() bool { return false }
 func (c *Context) prepareMode0PackedObjects()  {}
 
 func mode0PackedObjectReservedSource(id int) bool                  { return false }
+func mode0PackedObjectWindowReserved(base, count int) bool         { return false }
 func (c *Context) mode0PackedObjectTile(id, cells int) (int, bool) { return 0, false }
 func (c *Context) dirtyMode0PackedObject(id int)                   {}
 func (c *Context) presentMode0PackedObjects() uint32               { return 0 }

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "capturedAtUTC": "2026-09-26T20:29:57.903308+00:00",
+  "nativeArtifacts": "/private/tmp/mtile-pose-flip-verified-20260926",
+  "sourceSHA256": {
+    "cmd/renderbench/pose_flip_diagnostic_test.go": "718e935b02daa026a5fcfeb93ab4e56610c2f4e63c861806cb6a97c86b39f5dd",
+    "cmd/renderbench/main.go": "561b9799fde8471bdfe5cd85f6c5b09224a198e408abd9630810a7a4ebc106ba",
+    "cmd/renderbench/obj_optimization_diagnostic_test.go": "388b4156055379b5f1ebfee6edf49fe72c75e7e4ea1fc8f2d337e27ecbdc7386",
+    "cmd/renderbench/mode0_present_window_diagnostic_test.go": "5f3bb60de1890b34cafd2ba8de0256505218a04ef264569ac361c8151d34df77",
+    "internal/assetsync/animation_assets.go": "8674d1d5010823ffc1b7ead450d7968ad6a58c6a232582e593d2cd960f861e3e",
+    "internal/assetsync/assets.go": "4f599bcbee690819d650d3d79e23edf09ead0eab1a970778ab3ae782665a00ad",
+    "internal/assetsync/types.go": "f1385f7fe282498ae2d1416faf948db98aa543546bb489339fcaba4a0b9fcbe9",
+    "internal/assetsync/generate.go": "6322af83e6d4d876b607cfc13a29ade5065b13d28c5622b03c47e967a8f78711",
+    "internal/assetsync/animation_generate.go": "e621e36e2706201ac26e459f51ee9b9169056c2933456bbd1a78d6da8d2490bd",
+    "internal/transpiler/transpiler.go": "c755ef6ad4d40b3216d3128bda655573404c67a985f57ffbb115780751bec41e",
+    "internal/transpiler/animation.go": "3dd091f6200d8099f6199da56634047ed93f08a9d827c1c1ffbbc351492af2db",
+    "internal/transpiler/pose_bounds.go": "2a7346ddbf9df8f7ac2aa11bc9cf05bce68d63c4a89550459dcbc593b40fdff3",
+    "internal/transpiler/mode0_pspr.go": "f6cc19c2d107141e2fe3eafdf412eba9916df5b2f903b4bcbbcf3ccec38b0ad2",
+    "runtime/pose.go": "2b32f0aa7c6ea350240180a2fec8cd094b27dfbdb819231e8cdcc71874b4639f",
+    "runtime/animation.go": "45d23933604f8ee823f6a5145cfed89f206113e0ec0adf4aa7d4bef96f508b05",
+    "runtime/mode0_pose.go": "4ec5dcf933c316463571e7781dcd98022d28322b5f83b4e4833a791c2f65d6b2",
+    "runtime/debug_obj_stream.go": "76fedbcefc0f4973beee8ec5963d958d00b91aa9aa6cc1d1a095e2b606c829fa"
+  },
+  "command": "MTILE_POSE_FLIP_OUT=/private/tmp/mtile-pose-flip-verified-20260926 CGO_ENABLED=0 GOCACHE=/private/tmp/mtile-go-cache go test -tags runtimeperfdiagnostic ./cmd/renderbench -run ^TestPoseFlipTargetDiagnostic$ -count=1 -v",
+  "notes": [
+    "Generated disposable projects only; no authored artwork or game code is read or modified.",
+    "Native mGBA ARM/PPU measurements, not physical hardware. Debug cycle counters exclude snapshot publication.",
+    "Same-ROM flip/no-flip comparison is an input control, not a before/after compiler measurement.",
+    "Metadata field growth is eight ROM bytes per retained PoseRange or AnimationClip entry; it is not additional per-frame RAM.",
+    "LCD parity compares all 240 sampled Mode0 scans with corresponding Mode4 presented frames; independent RGB5 oracle also checks those scans and both renderers at120 synchronized game frames."
+  ]
+}

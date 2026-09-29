@@ -116,6 +116,7 @@ type Result struct {
 	WorkDir       string
 	AudioROMBytes int
 	AudioVoices   int
+	PoseMemory    PoseMemoryReport
 
 	AudioProfile       string
 	AudioPSGRatio      int
@@ -260,11 +261,16 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
 		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
-		PoseIndex:   poseIndex,
-		PoseParts:   poseParts,
-		Palette:     assets.PaletteROM[:],
-		NativeAudio: assets.NativeAudio,
-		Debug:       s.Debug,
+		AnimationClips:  flattenAssetAnimations(assets),
+		AnimationFrames: assets.AnimationFrames,
+		PoseIndex:       poseIndex,
+		PoseParts:       poseParts,
+		ObjSheetW:       assets.ObjSheetW,
+		ObjSheetH:       assets.ObjSheetH,
+		ObjSheet:        assets.ObjSheetROM,
+		Palette:         assets.PaletteROM[:],
+		NativeAudio:     assets.NativeAudio,
+		Debug:           s.Debug,
 	})
 	if err != nil {
 		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
@@ -382,6 +388,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		ROMPath: outputPath, ROMSize: len(rom),
 		EWRAMUsed: ewramUsed, EWRAMFree: ewramFree, IWRAMUsed: iwramUsed,
 		HeapLinked:    rendererReport.HeapLinked,
+		PoseMemory:    summarizePoseMemory(assets, elfPath),
 		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices,
 		AudioProfile: audioProfile, AudioPSGRatio: audioPSGRatio,
 		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals, GeneratedGo: generated,
@@ -447,7 +454,7 @@ func loadBuildAssets(projectDir string) (*assetsync.Assets, error) {
 func flattenAssetPoses(assets *assetsync.Assets) ([]runtimebundle.PoseRange, []runtimebundle.PosePart) {
 	poseIndex := make([]runtimebundle.PoseRange, len(assets.PoseIndex))
 	for i, p := range assets.PoseIndex {
-		poseIndex[i] = runtimebundle.PoseRange{Start: p.Start, Count: p.Count}
+		poseIndex[i] = runtimebundle.PoseRange{Start: p.Start, Count: p.Count, FlipOffsetX: p.FlipOffsetX, FlipOffsetY: p.FlipOffsetY}
 	}
 	poseParts := make([]runtimebundle.PosePart, len(assets.PoseParts))
 	for i, p := range assets.PoseParts {
@@ -674,8 +681,11 @@ func mode0BuildTags(report transpiler.RendererReport) string {
 	}
 	// Text and packing implementations embed the ordinary OBJ state. Keep the
 	// dependency explicit here as a defense against an inconsistent report.
-	if report.Mode0Objects || report.Mode0ObjectPacking || report.Mode0Text {
+	if report.Mode0Objects || report.Mode0ObjectPacking || report.Mode0Text || report.Mode0PoseStreaming || report.Mode0PoseResident {
 		tags += ",mtile_mode0_obj"
+	}
+	if report.Mode0PoseStreaming || report.Mode0PoseResident {
+		tags += ",mtile_mode0_pspr"
 	}
 	if report.Mode0ObjectPacking {
 		tags += ",mtile_mode0_objpack"

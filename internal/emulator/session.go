@@ -80,6 +80,16 @@ type DebugStats struct {
 	HeapLive, HeapPeakLive                    uint32
 	HeapHandles, HeapHandleLimit              uint32
 	HeapError                                 HeapError
+	OBJTelemetryValid                         bool
+	OBJStreamAvailable                        bool
+	OBJStreamResidencyValid                   bool
+	OBJStreamResidentBytes                    uint32
+	OBJStreamResidentSlots                    uint32
+	OBJUploadedBytes                          uint32
+	// The first min(OBJStreamResidentSlots, 4) IDs name cached slots, not
+	// necessarily visible poses. Remaining entries are 0xffff. A valid
+	// prefix entry may itself be pose 65535, so use the count, not a sentinel.
+	OBJStreamResidentPoseIDs [4]uint16
 }
 
 type Watch struct {
@@ -229,6 +239,15 @@ const (
 	debugHeapHandles     = debugHeapBase + 16
 	debugHeapHandleLimit = debugHeapBase + 20
 	debugHeapError       = debugHeapBase + 24
+	debugOBJBase         = debugHeapError + 4
+	debugOBJMagic        = uint32(0x314a424f)
+	debugOBJFlags        = debugOBJBase + 4
+	debugOBJResident     = debugOBJBase + 8
+	debugOBJSlots        = debugOBJBase + 12
+	debugOBJUploaded     = debugOBJBase + 16
+	debugOBJPoseIDs      = debugOBJBase + 20
+	debugOBJAvailable    = uint32(1 << 0)
+	debugOBJResidencySet = uint32(1 << 1)
 )
 
 func decodeTelemetry(data []byte) Telemetry {
@@ -273,6 +292,18 @@ func decodeTelemetry(data []byte) Telemetry {
 		HeapHandles:     binary.LittleEndian.Uint32(mailbox[debugHeapHandles:]),
 		HeapHandleLimit: binary.LittleEndian.Uint32(mailbox[debugHeapHandleLimit:]),
 		HeapError:       HeapError(binary.LittleEndian.Uint32(mailbox[debugHeapError:])),
+	}
+	if binary.LittleEndian.Uint32(mailbox[debugOBJBase:]) == debugOBJMagic {
+		flags := binary.LittleEndian.Uint32(mailbox[debugOBJFlags:])
+		result.Stats.OBJTelemetryValid = true
+		result.Stats.OBJStreamAvailable = flags&debugOBJAvailable != 0
+		result.Stats.OBJStreamResidencyValid = result.Stats.OBJStreamAvailable && flags&debugOBJResidencySet != 0
+		result.Stats.OBJStreamResidentBytes = binary.LittleEndian.Uint32(mailbox[debugOBJResident:])
+		result.Stats.OBJStreamResidentSlots = binary.LittleEndian.Uint32(mailbox[debugOBJSlots:])
+		result.Stats.OBJUploadedBytes = binary.LittleEndian.Uint32(mailbox[debugOBJUploaded:])
+		for index := range result.Stats.OBJStreamResidentPoseIDs {
+			result.Stats.OBJStreamResidentPoseIDs[index] = binary.LittleEndian.Uint16(mailbox[debugOBJPoseIDs+index*2:])
+		}
 	}
 	count := min(int(mailbox[68]), debugWatchSlots)
 	result.Watches = make([]Watch, 0, count)

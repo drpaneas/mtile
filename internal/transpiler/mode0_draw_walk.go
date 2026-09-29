@@ -7,22 +7,28 @@ import (
 )
 
 type mode0DrawOp struct {
-	name      string
-	call      *luaparser.CallExpr
-	copies    int
-	lastID    int
-	sprW      int
-	sprH      int
-	printKind mode0PrintTextKind
-	atlasOnly bool
+	name           string
+	call           *luaparser.CallExpr
+	copies         int
+	lastID         int
+	sprW           int
+	sprH           int
+	printKind      mode0PrintTextKind
+	atlasOnly      bool
+	allocationOnly bool
+	psprUnique     int
+	psprParts      int
+	psprIDs        []int
 }
 
-func mode0WalkDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, analysis *mode0SpriteIDAnalysis, cols, rows int) ([]mode0DrawOp, bool, error) {
+func mode0WalkDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, analysis *mode0SpriteIDAnalysis, opts Options) ([]mode0DrawOp, bool, error) {
+	cols, rows := opts.SheetW/8, opts.SheetH/8
 	w := &mode0DrawWalker{
 		chunk:    chunk,
 		graph:    newMode0CallGraph(chunk),
 		analysis: analysis,
 		eval:     newMode0NumEval(chunk, analysis),
+		opts:     opts,
 		cols:     cols,
 		rows:     rows,
 		names:    mode0NumericNames(chunk),
@@ -38,6 +44,7 @@ type mode0DrawWalker struct {
 	graph     *mode0CallGraph
 	analysis  *mode0SpriteIDAnalysis
 	eval      *mode0NumEval
+	opts      Options
 	cols      int
 	rows      int
 	ops       []mode0DrawOp
@@ -76,11 +83,23 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 	switch s := stmt.(type) {
 	case *luaparser.CallStmt:
 		return w.walkCall(s.Call, env, copies, visiting, topDraw, names)
+	case *luaparser.LocalAssignStmt:
+		return w.walkExprs(s.Values, env, copies, visiting, names)
+	case *luaparser.AssignStmt:
+		if err := w.walkExprs(s.Targets, env, copies, visiting, names); err != nil {
+			return err
+		}
+		return w.walkExprs(s.Values, env, copies, visiting, names)
+	case *luaparser.ReturnStmt:
+		return w.walkExprs(s.Values, env, copies, visiting, names)
 	case *luaparser.DoStmt:
 		return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
 	case *luaparser.IfStmt:
 		return w.walkIf(s, env, copies, visiting, names)
 	case *luaparser.NumericForStmt:
+		if err := w.walkExprs([]luaparser.Expr{s.Init, s.Limit, s.Step}, env, copies, visiting, names); err != nil {
+			return err
+		}
 		trips, ok := w.numericTrips(s, env)
 		if !ok {
 			if w.blockHasDrawOp(s.Body) {
@@ -102,12 +121,22 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 		}
 		return nil
 	case *luaparser.GenericForStmt:
+		if err := w.walkExprs(s.Values, env, copies, visiting, names); err != nil {
+			return err
+		}
 		if w.blockHasDrawOp(s.Body) {
 			w.unbounded = true
 			return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
 		}
 		return nil
 	case *luaparser.WhileStmt:
+		start := len(w.ops)
+		if err := w.walkExpr(s.Condition, env, copies, visiting, names); err != nil {
+			return err
+		}
+		if mode0OpsHaveObjects(w.ops[start:]) {
+			w.unbounded = true
+		}
 		if w.blockHasDrawOp(s.Body) {
 			w.unbounded = true
 			return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
@@ -116,7 +145,16 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 	case *luaparser.RepeatStmt:
 		if w.blockHasDrawOp(s.Body) {
 			w.unbounded = true
-			return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
+			if err := w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names); err != nil {
+				return err
+			}
+		}
+		start := len(w.ops)
+		if err := w.walkExpr(s.Condition, env, copies, visiting, names); err != nil {
+			return err
+		}
+		if mode0OpsHaveObjects(w.ops[start:]) {
+			w.unbounded = true
 		}
 		return nil
 	default:
@@ -125,6 +163,16 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 }
 
 func (w *mode0DrawWalker) walkIf(s *luaparser.IfStmt, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, names map[string]bool) error {
+	// Each condition runs at most once. Summing every elseif condition is a
+	// conservative bound and preserves sites even when earlier branches win.
+	if err := w.walkExpr(s.Condition, env, copies, visiting, names); err != nil {
+		return err
+	}
+	for _, branch := range s.ElseIf {
+		if err := w.walkExpr(branch.Condition, env, copies, visiting, names); err != nil {
+			return err
+		}
+	}
 	branches := []*luaparser.Block{s.Then}
 	for _, branch := range s.ElseIf {
 		branches = append(branches, branch.Body)
@@ -134,103 +182,39 @@ func (w *mode0DrawWalker) walkIf(s *luaparser.IfStmt, env mode0NumEnv, copies in
 	} else {
 		branches = append(branches, nil)
 	}
-	start := len(w.ops)
-	startUnbounded := w.unbounded
-	type branchResult struct {
-		ops []mode0DrawOp
-	}
-	results := make([]branchResult, 0, len(branches))
-	best := -1
-	bestCost := -1
-	anyUnbounded := startUnbounded
-	for _, body := range branches {
-		w.ops = w.ops[:start]
-		w.unbounded = startUnbounded
-		if err := w.walkBlock(body, cloneMode0NumEnv(env), copies, visiting, false, names); err != nil {
+	// Retain every call site for allocation and text-atlas construction. Object
+	// counts and scanline costs use independent branch envelopes downstream;
+	// choosing a single "largest" branch is unsafe when those maxima differ.
+	w.ops = append(w.ops, mode0DrawOp{name: mode0BranchStart})
+	for index, body := range branches {
+		if index > 0 {
+			w.ops = append(w.ops, mode0DrawOp{name: mode0BranchNext})
+		}
+		if err := w.walkBlock(body, cloneMode0NumEnv(env), copies, visiting, false, cloneMode0PrintNames(names)); err != nil {
 			return err
 		}
-		branchOps := append([]mode0DrawOp(nil), w.ops[start:]...)
-		if w.unbounded {
-			anyUnbounded = true
-		}
-		cost := mode0OpsObjectCost(branchOps)
-		results = append(results, branchResult{ops: branchOps})
-		if cost > bestCost {
-			bestCost = cost
-			best = len(results) - 1
-		}
 	}
-	w.unbounded = anyUnbounded
-	var chosen []mode0DrawOp
-	if best >= 0 {
-		chosen = append(chosen, results[best].ops...)
-	}
-	for i, result := range results {
-		if i == best {
-			continue
-		}
-		for _, op := range result.ops {
-			if op.name == "print" {
-				op.atlasOnly = true
-				chosen = append(chosen, op)
-			}
-		}
-	}
-	w.ops = append(w.ops[:start], chosen...)
+	w.ops = append(w.ops, mode0DrawOp{name: mode0BranchEnd})
 	return nil
 }
 
-func mode0OpsObjectCost(ops []mode0DrawOp) int {
-	total := 0
-	for _, op := range ops {
-		if op.atlasOnly {
-			continue
-		}
-		copies := op.copies
-		if copies < 1 {
-			copies = 1
-		}
-		switch op.name {
-		case "spr":
-			width, height := op.sprW, op.sprH
-			if width < 1 {
-				width = 1
-			}
-			if height < 1 {
-				height = 1
-			}
-			total += width * height * copies
-		case "sspr":
-			width, height := op.sprW, op.sprH
-			if width < 1 || height < 1 {
-				call := op.call
-				if call == nil || len(call.Args) < 4 {
-					total += copies
-					continue
-				}
-				width = mode0LiteralInt(call.Args[2]) / 8
-				height = mode0LiteralInt(call.Args[3]) / 8
-			}
-			if width < 1 {
-				width = 1
-			}
-			if height < 1 {
-				height = 1
-			}
-			total += width * height * copies
-		case "print":
-			entries, ok := mode0PrintOAMEntries(op.call, op.printKind)
-			if ok {
-				total += entries * copies
-			}
-		}
-	}
-	return total
-}
+const (
+	mode0BranchStart = "branch-start"
+	mode0BranchNext  = "branch-next"
+	mode0BranchEnd   = "branch-end"
+)
 
 func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, topDraw bool, names map[string]bool) error {
 	if call == nil {
 		return nil
+	}
+	// Lua evaluates the receiver and arguments before entering the callee.
+	// Calls used as values can draw too, even when their return is discarded.
+	if err := w.walkExpr(call.Callee, env, copies, visiting, names); err != nil {
+		return err
+	}
+	if err := w.walkExprs(call.Args, env, copies, visiting, names); err != nil {
+		return err
 	}
 	name, ok := callKey(call)
 	if !ok {
@@ -266,6 +250,20 @@ func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, co
 		}
 		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies, lastID: lastID, sprW: sprW, sprH: sprH})
 		return nil
+	case "pspr", "anim":
+		ids, unique, parts, err := validateMode0PsprCallWithEnv(call, w.opts, w.analysis, w.eval, env)
+		if err != nil {
+			return err
+		}
+		w.ops = append(w.ops, mode0DrawOp{
+			name:       "pspr",
+			call:       call,
+			copies:     copies,
+			psprUnique: unique,
+			psprParts:  parts,
+			psprIDs:    ids,
+		})
+		return nil
 	case "camera":
 		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies})
 		return nil
@@ -287,8 +285,16 @@ func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, co
 		return nil
 	}
 	for _, fn := range w.graph.functions[name] {
+		// A math/data helper can recurse without multiplying draw sites.
+		// Only follow bodies that can affect the renderer's operation trace.
+		if w.graph.firstBuiltinFromBlock(fn.Body, map[string]bool{
+			"cls": true, "map": true, "spr": true, "sspr": true,
+			"pspr": true, "anim": true, "print": true, "camera": true,
+		}, make(map[*luaparser.FunctionDeclStmt]bool)) == nil {
+			continue
+		}
 		if visiting[fn] {
-			return fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/sspr()/print() cannot use a recursive helper",
+			return fmt.Errorf("transpiler: %s: [%s] Mode 0 spr()/sspr()/pspr()/print() cannot use a recursive helper",
 				call.Pos(), reasonMode0DrawShape)
 		}
 		visiting[fn] = true
@@ -306,6 +312,51 @@ func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, co
 		delete(visiting, fn)
 	}
 	return nil
+}
+
+// Expressions contribute draw operations in evaluation order. Both operands
+// of and/or are counted, which safely overestimates short-circuit execution.
+func (w *mode0DrawWalker) walkExpr(expr luaparser.Expr, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, names map[string]bool) error {
+	switch e := expr.(type) {
+	case *luaparser.CallExpr:
+		return w.walkCall(e, env, copies, visiting, false, names)
+	case *luaparser.ParenExpr:
+		return w.walkExpr(e.Expr, env, copies, visiting, names)
+	case *luaparser.UnaryExpr:
+		return w.walkExpr(e.Expr, env, copies, visiting, names)
+	case *luaparser.BinaryExpr:
+		return w.walkExprs([]luaparser.Expr{e.Left, e.Right}, env, copies, visiting, names)
+	case *luaparser.IndexExpr:
+		return w.walkExprs([]luaparser.Expr{e.Base, e.Key}, env, copies, visiting, names)
+	case *luaparser.FieldExpr:
+		return w.walkExpr(e.Base, env, copies, visiting, names)
+	case *luaparser.TableExpr:
+		for _, field := range e.Fields {
+			if err := w.walkExprs([]luaparser.Expr{field.Key, field.Value}, env, copies, visiting, names); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (w *mode0DrawWalker) walkExprs(exprs []luaparser.Expr, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, names map[string]bool) error {
+	for _, expr := range exprs {
+		if err := w.walkExpr(expr, env, copies, visiting, names); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func mode0OpsHaveObjects(ops []mode0DrawOp) bool {
+	for _, op := range ops {
+		switch op.name {
+		case "spr", "sspr", "pspr", "anim", "print":
+			return true
+		}
+	}
+	return false
 }
 
 func (w *mode0DrawWalker) callEnv(fn *luaparser.FunctionDeclStmt, call *luaparser.CallExpr, parent mode0NumEnv) mode0NumEnv {
@@ -437,6 +488,7 @@ func (w *mode0DrawWalker) blockHasDrawOp(block *luaparser.Block) bool {
 		for _, stmt := range body.Body {
 			if w.graph.firstBuiltinFromStmt(stmt, "spr") != nil ||
 				w.graph.firstBuiltinFromStmt(stmt, "sspr") != nil ||
+				(w.graph.firstBuiltinFromStmt(stmt, "pspr") != nil || w.graph.firstBuiltinFromStmt(stmt, "anim") != nil) ||
 				w.graph.firstBuiltinFromStmt(stmt, "print") != nil {
 				return true
 			}

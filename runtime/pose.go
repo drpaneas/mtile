@@ -21,18 +21,61 @@ type PosePart struct {
 // shared PoseParts array. Start/Count index PoseParts directly; they are not
 // byte offsets.
 type PoseRange struct {
-	Start uint16
+	Start uint32
 	Count uint16
+	// Build-time sums of the minimum and exclusive maximum tile bounds. A
+	// flipped draw adds these before mirroring around the authored origin,
+	// keeping the same local bounding rectangle even with negative offsets.
+	FlipOffsetX, FlipOffsetY int32
 }
 
-// PSpr draws a multi-part pose as a sequence of 1x1 Spr calls. Each part's
-// own offset and flip flags are composed with the caller's flipX/flipY: a
-// horizontal flip negates the part's X offset around the pose origin (an
-// 8-pixel-wide cell, hence the -part.X-8 mirror point) and XORs the part's
-// authored FlipX bit, and flipY behaves symmetrically on Y. An out-of-range
+// PSpr draws a multi-part pose, flipping within its authored tile bounds.
+// The compiler supplies the bounds, so drawing needs no bounds scan or extra
+// pixel storage. Each part's own flip flags are XORed with flipX/flipY.
+// Unflipped draws retain their authored offsets from (x,y). An out-of-range
 // id, a cart without pose tables, or a pose whose range escapes PoseParts is
 // a silent no-op, matching Spr's own out-of-range behavior.
 func (c *Context) PSpr(id, x, y int, flipX, flipY bool) {
+	c.PSprSite(0, 0, id, x, y, flipX, flipY)
+}
+
+func (c *Context) PSprSite(site, windowBase, id, x, y int, flipX, flipY bool) {
+	if (flipX || flipY) && c != nil && c.cart != nil && uint(id) < uint(len(c.cart.PoseIndex)) {
+		pose := &c.cart.PoseIndex[id]
+		if flipX {
+			x += int(pose.FlipOffsetX)
+		}
+		if flipY {
+			y += int(pose.FlipOffsetY)
+		}
+	}
+	c.drawPoseSite(site, windowBase, id, x, y, flipX, flipY)
+}
+
+// drawPoseSite is the origin-mirroring primitive shared by standalone poses
+// and animations. Its caller has already applied either pose or clip bounds.
+func (c *Context) drawPoseSite(site, windowBase, id, x, y int, flipX, flipY bool) {
+	if c != nil && c.psprOnHardwareOBJ() {
+		c.mode0PSpr(site, windowBase, id, x, y, flipX, flipY)
+		return
+	}
+	c.drawPose(id, x, y, flipX, flipY)
+}
+
+func (c *Context) PSprSiteFromBase(base, windowBase, windowStride, id, x, y int, flipX, flipY bool) {
+	site := c.TakePSprSite(base)
+	window := windowBase + (site-base)*windowStride
+	c.PSprSite(site, window, id, x, y, flipX, flipY)
+}
+
+func (c *Context) TakePSprSite(base int) int {
+	if c != nil && c.psprOnHardwareOBJ() {
+		return c.takeMode0PsprSite(base)
+	}
+	return base
+}
+
+func (c *Context) drawPose(id, x, y int, flipX, flipY bool) {
 	if c == nil || c.cart == nil || id < 0 || id >= len(c.cart.PoseIndex) {
 		return
 	}
@@ -53,6 +96,21 @@ func (c *Context) PSpr(id, x, y int, flipX, flipY bool) {
 			oy = -int(part.Y) - 8
 			partFlipY = !partFlipY
 		}
-		c.Spr(int(part.Tile), x+ox, y+oy, 1, 1, partFlipX, partFlipY)
+		c.drawPosePart(int(part.Tile), x+ox, y+oy, partFlipX, partFlipY)
 	}
+}
+
+func (c *Context) drawPosePart(tile, x, y int, flipX, flipY bool) {
+	if c == nil || c.cart == nil {
+		return
+	}
+	if c.psprOnHardwareOBJ() {
+		c.mode0PSprPart(tile, x, y, flipX, flipY)
+		return
+	}
+	if c.cart.ObjSpriteN > 0 {
+		c.drawObjectCell(tile, x, y, flipX, flipY)
+		return
+	}
+	c.Spr(tile, x, y, 1, 1, flipX, flipY)
 }

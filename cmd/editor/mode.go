@@ -102,6 +102,7 @@ func (g *Game) setMode(mode editorMode) {
 		// Paste placement is transient Sprite Lab interaction state. Switching
 		// workspaces cancels it without touching project data.
 		g.spritePaste = nil
+		g.copiedSprite.cut = nil
 	}
 	if g.mode == modeMap {
 		g.mapTool = mapToolPaint
@@ -149,7 +150,7 @@ func (g *Game) setMode(mode editorMode) {
 func (g *Game) handleModeNavigation() bool {
 	mode := editorModeCount
 	handled := false
-	textEntry := g.nativeNameTarget != 0 || g.mode == modeCode
+	textEntry := g.nativeNameTarget != 0 || (g.mode == modeSprites && g.poseNameEditing) || g.mode == modeCode
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	// In Map Lab the unmodified number keys select BG0-BG3, or the target BG
 	// while an area transfer is selected. Tabs remain reachable by mouse or

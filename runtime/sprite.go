@@ -424,6 +424,72 @@ func (c *Context) drawSprite(id, x, y, w, h int, flipX, flipY bool) {
 	}
 }
 
+func (c *Context) drawObjectCell(id, x, y int, flipX, flipY bool) {
+	if c == nil || c.cart == nil || id < 0 || id >= c.cart.ObjSpriteN {
+		return
+	}
+	c.ensureDrawState()
+	if id >= len(c.cart.ObjSheetIndex) {
+		return
+	}
+	baseX := x - c.camX
+	baseY := y - c.camY
+	drawX0, drawX1 := 0, 8
+	drawY0, drawY1 := 0, 8
+	if baseX < c.clipX0 {
+		drawX0 = c.clipX0 - baseX
+	}
+	if baseX+8 > c.clipX1 {
+		drawX1 = c.clipX1 - baseX
+	}
+	if baseY < c.clipY0 {
+		drawY0 = c.clipY0 - baseY
+	}
+	if baseY+8 > c.clipY1 {
+		drawY1 = c.clipY1 - baseY
+	}
+	if drawX0 < 0 {
+		drawX0 = 0
+	}
+	if drawY0 < 0 {
+		drawY0 = 0
+	}
+	if drawX1 > 8 {
+		drawX1 = 8
+	}
+	if drawY1 > 8 {
+		drawY1 = 8
+	}
+	if drawX0 >= drawX1 || drawY0 >= drawY1 {
+		return
+	}
+	sheet := c.cart.ObjSheet
+	sheetW, sheetH, srcY0 := 8, 8, 0
+	slot := c.cart.ObjSheetIndex[id]
+	if slot == 0 {
+		if c.transpKey0 {
+			return
+		}
+		sheet = emptySpriteCell[:]
+	} else {
+		sheetH = len(sheet)
+		srcY0 = (int(slot) - 1) * 8
+	}
+	fb := c.framebuffer[:]
+	pal := &c.drawPal
+	transp := &c.transp
+	identity := c.drawPalIdentity
+	key0 := c.transpKey0
+	if !flipX && !flipY {
+		blitUnflippedSpriteCells(sheet, fb, pal, transp, sheetW, sheetH, 0, srcY0, baseX, baseY, drawX0, drawX1, drawY0, drawY1, 1, 1, identity, key0)
+		return
+	}
+	if srcY0 >= 0 && srcY0+8 <= sheetH {
+		blitFlippedCell8(sheet, fb, pal, transp, sheetW, 0, srcY0, baseX, baseY,
+			drawY0, drawY1, drawX0, drawX1, identity, key0, flipX, flipY)
+	}
+}
+
 // SSpr blits a source pixel rectangle, optionally stretching it to a
 // destination rectangle using nearest-neighbor sampling.
 //

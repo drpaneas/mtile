@@ -1,0 +1,1754 @@
+{
+  "baseline": {
+    "anim-clock": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "3d354383f25558e9585699048cf506bb9c5ef2cf945ddf870ede833997cb195f",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 20524,
+        "romSha256": "2d63eb1d84c8c4d1a7d27faf4df5c75a1c4a0a75830ba007aa7ba05c57764ce6",
+        "ewramUsed": 151492,
+        "ewramFree": 110140,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 13848,
+          "p95": 14951,
+          "max": 14952,
+          "medianBudgetPercent": 2.4649692412850306,
+          "p95BudgetPercent": 2.661305251765778,
+          "maxBudgetPercent": 2.661483253588517
+        },
+        "drawCycles": {
+          "median": 3461,
+          "p95": 4441,
+          "max": 4441,
+          "medianBudgetPercent": 0.616064308498519,
+          "p95BudgetPercent": 0.7905060947824105,
+          "maxBudgetPercent": 0.7905060947824105
+        },
+        "commitCycles": {
+          "median": 3126,
+          "p95": 3249,
+          "max": 3249,
+          "medianBudgetPercent": 3.7870711378174065,
+          "p95BudgetPercent": 3.936082574142276,
+          "maxBudgetPercent": 3.936082574142276
+        },
+        "oamEntries": 3,
+        "objLineCycles": 16
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 17984,
+        "romSha256": "599b8f020f0bd540d65e62a3f262c479204b804fe0603b77065a49ebbc14a8e0",
+        "ewramUsed": 183988,
+        "ewramFree": 77644,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 150436,
+          "p95": 151768,
+          "max": 151777,
+          "medianBudgetPercent": 26.777882205513784,
+          "p95BudgetPercent": 27.014980633401684,
+          "maxBudgetPercent": 27.016582649806335
+        },
+        "drawCycles": {
+          "median": 71657,
+          "p95": 72989,
+          "max": 72989,
+          "medianBudgetPercent": 12.755076611984506,
+          "p95BudgetPercent": 12.992175039872409,
+          "maxBudgetPercent": 12.992175039872409
+        },
+        "commitCycles": {
+          "median": 77077,
+          "p95": 77077,
+          "max": 77077,
+          "medianBudgetPercent": 93.3768656716418,
+          "p95BudgetPercent": 93.3768656716418,
+          "maxBudgetPercent": 93.3768656716418
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "anim-clips": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "141f6ec92fff6c3c8852c2590dc5c0a77891f23992c763b0e183150231c6af5a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 27324,
+        "romSha256": "d20724d59a2a1bf9659d9cb49df059564e806e878c097b64549ffe495ad97499",
+        "ewramUsed": 153492,
+        "ewramFree": 108140,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 55690,
+          "p95": 69954,
+          "max": 70162,
+          "medianBudgetPercent": 9.912921508316245,
+          "p95BudgetPercent": 12.45193950786056,
+          "maxBudgetPercent": 12.488963886990202
+        },
+        "drawCycles": {
+          "median": 23590,
+          "p95": 26686,
+          "max": 26894,
+          "medianBudgetPercent": 4.199062998405104,
+          "p95BudgetPercent": 4.75015664160401,
+          "maxBudgetPercent": 4.7871810207336525
+        },
+        "commitCycles": {
+          "median": 7339,
+          "p95": 7571,
+          "max": 7571,
+          "medianBudgetPercent": 8.891015700717194,
+          "p95BudgetPercent": 9.172077922077921,
+          "maxBudgetPercent": 9.172077922077921
+        },
+        "oamEntries": 25,
+        "objLineCycles": 48
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 24996,
+        "romSha256": "133b949b1cb3428f7f20c131bcb1abf577fcc60b15d075cfc050e755769afaf8",
+        "ewramUsed": 184196,
+        "ewramFree": 77436,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 225507,
+          "p95": 229120,
+          "max": 229208,
+          "medianBudgetPercent": 40.140657040328094,
+          "p95BudgetPercent": 40.78377762588289,
+          "maxBudgetPercent": 40.79944178628389
+        },
+        "drawCycles": {
+          "median": 146613,
+          "p95": 150250,
+          "max": 150338,
+          "medianBudgetPercent": 26.097381237183868,
+          "p95BudgetPercent": 26.744773866484394,
+          "maxBudgetPercent": 26.760438026885396
+        },
+        "commitCycles": {
+          "median": 77004,
+          "p95": 77004,
+          "max": 77004,
+          "medianBudgetPercent": 93.28842798992052,
+          "p95BudgetPercent": 93.28842798992052,
+          "maxBudgetPercent": 93.28842798992052
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "fighters": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "97e8704b3dcc1faff02fad53bd8be4a2aa9d8fa11e56686093cf335a22ed9b09",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 44388,
+        "romSha256": "daec963a7cfcb020027fc5c996daa33d46815de4175255b5206e70c9267e280e",
+        "ewramUsed": 170888,
+        "ewramFree": 90744,
+        "iwramUsed": 10536,
+        "iwramFree": 22136,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 29093,
+          "p95": 219546,
+          "max": 219546,
+          "medianBudgetPercent": 5.178607028935977,
+          "p95BudgetPercent": 39.07958817498291,
+          "maxBudgetPercent": 39.07958817498291
+        },
+        "drawCycles": {
+          "median": 21140,
+          "p95": 27148,
+          "max": 27148,
+          "medianBudgetPercent": 3.7629585326953747,
+          "p95BudgetPercent": 4.832393483709273,
+          "maxBudgetPercent": 4.832393483709273
+        },
+        "commitCycles": {
+          "median": 4533,
+          "p95": 21025,
+          "max": 21025,
+          "medianBudgetPercent": 5.491616592362861,
+          "p95BudgetPercent": 25.47126381081605,
+          "maxBudgetPercent": 25.47126381081605
+        },
+        "oamEntries": 21,
+        "objLineCycles": 224
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 45252,
+        "romSha256": "2cfa64136f03d82002a27ef4462969d01703a3ed0aa5d300039d52bdf70fb440",
+        "ewramUsed": 185176,
+        "ewramFree": 76456,
+        "iwramUsed": 19996,
+        "iwramFree": 12676,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 632006,
+          "p95": 731719,
+          "max": 733184,
+          "medianBudgetPercent": 112.4982199817726,
+          "p95BudgetPercent": 130.2473157325131,
+          "maxBudgetPercent": 130.50808840282525
+        },
+        "drawCycles": {
+          "median": 554378,
+          "p95": 654091,
+          "max": 655556,
+          "medianBudgetPercent": 98.68029448621554,
+          "p95BudgetPercent": 116.42939023695602,
+          "maxBudgetPercent": 116.69016290726817
+        },
+        "commitCycles": {
+          "median": 77025,
+          "p95": 77025,
+          "max": 77025,
+          "medianBudgetPercent": 93.31386896685405,
+          "p95BudgetPercent": 93.31386896685405,
+          "maxBudgetPercent": 93.31386896685405
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "full-window": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "79b420543dd604fe0f55060a74af3ff3b25fd88a7587c9dc86666bd136d122f4",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 28468,
+        "romSha256": "6a3f2950d963d72afe2719498038735d79094c8c060187550166d902c24b81ea",
+        "ewramUsed": 183992,
+        "ewramFree": 77640,
+        "iwramUsed": 9980,
+        "iwramFree": 22692,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 430041,
+          "p95": 430041,
+          "max": 430041,
+          "medianBudgetPercent": 76.54808185235817,
+          "p95BudgetPercent": 76.54808185235817,
+          "maxBudgetPercent": 76.54808185235817
+        },
+        "drawCycles": {
+          "median": 40924,
+          "p95": 40924,
+          "max": 40924,
+          "medianBudgetPercent": 7.28454659375712,
+          "p95BudgetPercent": 7.28454659375712,
+          "maxBudgetPercent": 7.28454659375712
+        },
+        "commitCycles": {
+          "median": 68612,
+          "p95": 68612,
+          "max": 68612,
+          "medianBudgetPercent": 83.12172901725141,
+          "p95BudgetPercent": 83.12172901725141,
+          "maxBudgetPercent": 83.12172901725141
+        },
+        "oamEntries": 8,
+        "objLineCycles": 512
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 24800,
+        "romSha256": "b502de8a87932bce19ce76c9d37594fca833331b3272d2a08050e07dba32c27a",
+        "ewramUsed": 183980,
+        "ewramFree": 77652,
+        "iwramUsed": 13108,
+        "iwramFree": 19564,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 1158155,
+          "p95": 1158587,
+          "max": 1158587,
+          "medianBudgetPercent": 206.15370101389837,
+          "p95BudgetPercent": 206.2305978013215,
+          "maxBudgetPercent": 206.2305978013215
+        },
+        "drawCycles": {
+          "median": 1080776,
+          "p95": 1081208,
+          "max": 1081208,
+          "medianBudgetPercent": 192.38009797220323,
+          "p95BudgetPercent": 192.45699475962633,
+          "maxBudgetPercent": 192.45699475962633
+        },
+        "commitCycles": {
+          "median": 77012,
+          "p95": 77012,
+          "max": 77012,
+          "medianBudgetPercent": 93.29811979065711,
+          "p95BudgetPercent": 93.29811979065711,
+          "maxBudgetPercent": 93.29811979065711
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "library-180": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "08cff7af26d5cc5c61429328d48f38613a91271c0b199440a6d5b113fe25dd3a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 735180,
+        "romSha256": "3505b760e56a84f4c451272d37d00487fded0a1991b3e421b02d88434c826304",
+        "ewramUsed": 157276,
+        "ewramFree": 104356,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 19120,
+          "p95": 97897,
+          "max": 97920,
+          "medianBudgetPercent": 3.403394850763272,
+          "p95BudgetPercent": 17.425844440647072,
+          "maxBudgetPercent": 17.429938482570062
+        },
+        "drawCycles": {
+          "median": 13746,
+          "p95": 18542,
+          "max": 18556,
+          "medianBudgetPercent": 2.446813055365687,
+          "p95BudgetPercent": 3.3005097972203234,
+          "maxBudgetPercent": 3.303001822738665
+        },
+        "commitCycles": {
+          "median": 3229,
+          "p95": 16253,
+          "max": 16253,
+          "medianBudgetPercent": 3.9118530723008336,
+          "p95BudgetPercent": 19.690104671447955,
+          "maxBudgetPercent": 19.690104671447955
+        },
+        "oamEntries": 10,
+        "objLineCycles": 80
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 701704,
+        "romSha256": "32702432d9443fea036b4666e9743726ee0c668a79fedaf2f431318c9a955091",
+        "ewramUsed": 183628,
+        "ewramFree": 78004,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 416616,
+          "p95": 416663,
+          "max": 416665,
+          "medianBudgetPercent": 74.1584073820916,
+          "p95BudgetPercent": 74.16677346776031,
+          "maxBudgetPercent": 74.16712947140579
+        },
+        "drawCycles": {
+          "median": 337685,
+          "p95": 337732,
+          "max": 337734,
+          "medianBudgetPercent": 60.10854551150604,
+          "p95BudgetPercent": 60.116911597174756,
+          "maxBudgetPercent": 60.117267600820234
+        },
+        "commitCycles": {
+          "median": 77025,
+          "p95": 77025,
+          "max": 77025,
+          "medianBudgetPercent": 93.31386896685405,
+          "p95BudgetPercent": 93.31386896685405,
+          "maxBudgetPercent": 93.31386896685405
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "nerdo": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "8ba9cb76dc781f4f50d2fb253500c0a85c557d0f13b34f233c163dc178bc6578",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": false,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 36908,
+        "romSha256": "469de7aec93ad0f2efe6fff767c0ddc7498d511b8492619da8b0b33854e581d4",
+        "ewramUsed": 155316,
+        "ewramFree": 106316,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 14220,
+          "p95": 78887,
+          "max": 78929,
+          "medianBudgetPercent": 2.531185919343814,
+          "p95BudgetPercent": 14.042029790385053,
+          "maxBudgetPercent": 14.049505866940077
+        },
+        "drawCycles": {
+          "median": 9430,
+          "p95": 10463,
+          "max": 10505,
+          "medianBudgetPercent": 1.6785571884256094,
+          "p95BudgetPercent": 1.8624330713146502,
+          "maxBudgetPercent": 1.869909147869674
+        },
+        "commitCycles": {
+          "median": 3050,
+          "p95": 8885,
+          "max": 8885,
+          "medianBudgetPercent": 3.6949990308199263,
+          "p95BudgetPercent": 10.76395619306067,
+          "maxBudgetPercent": 10.76395619306067
+        },
+        "oamEntries": 12,
+        "objLineCycles": 40
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 34112,
+        "romSha256": "228a07ef0d5759f222b77370ba143e21274f716c98f9663da49a6ac562d76f76",
+        "ewramUsed": 185252,
+        "ewramFree": 76380,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 218329,
+          "p95": 224404,
+          "max": 224404,
+          "medianBudgetPercent": 38.86295995670996,
+          "p95BudgetPercent": 39.944321029847345,
+          "maxBudgetPercent": 39.944321029847345
+        },
+        "drawCycles": {
+          "median": 139590,
+          "p95": 145665,
+          "max": 145665,
+          "medianBudgetPercent": 24.847274436090224,
+          "p95BudgetPercent": 25.928635509227615,
+          "maxBudgetPercent": 25.928635509227615
+        },
+        "commitCycles": {
+          "median": 77085,
+          "p95": 77085,
+          "max": 77085,
+          "medianBudgetPercent": 93.38655747237837,
+          "p95BudgetPercent": 93.38655747237837,
+          "maxBudgetPercent": 93.38655747237837
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    }
+  },
+  "phase1": {
+    "anim-clock": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "3d354383f25558e9585699048cf506bb9c5ef2cf945ddf870ede833997cb195f",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 17664,
+        "romSha256": "ecc5795d09a6fd18b77498210ce95f1ae7c8e96e83084aa4fe9a59325a487947",
+        "ewramUsed": 8412,
+        "ewramFree": 253220,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 13081,
+          "p95": 14184,
+          "max": 14185,
+          "medianBudgetPercent": 2.328441843244475,
+          "p95BudgetPercent": 2.5247778537252223,
+          "maxBudgetPercent": 2.5249558555479608
+        },
+        "drawCycles": {
+          "median": 2827,
+          "p95": 3807,
+          "max": 3807,
+          "medianBudgetPercent": 0.5032111528822055,
+          "p95BudgetPercent": 0.677652939166097,
+          "maxBudgetPercent": 0.677652939166097
+        },
+        "commitCycles": {
+          "median": 3122,
+          "p95": 3245,
+          "max": 3245,
+          "medianBudgetPercent": 3.782225237449118,
+          "p95BudgetPercent": 3.931236673773987,
+          "maxBudgetPercent": 3.931236673773987
+        },
+        "oamEntries": 3,
+        "objLineCycles": 16
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 15360,
+        "romSha256": "7ae687239737fb3df4970ebd85f320e7fec06c31ea8bcd0b8d96a2451412d7ad",
+        "ewramUsed": 40908,
+        "ewramFree": 220724,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 149697,
+          "p95": 151029,
+          "max": 151029,
+          "medianBudgetPercent": 26.64633885850991,
+          "p95BudgetPercent": 26.88343728639781,
+          "maxBudgetPercent": 26.88343728639781
+        },
+        "drawCycles": {
+          "median": 71088,
+          "p95": 72420,
+          "max": 72420,
+          "medianBudgetPercent": 12.653793574846206,
+          "p95BudgetPercent": 12.890892002734107,
+          "maxBudgetPercent": 12.890892002734107
+        },
+        "commitCycles": {
+          "median": 77020,
+          "p95": 77020,
+          "max": 77020,
+          "medianBudgetPercent": 93.30781159139369,
+          "p95BudgetPercent": 93.30781159139369,
+          "maxBudgetPercent": 93.30781159139369
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "anim-clips": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "141f6ec92fff6c3c8852c2590dc5c0a77891f23992c763b0e183150231c6af5a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 27600,
+        "romSha256": "02ec3f4b5d5cdcb9fc36acde4c4ebd971f59f7c788f650df9ef99e158e933f09",
+        "ewramUsed": 153480,
+        "ewramFree": 108152,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 52021,
+          "p95": 66361,
+          "max": 66569,
+          "medianBudgetPercent": 9.259832820688084,
+          "p95BudgetPercent": 11.812378958760538,
+          "maxBudgetPercent": 11.84940333789018
+        },
+        "drawCycles": {
+          "median": 19823,
+          "p95": 22959,
+          "max": 23167,
+          "medianBudgetPercent": 3.5285301321485534,
+          "p95BudgetPercent": 4.086743848257006,
+          "maxBudgetPercent": 4.123768227386648
+        },
+        "commitCycles": {
+          "median": 7341,
+          "p95": 7573,
+          "max": 7573,
+          "medianBudgetPercent": 8.893438650901338,
+          "p95BudgetPercent": 9.174500872262067,
+          "maxBudgetPercent": 9.174500872262067
+        },
+        "oamEntries": 25,
+        "objLineCycles": 48
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 24648,
+        "romSha256": "f08a4e78d55bafc486bad3d75e6af9b505a0b6e4544c9cc4472d2792d00b367f",
+        "ewramUsed": 184184,
+        "ewramFree": 77448,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": true,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 219837,
+          "p95": 223491,
+          "max": 223578,
+          "medianBudgetPercent": 39.13138670539986,
+          "p95BudgetPercent": 39.78180536568694,
+          "maxBudgetPercent": 39.797291524265205
+        },
+        "drawCycles": {
+          "median": 140953,
+          "p95": 144631,
+          "max": 144718,
+          "medianBudgetPercent": 25.089890920483025,
+          "p95BudgetPercent": 25.744581624515835,
+          "maxBudgetPercent": 25.760067783094097
+        },
+        "commitCycles": {
+          "median": 77034,
+          "p95": 77034,
+          "max": 77034,
+          "medianBudgetPercent": 93.32477224268268,
+          "p95BudgetPercent": 93.32477224268268,
+          "maxBudgetPercent": 93.32477224268268
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "fighters": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "97e8704b3dcc1faff02fad53bd8be4a2aa9d8fa11e56686093cf335a22ed9b09",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 42548,
+        "romSha256": "d925d187a56bc9878ce518cc378614b1273fb35839159f6e97c2fb5ec9ce4a86",
+        "ewramUsed": 27820,
+        "ewramFree": 233812,
+        "iwramUsed": 10536,
+        "iwramFree": 22136,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 24274,
+          "p95": 211609,
+          "max": 211609,
+          "medianBudgetPercent": 4.32081624515835,
+          "p95BudgetPercent": 37.66678770790613,
+          "maxBudgetPercent": 37.66678770790613
+        },
+        "drawCycles": {
+          "median": 16312,
+          "p95": 20226,
+          "max": 20226,
+          "medianBudgetPercent": 2.903565732513101,
+          "p95BudgetPercent": 3.600264866712235,
+          "maxBudgetPercent": 3.600264866712235
+        },
+        "commitCycles": {
+          "median": 4529,
+          "p95": 21021,
+          "max": 21021,
+          "medianBudgetPercent": 5.486770691994573,
+          "p95BudgetPercent": 25.46641791044776,
+          "maxBudgetPercent": 25.46641791044776
+        },
+        "oamEntries": 21,
+        "objLineCycles": 224
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 43504,
+        "romSha256": "c819e146e243beadcd1b6a2d63ec62219ef088b39327f0ae6b39e5e83799cf9a",
+        "ewramUsed": 42108,
+        "ewramFree": 219524,
+        "iwramUsed": 19996,
+        "iwramFree": 12676,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 631952,
+          "p95": 731665,
+          "max": 733130,
+          "medianBudgetPercent": 112.48860788334473,
+          "p95BudgetPercent": 130.23770363408522,
+          "maxBudgetPercent": 130.49847630439734
+        },
+        "drawCycles": {
+          "median": 554370,
+          "p95": 654083,
+          "max": 655548,
+          "medianBudgetPercent": 98.67887047163363,
+          "p95BudgetPercent": 116.42796622237412,
+          "maxBudgetPercent": 116.68873889268626
+        },
+        "commitCycles": {
+          "median": 77025,
+          "p95": 77025,
+          "max": 77025,
+          "medianBudgetPercent": 93.31386896685405,
+          "p95BudgetPercent": 93.31386896685405,
+          "maxBudgetPercent": 93.31386896685405
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "full-window": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "79b420543dd604fe0f55060a74af3ff3b25fd88a7587c9dc86666bd136d122f4",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 26580,
+        "romSha256": "a58177dbb0adc10590b15b664556137fc5cc7107f2027c98b98880efc7d9ca2c",
+        "ewramUsed": 40924,
+        "ewramFree": 220708,
+        "iwramUsed": 9980,
+        "iwramFree": 22692,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 427534,
+          "p95": 427534,
+          "max": 427534,
+          "medianBudgetPercent": 76.10183128275233,
+          "p95BudgetPercent": 76.10183128275233,
+          "maxBudgetPercent": 76.10183128275233
+        },
+        "drawCycles": {
+          "median": 40948,
+          "p95": 40948,
+          "max": 40948,
+          "medianBudgetPercent": 7.288818637502848,
+          "p95BudgetPercent": 7.288818637502848,
+          "maxBudgetPercent": 7.288818637502848
+        },
+        "commitCycles": {
+          "median": 68629,
+          "p95": 68629,
+          "max": 68629,
+          "medianBudgetPercent": 83.14232409381663,
+          "p95BudgetPercent": 83.14232409381663,
+          "maxBudgetPercent": 83.14232409381663
+        },
+        "oamEntries": 8,
+        "objLineCycles": 512
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 23060,
+        "romSha256": "2618cd78fa8ae4bc9959989f1b08a70a7ccb7fe4e8d9aff52267464a10a89b2d",
+        "ewramUsed": 40912,
+        "ewramFree": 220720,
+        "iwramUsed": 13108,
+        "iwramFree": 19564,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 1158121,
+          "p95": 1158553,
+          "max": 1158553,
+          "medianBudgetPercent": 206.14764895192528,
+          "p95BudgetPercent": 206.22454573934837,
+          "maxBudgetPercent": 206.22454573934837
+        },
+        "drawCycles": {
+          "median": 1080772,
+          "p95": 1081204,
+          "max": 1081204,
+          "medianBudgetPercent": 192.37938596491227,
+          "p95BudgetPercent": 192.4562827523354,
+          "maxBudgetPercent": 192.4562827523354
+        },
+        "commitCycles": {
+          "median": 77012,
+          "p95": 77012,
+          "max": 77012,
+          "medianBudgetPercent": 93.29811979065711,
+          "p95BudgetPercent": 93.29811979065711,
+          "maxBudgetPercent": 93.29811979065711
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "library-180": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "08cff7af26d5cc5c61429328d48f38613a91271c0b199440a6d5b113fe25dd3a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 732328,
+        "romSha256": "346df130eb2815aa71d6a71a908c3849fad56fa07f4811dc70eaea388eee563f",
+        "ewramUsed": 14044,
+        "ewramFree": 247588,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 15639,
+          "p95": 93988,
+          "max": 94011,
+          "medianBudgetPercent": 2.7837705058099793,
+          "p95BudgetPercent": 16.730035315561633,
+          "maxBudgetPercent": 16.73412935748462
+        },
+        "drawCycles": {
+          "median": 10272,
+          "p95": 15048,
+          "max": 15062,
+          "medianBudgetPercent": 1.8284347231715652,
+          "p95BudgetPercent": 2.6785714285714284,
+          "maxBudgetPercent": 2.6810634540897698
+        },
+        "commitCycles": {
+          "median": 3229,
+          "p95": 16253,
+          "max": 16253,
+          "medianBudgetPercent": 3.9118530723008336,
+          "p95BudgetPercent": 19.690104671447955,
+          "maxBudgetPercent": 19.690104671447955
+        },
+        "oamEntries": 10,
+        "objLineCycles": 80
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 698816,
+        "romSha256": "3752e16eb0d9f18201b3b9ae1afb80e1d513d85961d0896b7f945eacd98e1cab",
+        "ewramUsed": 40396,
+        "ewramFree": 221236,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 408112,
+          "p95": 408159,
+          "max": 408161,
+          "medianBudgetPercent": 72.64467988152198,
+          "p95BudgetPercent": 72.6530459671907,
+          "maxBudgetPercent": 72.65340197083619
+        },
+        "drawCycles": {
+          "median": 329207,
+          "p95": 329254,
+          "max": 329256,
+          "medianBudgetPercent": 58.599446058327636,
+          "p95BudgetPercent": 58.607812143996355,
+          "maxBudgetPercent": 58.608168147641834
+        },
+        "commitCycles": {
+          "median": 77029,
+          "p95": 77029,
+          "max": 77029,
+          "medianBudgetPercent": 93.31871486722233,
+          "p95BudgetPercent": 93.31871486722233,
+          "maxBudgetPercent": 93.31871486722233
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "nerdo": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "8ba9cb76dc781f4f50d2fb253500c0a85c557d0f13b34f233c163dc178bc6578",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 34320,
+        "romSha256": "e13ae63c8a527dc35957306d5400552a0e9895db8c3f3b3012a1d2b03b5e809a",
+        "ewramUsed": 12236,
+        "ewramFree": 249396,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 13815,
+          "p95": 78550,
+          "max": 78592,
+          "medianBudgetPercent": 2.459095181134655,
+          "p95BudgetPercent": 13.982043176122124,
+          "maxBudgetPercent": 13.989519252677148
+        },
+        "drawCycles": {
+          "median": 9052,
+          "p95": 10074,
+          "max": 10116,
+          "medianBudgetPercent": 1.6112724994303942,
+          "p95BudgetPercent": 1.7931903622693097,
+          "maxBudgetPercent": 1.8006664388243336
+        },
+        "commitCycles": {
+          "median": 3052,
+          "p95": 8887,
+          "max": 8887,
+          "medianBudgetPercent": 3.6974219810040707,
+          "p95BudgetPercent": 10.766379143244816,
+          "maxBudgetPercent": 10.766379143244816
+        },
+        "oamEntries": 12,
+        "objLineCycles": 40
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 31712,
+        "romSha256": "29da13b9f19f6bfc95e5a47fae002ffb5c0d205063326d5c47762a4774791ce0",
+        "ewramUsed": 42172,
+        "ewramFree": 219460,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 218480,
+          "p95": 224615,
+          "max": 224615,
+          "medianBudgetPercent": 38.88983823194349,
+          "p95BudgetPercent": 39.9818794144452,
+          "maxBudgetPercent": 39.9818794144452
+        },
+        "drawCycles": {
+          "median": 139856,
+          "p95": 145991,
+          "max": 145991,
+          "medianBudgetPercent": 24.894622920938712,
+          "p95BudgetPercent": 25.986664103440418,
+          "maxBudgetPercent": 25.986664103440418
+        },
+        "commitCycles": {
+          "median": 77000,
+          "p95": 77000,
+          "max": 77000,
+          "medianBudgetPercent": 93.28358208955224,
+          "p95BudgetPercent": 93.28358208955224,
+          "maxBudgetPercent": 93.28358208955224
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    }
+  },
+  "phase2": {
+    "anim-clock": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "3d354383f25558e9585699048cf506bb9c5ef2cf945ddf870ede833997cb195f",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 17664,
+        "romSha256": "e5eb61dd7a6345535158be0a79968b4ca193adecbfca421089b0968fbbb12441",
+        "ewramUsed": 8412,
+        "ewramFree": 253220,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 10313,
+          "p95": 11416,
+          "max": 11417,
+          "medianBudgetPercent": 1.8357327979038505,
+          "p95BudgetPercent": 2.0320688083845977,
+          "maxBudgetPercent": 2.0322468102073366
+        },
+        "drawCycles": {
+          "median": 2827,
+          "p95": 3807,
+          "max": 3807,
+          "medianBudgetPercent": 0.5032111528822055,
+          "p95BudgetPercent": 0.677652939166097,
+          "maxBudgetPercent": 0.677652939166097
+        },
+        "commitCycles": {
+          "median": 3122,
+          "p95": 3245,
+          "max": 3245,
+          "medianBudgetPercent": 3.782225237449118,
+          "p95BudgetPercent": 3.931236673773987,
+          "maxBudgetPercent": 3.931236673773987
+        },
+        "oamEntries": 3,
+        "objLineCycles": 16
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 15360,
+        "romSha256": "7ae687239737fb3df4970ebd85f320e7fec06c31ea8bcd0b8d96a2451412d7ad",
+        "ewramUsed": 40908,
+        "ewramFree": 220724,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 149697,
+          "p95": 151029,
+          "max": 151029,
+          "medianBudgetPercent": 26.64633885850991,
+          "p95BudgetPercent": 26.88343728639781,
+          "maxBudgetPercent": 26.88343728639781
+        },
+        "drawCycles": {
+          "median": 71088,
+          "p95": 72420,
+          "max": 72420,
+          "medianBudgetPercent": 12.653793574846206,
+          "p95BudgetPercent": 12.890892002734107,
+          "maxBudgetPercent": 12.890892002734107
+        },
+        "commitCycles": {
+          "median": 77020,
+          "p95": 77020,
+          "max": 77020,
+          "medianBudgetPercent": 93.30781159139369,
+          "p95BudgetPercent": 93.30781159139369,
+          "maxBudgetPercent": 93.30781159139369
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "anim-clips": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "141f6ec92fff6c3c8852c2590dc5c0a77891f23992c763b0e183150231c6af5a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 24884,
+        "romSha256": "53570a770f2fdfe2c067c0211a80db820964ba299507d22a35a848268033c79b",
+        "ewramUsed": 10412,
+        "ewramFree": 251220,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 41031,
+          "p95": 49827,
+          "max": 50035,
+          "medianBudgetPercent": 7.303592788790157,
+          "p95BudgetPercent": 8.869296821599454,
+          "maxBudgetPercent": 8.906321200729096
+        },
+        "drawCycles": {
+          "median": 19792,
+          "p95": 22928,
+          "max": 23136,
+          "medianBudgetPercent": 3.5230120756436545,
+          "p95BudgetPercent": 4.081225791752107,
+          "maxBudgetPercent": 4.11825017088175
+        },
+        "commitCycles": {
+          "median": 7352,
+          "p95": 7584,
+          "max": 7584,
+          "medianBudgetPercent": 8.906764876914131,
+          "p95BudgetPercent": 9.187827098274859,
+          "maxBudgetPercent": 9.187827098274859
+        },
+        "oamEntries": 25,
+        "objLineCycles": 48
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 21960,
+        "romSha256": "ce6cd9e930ebbd86f54f6a7e520995a2a5707b7aa3fdc1722d3567154212bd1e",
+        "ewramUsed": 41116,
+        "ewramFree": 220516,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 219933,
+          "p95": 223587,
+          "max": 223674,
+          "medianBudgetPercent": 39.14847488038278,
+          "p95BudgetPercent": 39.79889354066986,
+          "maxBudgetPercent": 39.81437969924812
+        },
+        "drawCycles": {
+          "median": 140919,
+          "p95": 144597,
+          "max": 144684,
+          "medianBudgetPercent": 25.08383885850991,
+          "p95BudgetPercent": 25.73852956254272,
+          "maxBudgetPercent": 25.754015721120986
+        },
+        "commitCycles": {
+          "median": 77061,
+          "p95": 77061,
+          "max": 77061,
+          "medianBudgetPercent": 93.35748207016864,
+          "p95BudgetPercent": 93.35748207016864,
+          "maxBudgetPercent": 93.35748207016864
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "fighters": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "97e8704b3dcc1faff02fad53bd8be4a2aa9d8fa11e56686093cf335a22ed9b09",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 42548,
+        "romSha256": "6997c18ab667ba52ef392b515fa06f57392c16474a8707e50f1b40ef28a6d291",
+        "ewramUsed": 27820,
+        "ewramFree": 233812,
+        "iwramUsed": 10536,
+        "iwramFree": 22136,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 24274,
+          "p95": 123033,
+          "max": 123033,
+          "medianBudgetPercent": 4.32081624515835,
+          "p95BudgetPercent": 21.900098257006153,
+          "maxBudgetPercent": 21.900098257006153
+        },
+        "drawCycles": {
+          "median": 16312,
+          "p95": 20226,
+          "max": 20226,
+          "medianBudgetPercent": 2.903565732513101,
+          "p95BudgetPercent": 3.600264866712235,
+          "maxBudgetPercent": 3.600264866712235
+        },
+        "commitCycles": {
+          "median": 4529,
+          "p95": 21021,
+          "max": 21021,
+          "medianBudgetPercent": 5.486770691994573,
+          "p95BudgetPercent": 25.46641791044776,
+          "maxBudgetPercent": 25.46641791044776
+        },
+        "oamEntries": 21,
+        "objLineCycles": 224
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 43504,
+        "romSha256": "c819e146e243beadcd1b6a2d63ec62219ef088b39327f0ae6b39e5e83799cf9a",
+        "ewramUsed": 42108,
+        "ewramFree": 219524,
+        "iwramUsed": 19996,
+        "iwramFree": 12676,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 631952,
+          "p95": 731665,
+          "max": 733130,
+          "medianBudgetPercent": 112.48860788334473,
+          "p95BudgetPercent": 130.23770363408522,
+          "maxBudgetPercent": 130.49847630439734
+        },
+        "drawCycles": {
+          "median": 554370,
+          "p95": 654083,
+          "max": 655548,
+          "medianBudgetPercent": 98.67887047163363,
+          "p95BudgetPercent": 116.42796622237412,
+          "maxBudgetPercent": 116.68873889268626
+        },
+        "commitCycles": {
+          "median": 77025,
+          "p95": 77025,
+          "max": 77025,
+          "medianBudgetPercent": 93.31386896685405,
+          "p95BudgetPercent": 93.31386896685405,
+          "maxBudgetPercent": 93.31386896685405
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "full-window": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "79b420543dd604fe0f55060a74af3ff3b25fd88a7587c9dc86666bd136d122f4",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 26580,
+        "romSha256": "a58177dbb0adc10590b15b664556137fc5cc7107f2027c98b98880efc7d9ca2c",
+        "ewramUsed": 40924,
+        "ewramFree": 220708,
+        "iwramUsed": 9980,
+        "iwramFree": 22692,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 427534,
+          "p95": 427534,
+          "max": 427534,
+          "medianBudgetPercent": 76.10183128275233,
+          "p95BudgetPercent": 76.10183128275233,
+          "maxBudgetPercent": 76.10183128275233
+        },
+        "drawCycles": {
+          "median": 40948,
+          "p95": 40948,
+          "max": 40948,
+          "medianBudgetPercent": 7.288818637502848,
+          "p95BudgetPercent": 7.288818637502848,
+          "maxBudgetPercent": 7.288818637502848
+        },
+        "commitCycles": {
+          "median": 68629,
+          "p95": 68629,
+          "max": 68629,
+          "medianBudgetPercent": 83.14232409381663,
+          "p95BudgetPercent": 83.14232409381663,
+          "maxBudgetPercent": 83.14232409381663
+        },
+        "oamEntries": 8,
+        "objLineCycles": 512
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 23060,
+        "romSha256": "2618cd78fa8ae4bc9959989f1b08a70a7ccb7fe4e8d9aff52267464a10a89b2d",
+        "ewramUsed": 40912,
+        "ewramFree": 220720,
+        "iwramUsed": 13108,
+        "iwramFree": 19564,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 120,
+        "frameCycles": {
+          "median": 1158121,
+          "p95": 1158553,
+          "max": 1158553,
+          "medianBudgetPercent": 206.14764895192528,
+          "p95BudgetPercent": 206.22454573934837,
+          "maxBudgetPercent": 206.22454573934837
+        },
+        "drawCycles": {
+          "median": 1080772,
+          "p95": 1081204,
+          "max": 1081204,
+          "medianBudgetPercent": 192.37938596491227,
+          "p95BudgetPercent": 192.4562827523354,
+          "maxBudgetPercent": 192.4562827523354
+        },
+        "commitCycles": {
+          "median": 77012,
+          "p95": 77012,
+          "max": 77012,
+          "medianBudgetPercent": 93.29811979065711,
+          "p95BudgetPercent": 93.29811979065711,
+          "maxBudgetPercent": 93.29811979065711
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "library-180": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "08cff7af26d5cc5c61429328d48f38613a91271c0b199440a6d5b113fe25dd3a",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 732328,
+        "romSha256": "346df130eb2815aa71d6a71a908c3849fad56fa07f4811dc70eaea388eee563f",
+        "ewramUsed": 14044,
+        "ewramFree": 247588,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 15639,
+          "p95": 93988,
+          "max": 94011,
+          "medianBudgetPercent": 2.7837705058099793,
+          "p95BudgetPercent": 16.730035315561633,
+          "maxBudgetPercent": 16.73412935748462
+        },
+        "drawCycles": {
+          "median": 10272,
+          "p95": 15048,
+          "max": 15062,
+          "medianBudgetPercent": 1.8284347231715652,
+          "p95BudgetPercent": 2.6785714285714284,
+          "maxBudgetPercent": 2.6810634540897698
+        },
+        "commitCycles": {
+          "median": 3229,
+          "p95": 16253,
+          "max": 16253,
+          "medianBudgetPercent": 3.9118530723008336,
+          "p95BudgetPercent": 19.690104671447955,
+          "maxBudgetPercent": 19.690104671447955
+        },
+        "oamEntries": 10,
+        "objLineCycles": 80
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 698816,
+        "romSha256": "3752e16eb0d9f18201b3b9ae1afb80e1d513d85961d0896b7f945eacd98e1cab",
+        "ewramUsed": 40396,
+        "ewramFree": 221236,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 408112,
+          "p95": 408159,
+          "max": 408161,
+          "medianBudgetPercent": 72.64467988152198,
+          "p95BudgetPercent": 72.6530459671907,
+          "maxBudgetPercent": 72.65340197083619
+        },
+        "drawCycles": {
+          "median": 329207,
+          "p95": 329254,
+          "max": 329256,
+          "medianBudgetPercent": 58.599446058327636,
+          "p95BudgetPercent": 58.607812143996355,
+          "maxBudgetPercent": 58.608168147641834
+        },
+        "commitCycles": {
+          "median": 77029,
+          "p95": 77029,
+          "max": 77029,
+          "medianBudgetPercent": 93.31871486722233,
+          "p95BudgetPercent": 93.31871486722233,
+          "maxBudgetPercent": 93.31871486722233
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    },
+    "nerdo": {
+      "environment": {
+        "goVersion": "go1.27.1",
+        "goos": "darwin",
+        "goarch": "arm64",
+        "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+        "gitDirty": false,
+        "projectSha256": "8ba9cb76dc781f4f50d2fb253500c0a85c557d0f13b34f233c163dc178bc6578",
+        "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+      },
+      "differingPixels": 0,
+      "lcdScans": 240,
+      "lcdDifferingPixels": 0,
+      "beforeAfterPixelsMatch": true,
+      "mode0": {
+        "renderer": "mode0",
+        "romBytes": 34320,
+        "romSha256": "018faa676f296a10f449d26aeefbae06b1f3c3203b1615eead513bd1b8ca9f93",
+        "ewramUsed": 12236,
+        "ewramFree": 249396,
+        "iwramUsed": 10416,
+        "iwramFree": 22256,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 13815,
+          "p95": 48102,
+          "max": 48144,
+          "medianBudgetPercent": 2.459095181134655,
+          "p95BudgetPercent": 8.562243677375257,
+          "maxBudgetPercent": 8.569719753930281
+        },
+        "drawCycles": {
+          "median": 9052,
+          "p95": 10074,
+          "max": 10116,
+          "medianBudgetPercent": 1.6112724994303942,
+          "p95BudgetPercent": 1.7931903622693097,
+          "maxBudgetPercent": 1.8006664388243336
+        },
+        "commitCycles": {
+          "median": 3052,
+          "p95": 8887,
+          "max": 8887,
+          "medianBudgetPercent": 3.6974219810040707,
+          "p95BudgetPercent": 10.766379143244816,
+          "maxBudgetPercent": 10.766379143244816
+        },
+        "oamEntries": 12,
+        "objLineCycles": 40
+      },
+      "mode4": {
+        "renderer": "mode4",
+        "romBytes": 31712,
+        "romSha256": "29da13b9f19f6bfc95e5a47fae002ffb5c0d205063326d5c47762a4774791ce0",
+        "ewramUsed": 42172,
+        "ewramFree": 219460,
+        "iwramUsed": 13824,
+        "iwramFree": 18848,
+        "heapLinked": false,
+        "heapAllocated": 0,
+        "heapLive": 0,
+        "heapPeakLive": 0,
+        "gcCount": 0,
+        "missedFrames": 0,
+        "frameCycles": {
+          "median": 218480,
+          "p95": 224615,
+          "max": 224615,
+          "medianBudgetPercent": 38.88983823194349,
+          "p95BudgetPercent": 39.9818794144452,
+          "maxBudgetPercent": 39.9818794144452
+        },
+        "drawCycles": {
+          "median": 139856,
+          "p95": 145991,
+          "max": 145991,
+          "medianBudgetPercent": 24.894622920938712,
+          "p95BudgetPercent": 25.986664103440418,
+          "maxBudgetPercent": 25.986664103440418
+        },
+        "commitCycles": {
+          "median": 77000,
+          "p95": 77000,
+          "max": 77000,
+          "medianBudgetPercent": 93.28358208955224,
+          "p95BudgetPercent": 93.28358208955224,
+          "maxBudgetPercent": 93.28358208955224
+        },
+        "oamEntries": 0,
+        "objLineCycles": 0
+      }
+    }
+  }
+}

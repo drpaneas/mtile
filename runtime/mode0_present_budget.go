@@ -15,7 +15,7 @@ import "github.com/drpaneas/mtile/runtime/audio"
 // window because those transfers are not covered by the warm map bound.
 func (c *Context) mode0RequiredCommitCycles() uint32 {
 	if c == nil || !mode0SheetImmutable || !c.paletteReady || c.paletteDirty ||
-		c.mode0ColdCycles != 0 || c.hasMode0PackedUploads() {
+		c.mode0ColdCycles != 0 || c.hasMode0PackedUploads() || c.hasMode0PsprUploads() {
 		return mode0CommitReserve
 	}
 	cycles := uint32(22000)

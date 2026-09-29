@@ -25,7 +25,7 @@ end
 	if !strings.Contains(got, "PosePart{{Tile: 1, X: 2, Y: 3, Flags: 1}}") {
 		t.Fatalf("generated source missing pose part ROM literal:\n%s", got)
 	}
-	if !strings.Contains(got, "PoseRange{{Start: 0, Count: 1}}") {
+	if !strings.Contains(got, "PoseRange{{Start: 0, Count: 1, FlipOffsetX: 12, FlipOffsetY: 14}}") {
 		t.Fatalf("generated source missing pose index ROM literal:\n%s", got)
 	}
 	if !strings.Contains(got, "cartData.PoseIndex") {
@@ -33,6 +33,27 @@ end
 	}
 	if !strings.Contains(got, "PoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],") {
 		t.Fatalf("generated source missing cartImage pose ROM wiring:\n%s", got)
+	}
+}
+
+func TestTranspileEmitsObjectSheetROM(t *testing.T) {
+	sheet := make([]byte, 64)
+	sheet[1] = 9
+	got, err := Transpile("obj.lua", `
+function _draw()
+end
+`, Options{ObjSheetW: 8, ObjSheetH: 8, ObjSheet: sheet})
+	if err != nil {
+		t.Fatalf("transpile: %v", err)
+	}
+	if !strings.Contains(got, "ObjSheetW = 8") || !strings.Contains(got, "var objSheetROM") {
+		t.Fatalf("generated source missing object sheet ROM:\n%s", got)
+	}
+	if !strings.Contains(got, "ObjSheet: objSheetROM.Pixels[:], ObjSheetIndex: objSheetIndexROM[:],") {
+		t.Fatalf("generated source missing object sheet cart wiring:\n%s", got)
+	}
+	if strings.Contains(got, "var objSheetRAM") {
+		t.Fatalf("object sheet must stay in ROM, found EWRAM copy:\n%s", got)
 	}
 }
 

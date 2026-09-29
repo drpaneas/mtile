@@ -1293,24 +1293,16 @@ func nonEmptyMap(width, height, layers int, nonEmpty ...int) []uint16 {
 	return data
 }
 
-func TestMode0RejectsPspr(t *testing.T) {
-	_, _, err := TranspileWithReport("draw.lua", `
-function _draw()
-  cls()
-  pspr(0, 0, 0)
-end
-`, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8, MapW: 30, MapH: 20})
-	if err == nil || !strings.Contains(err.Error(), "[M0_MODE4_BUILTIN]") || !strings.Contains(err.Error(), "pspr") {
-		t.Fatalf("error = %v", err)
+func TestMode0EmptyPoseLibraryIsNoop(t *testing.T) {
+	_, report, err := TranspileWithReport("draw.lua", `function _draw() cls() pspr(0,0,0) end`, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8, MapW: 30, MapH: 20})
+	if err != nil || report.Mode0OAMEntries != 0 {
+		t.Fatalf("report = %+v, error = %v", report, err)
 	}
 }
 
-func TestAutoPsprSelectsMode4(t *testing.T) {
+func TestAutoEmptyPoseLibrarySelectsMode0(t *testing.T) {
 	_, report, err := TranspileWithReport("auto.lua", `function _draw() cls() pspr(0,0,0) end`, Options{Renderer: RendererAuto, SheetW: 8, SheetH: 8, MapW: 30, MapH: 20})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if report.Selected != RendererMode4 {
-		t.Fatalf("report = %+v", report)
+	if err != nil || report.Selected != RendererMode0 || report.Mode0Objects {
+		t.Fatalf("report = %+v, error = %v", report, err)
 	}
 }

@@ -18,10 +18,18 @@ import (
 // select it so users can erase map cells, but must never author pixels into it.
 const ReservedSpriteID = 0
 
-// SpriteIsReserved reports cells the editor must not paint. Sprite 0 is the
-// transparent map eraser. IDs 480-511 are the Mode 0 print glyph bank whenever
-// they exist on the sheet.
+// SpriteIsReserved reports cells the editor must not paint on the BG sheet.
+// Sprite 0 is the transparent map eraser. IDs 480-511 are the Mode 0 print
+// glyph bank whenever they exist on the BG sheet. Object-sheet cells are
+// never reserved: tile 0 is paintable and print locks do not apply.
 func SpriteIsReserved(id int) bool {
+	return SpriteIsReservedOn(id, false)
+}
+
+func SpriteIsReservedOn(id int, objectSheet bool) bool {
+	if objectSheet {
+		return false
+	}
 	if id == ReservedSpriteID {
 		return true
 	}
@@ -38,10 +46,13 @@ func reservedSpriteEditError(id int) error {
 // Model is one editable native project. Sheet and map dimensions are project
 // data, not a fixed display or cartridge size.
 type Model struct {
-	Dir     string
-	Project assetsync.Project
-	Sheet   assetsync.Spritesheet
-	Map     assetsync.Map
+	Dir       string
+	Project   assetsync.Project
+	Sheet     assetsync.Spritesheet
+	ObjSheet  *assetsync.Spritesheet
+	Poses     assetsync.PoseFile
+	Animation assetsync.AnimationWorkspace
+	Map       assetsync.Map
 
 	AudioVersion int
 	NativeAudio  assetsync.NativeAudioAssets
@@ -73,6 +84,28 @@ func Open(dir string) (*Model, error) {
 	if err != nil {
 		return nil, err
 	}
+	objSheet, err := assetsync.LoadObjSheet(dir)
+	if err != nil {
+		return nil, err
+	}
+	poses, err := assetsync.LoadPoses(dir)
+	if err != nil {
+		return nil, err
+	}
+	if poses == nil {
+		poses = &assetsync.PoseFile{Version: 1}
+	}
+	animation, err := assetsync.LoadAnimationWorkspace(dir)
+	if err != nil {
+		return nil, err
+	}
+	animationSheet := sheet
+	if objSheet != nil {
+		animationSheet = objSheet
+	}
+	if err := assetsync.ValidateAnimationWorkspace(*animation, animationSheet.Width, animationSheet.Height, len(poses.Poses)); err != nil {
+		return nil, err
+	}
 	mapData, err := assetsync.LoadMap(dir)
 	if err != nil {
 		return nil, err
@@ -92,9 +125,15 @@ func Open(dir string) (*Model, error) {
 		Dir:           dir,
 		Project:       project,
 		Sheet:         *sheet,
+		ObjSheet:      objSheet,
+		Poses:         *poses,
+		Animation:     *animation,
 		Map:           *mapData,
 		ActivePalette: *palette,
 		PaletteNames:  names,
+	}
+	if err := model.NormalizeObjPages(); err != nil {
+		return nil, err
 	}
 	version, err := assetsync.DetectAudioVersion(dir)
 	if err != nil {
@@ -137,6 +176,21 @@ func (m *Model) Save() error {
 	if _, err := assetsync.Flatten(m.Project, m.Sheet, m.Map, m.ActivePalette); err != nil {
 		return err
 	}
+	work := *m
+	if err := work.NormalizeObjPages(); err != nil {
+		return err
+	}
+	animationSheet := &m.Sheet
+	if work.ObjSheet != nil {
+		animationSheet = work.ObjSheet
+	}
+	animation := work.Animation
+	if animation.Version == 0 {
+		animation.Version = 1
+	}
+	if err := assetsync.ValidateAnimationWorkspace(animation, animationSheet.Width, animationSheet.Height, len(m.Poses.Poses)); err != nil {
+		return err
+	}
 	if m.AudioVersion == assetsync.NativeAudioSchemaVersion {
 		library, err := assetsync.CompileNativeAudio(m.NativeAudio.Settings, m.NativeAudio.Sounds, m.NativeAudio.Music)
 		if err != nil {
@@ -145,6 +199,7 @@ func (m *Model) Save() error {
 		m.NativeAudio.Library = library
 
 	}
+	m.ObjSheet, m.Poses, m.Animation = work.ObjSheet, work.Poses, animation
 	if err := assetsync.SavePalette(m.Dir, &m.ActivePalette); err != nil {
 		return err
 	}
@@ -152,6 +207,17 @@ func (m *Model) Save() error {
 		return err
 	}
 	if err := assetsync.SaveSpritesheet(m.Dir, &m.Sheet); err != nil {
+		return err
+	}
+	if m.ObjSheet != nil {
+		if err := assetsync.SaveObjSheet(m.Dir, m.ObjSheet); err != nil {
+			return err
+		}
+	}
+	if err := assetsync.SavePoses(m.Dir, &m.Poses); err != nil {
+		return err
+	}
+	if err := assetsync.SaveAnimationWorkspace(m.Dir, &m.Animation); err != nil {
 		return err
 	}
 	if err := assetsync.SaveMap(m.Dir, &m.Map); err != nil {
@@ -426,12 +492,113 @@ func (m *Model) SetSpritePixel(id, x, y, color int) error {
 	return nil
 }
 
+func (m *Model) CreateObjSheet(width, height int) error {
+	if m == nil {
+		return fmt.Errorf("editor model is required")
+	}
+	if m.ObjSheet != nil {
+		return fmt.Errorf("animation sheet already exists; resize it instead")
+	}
+	if err := assetsync.ValidateObjSheetDimensions(width, height); err != nil {
+		return err
+	}
+	sheet := assetsync.Spritesheet{Width: width, Height: height}
+	if len(m.Poses.Poses) > 0 {
+		// Existing projects may source pspr from the shared sheet. Creating
+		// the animation bank must preserve those IDs and pixels, not silently
+		// redirect every existing frame into a new empty bank.
+		sheet.Width, sheet.Height = m.Sheet.Width, m.Sheet.Height
+		sheet.Sprites = make([]assetsync.SpriteRecord, len(m.Sheet.Sprites))
+		for i, sprite := range m.Sheet.Sprites {
+			sheet.Sprites[i] = sprite
+			sheet.Sprites[i].Pixels = make([][]int, len(sprite.Pixels))
+			for y, row := range sprite.Pixels {
+				sheet.Sprites[i].Pixels[y] = append([]int(nil), row...)
+			}
+		}
+	}
+	work := *m
+	work.ObjSheet = &sheet
+	if err := work.NormalizeObjPages(); err != nil {
+		return err
+	}
+	// Sheet creation and any pose-ID remapping are one in-memory edit; Save
+	// persists the bank and its references together through the normal path.
+	m.ObjSheet, m.Poses, m.Animation = work.ObjSheet, work.Poses, work.Animation
+	return nil
+}
+
+func (m *Model) SetObjSpritePixel(id, x, y, color int) error {
+	if m == nil {
+		return fmt.Errorf("editor model is required")
+	}
+	if m.ObjSheet == nil {
+		return fmt.Errorf("object sheet is missing")
+	}
+	cols, rows := m.ObjSheet.Width/8, m.ObjSheet.Height/8
+	spriteN := cols * rows
+	if id < 0 || id >= spriteN {
+		return fmt.Errorf("object sprite id %d is outside 0..%d", id, spriteN-1)
+	}
+	if x < 0 || x >= 8 || y < 0 || y >= 8 {
+		return fmt.Errorf("sprite pixel (%d,%d) is outside 8x8 cell", x, y)
+	}
+	if color < 0 || color >= len(m.ActivePalette.Colors) {
+		return fmt.Errorf("pixel color %d is outside active palette length %d", color, len(m.ActivePalette.Colors))
+	}
+	for i := range m.ObjSheet.Sprites {
+		sprite := &m.ObjSheet.Sprites[i]
+		if sprite.ID != id {
+			continue
+		}
+		if sprite.X != (id%cols)*8 || sprite.Y != (id/cols)*8 || sprite.Width != 8 || sprite.Height != 8 {
+			return fmt.Errorf("sprite %d is not an editable 8x8 cell", id)
+		}
+		sprite.Pixels[y][x] = color
+		return nil
+	}
+	m.ObjSheet.Sprites = append(m.ObjSheet.Sprites, newCellSprite(id, id%cols*8, id/cols*8))
+	m.ObjSheet.Sprites[len(m.ObjSheet.Sprites)-1].Pixels[y][x] = color
+	return nil
+}
+
 // SetSpritePixelBlock atomically replaces a tile-aligned rectangle of sheet
 // pixels. It is used by multi-tile imports, where a validation failure must
 // not leave the first part of the image applied. Empty tiles remain sparse;
 // existing flags are preserved on every overwritten tile.
 func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixels []int) (bool, error) {
+	return m.setSheetPixelBlock(&m.Sheet, false, startCol, startRow, width, height, pixels, false)
+}
+
+func (m *Model) SetObjSpritePixelBlock(startCol, startRow, width, height int, pixels []int) (bool, error) {
 	if m == nil {
+		return false, fmt.Errorf("editor model is required")
+	}
+	if m.ObjSheet == nil {
+		return false, fmt.Errorf("object sheet is missing")
+	}
+	return m.setSheetPixelBlock(m.ObjSheet, true, startCol, startRow, width, height, pixels, false)
+}
+
+func (m *Model) EraseSpritePixelBlock(objectSheet bool, startCol, startRow, width, height int) (bool, error) {
+	if m == nil {
+		return false, fmt.Errorf("editor model is required")
+	}
+	if width <= 0 || height <= 0 {
+		return false, fmt.Errorf("sprite pixel block must have positive dimensions divisible by 8 (got %dx%d)", width, height)
+	}
+	pixels := make([]int, width*height)
+	if objectSheet {
+		if m.ObjSheet == nil {
+			return false, fmt.Errorf("object sheet is missing")
+		}
+		return m.setSheetPixelBlock(m.ObjSheet, true, startCol, startRow, width, height, pixels, true)
+	}
+	return m.setSheetPixelBlock(&m.Sheet, false, startCol, startRow, width, height, pixels, true)
+}
+
+func (m *Model) setSheetPixelBlock(sheet *assetsync.Spritesheet, objectSheet bool, startCol, startRow, width, height int, pixels []int, skipReserved bool) (bool, error) {
+	if m == nil || sheet == nil {
 		return false, fmt.Errorf("editor model is required")
 	}
 	if width <= 0 || height <= 0 || width%8 != 0 || height%8 != 0 {
@@ -440,7 +607,7 @@ func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixel
 	if len(pixels) != width*height {
 		return false, fmt.Errorf("sprite pixel block has %d pixels (want %d)", len(pixels), width*height)
 	}
-	cols, rows := m.Sheet.Width/8, m.Sheet.Height/8
+	cols, rows := sheet.Width/8, sheet.Height/8
 	tileCols, tileRows := width/8, height/8
 	if startCol < 0 || startRow < 0 || startCol+tileCols > cols || startRow+tileRows > rows {
 		return false, fmt.Errorf("%dx%d tile paste at (%d,%d) exceeds the %dx%d spritesheet", tileCols, tileRows, startCol, startRow, cols, rows)
@@ -451,18 +618,23 @@ func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixel
 		}
 	}
 
-	updated := cloneSpritesheet(m.Sheet)
+	updated := cloneSpritesheet(*sheet)
 	records := make(map[int]int, len(updated.Sprites))
 	for i := range updated.Sprites {
 		records[updated.Sprites[i].ID] = i
 	}
+	writable := 0
 	for tileY := 0; tileY < tileRows; tileY++ {
 		for tileX := 0; tileX < tileCols; tileX++ {
 			col, row := startCol+tileX, startRow+tileY
 			id := row*cols + col
-			if SpriteIsReserved(id) {
+			if SpriteIsReservedOn(id, objectSheet) {
+				if skipReserved {
+					continue
+				}
 				return false, reservedSpriteEditError(id)
 			}
+			writable++
 			if index, ok := records[id]; ok {
 				sprite := updated.Sprites[index]
 				if sprite.X != col*8 || sprite.Y != row*8 || sprite.Width != 8 || sprite.Height != 8 || len(sprite.Pixels) != 8 {
@@ -476,12 +648,18 @@ func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixel
 			}
 		}
 	}
+	if skipReserved && writable == 0 {
+		return false, reservedSpriteEditError(startRow*cols + startCol)
+	}
 
 	changed := false
 	for tileY := 0; tileY < tileRows; tileY++ {
 		for tileX := 0; tileX < tileCols; tileX++ {
 			col, row := startCol+tileX, startRow+tileY
 			id := row*cols + col
+			if SpriteIsReservedOn(id, objectSheet) {
+				continue
+			}
 			index, exists := records[id]
 			if !exists && !pixelTileHasInk(pixels, width, tileX, tileY) {
 				continue
@@ -504,7 +682,7 @@ func (m *Model) SetSpritePixelBlock(startCol, startRow, width, height int, pixel
 		}
 	}
 	if changed {
-		m.Sheet = updated
+		*sheet = updated
 	}
 	return changed, nil
 }

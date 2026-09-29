@@ -21,8 +21,26 @@ type AssetImage struct {
 	// PoseIndex/PoseParts back PSpr: PoseIndex[id] names the contiguous
 	// PoseParts span for a multi-part pose. Both are empty when the cart
 	// declares no poses.
-	PoseIndex []PoseRange
-	PoseParts []PosePart
+	AnimationClips  []AnimationClip
+	AnimationFrames []uint16
+	PoseIndex       []PoseRange
+	PoseParts       []PosePart
+	PoseOBJIndex    []PoseOBJRange
+	PoseOBJParts    []PoseOBJ
+	PoseOBJTiles    []uint16
+	// Immutable, compiler-proven pose layouts may share one resident OBJ bank.
+	// Words are little-endian 8-bit tile pixels, uploaded while force-blanked.
+	PoseOBJResident     []uint32
+	PoseOBJResidentBase int
+	// ObjSheet is the optional compact object warehouse. ObjSpriteN == 0
+	// means poses still index the spritesheet. When present, the sheet is
+	// always read-only compact ROM (same slot+1 index as a read-only
+	// spritesheet).
+	ObjSheetW, ObjSheetH         int
+	ObjSpriteCols, ObjSpriteRows int
+	ObjSpriteN                   int
+	ObjSheet                     []byte
+	ObjSheetIndex                []uint32
 }
 
 // AssetMemory is the RAM copy Init writes into. Generated main points the
@@ -59,8 +77,24 @@ type AssetMemory struct {
 	// PoseIndex/PoseParts are Init-copied slice headers from AssetImage; the
 	// backing arrays stay in ROM (or wherever the image lives), since poses
 	// are not mutated at runtime.
-	PoseIndex []PoseRange
-	PoseParts []PosePart
+	AnimationClips      []AnimationClip
+	AnimationFrames     []uint16
+	PoseIndex           []PoseRange
+	PoseParts           []PosePart
+	PoseOBJIndex        []PoseOBJRange
+	PoseOBJParts        []PoseOBJ
+	PoseOBJTiles        []uint16
+	PoseOBJResident     []uint32
+	PoseOBJResidentBase int
+	// Generated Mode 0 pose staging covers only allocated streaming windows.
+	// The base is an OBJ tile destination; each cell occupies sixteen words.
+	PoseOBJStage                 []uint32
+	PoseOBJStageBase             int
+	ObjSheetW, ObjSheetH         int
+	ObjSpriteCols, ObjSpriteRows int
+	ObjSpriteN                   int
+	ObjSheet                     []byte
+	ObjSheetIndex                []uint32
 }
 
 // MapPackedSpan describes an opaque source run. X/Y retain map coordinates;
@@ -204,6 +238,9 @@ func assetLensExact(image *AssetImage, ram *AssetMemory) bool {
 	if !poseIndexValid(image) {
 		return false
 	}
+	if !objSheetValid(image) {
+		return false
+	}
 	if !mapStorageStreaming && (mapStorageFixed || !image.MapStreaming) {
 		return len(ram.Map) == mapN && len(ram.MapChunks) == 0 && len(ram.MapEdits) == 0
 	}
@@ -250,9 +287,73 @@ func packedMapStorageValid(image *AssetImage, ram *AssetMemory, readOnlySheet bo
 // headers unconditionally, so ram's prior pose content (if any) never
 // factors into this check.
 func poseIndexValid(image *AssetImage) bool {
+	if !animationIndexValid(image) {
+		return false
+	}
+	if len(image.PoseOBJResident) != 0 && len(image.PoseOBJIndex) == 0 {
+		return false
+	}
 	for _, r := range image.PoseIndex {
-		end := int(r.Start) + int(r.Count)
-		if int(r.Start) > len(image.PoseParts) || end > len(image.PoseParts) {
+		end := uint64(r.Start) + uint64(r.Count)
+		if end > uint64(len(image.PoseParts)) {
+			return false
+		}
+	}
+	if len(image.PoseOBJIndex) != 0 {
+		if len(image.PoseOBJIndex) != len(image.PoseIndex) {
+			return false
+		}
+		residentTiles := len(image.PoseOBJResident) / 16
+		if len(image.PoseOBJResident) != 0 && (len(image.PoseOBJResident)%16 != 0 ||
+			image.PoseOBJResidentBase < 0 || image.PoseOBJResidentBase > Mode0ObjectTileLimit-residentTiles) {
+			return false
+		}
+		for _, r := range image.PoseOBJIndex {
+			end, tileEnd := uint64(r.Start)+uint64(r.Count), uint64(r.TileStart)+uint64(r.TileCount)
+			tileLimit := len(image.PoseOBJTiles)
+			if residentTiles != 0 {
+				tileLimit = residentTiles
+				if r.TileStart != 0 {
+					return false
+				}
+			}
+			if end > uint64(len(image.PoseOBJParts)) || tileEnd > uint64(tileLimit) {
+				return false
+			}
+			for _, object := range image.PoseOBJParts[r.Start:uint32(end)] {
+				_, _, valid := mode0PoseShape(int(object.Width), int(object.Height))
+				if !valid || uint32(object.TileOffset)+uint32(object.Width)*uint32(object.Height)/64 > r.TileCount {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func objSheetValid(image *AssetImage) bool {
+	if image == nil {
+		return false
+	}
+	if image.ObjSpriteN == 0 {
+		return image.ObjSheetW == 0 && image.ObjSheetH == 0 &&
+			image.ObjSpriteCols == 0 && image.ObjSpriteRows == 0 &&
+			len(image.ObjSheet) == 0 && len(image.ObjSheetIndex) == 0
+	}
+	if image.ObjSheetW < 8 || image.ObjSheetH < 8 ||
+		image.ObjSheetW%8 != 0 || image.ObjSheetH%8 != 0 {
+		return false
+	}
+	cols := image.ObjSheetW / 8
+	rows := image.ObjSheetH / 8
+	if image.ObjSpriteCols != cols || image.ObjSpriteRows != rows || image.ObjSpriteN != cols*rows {
+		return false
+	}
+	if len(image.ObjSheet)%64 != 0 || len(image.ObjSheetIndex) != image.ObjSpriteN {
+		return false
+	}
+	for _, slot := range image.ObjSheetIndex {
+		if uint64(slot)*64 > uint64(len(image.ObjSheet)) {
 			return false
 		}
 	}

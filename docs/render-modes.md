@@ -62,17 +62,33 @@ prove all of these conditions:
 - every map viewport has a static width no greater than 64 cells and a static
   height no greater than 32 cells; map origin, destination, layer mask, camera,
   and the logical map size may be dynamic/large;
-- all `spr`, supported `sspr`, and `print` calls run from `_draw`, including
-  through user helpers, `if` branches, and numeric `for` loops with a proven
-  finite trip count. Generic `for`, `while`, and `repeat` loops that reach
-  `spr`/`sspr`/`print` cannot prove an object count, so forced Mode 0 fails
+- all `spr`, supported `sspr`, `pspr`, `anim`, and `print` calls run from `_draw`, including
+  through user helpers (including helpers used inside expressions), `if`
+  branches, and numeric `for` loops with a proven finite trip count. Generic
+  `for`, `while`, and `repeat` loops that reach
+  `spr`/`sspr`/`pspr`/`anim`/`print` cannot prove an object count, so forced Mode 0 fails
   with `M0_OBJ_BUDGET` ("unproven object count") and AUTO falls back to Mode 4.
   They are not required to be top-level statements in `_draw`. `cls` and `map`
-  remain unconditional direct `_draw` statements. `spr`/`sspr` may follow any
+  remain unconditional direct `_draw` statements. `spr`/`sspr`/`pspr`/`anim` may follow any
   materialized explicit map
   (including when the object call lives in a helper invoked after that map)
   and thereby occupy its exact object-depth lane; an object behind every
-  materialized BG is unrepresentable. `print` remains after every map. After
+  materialized BG is unrepresentable. `pspr` uses compiled pose layouts and
+  disjoint streamed tile windows alongside ordinary sheet objects. Precise
+  pose-ID proofs narrow the budget; otherwise all authored poses are considered.
+  Mutually exclusive `if`/`elseif`/`else` paths retain every pose call site and
+  text glyph for allocation. OAM counts and each hardware scanline use
+  independent maxima across alternatives, then add the surrounding draws;
+  the branch using most objects need not have the highest scanline cost.
+  Nested helpers and branches follow the same rule. Ordinary sprite packing
+  is discounted in a branched scene only when every possible packed source
+  fits the shared cache; otherwise the proof charges its per-cell fallback.
+  Empty or out-of-range poses are no-ops. Up to 128 bounded pose invocations
+  may share a frame, subject to the actual hardware budgets. Streamed windows
+  use up to 512 OBJ tiles, reduced to 480 when text is linked or 448 when the
+  ordinary-sprite packing cache is linked; identity-mapped `spr`/`sspr` source
+  tiles are reserved before those windows. Background `sset` edits preserve
+  separate-bank poses and update shared-sheet poses on the next draw. `print` remains after every map. After
   the deterministic packing plan they use at most 128 OAM entries and at most
   1,226 normal-OBJ rendering cycles on every scanline. Literal Y positions are
   first quantized exactly like the runtime's signed 16:16 numbers, then compose
@@ -167,6 +183,44 @@ framebuffer and page-copy code are excluded by build tag. Unsupported forced
 Mode 0 source fails before TinyGo
 with a source position and stable `M0_*` reason code; it is never approximated.
 
+The optional OBJ animation bank is stored in ROM. Its 512×320-pixel editor
+pages describe artwork locations independently of VRAM allocation and global
+pose IDs. PAGE+ adds another page until the 65,536 source tile positions are
+used; after 25 full pages, the final page is 512×192 pixels. Named clips in
+`assets/animation.json` store ordered pose IDs, FPS and loop behavior. `anim`
+selects a pose from those immutable tables
+and follows exactly the `pspr` rendering path. Builds store each exactly equal
+nonblank 8×8 pixel pattern once and skip blank patterns, preserving logical
+source IDs. This saves ROM; it does not relax active-pose tile, OAM, scanline,
+or transfer budgets. Normally an entire animation library stays in ROM while
+only its current visible poses occupy OBJ VRAM.
+
+If the existing streaming-window or upload proof fails, Mode 0 can instead
+keep an immutable reachable pose library resident in OBJ VRAM. This alternative
+requires no `sset` anywhere in the program and complete source pixel data at
+build time. It preserves each hardware object's exact contiguous tile pixels,
+layout, authored flips, and painter order, sharing equal pixel runs across
+poses and draw sites. The resulting bank must fit after every reachable
+legacy sprite tile and below the text and ordinary-object packing reservations
+(at most 512 tiles in total). Unreachable poses do not consume this bank;
+unknown pose IDs or clip names still conservatively include every possible
+pose. The bank uploads once while the LCD is force-blanked, so animation and
+motion subsequently change OAM without visible pose uploads or EWRAM staging.
+Already accepted streaming scenes keep their existing allocation. A library
+that cannot fit retains the original streaming proof and its stable,
+source-positioned rejection or AUTO fallback. Residency does not relax finite
+draw counts, OAM, scanline, layering, palette, or native-audio restrictions.
+See [resident-pose evidence](benchmarks/render-modes/pose-resident-v1.md).
+
+Literal `anim` names resolve to clip indices at build time. A whole-program
+allocation proof lets pose/clip-only games omit Lua heap storage and root
+registration, including games that choose between static clip names in global
+variables. Programs that create strings or tables retain their heap and GC
+roots. Immutable OBJ pixels are word-aligned in ROM so pose staging can use
+aligned ARM copies; unchanged poses retain their staged tiles. These are
+implementation optimizations and do not relax the scene proof or change
+playback semantics. See the [CPU and memory audit](benchmarks/render-modes/obj-optimization-v1.md).
+
 ### Finite-map caching and hardware scrolling
 
 An admitted `map` rectangle can now remain in the existing 64x32 screen shadow
@@ -246,8 +300,25 @@ unknown ids still fail. Forced Mode 0 rejects them with source-positioned
 `M0_SPR_SHAPE`; AUTO uses the same diagnostic and falls back to Mode 4. Every
 enumerated source rectangle must fit the sheet, OBJ IDs 0..511, the optional
 text reservation, and the existing OAM/scanline budgets. This is renderer
-eligibility only: it adds no animation builtin and does not change `spr()`
-semantics in either renderer.
+eligibility only and does not change `spr()` semantics in either renderer.
+Named clip playback is provided separately by `anim()`.
+
+For `pspr` and `anim`, both renderers preserve the same calculated rectangle
+when flipping: each flipped axis adds `min + max` to the supplied coordinate
+before the internal origin-relative mirror. Bounds are the union of local
+8×8 part rectangles, including signed offsets and tile padding. `pspr` uses
+its own pose; `anim` uses every pose referenced by that clip. Empty poses do
+not enlarge the union. Camera and authored per-part flips still compose with
+this adjustment, and unflipped drawing is unchanged. The two signed 32-bit
+adjustments live in ROM metadata; there is no gameplay bounds scan or
+flip-only pixel transfer. Existing manual flip position offsets must be
+removed when rebuilding. This changes neither Mode 0 eligibility nor the
+resource and fallback conditions listed below.
+
+The [automatic flip verification](benchmarks/render-modes/pose-flip-v1.md)
+checks both renderers against independent expected pixels across 120 game
+frames and every sampled Mode 0 LCD scan. It also covers one pose shared by
+clips with different bounds and confirms zero tile uploads for cached flips.
 
 The enumerated set may include `0`, so a one-cell dynamic draw can use
 `0` as its inactive value. Under Mode 0, `spr(0,x,y)` consumes no runtime OAM
@@ -336,7 +407,8 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `rectfill` | Mode 4 only | Arbitrary coordinates, sizes, overlap, and clipping require bitmap rasterization. |
 | `circ` | Mode 4 only | Midpoint-circle pixels cannot generally be represented as a fixed tile or OBJ allocation. |
 | `circfill` | Mode 4 only | Arbitrary span-filled circles require bitmap rasterization. |
-| `pspr` | Mode 4 only | Draws an authored pose as a scatter of 8x8 sheet cells. Slice 1 has no hardware OBJ working-set proof, so forced Mode 0 fails and AUTO selects Mode 4. |
+| `pspr` | Mode 0 conditional | Draws an authored pose from the animation bank, or the shared sheet when no animation bank exists. Call-level flips mirror inside its build-calculated local tile bounds, preserving the bounds at the same destination. The compiler packs complete nonoverlapping unflipped tile rectangles into exact 8–64px hardware objects; overlapping or individually flipped parts retain their original cell semantics. Known IDs use a subset budget; unknown IDs conservatively use every authored pose. Bounded invocations may mix with `spr`/`sspr` and use mutable shared-sheet art. Nonoverlapping streaming windows, or the exact immutable resident bank described above, must coexist with static sheet objects, text, and any ordinary-object packing cache within OBJ VRAM. Programs using `sset` cannot use the resident alternative. Both paths must satisfy finite-draw, OAM, scanline, and applicable upload budgets. An oversized or unbounded scene fails forced Mode 0 and makes AUTO select Mode 4; the runtime never silently truncates an admitted scene. |
+| `anim` | Mode 0 conditional | Selects a registered clip frame at saved FPS, then uses the pose draw path and budgets. Call-level flips use one build-calculated union of every referenced pose’s local tile bounds, not the current frame’s bounds; this fixes the mirror axis throughout playback. Omitted elapsed time follows the shared game update clock; explicit seconds clamp below zero, loop or hold the last frame according to the clip. Literal names budget that clip; dynamic names budget all registered clips. Empty/missing dynamic names draw nothing; missing literal names fail with `ANIM_UNKNOWN_CLIP`. Bounded `_draw` invocations must satisfy the same ordering, VRAM, OAM, scanline, and transfer proofs as `pspr`; otherwise forced Mode 0 fails and AUTO uses Mode 4. |
 | `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. Width and height use the worst proven 1..32 values in the object budget. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic/table/function-derived or otherwise unproven IDs use Mode 4. |
 | `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: an 8x8-aligned in-bounds source rectangle whose `sx`/`sy`/`sw`/`sh` (and `dw`/`dh` if present) are proven singleton integers, not merely similar crops. Literals and singleton table-index/helper results from the `spr` finite-number proof count, including indexes into a nested named numeric array field (`idle.fr1[1]` when `idle.fr1` is a single immutable `{0,8,40,80}`-style table). A multi-value set or unproven index does not. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops, resampling, or scaling require Mode 4. |
 | `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. Retained compact maps select a link-time compact runtime in both renderers; large maps select the fixed streaming runtime in Mode 0, while Mode 4 keeps the semantically identical generic path because target benchmarks reject the fixed variant there. |
@@ -418,6 +490,22 @@ returns later. This reserves all 67 remaining complete scanlines; it does
 not make an oversized commit fit. `LastBlitWindow` records the actual writes,
 excluding the wait. Native fixtures must still demonstrate that the commit
 finishes before active display resumes.
+
+Pose streaming prepares pixels and transfer bookkeeping before VBlank in an
+EWRAM buffer sized to the allocated pose windows: 64 bytes per tile, up to
+32 KiB for all 512 tiles. One contiguous DMA commits the changed range. Small
+pose workloads do not pay for a full-size buffer, and ordinary sheet objects
+do not consume this staging allocation.
+
+The compiler also budgets worst-case pose transfers together with dirty BGs,
+direct `_update` tile edits, palette changes, the ordinary-sprite packing cache,
+and native-audio interrupts. A conservative estimate above the usable
+82,544-cycle window rejects forced Mode 0 and selects Mode 4 under AUTO, even
+when the tiles fit VRAM. Initialization edits are committed while force-blanked.
+[Pose-streaming evidence](benchmarks/render-modes/pspr-stream-v1.md) covers
+960 matching game frames and every intervening LCD scan, plus 240 matching
+AUTO-fallback frames. Hardware-safe transfers do not guarantee a frame rate:
+game logic and pose preparation must also fit the CPU frame budget.
 
 A dense native-audio trial with four dirty maps, 16 tile mutations, palette
 remaps, and 128 OBJs measured a 100,599-cycle warm commit and exposed first-scan
@@ -555,3 +643,8 @@ Mode 0 measured 102,790 median total cycles against Mode 4's 305,554, reclaimed
 Mode 0 cold upload cost 3,273,893 cycles. This supports AUTO for the already
 bounded direct-`mset` shape in a persistent tile scene; it does not remove the
 cold-load trade-off or justify accepting unbounded/indirect mutations.
+
+[Named animation evidence](benchmarks/render-modes/anim-runtime-v1.md) verifies
+automatic game-clock advancement, explicit timing, looping/final-frame holds,
+and mixed dynamic-name playback with zero differences across 240 game frames
+and 480 LCD scans. The fixtures use the same pose resource proof as `pspr`.

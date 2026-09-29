@@ -44,18 +44,31 @@ type Game struct {
 	preferences     editorPreferences
 	preferencesOpen bool
 
-	mode              editorMode
-	currentColor      int
-	currentSprite     int
-	gridCols          int
-	gridRows          int
-	spriteTool        spriteTool
-	spriteShapeActive bool
-	spriteShapeStartX int
-	spriteShapeStartY int
-	spriteShapeEndX   int
-	spriteShapeEndY   int
-	spriteShapeFilled bool
+	mode                 editorMode
+	currentColor         int
+	currentSprite        int
+	objEditing           bool
+	selectedPose         int
+	poseStripScroll      int
+	poseNameEditing      bool
+	poseNameDraft        string
+	objPage              int
+	objPageFirstTab      int
+	objPageNameEditing   bool
+	objPageNameSelectAll bool
+	objPageNameDraft     string
+	objShowReuse         bool
+	objUsage             *objTileUsage
+	animation            animationEditorState
+	gridCols             int
+	gridRows             int
+	spriteTool           spriteTool
+	spriteShapeActive    bool
+	spriteShapeStartX    int
+	spriteShapeStartY    int
+	spriteShapeEndX      int
+	spriteShapeEndY      int
+	spriteShapeFilled    bool
 
 	hoverX, hoverY                     int // absolute sheet pixel under the cursor, -1 if none
 	spriteCanvasZoomLevel              int
@@ -67,8 +80,9 @@ type Game struct {
 	sheetSelectionAnchorCol            int
 	sheetSelectionAnchorRow            int
 
-	preview *editor.Preview
-	dirty   bool // set by any edit this Update(); triggers a debounced undo push + preview refresh
+	objDrawPixels []byte // temporary flattened animation pixels during one draw
+	preview       *editor.Preview
+	dirty         bool // set by any edit this Update(); triggers a debounced undo push + preview refresh
 
 	sheetCam editor.Camera
 	mapCam   editor.Camera
@@ -89,7 +103,7 @@ type Game struct {
 	mapAreaTargetX               int
 	mapAreaTargetY               int
 
-	copiedSprite [8][8]int
+	copiedSprite spriteCopyBuffer
 	hasCopied    bool
 	spritePaste  *spritePastePlacement
 
@@ -229,6 +243,8 @@ type Game struct {
 	runEWRAMUsed               uint64
 	runEWRAMFree               uint64
 	runIWRAMUsed               uint64
+	runMemoryReady             bool
+	runPoseMemory              build.PoseMemoryReport
 	runEntry                   string
 	runSourceFiles             []string
 	runGlobalUsage             build.GlobalUsage
@@ -302,6 +318,7 @@ func newGame(dir string) (*Game, error) {
 		mode:          modeSprites,
 		currentColor:  1,
 		currentSprite: 0,
+		selectedPose:  -1,
 		gridCols:      gridCellsMin,
 		gridRows:      gridCellsMin,
 		hoverX:        -1,
@@ -356,25 +373,78 @@ func newGame(dir string) (*Game, error) {
 		return nil, fmt.Errorf("open project %q: %w", dir, err)
 	}
 	g.undo.reset(g.snapshot())
+	g.ensurePoseSelection()
 	g.fitSheetCamera()
 	return g, nil
 }
 
 func (g *Game) spriteCols() int {
-	if g == nil || g.model == nil || g.model.Sheet.Width < 8 {
+	sheet := g.activeSheet()
+	if g == nil || sheet == nil || sheet.Width < 8 {
 		return 0
 	}
-	return g.model.Sheet.Width / 8
+	return sheet.Width / 8
 }
 
 func (g *Game) spriteRows() int {
-	if g == nil || g.model == nil || g.model.Sheet.Height < 8 {
+	sheet := g.activeSheet()
+	if g == nil || sheet == nil || sheet.Height < 8 {
 		return 0
 	}
-	return g.model.Sheet.Height / 8
+	return sheet.Height / 8
+}
+
+func (g *Game) activeSheet() *assetsync.Spritesheet {
+	if g == nil || g.model == nil {
+		return nil
+	}
+	if g.objEditing && g.model.ObjSheet != nil {
+		return g.model.ObjSheet
+	}
+	return &g.model.Sheet
 }
 
 func (g *Game) spriteN() int { return g.spriteCols() * g.spriteRows() }
+
+func (g *Game) spriteIsReserved(id int) bool {
+	return editor.SpriteIsReservedOn(id, g.objEditing)
+}
+
+func (g *Game) setObjEditing(on bool) error {
+	if on != g.objEditing {
+		g.spritePaste = nil
+		g.copiedSprite.cut = nil
+	}
+	if on && (g.model == nil || g.model.ObjSheet == nil) {
+		if err := g.model.CreateObjSheet(assetsync.DefaultObjSheetW, assetsync.DefaultObjSheetH); err != nil {
+			return err
+		}
+		g.dirty = true
+	}
+	if on {
+		if err := g.model.NormalizeObjPages(); err != nil {
+			return err
+		}
+	}
+	g.objEditing = on
+	if on {
+		g.model.EnsureObjPages()
+	}
+	g.objPage = 0
+	g.objPageNameEditing = false
+	g.objUsage = nil
+	g.invalidateAnimationPreview()
+	g.currentSprite = 0
+	g.gridCols = 1
+	g.gridRows = 1
+	g.cancelPoseNameEdit()
+	g.ensurePoseSelection()
+	if on {
+		g.selectPose(g.selectedPose)
+	}
+	g.fitSheetCamera()
+	return nil
+}
 
 // clampCurrentColor keeps the paint color inside the active palette's stored
 // entries (a 256-color index 255 is not paint-legal on a 16-color shorthand).
@@ -427,19 +497,44 @@ func (g *Game) refreshPreview() error {
 // pixelAt reads an already-flattened sheet pixel (0 for out-of-range or a
 // stale/missing preview, matching an unauthored pixel's stored value).
 func (g *Game) pixelAt(x, y int) int {
+	if g.objEditing && g.model != nil && g.model.ObjSheet != nil {
+		sheet := g.model.ObjSheet
+		if g.objDrawPixels != nil && x >= 0 && y >= 0 && x < sheet.Width && y < sheet.Height {
+			return int(g.objDrawPixels[y*sheet.Width+x])
+		}
+		return spriteSheetPixel(*sheet, x, y)
+	}
 	if g.preview == nil || x < 0 || y < 0 || x >= g.preview.Width || y >= g.preview.Height {
 		return 0
 	}
 	return int(g.preview.Pixels[y*g.preview.Width+x])
 }
 
+func spriteSheetPixel(sheet assetsync.Spritesheet, x, y int) int {
+	if x < 0 || y < 0 || x >= sheet.Width || y >= sheet.Height {
+		return 0
+	}
+	for _, sprite := range sheet.Sprites {
+		if x < sprite.X || y < sprite.Y || x >= sprite.X+sprite.Width || y >= sprite.Y+sprite.Height {
+			continue
+		}
+		return sprite.Pixels[y-sprite.Y][x-sprite.X]
+	}
+	return 0
+}
+
 func (g *Game) snapshot() undoSnapshot {
 	return undoSnapshot{
 		Sheet:              g.model.Sheet,
+		ObjSheet:           g.model.ObjSheet,
+		Poses:              g.model.Poses,
+		Animation:          g.model.Animation,
+		ObjPage:            g.objPage,
 		Map:                g.model.Map,
 		Project:            g.model.Project,
 		Palette:            g.model.ActivePalette,
 		CurrentSprite:      g.currentSprite,
+		SelectedPose:       g.selectedPose,
 		CurrentColor:       g.currentColor,
 		GridCols:           g.gridCols,
 		GridRows:           g.gridRows,
@@ -469,15 +564,35 @@ func (g *Game) restore(s undoSnapshot) {
 	g.resetMapAreaInteraction()
 	// Paste indices belong to the palette and sheet present at import time.
 	// Undo/redo may replace either, so discard the transient preview together.
-	if g.spritePaste != nil {
+	if g.spritePaste != nil || g.copiedSprite.cut != nil {
 		g.cancelSpritePastePlacement()
 	}
 	g.model.Sheet = s.Sheet
+	if s.ObjSheet != nil {
+		sheet := *s.ObjSheet
+		g.model.ObjSheet = &sheet
+	} else {
+		g.model.ObjSheet = nil
+	}
+	if g.objEditing && g.model.ObjSheet == nil {
+		g.objEditing = false
+		g.setAnimationWorkspaceActive(false)
+	}
+	g.model.Poses = s.Poses
+	g.model.Animation = s.Animation
+	g.objPage = s.ObjPage
+	g.objPageNameEditing = false
+	// A draft belongs to the old selection; restoring a different pose must
+	// never apply that draft to the newly selected pose on the next Enter.
+	g.poseNameEditing, g.poseNameDraft = false, ""
+	g.objUsage = nil
+	g.resetAnimationEditorAfterRestore()
 	g.model.Map = s.Map
 	g.model.NativeAudio = s.NativeAudio
 	g.model.Project = s.Project
 	g.model.ActivePalette = s.Palette
 	g.currentSprite = s.CurrentSprite
+	g.selectedPose = s.SelectedPose
 	g.currentColor = s.CurrentColor
 	g.gridCols = s.GridCols
 	g.gridRows = s.GridRows
@@ -507,6 +622,13 @@ func (g *Game) restore(s undoSnapshot) {
 		g.nativeNoteLengthTicks = g.nativeNoteLength * editor.NativeTicksPerStep
 	}
 	g.clampCurrentColor()
+	// A pasted variant (or a blank page) deliberately has no registered pose
+	// selected. Redo must retain that, rather than selecting an unrelated pose.
+	if g.selectedPose >= 0 {
+		g.ensurePoseSelection()
+	}
+	g.fitSheetCamera()
+	g.requestRender()
 	if err := g.refreshPreview(); err != nil {
 		g.statusMsg = "preview after undo/redo: " + err.Error()
 	}
@@ -526,6 +648,7 @@ func (g *Game) persist() {
 		log.Printf("save failed: %v", err)
 		return
 	}
+	g.markAnimationClipsSaved()
 	g.statusMsg = ""
 }
 
@@ -533,8 +656,19 @@ func (g *Game) Update() error {
 	g.dirty = false
 	g.updateRenderDemand()
 	g.updateTheme()
+	g.advanceAnimationPreview(time.Now())
 	if g.preferencesOpen {
 		g.updatePreferences()
+		return nil
+	}
+	if g.objPageNameEditing {
+		g.updateObjPageName()
+		return nil
+	}
+	if g.objEditing && g.updateAnimationNameTyping() {
+		return nil
+	}
+	if g.animationWorkspaceActive() && g.updateAnimationWorkspaceTyping() {
 		return nil
 	}
 	// Code owns the normal editing shortcuts while its document has focus.
@@ -560,6 +694,8 @@ func (g *Game) Update() error {
 		g.updateSpriteMode()
 	}
 	if g.dirty {
+		g.objUsage = nil
+		g.invalidateAnimationPreview()
 		if err := g.refreshPreview(); err != nil {
 			g.statusMsg = err.Error()
 		}
@@ -628,6 +764,17 @@ func (g *Game) drawStatusBar(screen *ebiten.Image) {
 	mode := g.mode.label()
 	lastSprite := max(0, g.spriteN()-1)
 	msg := fmt.Sprintf("[%s]  sprite:%d/%d  tool:%s  (M/P/E/F/L/R/C: tools, Shift+H/V: flip, Cmd/Ctrl+S: save, Cmd/Ctrl+Z: undo)", mode, g.currentSprite, lastSprite, g.spriteTool.String())
+	if g.mode == modeSprites && g.showsPoseStrip() {
+		if g.selectedPose >= 0 && g.selectedPose < len(g.authoredPoses()) {
+			msg = fmt.Sprintf("[%s]  tile:%d/%d  pose:%s  (Register Pose / Update Pose / Delete Pose, click name to rename)",
+				mode, g.currentSprite, lastSprite, editor.PoseFrameLabel(g.selectedPose, g.authoredPoses()[g.selectedPose]))
+		} else {
+			msg = fmt.Sprintf("[%s]  tile:%d/%d  (select artwork, then Register Pose · Cmd/Ctrl+S: save)", mode, g.currentSprite, lastSprite)
+		}
+	}
+	if g.mode == modeSprites && g.animationWorkspaceActive() {
+		msg = "[animations]  Add registered poses, arrange their order, set speed, then Register Clip to use it in code."
+	}
 	if g.mode == modeMap {
 		visible := ""
 		for layer := 0; layer < assetsync.MapLayerCount; layer++ {

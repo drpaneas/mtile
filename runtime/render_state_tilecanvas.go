@@ -59,6 +59,11 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 }
 func (c *Context) hardwarePrint(s, x, y, color Value) (int, bool)       { return 0, false }
 func (c *Context) hardwarePrintStatic(s, x, y, color Value) (int, bool) { return 0, false }
+func (c *Context) psprOnHardwareOBJ() bool                              { return false }
+func (c *Context) mode0PSprPart(id, x, y int, flipX, flipY bool)        {}
+func (c *Context) mode0PSpr(site, windowBase, id, x, y int, flipX, flipY bool) {
+}
+func (c *Context) takeMode0PsprSite(base int) int { return base }
 func (c *Context) renderSSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) bool {
 	c.canvasMarkSSpr(sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY)
 	return false

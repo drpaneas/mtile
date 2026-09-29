@@ -68,6 +68,8 @@ func (c *Context) rendererPaletteIndex(index int) byte {
 	return c.displayPal[c.drawPal[index]]
 }
 
+func (c *Context) psprOnHardwareOBJ() bool { return true }
+
 func (c *Context) RendererUploadStats() RendererUploadStats {
 	if c == nil {
 		return RendererUploadStats{}

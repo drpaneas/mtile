@@ -159,7 +159,7 @@ func TestPasteSpriteClipboardPrefersImageAndFallsBackToInternalBuffer(t *testing
 	setClipboardTestPalette(g)
 	g.currentSprite = 1
 	g.hasCopied = true
-	g.copiedSprite[0][0] = 2
+	g.copiedSprite = filledCopyBuffer(8, 8, 2)
 	img := image.NewNRGBA(image.Rect(0, 0, 8, 8))
 	img.SetNRGBA(0, 0, color.NRGBA{R: 255, A: 255})
 	var encoded bytes.Buffer

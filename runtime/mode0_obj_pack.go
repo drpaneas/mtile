@@ -34,6 +34,10 @@ func mode0PackedObjectReservedSource(id int) bool {
 	return id >= mode0PackedObjectTileBase && id < mode0PackedObjectTileEnd
 }
 
+func mode0PackedObjectWindowReserved(base, count int) bool {
+	return count > 0 && base < mode0PackedObjectTileEnd && base+count > mode0PackedObjectTileBase
+}
+
 func (c *Context) mode0PackedObjectTile(id, cells int) (int, bool) {
 	if c == nil || c.cart == nil || id < 0 || c.cart.SpriteCols <= 0 || cells != 2 && cells != 4 {
 		return 0, false

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "pages": null,
+  "clips": [
+    {
+      "name": "wide",
+      "frames": [
+        0,
+        1
+      ],
+      "fps": 8
+    },
+    {
+      "name": "tall",
+      "frames": [
+        0,
+        2
+      ],
+      "fps": 8
+    }
+  ]
+}

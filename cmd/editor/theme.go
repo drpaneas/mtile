@@ -73,7 +73,7 @@ func (g *Game) updateTheme() {
 		g.theme.completionFrame = 0
 	}
 	if g.mode == modeCode && g.code != nil {
-		layout := newDevelopLayout().Code
+		layout := newDevelopPanelLayout(g.developPanel).Code
 		line, column := g.code.LineColumn(g.code.Cursor())
 		x := float64(layout.Text.X + 8 + (column-g.codeScrollColumn)*codeCharWidth)
 		y := float64(layout.Text.Y + 3 + (line-g.codeScrollLine)*codeLineHeight)

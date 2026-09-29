@@ -10,8 +10,8 @@ func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
 	want := map[RendererCompatibility]int{
 		RendererIndependent:      45,
 		RendererBoth:             9,
-		RendererMode0Conditional: 8,
-		RendererMode4Only:        8,
+		RendererMode0Conditional: 10,
+		RendererMode4Only:        7,
 	}
 	counts := make(map[RendererCompatibility]int, len(want))
 	for name := range Builtins {
@@ -37,12 +37,12 @@ func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
 }
 
 func TestRendererCompatibilityKeepsExactRasterCallsInMode4(t *testing.T) {
-	for _, name := range []string{"pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "pspr"} {
+	for _, name := range []string{"pset", "pget", "line", "rect", "rectfill", "circ", "circfill"} {
 		if got := BuiltinRendererCompatibility(name); got != RendererMode4Only {
 			t.Errorf("%s compatibility = %d, want Mode 4-only", name, got)
 		}
 	}
-	for _, name := range []string{"map", "spr", "print", "pal"} {
+	for _, name := range []string{"map", "spr", "print", "pal", "pspr"} {
 		if got := BuiltinRendererCompatibility(name); got != RendererMode0Conditional {
 			t.Errorf("%s compatibility = %d, want conditional Mode 0", name, got)
 		}

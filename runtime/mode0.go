@@ -96,6 +96,7 @@ func (c *Context) FinalizeInitHardware() {
 	start := hw.ReadFrameCycleCounter()
 	uploaded, _ := c.uploadMode0DirtyTiles()
 	c.applyMode0Palettes()
+	c.initMode0ResidentPoses()
 	c.mode0ColdCycles += hw.ReadFrameCycleCounter() - start
 	c.mode0UploadStats.ColdTileBytes += uploaded
 }
@@ -123,6 +124,7 @@ func (c *Context) BeginRenderFrame() {
 func (c *Context) PrepareRender() {
 	c.prepareMode0TileUploads()
 	c.prepareMode0PackedObjects()
+	c.prepareMode0PsprStreams()
 }
 
 func (c *Context) PresentRender() {

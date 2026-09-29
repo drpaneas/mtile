@@ -8,7 +8,9 @@ import (
 
 const (
 	gbaHeaderSize = 0xc0
-	maxGBAROMSize = 32 * 1024 * 1024
+	// ROMCapacity is the cartridge address space accepted by the GBA linker.
+	ROMCapacity   = 32 * 1024 * 1024
+	maxGBAROMSize = ROMCapacity
 )
 
 // ValidateROM checks the invariants that distinguish a linked GBA image from
