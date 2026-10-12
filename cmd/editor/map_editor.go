@@ -43,6 +43,17 @@ func (g *Game) updateMapMode() {
 	mapW, mapH := g.mapBounds()
 	g.mapCam.Clamp(mapW, mapH, layout.Canvas)
 
+	if g.updateMapRoomToolbar(layout) {
+		return
+	}
+	if g.mapRooms {
+		g.handleMapLayerPanel(layout)
+		g.handleMapPan(layout)
+		g.handleMapMouseDrag(layout)
+		g.handleMapZoom(layout)
+		g.updateMapRooms(layout)
+		return
+	}
 	g.handleMapResizeKeys()
 	g.handleMapLayerPanel(layout)
 	g.handleMapAreaTool(layout)
@@ -283,12 +294,16 @@ func (g *Game) drawMapMode(screen *ebiten.Image) {
 	tileX, tileY, ok := g.mapTargetTile(layout, mx, my)
 	if g.mapTool.isAreaTool() {
 		g.drawMapAreaSelection(screen, layout)
-	} else {
+	} else if !g.mapRooms {
 		g.drawMapHover(screen, layout, tileX, tileY, ok)
 	}
 	g.drawSceneBoundaries(screen, layout)
 	g.drawMapBottomStrip(screen, layout, tileX, tileY, ok)
 	g.drawMapLayersPanel(screen, layout)
+	g.drawMapRoomToolbar(screen, layout)
+	if g.mapRooms {
+		g.drawMapRooms(screen, layout)
+	}
 }
 
 func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
@@ -476,6 +491,9 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 	}
 	drawText(screen, truncateUIText(hoverText, layout.Coordinates.W), layout.Coordinates.X, layout.Coordinates.Y-6, colorText)
 	help := fmt.Sprintf("%s  (left paint, right erase, Cmd/Ctrl+drag select, WASD pan, wheel zoom)", selected)
+	if g.mapRooms {
+		help = "Click a room to select; + adds at an edge; Cmd/Ctrl+Z undoes"
+	}
 	if g.mapTool.isAreaTool() {
 		help = fmt.Sprintf("%s: drag select; Cmd/Ctrl+A whole layer; choose target BG0-BG3 (keys 1-4)", g.mapTool.areaTitle())
 		if g.mapArea != nil {

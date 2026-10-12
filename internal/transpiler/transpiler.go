@@ -175,10 +175,12 @@ type Options struct {
 	// PoseIndex/PoseParts supply pspr's multi-part sprite tables. Poses are
 	// read-only cart metadata with no per-cart mutation path, so both stay
 	// in .rodata: there is no matching EWRAM budget entry for them.
-	PoseIndex       []runtimeapi.PoseRange
-	AnimationClips  []runtimeapi.AnimationClip
-	AnimationFrames []uint16
-	PoseParts       []runtimeapi.PosePart
+	PoseVariantBaseCount int
+	PoseVariantNames     []string
+	PoseIndex            []runtimeapi.PoseRange
+	AnimationClips       []runtimeapi.AnimationClip
+	AnimationFrames      []uint16
+	PoseParts            []runtimeapi.PosePart
 	// ObjSheet is the optional dense object warehouse. ObjSheetW == 0 means
 	// poses index the spritesheet. Generated carts always compact this into
 	// read-only ROM; there is no EWRAM copy.
@@ -227,7 +229,8 @@ var Builtins = map[string]BuiltinSpec{
 	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0},
 	// Flips automatically preserve the pose bounds, or the union bounds of a
 	// named clip; callers keep the same x/y anchor in either facing direction.
-	"pspr": {"PSprV", 3, 5, 0}, "anim": {"AnimV", 3, 6, 0},
+	"pvariant": {"PVariantV", 0, 1, 0},
+	"pspr":     {"PSprV", 3, 5, 0}, "anim": {"AnimV", 3, 6, 0},
 	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
@@ -730,6 +733,12 @@ func (g *generator) prepare() error {
 				g.poseOBJResident = planMode0ResidentPoses(g.chunk, ops, g.opts)
 				if g.poseOBJResident != nil {
 					g.poseOBJIndex, g.poseOBJParts = g.poseOBJResident.index, g.poseOBJResident.parts
+					if len(g.poseOBJResident.palettes) != 0 {
+						// The immutable packed bank supplies every reachable pose.
+						// Do not ship the build-time recolored source warehouse too.
+						g.objSpriteN = 0
+						g.objSheetCompact, g.objSheetIndex = nil, nil
+					}
 				} else {
 					g.preparePoseOBJPlans()
 				}
@@ -3928,10 +3937,25 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line(fmt.Sprintf("var mapROM = [ %d ]uint16{%s}", mapCells, u16Literal(g.mapCompact, mapCells)))
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var flagROM = [ %d ]byte{%s}", g.spriteN, byteLiteral(g.opts.Flags, g.spriteN)))
+	poseIndex, poseParts := g.opts.PoseIndex, g.opts.PoseParts
+	if g.poseOBJResident != nil && len(g.poseOBJResident.palettes) != 0 {
+		// Hardware variants share canonical geometry as well as pixels.
+		poseIndex = append([]runtimeapi.PoseRange(nil), poseIndex...)
+		count, end := g.opts.PoseVariantBaseCount, 0
+		for i := range poseIndex {
+			poseIndex[i] = poseIndex[i%count]
+			if n := int(poseIndex[i].Start) + int(poseIndex[i].Count); n > end {
+				end = n
+			}
+		}
+		poseParts = poseParts[:end]
+	}
 	b.line("//go:section .rodata")
-	b.line(fmt.Sprintf("var poseIndexROM = [ %d ]rt.PoseRange{%s}", len(g.opts.PoseIndex), poseRangeLiteral(g.opts.PoseIndex)))
+	b.line(fmt.Sprintf("var poseIndexROM = [ %d ]rt.PoseRange{%s}", len(poseIndex), poseRangeLiteral(poseIndex)))
+	b.line(fmt.Sprintf("const PoseVariantBaseCount = %d", g.opts.PoseVariantBaseCount))
+	b.line(fmt.Sprintf("var poseVariantNamesROM = %#v", g.opts.PoseVariantNames))
 	b.line("//go:section .rodata")
-	b.line(fmt.Sprintf("var posePartROM = [ %d ]rt.PosePart{%s}", len(g.opts.PoseParts), posePartLiteral(g.opts.PoseParts)))
+	b.line(fmt.Sprintf("var posePartROM = [ %d ]rt.PosePart{%s}", len(poseParts), posePartLiteral(poseParts)))
 	g.renderAnimationTables(b)
 	if len(g.poseOBJIndex) > 0 {
 		g.renderPoseOBJPlans(b)
@@ -4081,19 +4105,16 @@ func (g *generator) haltStatement(reason string) string {
 }
 
 func (g *generator) renderMain(b *sourceBuilder) {
-	b.line("func main() {")
-	if g.opts.Debug {
-		b.line("\trt.DebugLog(\"Cartridge preview started\")")
-	}
-	b.line("\tcartImage := rt.AssetImage{")
+	b.line("var cartImage = rt.AssetImage{")
 	b.line("\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,")
 	b.line("\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],")
 	b.line("\t\tPoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],")
+	b.line(fmt.Sprintf("\t\tPoseVariantBaseCount: %d, PoseVariantNames: poseVariantNamesROM,", g.opts.PoseVariantBaseCount))
 	b.line("\t\tAnimationClips: animationClipROM[:], AnimationFrames: animationFrameROM[:],")
 	if len(g.poseOBJIndex) > 0 {
 		b.line("\t\tPoseOBJIndex: poseOBJIndexROM[:], PoseOBJParts: poseOBJPartsROM[:], PoseOBJTiles: poseOBJTilesROM[:],")
 		if g.poseOBJResident != nil {
-			b.line(fmt.Sprintf("\t\tPoseOBJResident: poseOBJResidentROM[:], PoseOBJResidentBase: %d,", g.poseOBJResident.base))
+			b.line(fmt.Sprintf("\t\tPoseOBJResident: poseOBJResidentROM[:], PoseOBJResidentBase: %d, PoseOBJPalettes: poseOBJPalettesROM[:],", g.poseOBJResident.base))
 		}
 	}
 	if g.objSpriteN > 0 {
@@ -4103,7 +4124,11 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	if !g.sheetMutable {
 		b.line("\t\tSheetIndex: sheetIndexROM[:],")
 	}
-	b.line("\t}")
+	b.line("}")
+	b.line("func main() {")
+	if g.opts.Debug {
+		b.line("\trt.DebugLog(\"Cartridge preview started\")")
+	}
 	b.line("\tcartData.SheetW, cartData.SheetH = SheetW, SheetH")
 	b.line("\tcartData.SpriteCols, cartData.SpriteRows, cartData.SpriteN = SpriteCols, SpriteRows, SpriteN")
 	b.line("\tcartData.MapW, cartData.MapH, cartData.MapLayers, cartData.MapPlaneMask = MapW, MapH, MapLayers, MapPlaneMask")
@@ -4117,6 +4142,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	}
 	b.line("\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]")
 	b.line("\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]")
+	b.line(fmt.Sprintf("\tcartData.PoseVariantBaseCount, cartData.PoseVariantNames = %d, poseVariantNamesROM", g.opts.PoseVariantBaseCount))
 	b.line("\tcartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]")
 	if base, tiles := g.poseOBJStageWindow(); tiles > 0 {
 		b.line(fmt.Sprintf("\tcartData.PoseOBJStage, cartData.PoseOBJStageBase = poseOBJStageRAM[:], %d", base))
@@ -6014,6 +6040,11 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		}
 	}
 	sequencedExprs := argExprs
+	if name == "pvariant" && len(argExprs) == 1 {
+		if _, literal := unparenExpr(argExprs[0]).(*luaparser.StringExpr); literal {
+			sequencedExprs = nil
+		}
+	}
 	animationMethod, animationID := "", ""
 	if name == "anim" {
 		animationMethod, animationID = g.animationMethod(argExprs)
@@ -6080,6 +6111,23 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 			return void(fmt.Sprintf("c.MapBGAt(%d,%s)", slot, strings.Join(args, ",")))
 		}
 		return void(fmt.Sprintf("c.MapBGAtV(%d,%s)", slot, argsUpTo(8)))
+	case "pvariant":
+		if len(argExprs) == 0 {
+			return void("c.PVariantID(0)")
+		}
+		if name, literal := unparenExpr(argExprs[0]).(*luaparser.StringExpr); literal {
+			for i, v := range g.opts.PoseVariantNames {
+				if v == name.Value {
+					return void(fmt.Sprintf("c.PVariantID(%d)", i+1))
+				}
+			}
+			g.setErr(fmt.Errorf("transpiler: %s: [PVARIANT_UNKNOWN] no pose color variant %q", argExprs[0].Pos(), name.Value))
+			return "rt.NilVal()"
+		}
+		if !g.heapEnabled {
+			return void("c.PVariantStaticV(" + arg(0) + ")")
+		}
+		return void("c.PVariantV(" + arg(0) + ")")
 	case "pal":
 		switch len(names) {
 		case 0:

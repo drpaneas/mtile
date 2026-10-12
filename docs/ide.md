@@ -13,6 +13,22 @@ window. Its four workspaces share the same project model:
 
 Use the tabs, keys `1`–`4`, or Tab outside a text field to change workspace.
 
+## Map rooms
+
+Click **ROOMS** in Map Lab to show room controls. Click a room to select it;
+**+ LEFT**, **+ RIGHT**, **+ ABOVE**, and **+ BELOW** grow the map by a
+30×20-tile room column or row. Left and top additions move existing artwork
+on all backgrounds together. Click **ROOMS** again to resume tile painting.
+
+**DELETE ROOM** removes the selected room from a horizontal or vertical strip
+and closes the gap. In a two-dimensional grid (or the final remaining room),
+**CLEAR ROOM** empties only that room on all backgrounds, preserving neighboring
+rooms and their coordinates. Ctrl/Cmd+Z undoes either action; Ctrl/Cmd+S saves.
+These controls edit map artwork; game code still determines level transitions.
+
+The keyboard alternatives remain `]` to add a column on the right and `[` to
+add a row below, with Ctrl/Cmd held to remove the last column or row.
+
 ## Sprite controls
 
 The Sprite Editor keeps its everyday tools in one compact rail below the

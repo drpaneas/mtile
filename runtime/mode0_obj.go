@@ -70,6 +70,11 @@ func (c *Context) applyMode0ObjectPalette() {
 	for index := 0; index < 256; index++ {
 		hw.SetPaletteRAM16(256+index, c.palette[c.rendererPaletteIndex(index)])
 	}
+	if c.cart != nil {
+		for index, source := range c.cart.PoseOBJPalettes {
+			hw.SetPaletteRAM16(256+index, c.palette[c.rendererPaletteIndex(int(source))])
+		}
+	}
 }
 
 // Both banks use the same draw/display remaps. Consume the shared dirty flag
@@ -87,6 +92,11 @@ func (c *Context) applyMode0Palettes() {
 		hi := c.palette[c.rendererPaletteIndex(index+1)]
 		hw.SetPaletteRAM32(index, lo, hi)
 		hw.SetPaletteRAM32(256+index, lo, hi)
+	}
+	if c.cart != nil && len(c.cart.PoseOBJPalettes) > 0 {
+		for index, source := range c.cart.PoseOBJPalettes {
+			hw.SetPaletteRAM16(256+index, c.palette[c.rendererPaletteIndex(int(source))])
+		}
 	}
 	c.paletteDirty = false
 }

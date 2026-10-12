@@ -399,7 +399,9 @@ func TestCelesteControllerKeepsNumericFieldLocals(t *testing.T) {
 		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
 		Palette:   assets.PaletteROM[:],
 		ObjSheetW: assets.ObjSheetW, ObjSheetH: assets.ObjSheetH, ObjSheet: assets.ObjSheetROM,
-		AnimationFrames: assets.AnimationFrames,
+		AnimationFrames:      assets.AnimationFrames,
+		PoseVariantBaseCount: assets.PoseVariantBaseCount,
+		PoseVariantNames:     assets.PoseVariantNames,
 	}
 	for _, pose := range assets.PoseIndex {
 		opts.PoseIndex = append(opts.PoseIndex, rt.PoseRange{

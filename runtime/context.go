@@ -16,7 +16,8 @@ const (
 // renderState is build-tag selected so a Mode 0 ROM does not pay for the Mode 4
 // software framebuffer in EWRAM.
 type Context struct {
-	cart *AssetMemory
+	poseVariant int
+	cart        *AssetMemory
 
 	renderState
 	drawPal         [256]byte
@@ -90,6 +91,7 @@ type drawCursor struct {
 // Init copies image into ram when assetLensExact passes. It always clears
 // c.cart first so a failed re-init cannot leave a stale pointer.
 func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
+	c.poseVariant = 0
 	c.cart = nil
 	c.resetRendererState()
 	c.mapROM = nil
@@ -141,6 +143,7 @@ func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	ram.PoseOBJParts = image.PoseOBJParts
 	ram.PoseOBJTiles = image.PoseOBJTiles
 	ram.PoseOBJResident, ram.PoseOBJResidentBase = image.PoseOBJResident, image.PoseOBJResidentBase
+	ram.PoseOBJPalettes, ram.PoseVariantBaseCount, ram.PoseVariantNames = image.PoseOBJPalettes, image.PoseVariantBaseCount, image.PoseVariantNames
 	ram.ObjSheetW, ram.ObjSheetH = image.ObjSheetW, image.ObjSheetH
 	ram.ObjSpriteCols, ram.ObjSpriteRows = image.ObjSpriteCols, image.ObjSpriteRows
 	ram.ObjSpriteN = image.ObjSpriteN

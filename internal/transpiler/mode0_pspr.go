@@ -49,11 +49,12 @@ func validateMode0PsprCallWithEnv(
 		// Every runtime ID either selects an authored pose or is a no-op.
 		// Budgeting the whole library is a sound bound even when expression
 		// analysis cannot enumerate a large animation counter or table lookup.
-		ids = make([]int, len(opts.PoseIndex))
+		ids = make([]int, canonicalPoseCount(opts))
 		for id := range ids {
 			ids[id] = id
 		}
 	}
+	ids = expandedPoseIDs(opts, ids)
 	inRange := make([]int, 0, len(ids))
 	for _, id := range ids {
 		// Scalar proofs may still supply source integer literals. The runtime
@@ -157,6 +158,9 @@ func validateMode0PsprProof(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Opti
 		return nil
 	}
 	sites := mode0PsprSitesFromOps(ops)
+	if len(opts.PoseVariantNames) > 0 && len(sites) > 0 {
+		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 16 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
+	}
 	if len(sites) == 0 {
 		return nil
 	}
@@ -208,6 +212,9 @@ func validateMode0PoseCommit(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Opt
 		return nil
 	}
 	sites := mode0PsprSitesFromOps(ops)
+	if len(opts.PoseVariantNames) > 0 && len(sites) > 0 {
+		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 16 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
+	}
 	if len(sites) == 0 {
 		return nil
 	}

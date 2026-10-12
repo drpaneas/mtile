@@ -118,9 +118,7 @@ func (g *Game) syncPoseSelectionFromSprite(tile int) {
 	if g.selectedPose >= 0 && g.selectedPose < len(poses) && editor.PoseContainsTile(poses[g.selectedPose], tile) {
 		return
 	}
-	if id := editor.FirstPoseContainingTile(poses, tile); id >= 0 {
-		g.selectedPose = id
-	}
+	g.selectedPose = editor.FirstPoseContainingTile(poses, tile)
 }
 
 func (g *Game) poseStripRect() editor.Rect {
@@ -413,35 +411,6 @@ func (g *Game) poseStripLabelRect(id int) editor.Rect {
 	return editor.Rect{X: labelX, Y: labelY, W: smallTextWidth(label), H: uiSmallTextHeight}
 }
 
-func (g *Game) poseOverlayLabelRect(id int) editor.Rect {
-	if !g.showsPoseStrip() {
-		return editor.Rect{}
-	}
-	poses := g.authoredPoses()
-	if id < 0 || id >= len(poses) {
-		return editor.Rect{}
-	}
-	col, row, width, height, ok := editor.PoseSheetBounds(poses[id], g.spriteCols(), g.spriteRows())
-	if !ok {
-		return editor.Rect{}
-	}
-	canvas := g.sheetGridCanvas()
-	region := sheetCameraRect(g.sheetCam, canvas, col, row, width, height)
-	clip := g.sheetContentClip(canvas)
-	outline, visible := spritesheetSelectionOutlineRect(region, clip)
-	if !visible {
-		return editor.Rect{}
-	}
-	label := g.poseVisibleLabel(id, poses[id])
-	labelX := outline.X + 3
-	labelY := outline.Y + 2
-	rect := editor.Rect{X: labelX, Y: labelY, W: smallTextWidth(label), H: uiSmallTextHeight}
-	if labelX+rect.W >= clip.X+clip.W || labelY+rect.H >= clip.Y+clip.H {
-		return editor.Rect{}
-	}
-	return rect
-}
-
 func (g *Game) beginPoseNameEdit() {
 	if g.selectedPose < 0 || g.selectedPose >= len(g.authoredPoses()) {
 		g.statusMsg = "Select a registered pose to rename"
@@ -453,25 +422,11 @@ func (g *Game) beginPoseNameEdit() {
 	g.requestRender()
 }
 
-func (g *Game) beginPoseNameEditAt(mx, my int) bool {
-	if !g.showsPoseStrip() {
-		return false
-	}
-	for id := range g.authoredPoses() {
-		if rectContains(g.poseOverlayLabelRect(id), mx, my) {
-			g.selectPose(id)
-			g.beginPoseNameEdit()
-			return true
-		}
-	}
-	return false
-}
-
 func (g *Game) poseNameEditClickKeepsFocus(mx, my int) bool {
 	if !g.poseNameEditing {
 		return false
 	}
-	return rectContains(g.poseStripLabelRect(g.selectedPose), mx, my) || rectContains(g.poseOverlayLabelRect(g.selectedPose), mx, my)
+	return rectContains(g.poseStripLabelRect(g.selectedPose), mx, my)
 }
 
 func (g *Game) updatePoseNameTyping() bool {
@@ -562,39 +517,20 @@ func (g *Game) drawPoseSheetOverlays(screen *ebiten.Image, canvas editor.Rect) {
 	poses := g.authoredPoses()
 	clip := g.sheetContentClip(canvas)
 	for index, pose := range poses {
-		accent := poseOverlayColor(index)
-		if g.selectedPose == index {
-			for _, part := range pose.Parts {
-				if part.Tile < 0 || part.Tile >= cols*rows || !g.poseHighlightsTile(part.Tile) {
-					continue
-				}
-				col, row := part.Tile%cols, part.Tile/cols
-				cell := sheetCameraRect(g.sheetCam, canvas, col, row, 1, 1)
-				if fill, ok := intersectEditorRects(cell, clip); ok {
-					fillRect(screen, fill, rgba(accent, 55))
-				}
-			}
+		if g.selectedPose != index {
+			continue
 		}
+		accent := poseOverlayColor(index)
 		col, row, width, height, ok := editor.PoseSheetBounds(pose, cols, rows)
 		if !ok {
 			continue
 		}
 		region := sheetCameraRect(g.sheetCam, canvas, col, row, width, height)
-		outline, visible := spritesheetSelectionOutlineRect(region, clip)
+		outline, visible := intersectEditorRects(region, clip)
 		if !visible {
 			continue
 		}
-		alpha := uint8(140)
-		if g.selectedPose == index {
-			alpha = 230
-		}
-		strokeRect(screen, outline, rgba(accent, alpha))
-		label := g.poseVisibleLabel(index, pose)
-		labelX := outline.X + 3
-		labelY := outline.Y + 2
-		if labelX+smallTextWidth(label) < clip.X+clip.W && labelY+uiSmallTextHeight < clip.Y+clip.H {
-			drawSmallText(screen, label, labelX, labelY, accent)
-		}
+		strokeRect(screen, outline, rgba(accent, 230))
 	}
 }
 

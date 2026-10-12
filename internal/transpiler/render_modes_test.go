@@ -10,7 +10,7 @@ func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
 	want := map[RendererCompatibility]int{
 		RendererIndependent:      45,
 		RendererBoth:             9,
-		RendererMode0Conditional: 10,
+		RendererMode0Conditional: 11,
 		RendererMode4Only:        7,
 	}
 	counts := make(map[RendererCompatibility]int, len(want))

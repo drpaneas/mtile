@@ -1,0 +1,400 @@
+{
+  "date": "2026-10-12",
+  "toolchain": "TinyGo 0.42.0",
+  "native": {
+    "coverage": {
+      "death": 58,
+      "freeze": 30,
+      "stage0": 96,
+      "stage1": 57,
+      "stage2": 326,
+      "stage3": 12,
+      "stage4": 29,
+      "stage5": 100,
+      "stage6": 240,
+      "stage7": 1
+    },
+    "first_scan_exact": true,
+    "frames": 861,
+    "mismatches": null,
+    "performance": {
+      "mode0": {
+        "movement": {
+          "commit_median_p95_max": [
+            5297,
+            6510,
+            7194
+          ],
+          "draw_median_p95_max": [
+            245052,
+            279418,
+            296111
+          ],
+          "frame_median_p95_max": [
+            297128,
+            344761,
+            419819
+          ],
+          "over_30hz_budget": 0,
+          "samples": 240
+        },
+        "route": {
+          "commit_median_p95_max": [
+            5597,
+            6356,
+            8982
+          ],
+          "draw_median_p95_max": [
+            282414,
+            322389,
+            361575
+          ],
+          "frame_median_p95_max": [
+            358482,
+            503814,
+            944538
+          ],
+          "over_30hz_budget": 3,
+          "samples": 326
+        },
+        "title": {
+          "commit_median_p95_max": [
+            4697,
+            6034,
+            1328380
+          ],
+          "draw_median_p95_max": [
+            25439,
+            26802,
+            76914
+          ],
+          "frame_median_p95_max": [
+            38852,
+            40806,
+            124989
+          ],
+          "over_30hz_budget": 0,
+          "samples": 96
+        }
+      },
+      "mode4": {
+        "movement": {
+          "commit_median_p95_max": [
+            78493,
+            82382,
+            86541
+          ],
+          "draw_median_p95_max": [
+            696330,
+            818120,
+            871965
+          ],
+          "frame_median_p95_max": [
+            823008,
+            948839,
+            1005005
+          ],
+          "over_30hz_budget": 240,
+          "samples": 240
+        },
+        "route": {
+          "commit_median_p95_max": [
+            78524,
+            81791,
+            86576
+          ],
+          "draw_median_p95_max": [
+            710877,
+            856500,
+            923255
+          ],
+          "frame_median_p95_max": [
+            898802,
+            1044184,
+            1416808
+          ],
+          "over_30hz_budget": 326,
+          "samples": 326
+        },
+        "title": {
+          "commit_median_p95_max": [
+            78420,
+            79807,
+            86564
+          ],
+          "draw_median_p95_max": [
+            260746,
+            260941,
+            276176
+          ],
+          "frame_median_p95_max": [
+            347678,
+            349158,
+            362412
+          ],
+          "over_30hz_budget": 0,
+          "samples": 96
+        }
+      }
+    }
+  },
+  "host": {
+    "rows": 1373,
+    "state_differences": [],
+    "pixel_differences": [],
+    "next_random": [
+      55523,
+      55523
+    ],
+    "coverage": {
+      "completion": 12,
+      "completion_numbers": 11,
+      "dead": 539,
+      "death_particles": 34,
+      "death_respawn": 100,
+      "entity-1": 32,
+      "entity11": 24,
+      "entity118": 32,
+      "entity12": 24,
+      "entity18": 84,
+      "entity20": 32,
+      "entity22": 48,
+      "entity23": 84,
+      "entity28": 64,
+      "entity64": 8,
+      "entity8": 36,
+      "flag_touch_room0": 4,
+      "flag_touch_room1": 4,
+      "frozen": 34,
+      "movement": 240,
+      "restart": 1,
+      "restart_spawn": 28,
+      "route0": 162,
+      "route1": 162,
+      "score_edge_-2_158": 2,
+      "score_edge_-2_64": 2,
+      "score_edge_220_158": 2,
+      "score_edge_220_64": 2,
+      "score_edge_223_158": 2,
+      "score_edge_223_64": 2,
+      "score_edge_233_158": 2,
+      "score_edge_233_64": 2,
+      "score_edge_238_158": 2,
+      "score_edge_238_64": 2,
+      "score_edge_244_158": 2,
+      "score_edge_244_64": 2,
+      "score_edge_4_158": 2,
+      "score_edge_4_64": 2,
+      "spawn0": 28,
+      "spawn1": 28,
+      "start": 1,
+      "title": 96
+    }
+  },
+  "builds": {
+    "mode0": {
+      "ROMSize": 339924,
+      "EWRAMFree": 74784,
+      "IWRAMUsed": 22336,
+      "RendererOAMEntries": 126,
+      "RendererLineCycles": 1104,
+      "PoseMemory": {
+        "PoseCount": 78,
+        "ClipCount": 27,
+        "PoseNames": [
+          "idle",
+          "walk_1",
+          "jump",
+          "walk_3",
+          "wall_slide",
+          "crouch",
+          "look_up",
+          "smoke_0",
+          "smoke_1",
+          "smoke_2",
+          "spring",
+          "spring_compressed",
+          "balloon_0",
+          "balloon_1",
+          "balloon_2",
+          "floor",
+          "floor_crack_1",
+          "floor_crack_2",
+          "fruit",
+          "winged_fruit_0",
+          "winged_fruit_1",
+          "winged_fruit_2",
+          "platform",
+          "breakable_wall",
+          "key_0",
+          "key_1",
+          "key_2",
+          "chest",
+          "flag_0",
+          "flag_1",
+          "flag_2",
+          "title",
+          "hair_11_r1",
+          "hair_11_r2",
+          "ambient_158_1x1",
+          "ambient_158_1x2",
+          "ambient_158_2x1",
+          "ambient_158_2x2",
+          "death_158_1x3",
+          "death_158_1x4",
+          "death_158_1x5",
+          "death_158_2x3",
+          "death_158_2x4",
+          "death_158_2x5",
+          "death_158_3x1",
+          "death_158_3x2",
+          "death_158_3x3",
+          "death_158_3x4",
+          "death_158_3x5",
+          "death_158_4x1",
+          "death_158_4x2",
+          "death_158_4x3",
+          "death_158_4x4",
+          "death_158_4x5",
+          "death_158_5x1",
+          "death_158_5x2",
+          "death_158_5x3",
+          "death_158_5x4",
+          "death_158_5x5",
+          "digit_158_0",
+          "digit_158_1",
+          "digit_158_2",
+          "digit_158_3",
+          "digit_158_4",
+          "digit_158_5",
+          "digit_158_6",
+          "digit_158_7",
+          "digit_158_8",
+          "digit_158_9",
+          "digit_158_colon",
+          "digit_158_minus",
+          "score_1000_14",
+          "title_static",
+          "title_press_start",
+          "completion_panel",
+          "score_14_wrap_1",
+          "score_14_wrap_2",
+          "score_14_wrap_3"
+        ],
+        "Source": "obj",
+        "SourcePixelBytes": 201216,
+        "UniquePixelBytes": 52800,
+        "PixelROMBytes": 11328,
+        "ResidentVRAMBytes": 11328,
+        "MetadataROMBytes": 33652,
+        "StageRAMBytes": 0,
+        "LinkedMemoryAvailable": true,
+        "PixelsLinked": true,
+        "MetadataLinked": true,
+        "StageLinked": false
+      }
+    },
+    "mode4": {
+      "ROMSize": 400432,
+      "EWRAMFree": 58504,
+      "IWRAMUsed": 28588,
+      "RendererOAMEntries": 0,
+      "RendererLineCycles": 0,
+      "PoseMemory": {
+        "PoseCount": 78,
+        "ClipCount": 27,
+        "PoseNames": [
+          "idle",
+          "walk_1",
+          "jump",
+          "walk_3",
+          "wall_slide",
+          "crouch",
+          "look_up",
+          "smoke_0",
+          "smoke_1",
+          "smoke_2",
+          "spring",
+          "spring_compressed",
+          "balloon_0",
+          "balloon_1",
+          "balloon_2",
+          "floor",
+          "floor_crack_1",
+          "floor_crack_2",
+          "fruit",
+          "winged_fruit_0",
+          "winged_fruit_1",
+          "winged_fruit_2",
+          "platform",
+          "breakable_wall",
+          "key_0",
+          "key_1",
+          "key_2",
+          "chest",
+          "flag_0",
+          "flag_1",
+          "flag_2",
+          "title",
+          "hair_11_r1",
+          "hair_11_r2",
+          "ambient_158_1x1",
+          "ambient_158_1x2",
+          "ambient_158_2x1",
+          "ambient_158_2x2",
+          "death_158_1x3",
+          "death_158_1x4",
+          "death_158_1x5",
+          "death_158_2x3",
+          "death_158_2x4",
+          "death_158_2x5",
+          "death_158_3x1",
+          "death_158_3x2",
+          "death_158_3x3",
+          "death_158_3x4",
+          "death_158_3x5",
+          "death_158_4x1",
+          "death_158_4x2",
+          "death_158_4x3",
+          "death_158_4x4",
+          "death_158_4x5",
+          "death_158_5x1",
+          "death_158_5x2",
+          "death_158_5x3",
+          "death_158_5x4",
+          "death_158_5x5",
+          "digit_158_0",
+          "digit_158_1",
+          "digit_158_2",
+          "digit_158_3",
+          "digit_158_4",
+          "digit_158_5",
+          "digit_158_6",
+          "digit_158_7",
+          "digit_158_8",
+          "digit_158_9",
+          "digit_158_colon",
+          "digit_158_minus",
+          "score_1000_14",
+          "title_static",
+          "title_press_start",
+          "completion_panel",
+          "score_14_wrap_1",
+          "score_14_wrap_2",
+          "score_14_wrap_3"
+        ],
+        "Source": "obj",
+        "SourcePixelBytes": 201216,
+        "UniquePixelBytes": 52800,
+        "PixelROMBytes": 52800,
+        "ResidentVRAMBytes": 0,
+        "MetadataROMBytes": 58076,
+        "StageRAMBytes": 0,
+        "LinkedMemoryAvailable": true,
+        "PixelsLinked": true,
+        "MetadataLinked": true,
+        "StageLinked": false
+      }
+    }
+  }
+}

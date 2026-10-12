@@ -12,6 +12,10 @@ import (
 )
 
 func (g *Game) updateSpriteMode() {
+	if g.poseVariants.open {
+		g.updatePoseVariants()
+		return
+	}
 	if g.updatePoseNameTyping() {
 		mx, my := ebiten.CursorPosition()
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !g.poseNameEditClickKeepsFocus(mx, my) {
@@ -87,6 +91,9 @@ func (g *Game) drawSpriteMode(screen *ebiten.Image) {
 	g.drawPoseStrip(screen)
 	g.drawPaletteSwatches(screen)
 	g.drawColorPicker(screen)
+	if g.poseVariants.open {
+		g.drawPoseVariants(screen)
+	}
 }
 
 func (g *Game) drawSpriteWorkspaceHeader(screen *ebiten.Image) {
@@ -1014,11 +1021,6 @@ func (g *Game) updateSpritesheetPanel(mx, my int) {
 					g.clampSheetCamera(canvas)
 					return
 				}
-				if g.beginPoseNameEditAt(mx, my) {
-					g.sheetSelectionDragging = false
-					g.clampSheetCamera(canvas)
-					return
-				}
 				g.sheetSelectionDragging = true
 				g.sheetSelectionAnchorCol, g.sheetSelectionAnchorRow = col, row
 				g.selectSpritesheetDrag(col, row, cols, rows)
@@ -1072,7 +1074,8 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 		for col := minC; col < maxC; col++ {
 			cell := sheetCameraRect(g.sheetCam, canvas, col, row, 1, 1)
 			id := row*cols + col
-			g.drawSpriteThumb(screen, id, float64(cell.X), float64(cell.Y), float64(cell.W), float64(cell.H), cell)
+			sx, sy := g.sheetCam.WorldToScreen(col, row, canvas)
+			g.drawSpriteThumb(screen, id, sx, sy, tileW, tileH, cell)
 			if !g.objEditing && spriteSheetCellShowsLock(id) {
 				drawSpriteLockOverlay(screen, cell)
 			}

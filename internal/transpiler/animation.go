@@ -86,6 +86,14 @@ func validateMode0AnimCall(call *luaparser.CallExpr, opts Options) (ids []int, u
 			parts = max(parts, p)
 		}
 	}
+	ids = expandedPoseIDs(opts, ids)
+	for _, id := range ids {
+		u, p, ok := mode0PoseUniqueAndParts(opts, id)
+		if ok {
+			unique = max(unique, u)
+			parts = max(parts, p)
+		}
+	}
 	return ids, unique, parts, nil
 }
 

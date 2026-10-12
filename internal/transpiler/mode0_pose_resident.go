@@ -14,16 +14,20 @@ import (
 // Every packed object's row-major pixels must remain contiguous; equal runs
 // (including runs inside a larger object) may share storage exactly.
 type mode0ResidentPosePlan struct {
-	base  int
-	words []uint32
-	index []runtimeapi.PoseOBJRange
-	parts []runtimeapi.PoseOBJ
+	base     int
+	words    []uint32
+	index    []runtimeapi.PoseOBJRange
+	parts    []runtimeapi.PoseOBJ
+	palettes []uint8
 }
 
 func planMode0ResidentPoses(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Options) *mode0ResidentPosePlan {
 	// Keep established streaming scenes and their small staging allocations.
 	// Residency is an exact alternative when occurrence windows or their
 	// worst-case visible uploads would otherwise exceed a hardware budget.
+	if len(opts.PoseVariantNames) > 0 {
+		return buildMode0ResidentPosePlan(chunk, ops, opts)
+	}
 	sites := mode0PsprSitesFromOps(ops)
 	if len(sites) == 0 {
 		return nil
@@ -43,6 +47,13 @@ func planMode0ResidentPoses(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Opti
 }
 
 func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Options) *mode0ResidentPosePlan {
+	if len(opts.PoseVariantNames) > 0 {
+		for _, name := range []string{"spr", "sspr", "print", "pal", "palt", "sset"} {
+			if chunkCallsBuiltin(chunk, name) {
+				return nil
+			}
+		}
+	}
 	if len(opts.PoseIndex) == 0 || chunkCallsBuiltin(chunk, "sset") {
 		return nil
 	}
@@ -68,6 +79,14 @@ func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts 
 		}
 	}
 	plan := &mode0ResidentPosePlan{base: base, index: make([]runtimeapi.PoseOBJRange, len(opts.PoseIndex))}
+	var layouts map[[2]int]mode0PaletteLayout
+	if len(opts.PoseVariantNames) > 0 {
+		layouts, plan.palettes = mode0PaletteLayouts(opts, reachable)
+		if layouts == nil {
+			return nil
+		}
+	}
+
 	type objectPixels struct {
 		part   int
 		pixels []byte
@@ -83,7 +102,7 @@ func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts 
 		}
 		objects, tiles := runtimeapi.BuildPoseOBJPlan(opts.PoseParts[start:end])
 		plan.index[id] = runtimeapi.PoseOBJRange{Start: uint32(len(plan.parts)), Count: uint32(len(objects))}
-		for _, object := range objects {
+		for objectIndex, object := range objects {
 			count := int(object.Width) * int(object.Height) / 64
 			pixels := make([]byte, count*64)
 			for cell, tile := range tiles[int(object.TileOffset) : int(object.TileOffset)+count] {
@@ -96,6 +115,14 @@ func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts 
 					copy(pixels[cell*64+row*8:cell*64+row*8+8], sheet[(y+row)*width+x:(y+row)*width+x+8])
 				}
 			}
+			if len(opts.PoseVariantNames) > 0 {
+				layout, ok := layouts[[2]int{id % opts.PoseVariantBaseCount, objectIndex}]
+				if !ok {
+					return nil
+				}
+				pixels = layout.pixels
+				object.Palette = layout.banks[id/opts.PoseVariantBaseCount]
+			}
 			runs = append(runs, objectPixels{part: len(plan.parts), pixels: pixels})
 			plan.parts = append(plan.parts, object)
 		}
@@ -107,9 +134,13 @@ func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts 
 	// ordering makes the exact allocation independent of map iteration order.
 	sort.SliceStable(runs, func(i, j int) bool { return len(runs[i].pixels) > len(runs[j].pixels) })
 	var bank []byte
+	unit := 64
+	if len(plan.palettes) > 0 {
+		unit = 32
+	}
 	for _, run := range runs {
 		offset := -1
-		for at := 0; at+len(run.pixels) <= len(bank); at += 64 {
+		for at := 0; at+len(run.pixels) <= len(bank); at += unit {
 			if bytes.Equal(bank[at:at+len(run.pixels)], run.pixels) {
 				offset = at
 				break
@@ -120,20 +151,23 @@ func buildMode0ResidentPosePlan(chunk *luaparser.Chunk, ops []mode0DrawOp, opts 
 			// exact sequence sharing, never a pixel/shape approximation.
 			overlap := min(len(bank), len(run.pixels))
 			for overlap > 0 && !bytes.Equal(bank[len(bank)-overlap:], run.pixels[:overlap]) {
-				overlap -= 64
+				overlap -= unit
 			}
 			offset = len(bank) - overlap
 			bank = append(bank, run.pixels[overlap:]...)
-			if len(bank)/64 > limit-base {
+			if (len(bank)+63)/64 > limit-base {
 				return nil
 			}
 		}
-		plan.parts[run.part].TileOffset = uint16(offset / 64)
+		plan.parts[run.part].TileOffset = uint16(offset / unit)
 	}
 	for id := range plan.index {
 		if reachable[id] {
-			plan.index[id].TileCount = uint32(len(bank) / 64)
+			plan.index[id].TileCount = uint32(len(bank) / unit)
 		}
+	}
+	if len(bank)%64 != 0 {
+		bank = append(bank, make([]byte, 64-len(bank)%64)...)
 	}
 	plan.words = make([]uint32, len(bank)/4)
 	for i := range plan.words {

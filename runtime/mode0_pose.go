@@ -188,14 +188,22 @@ func (c *Context) mode0ResidentPSpr(id, x, y int, flipX, flipY bool) {
 	}
 	c.ensureDrawState()
 	for _, object := range c.cart.PoseOBJParts[start:end] {
-		c.emitMode0PoseObject(c.cart.PoseOBJResidentBase+int(object.TileOffset), x, y, object, flipX, flipY)
+		tile := c.cart.PoseOBJResidentBase + int(object.TileOffset)
+		if object.Palette > 0 {
+			tile = c.cart.PoseOBJResidentBase*2 + int(object.TileOffset)
+		}
+		c.emitMode0PoseObject(tile, x, y, object, flipX, flipY)
 	}
 }
 
 func (c *Context) emitMode0PoseObject(tile, x, y int, object PoseOBJ, flipX, flipY bool) {
 	width, height := int(object.Width), int(object.Height)
 	shape, size, valid := mode0PoseShape(width, height)
-	if !valid || tile < 0 || tile+width*height/64 > mode0PsprWindowLimit {
+	limit := mode0PsprWindowLimit
+	if object.Palette > 0 {
+		limit *= 2
+	}
+	if !valid || tile < 0 || tile+width*height/64 > limit {
 		return
 	}
 	ox, oy := int(object.X), int(object.Y)
@@ -221,6 +229,10 @@ func (c *Context) emitMode0PoseObject(tile, x, y int, object PoseOBJ, flipX, fli
 		attr1 |= 1 << 13
 	}
 	attr2 := uint16(tile*2) | c.mode0ObjectPriorityBits()
+	if object.Palette > 0 {
+		attr0 &^= 0x2000
+		attr2 = uint16(tile) | uint16(object.Palette-1)<<12 | c.mode0ObjectPriorityBits()
+	}
 	mode0PutOAMEntry(&c.mode0OAM, 127-c.mode0ObjectCount, attr0, attr1, attr2)
 	c.mode0ObjectCount++
 	c.mode0OAMDirty = true

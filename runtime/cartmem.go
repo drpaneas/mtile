@@ -30,8 +30,11 @@ type AssetImage struct {
 	PoseOBJTiles    []uint16
 	// Immutable, compiler-proven pose layouts may share one resident OBJ bank.
 	// Words are little-endian 8-bit tile pixels, uploaded while force-blanked.
-	PoseOBJResident     []uint32
-	PoseOBJResidentBase int
+	PoseOBJResident      []uint32
+	PoseOBJResidentBase  int
+	PoseOBJPalettes      []uint8
+	PoseVariantBaseCount int
+	PoseVariantNames     []string
 	// ObjSheet is the optional compact object warehouse. ObjSpriteN == 0
 	// means poses still index the spritesheet. When present, the sheet is
 	// always read-only compact ROM (same slot+1 index as a read-only
@@ -77,15 +80,18 @@ type AssetMemory struct {
 	// PoseIndex/PoseParts are Init-copied slice headers from AssetImage; the
 	// backing arrays stay in ROM (or wherever the image lives), since poses
 	// are not mutated at runtime.
-	AnimationClips      []AnimationClip
-	AnimationFrames     []uint16
-	PoseIndex           []PoseRange
-	PoseParts           []PosePart
-	PoseOBJIndex        []PoseOBJRange
-	PoseOBJParts        []PoseOBJ
-	PoseOBJTiles        []uint16
-	PoseOBJResident     []uint32
-	PoseOBJResidentBase int
+	AnimationClips       []AnimationClip
+	AnimationFrames      []uint16
+	PoseIndex            []PoseRange
+	PoseParts            []PosePart
+	PoseOBJIndex         []PoseOBJRange
+	PoseOBJParts         []PoseOBJ
+	PoseOBJTiles         []uint16
+	PoseOBJResident      []uint32
+	PoseOBJResidentBase  int
+	PoseOBJPalettes      []uint8
+	PoseVariantBaseCount int
+	PoseVariantNames     []string
 	// Generated Mode 0 pose staging covers only allocated streaming windows.
 	// The base is an OBJ tile destination; each cell occupies sixteen words.
 	PoseOBJStage                 []uint32
@@ -287,6 +293,12 @@ func packedMapStorageValid(image *AssetImage, ram *AssetMemory, readOnlySheet bo
 // headers unconditionally, so ram's prior pose content (if any) never
 // factors into this check.
 func poseIndexValid(image *AssetImage) bool {
+	if len(image.PoseOBJPalettes) > 256 || len(image.PoseOBJPalettes)%16 != 0 {
+		return false
+	}
+	if image.PoseVariantBaseCount < 0 || image.PoseVariantBaseCount > 0 && image.PoseVariantBaseCount*(len(image.PoseVariantNames)+1) != len(image.PoseIndex) {
+		return false
+	}
 	if !animationIndexValid(image) {
 		return false
 	}
@@ -313,6 +325,9 @@ func poseIndexValid(image *AssetImage) bool {
 			tileLimit := len(image.PoseOBJTiles)
 			if residentTiles != 0 {
 				tileLimit = residentTiles
+				if len(image.PoseOBJPalettes) > 0 {
+					tileLimit *= 2
+				}
 				if r.TileStart != 0 {
 					return false
 				}
@@ -322,6 +337,9 @@ func poseIndexValid(image *AssetImage) bool {
 			}
 			for _, object := range image.PoseOBJParts[r.Start:uint32(end)] {
 				_, _, valid := mode0PoseShape(int(object.Width), int(object.Height))
+				if object.Palette > uint8(len(image.PoseOBJPalettes)/16) {
+					return false
+				}
 				if !valid || uint32(object.TileOffset)+uint32(object.Width)*uint32(object.Height)/64 > r.TileCount {
 					return false
 				}

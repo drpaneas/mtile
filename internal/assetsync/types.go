@@ -105,9 +105,19 @@ type PoseRecord struct {
 	Parts []PosePartRecord `json:"parts"`
 }
 
+// PoseColorVariant stores replacements, never another copy of the artwork.
+type PoseColorVariant struct {
+	Name   string          `json:"name"`
+	Colors []PoseColorSwap `json:"colors"`
+}
+type PoseColorSwap struct {
+	From int `json:"from"`
+	To   int `json:"to"`
+}
 type PoseFile struct {
-	Version int          `json:"version"`
-	Poses   []PoseRecord `json:"poses"`
+	Version  int                `json:"version"`
+	Poses    []PoseRecord       `json:"poses"`
+	Variants []PoseColorVariant `json:"variants,omitempty"`
 }
 
 // FlatPosePart is one draw step within a flattened pose: which sprite tile
@@ -162,28 +172,30 @@ type Assets struct {
 	AudioVersion int
 	NativeAudio  *NativeAudioAssets
 
-	Palette       Palette
-	PaletteROM    [256]uint16
-	SheetW        int
-	SheetH        int
-	SpriteCols    int
-	SpriteRows    int
-	SpriteN       int
-	MapW          int
-	MapH          int
-	MapLayers     int
-	MapStreaming  bool
-	SheetROM      []byte
-	MapROM        []uint16
-	FlagROM       []byte
-	ObjSheetW     int
-	ObjSheetH     int
-	ObjSpriteCols int
-	ObjSpriteRows int
-	ObjSpriteN    int
-	ObjSheetROM   []byte
-	PoseIndex     []FlatPose
-	PoseParts     []FlatPosePart
+	Palette              Palette
+	PaletteROM           [256]uint16
+	SheetW               int
+	SheetH               int
+	SpriteCols           int
+	SpriteRows           int
+	SpriteN              int
+	MapW                 int
+	MapH                 int
+	MapLayers            int
+	MapStreaming         bool
+	SheetROM             []byte
+	MapROM               []uint16
+	FlagROM              []byte
+	ObjSheetW            int
+	ObjSheetH            int
+	ObjSpriteCols        int
+	ObjSpriteRows        int
+	ObjSpriteN           int
+	ObjSheetROM          []byte
+	PoseVariantBaseCount int
+	PoseVariantNames     []string
+	PoseIndex            []FlatPose
+	PoseParts            []FlatPosePart
 	// PoseNames are build/debugger labels from the same validated source as
 	// PoseIndex; they are not added to the cartridge's runtime pose records.
 	PoseNames       []string

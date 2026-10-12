@@ -648,3 +648,31 @@ cold-load trade-off or justify accepting unbounded/indirect mutations.
 automatic game-clock advancement, explicit timing, looping/final-frame holds,
 and mixed dynamic-name playback with zero differences across 240 game frames
 and 480 LCD scans. The fixtures use the same pose resource proof as `pspr`.
+
+### Pose color variants: `pvariant`
+
+`pvariant(name)` selects a named replacement map from `poses.json` for subsequent
+`pspr` and `anim` calls. `pvariant()` or `pvariant(0)` resets to the original
+colors. Positive numeric IDs select variants in their authored order (1-based);
+prefer names because deleting a variant changes numeric IDs. Unknown dynamic
+names/IDs reset to original colors; unknown literal names fail compilation with
+`PVARIANT_UNKNOWN`. Selection persists until changed, including between frames.
+It affects neither `spr`, maps, nor the global palette. Only nonzero indices
+1–255 can be replaced; transparency stays at zero. Replacement is simultaneous,
+before global `pal`/`palt` processing in Mode 4.
+
+Classification: **Mode 0 conditional**. Mode 4 builds exact recolored pose
+pixels from the canonical source. Mode 0 requires immutable resident 4bpp poses,
+15 visible colors per hardware object, at most 16 compatible palette banks,
+and sufficient OBJ VRAM. All declared variants of every reachable canonical
+pose are included in OAM, scanline and storage proofs, even when selected via
+helpers or dynamic names. `spr`, `sspr`, `print`, `pal`, `palt`, and `sset` cannot
+be combined with this Mode 0 variant bank: their existing 8bpp palette/mutation
+semantics would conflict. Unsupported allocation fails forced Mode 0 with a
+source-positioned `M0_RESOURCE_LIMIT`; AUTO falls back to Mode 4. Existing pose
+projects without variants retain their existing streaming/resident policy.
+Palette banks are uploaded while initializing; switching variants changes OAM
+attributes and never recolors or uploads sprite pixels during a frame.
+
+[Palette sharing and native parity evidence](benchmarks/render-modes/pose-color-variants-v1.md)
+covers the accepted pose/animation variant shapes and resource savings.

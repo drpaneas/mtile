@@ -60,6 +60,9 @@ func analyzePoseMemory(assets *assetsync.Assets) PoseMemoryReport {
 		return report
 	}
 	report.PoseCount, report.ClipCount = len(assets.PoseIndex), len(assets.AnimationClips)
+	if assets.PoseVariantBaseCount > 0 {
+		report.PoseCount = assets.PoseVariantBaseCount
+	}
 	report.PoseNames = make([]string, report.PoseCount)
 	copy(report.PoseNames, assets.PoseNames)
 	if assets.ObjSpriteN > 0 {

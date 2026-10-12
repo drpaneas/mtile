@@ -39,10 +39,14 @@ const idleRedrawTicks = 5 * 60
 // Game is the editor's ebiten.Game. It owns all UI state; internal/editor's
 // Model owns the actual asset data and its persistence/validation rules.
 type Game struct {
-	model           *editor.Model
-	theme           themeState
-	preferences     editorPreferences
-	preferencesOpen bool
+	mapRooms               bool
+	mapRoomSelected        bool
+	mapRoomCol, mapRoomRow int
+	poseVariants           poseVariantEditor
+	model                  *editor.Model
+	theme                  themeState
+	preferences            editorPreferences
+	preferencesOpen        bool
 
 	mode                 editorMode
 	currentColor         int
@@ -398,7 +402,7 @@ func (g *Game) activeSheet() *assetsync.Spritesheet {
 	if g == nil || g.model == nil {
 		return nil
 	}
-	if g.objEditing && g.model.ObjSheet != nil {
+	if g.objEditing && g.mode != modeMap && g.model.ObjSheet != nil {
 		return g.model.ObjSheet
 	}
 	return &g.model.Sheet
@@ -407,7 +411,7 @@ func (g *Game) activeSheet() *assetsync.Spritesheet {
 func (g *Game) spriteN() int { return g.spriteCols() * g.spriteRows() }
 
 func (g *Game) spriteIsReserved(id int) bool {
-	return editor.SpriteIsReservedOn(id, g.objEditing)
+	return editor.SpriteIsReservedOn(id, g.objEditing && g.mode != modeMap)
 }
 
 func (g *Game) setObjEditing(on bool) error {
@@ -497,7 +501,7 @@ func (g *Game) refreshPreview() error {
 // pixelAt reads an already-flattened sheet pixel (0 for out-of-range or a
 // stale/missing preview, matching an unauthored pixel's stored value).
 func (g *Game) pixelAt(x, y int) int {
-	if g.objEditing && g.model != nil && g.model.ObjSheet != nil {
+	if g.objEditing && g.mode != modeMap && g.model != nil && g.model.ObjSheet != nil {
 		sheet := g.model.ObjSheet
 		if g.objDrawPixels != nil && x >= 0 && y >= 0 && x < sheet.Width && y < sheet.Height {
 			return int(g.objDrawPixels[y*sheet.Width+x])

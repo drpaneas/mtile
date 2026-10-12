@@ -58,6 +58,9 @@ func Load(projectDir string) (*Assets, error) {
 	if err := attachAnimations(projectDir, assets); err != nil {
 		return nil, err
 	}
+	if err := attachPoseColorVariants(assets, *poses); err != nil {
+		return nil, err
+	}
 	audioVersion, err := DetectAudioVersion(projectDir)
 	if err != nil {
 		return nil, err

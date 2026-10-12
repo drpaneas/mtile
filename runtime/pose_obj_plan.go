@@ -8,6 +8,8 @@ type PoseOBJ struct {
 	Width      uint8
 	Height     uint8
 	Flags      uint8
+	// Palette is zero for 8bpp, or bank+1 for resident 4bpp objects.
+	Palette uint8
 }
 
 // PoseOBJRange addresses a pose's immutable object and source-tile plans.

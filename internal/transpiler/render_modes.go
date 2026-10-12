@@ -29,6 +29,10 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 	switch name {
 	case "pset", "pget", "line", "rect", "rectfill", "circ", "circfill":
 		return RendererMode4Only
+	case "pvariant":
+		// Exact independent color variants require proven resident 4bpp
+		// objects and compatible hardware palette-bank allocation.
+		return RendererMode0Conditional
 	case "pspr", "anim":
 		// Both backends use build-derived bounds for automatic flip anchoring
 		// (a pose's bounds or a whole clip's union). Mode 0 still requires the

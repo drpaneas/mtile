@@ -386,6 +386,11 @@ func (g *Game) updateAnimationDock(mx, my int) {
 func (g *Game) clickAnimationDock(layout animationDockLayout, mx, my int) {
 	s := &g.animation
 	switch {
+	case rectContains(poseVariantsButton(layout.Panel), mx, my):
+		g.poseVariants.open = true
+		g.poseVariants.source = max(1, g.currentColor)
+		g.poseVariants.selected = min(max(0, g.poseVariants.selected), max(0, len(g.model.Poses.Variants)-1))
+		g.requestRender()
 	case rectContains(layout.RegisterPose, mx, my):
 		g.capturePoseFromSelection(false)
 		if index := slices.Index(g.pageAnimationPoses(), g.selectedPose); index >= 0 {
@@ -551,6 +556,7 @@ func (g *Game) drawAnimationDock(screen *ebiten.Image) {
 	poses := g.pageAnimationPoses()
 	drawSmallText(screen, fmt.Sprintf("REGISTERED POSES ON THIS PAGE · %d", len(poses)), layout.Track.X, layout.Panel.Y+10, colorText)
 	drawSmallText(screen, "POSE PREVIEW", layout.Preview.X, layout.Panel.Y+10, colorDim)
+	drawTactileButton(screen, poseVariantsButton(layout.Panel), "COLOR VARIANTS", false, colorSprite, true)
 	if g.animation.thumbs == nil {
 		g.animation.thumbs = make(map[int]editor.PosePreview)
 	}

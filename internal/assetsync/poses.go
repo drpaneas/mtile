@@ -37,7 +37,7 @@ func SavePoses(projectDir string, file *PoseFile) error {
 		return err
 	}
 	path := filepath.Join(projectDir, "assets", "poses.json")
-	if len(normalized.Poses) == 0 {
+	if len(normalized.Poses) == 0 && len(normalized.Variants) == 0 {
 		if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 			return nil
 		} else if err != nil {
@@ -53,6 +53,20 @@ func validatePoseFile(file PoseFile) error {
 	}
 	if len(file.Poses) > MaxPoseCount {
 		return fmt.Errorf("poses.json: %d poses exceeds %d", len(file.Poses), MaxPoseCount)
+	}
+	variantNames := map[string]bool{}
+	for _, variant := range file.Variants {
+		if variant.Name == "" || len(variant.Name) > MaxPoseNameBytes || variantNames[variant.Name] {
+			return fmt.Errorf("poses.json: variant names must be nonempty and unique: %q", variant.Name)
+		}
+		variantNames[variant.Name] = true
+		seen := map[int]bool{}
+		for _, swap := range variant.Colors {
+			if swap.From < 1 || swap.From > 255 || swap.To < 1 || swap.To > 255 || seen[swap.From] {
+				return fmt.Errorf("poses.json: variant %q requires unique source colors and replacements in 1..255", variant.Name)
+			}
+			seen[swap.From] = true
+		}
 	}
 	names := make(map[string]int, len(file.Poses))
 	total := 0

@@ -643,7 +643,7 @@ func TestBuiltinResultAritiesAreExhaustivelyClassified(t *testing.T) {
 		"cls": true, "pset": true, "line": true, "rect": true, "rectfill": true,
 		"circ": true, "circfill": true, "spr": true, "sspr": true, "pspr": true, "anim": true, "map": true,
 		"camera": true, "clip": true, "pal": true, "palt": true, "color": true,
-		"cursor": true, "sset": true, "fset": true, "mset": true, "srand": true,
+		"pvariant": true, "cursor": true, "sset": true, "fset": true, "mset": true, "srand": true,
 		"foreach": true, "sfx": true, "music": true, "sample": true,
 		"gba_note": true, "gba_stop": true, "printh": true,
 	}

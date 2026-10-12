@@ -83,6 +83,14 @@ func TestSheetClickSelectsOwningPsprFrame(t *testing.T) {
 	if g.selectedPose != 1 {
 		t.Fatalf("tile 6 should select pspr 1, got %d", g.selectedPose)
 	}
+	g.syncPoseSelectionFromSprite(g.spriteCols()*g.spriteRows() - 1)
+	if g.selectedPose != -1 {
+		t.Fatalf("empty tile should clear the pose highlight, got %d", g.selectedPose)
+	}
+	g.syncPoseSelectionFromSprite(6)
+	if g.selectedPose != 1 {
+		t.Fatalf("pose should be selectable again, got %d", g.selectedPose)
+	}
 }
 
 func TestEmptyObjectSheetShowsPoseEditor(t *testing.T) {

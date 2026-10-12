@@ -58,12 +58,14 @@ func (g *generator) renderPoseOBJPlans(b *sourceBuilder) {
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var poseOBJPartsROM = [%d]rt.PoseOBJ{", len(g.poseOBJParts)))
 	for _, object := range g.poseOBJParts {
-		b.line(fmt.Sprintf("{X:%d,Y:%d,TileOffset:%d,Width:%d,Height:%d,Flags:%d},", object.X, object.Y, object.TileOffset, object.Width, object.Height, object.Flags))
+		b.line(fmt.Sprintf("{X:%d,Y:%d,TileOffset:%d,Width:%d,Height:%d,Flags:%d,Palette:%d},", object.X, object.Y, object.TileOffset, object.Width, object.Height, object.Flags, object.Palette))
 	}
 	b.line("}")
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var poseOBJTilesROM = [%d]uint16{%s}", len(g.poseOBJTiles), u16Literal(g.poseOBJTiles, len(g.poseOBJTiles))))
 	if g.poseOBJResident != nil {
+		b.line("//go:section .rodata")
+		b.line(fmt.Sprintf("var poseOBJPalettesROM = [%d]uint8{%s}", len(g.poseOBJResident.palettes), byteLiteral(g.poseOBJResident.palettes, len(g.poseOBJResident.palettes))))
 		b.line("//go:section .rodata")
 		b.line(fmt.Sprintf("var poseOBJResidentROM = [%d]uint32{%s}", len(g.poseOBJResident.words), u32Literal(g.poseOBJResident.words, len(g.poseOBJResident.words))))
 	}

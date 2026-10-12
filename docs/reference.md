@@ -207,6 +207,25 @@ search clip names during drawing. `pspr` and `anim` allocate no Lua objects;
 allocation-free games can omit the Lua heap altogether. Expressions passed to
 these calls may still allocate, such as constructing a clip name at runtime.
 
+Use **COLOR VARIANTS** in the Poses dock to create, copy, rename, delete and
+save named color replacements. Only the selected pose’s visible colors appear, paired with their current
+replacements. Click a replacement to choose a new color; choosing the original
+color resets that row. The original and recolored pose previews show the result. Variants are project-wide and stored once in `assets/poses.json`.
+
+```lua
+pvariant("spent")
+anim("walk", x, y)
+pvariant() -- restore the original colors
+```
+
+`pvariant(name)` or its 1-based numeric ID affects subsequent `pspr` and `anim`
+calls until reset, including across frames. It does not change the source
+artwork, maps or `spr`. Replacements happen simultaneously and keep index zero
+transparent. Rename/delete requires updating Lua references; unknown literal
+names fail builds, while unknown dynamic names/IDs reset to original colors.
+Mode 4 compiles exact recolored artwork. Mode 0 shares 4bpp pixels with independent
+hardware palette banks, subject to the [renderer contract](render-modes.md#pose-color-variants-pvariant).
+
 At build time, identical nonblank 8×8 pixel patterns share one ROM payload;
 blank tiles need none. The source cell IDs and independently editable copies
 are preserved. Multiple poses may also reference the same source tile, in
@@ -400,7 +419,7 @@ The function set and calling conventions follow
 Renderer compatibility and the exact Mode 0 restrictions for every function
 are documented in [docs/render-modes.md](render-modes.md).
 
-Graphics: `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
+Graphics: `pvariant`, `cls`, `pset`, `pget`, `line`, `rect`, `rectfill`, `circ`,
 `circfill`, `spr`, `sspr`, `pspr`, `anim`, `map`, `camera`, `clip`, `pal`, `palt`,
 `color`, `cursor`, `print`
 

@@ -644,7 +644,7 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			case RendererMode4Only:
 				firstErr = mode0CallError(call, reasonMode0Mode4Builtin, name+"() requires the Mode 4 framebuffer")
 			case RendererMode0Conditional:
-				if name != "cls" && name != "map" && name != "spr" && name != "sspr" && name != "pspr" && name != "anim" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
+				if name != "pvariant" && name != "cls" && name != "map" && name != "spr" && name != "sspr" && name != "pspr" && name != "anim" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
 					firstErr = mode0CallError(call, reasonMode0UnsupportedCall, name+"() is not in the Mode 0 tile-v1 proof")
 				}
 			}

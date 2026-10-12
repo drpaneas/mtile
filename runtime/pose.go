@@ -55,6 +55,12 @@ func (c *Context) PSprSite(site, windowBase, id, x, y int, flipX, flipY bool) {
 // drawPoseSite is the origin-mirroring primitive shared by standalone poses
 // and animations. Its caller has already applied either pose or clip bounds.
 func (c *Context) drawPoseSite(site, windowBase, id, x, y int, flipX, flipY bool) {
+	if c != nil && c.cart != nil && c.cart.PoseVariantBaseCount > 0 {
+		if id < 0 || id >= c.cart.PoseVariantBaseCount {
+			return
+		}
+		id += c.poseVariant * c.cart.PoseVariantBaseCount
+	}
 	if c != nil && c.psprOnHardwareOBJ() {
 		c.mode0PSpr(site, windowBase, id, x, y, flipX, flipY)
 		return
