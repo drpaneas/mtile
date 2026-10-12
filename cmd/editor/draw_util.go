@@ -42,7 +42,9 @@ var (
 	colorPanel          = color.RGBA{R: 35, G: 33, B: 57, A: 255}
 	colorBorder         = color.RGBA{R: 119, G: 113, B: 162, A: 255}
 	colorText           = color.RGBA{R: 235, G: 231, B: 250, A: 255}
-	colorDim            = color.RGBA{R: 178, G: 171, B: 207, A: 255}
+	colorDim            = color.RGBA{R: 194, G: 187, B: 219, A: 255}
+	colorSectionBorder  = color.RGBA{R: 67, G: 64, B: 91, A: 255}
+	colorSelection      = color.RGBA{R: 82, G: 217, B: 208, A: 255}
 	colorHighlight      = color.RGBA{R: 255, G: 207, B: 69, A: 255}
 	colorSprite         = color.RGBA{R: 82, G: 217, B: 208, A: 255}
 	colorMap            = color.RGBA{R: 127, G: 190, B: 101, A: 255}
@@ -174,7 +176,7 @@ func newHintedMonoFace(parsed *opentype.Font, size float64) (*text.GoXFace, int,
 	face, err := opentype.NewFace(parsed, &opentype.FaceOptions{
 		Size:    size,
 		DPI:     72,
-		Hinting: font.HintingNone,
+		Hinting: font.HintingFull,
 	})
 	if err != nil {
 		panic("create hinted JetBrains Mono face: " + err.Error())

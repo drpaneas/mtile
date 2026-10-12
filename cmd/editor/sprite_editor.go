@@ -98,12 +98,7 @@ func (g *Game) drawSpriteMode(screen *ebiten.Image) {
 
 func (g *Game) drawSpriteWorkspaceHeader(screen *ebiten.Image) {
 	r := spriteHeaderRect
-	fillRect(screen, r, color.RGBA{R: 29, G: 31, B: 78, A: 255})
-	fillRect(screen, editor.Rect{X: r.X, Y: r.Y, W: r.W, H: 1}, rgba(colorBorder, 190))
-	strokeRect(screen, r, colorBorder)
-	logoW, _ := drawMtileHeaderLogo(screen, r.X+16, r.Y+13, 190, 38)
-	titleX := r.X + 16 + logoW + 24
-	drawTextScale(screen, "SPRITE LAB", titleX, r.Y+3, 2, colorSprite)
+	titleX := r.X + 230
 	subtitle := "SHARED TILES · map / spr / sspr"
 	if g.objEditing {
 		subtitle = "POSES · DRAW / PASTE → REGISTER POSE"
@@ -113,7 +108,7 @@ func (g *Game) drawSpriteWorkspaceHeader(screen *ebiten.Image) {
 	}
 	bg, _, _ := spriteWorkspaceTabRects()
 	subtitle = truncateUIText(subtitle, bg.X-titleX-16)
-	drawSmallText(screen, subtitle, titleX, r.Y+39, rgba(colorSprite, 220))
+	drawWorkspaceHeader(screen, r, "SPRITE LAB", subtitle, colorSprite)
 	g.drawSpriteBankToggle(screen)
 	g.drawPoseBankHint(screen)
 }
@@ -125,7 +120,7 @@ func spriteBankToggleRects() (bg, obj editor.Rect) {
 
 func spriteWorkspaceTabRects() (shared, poses, animations editor.Rect) {
 	r := spriteHeaderRect
-	animations = editor.Rect{X: r.X + r.W - 152, Y: r.Y + 16, W: 132, H: 28}
+	animations = editor.Rect{X: r.X + r.W - 152, Y: r.Y + 22, W: 132, H: 28}
 	poses = editor.Rect{X: animations.X - 112, Y: animations.Y, W: 104, H: 28}
 	shared = editor.Rect{X: poses.X - 140, Y: poses.Y, W: 132, H: 28}
 	return shared, poses, animations
@@ -139,15 +134,7 @@ func (g *Game) drawSpriteBankToggle(screen *ebiten.Image) {
 }
 
 func drawBankToggle(screen *ebiten.Image, r editor.Rect, label string, active bool) {
-	fill := color.RGBA{R: 24, G: 25, B: 48, A: 255}
-	ink := colorDim
-	if active {
-		fill = colorSprite
-		ink = color.RGBA{R: 18, G: 18, B: 32, A: 255}
-	}
-	fillRoundedRect(screen, r, 6, fill)
-	strokeRoundedRect(screen, r, 6, colorBorder)
-	drawSmallTextCentered(screen, label, r, ink)
+	drawTactileButton(screen, r, label, active, colorSelection, true)
 }
 
 func (g *Game) updateSpriteBankToggle(mx, my int) bool {
@@ -184,7 +171,7 @@ func drawSpriteWorkbenchPanel(screen *ebiten.Image, r editor.Rect) {
 		return
 	}
 	fillRoundedRect(screen, r, 7, colorPanel)
-	strokeRoundedRect(screen, r, 7, rgba(colorBorder, 190))
+	strokeRoundedRect(screen, r, 7, colorSectionBorder)
 }
 
 func spritePanelTitlePosition(panel editor.Rect) (int, int) {

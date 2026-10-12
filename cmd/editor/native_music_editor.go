@@ -2121,12 +2121,21 @@ func (g *Game) drawMusicMode(screen *ebiten.Image) {
 	g.drawNativeWorkbench(screen, layout)
 }
 
+// Yellow used to mark ordinary controls as well as the playhead. Keep it
+// for playback timing; selections use the editor's common selection color.
+func nativeControlAccent(accent color.Color) color.Color {
+	if accent == colorHighlight {
+		return colorSelection
+	}
+	return accent
+}
+
 func drawNativeButton(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color) {
-	drawTactileButton(screen, rect, label, active, accent, false)
+	drawTactileButton(screen, rect, label, active, nativeControlAccent(accent), false)
 }
 
 func drawNativeMiniButton(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color) {
-	drawTactileButton(screen, rect, label, active, accent, true)
+	drawTactileButton(screen, rect, label, active, nativeControlAccent(accent), true)
 }
 
 func (g *Game) drawNativeToolbar(screen *ebiten.Image, layout nativeMusicLayout) {
@@ -2192,9 +2201,9 @@ func (g *Game) drawNativeToolbar(screen *ebiten.Image, layout nativeMusicLayout)
 
 func (g *Game) drawNativeChannelRail(screen *ebiten.Image, layout nativeMusicLayout) {
 	fillRect(screen, layout.Channels, colorPanel)
-	strokeRect(screen, layout.Channels, colorBorder)
+	strokeRect(screen, layout.Channels, colorSectionBorder)
 	drawNativeButton(screen, layout.WorkflowMusic, "MUSIC", !g.nativeSFXMode, colorHighlight)
-	drawNativeButton(screen, layout.WorkflowSFX, "SFX", g.nativeSFXMode, colorDanger)
+	drawNativeButton(screen, layout.WorkflowSFX, "SFX", g.nativeSFXMode, colorSelection)
 	for channel := 0; channel < 4; channel++ {
 		r := nativeChannelRect(layout, channel)
 		if channel == g.nativeChannel {
@@ -2240,7 +2249,7 @@ func (g *Game) drawNativeChannelRail(screen *ebiten.Image, layout nativeMusicLay
 		drawSmallText(screen, "a new hardware sound effect.", layout.Channels.X+12, layout.Channels.Y+370, colorDim)
 		drawSmallText(screen, fmt.Sprintf("CALL FROM GAME:  sfx(%d)", g.nativeSFXID), layout.Channels.X+12, layout.Channels.Y+410, colorHighlight)
 		drawSmallText(screen, "SPACE: PLAY / STOP", layout.Channels.X+12, layout.Channels.Y+438, colorDim)
-		drawSmallText(screen, "PSG ONLY / PCM OFF / CH1-CH4", layout.Channels.X+12, layout.Channels.Y+layout.Channels.H-uiSmallTextHeight-6, colorHighlight)
+		drawSmallText(screen, "PSG ONLY / PCM OFF / CH1-CH4", layout.Channels.X+12, layout.Channels.Y+layout.Channels.H-uiSmallTextHeight-6, colorDim)
 		return
 	}
 	drawSmallText(screen, "PLAY MODE", layout.Channels.X+12, layout.Channels.Y+326, colorDim)
@@ -2264,7 +2273,7 @@ func (g *Game) drawNativeChannelRail(screen *ebiten.Image, layout nativeMusicLay
 		swingLabel = fmt.Sprintf("SWING  %d%%", g.nativeSwing)
 	}
 	drawNativeButton(screen, nativeCaptureOptionRect(layout, 4), swingLabel, g.nativeSwing != 50, colorHighlight)
-	drawSmallText(screen, "PSG ONLY / PCM OFF / CH1-CH4", layout.Channels.X+12, layout.Channels.Y+layout.Channels.H-uiSmallTextHeight-6, colorHighlight)
+	drawSmallText(screen, "PSG ONLY / PCM OFF / CH1-CH4", layout.Channels.X+12, layout.Channels.Y+layout.Channels.H-uiSmallTextHeight-6, colorDim)
 }
 
 func drawNativeChannelIcon(screen *ebiten.Image, r editor.Rect, channel int, clr color.Color) {
@@ -2308,9 +2317,7 @@ func drawNativeChannelIcon(screen *ebiten.Image, r editor.Rect, channel int, clr
 func (g *Game) drawNativeWorkbench(screen *ebiten.Image, layout nativeMusicLayout) {
 	g.drawNativeChannelRail(screen, layout)
 	fillRect(screen, layout.Main, color.RGBA{R: 29, G: 31, B: 72, A: 255})
-	strokeRect(screen, layout.Main, colorBorder)
 	fillRect(screen, layout.Allocation, color.RGBA{R: 22, G: 25, B: 58, A: 255})
-	strokeRect(screen, layout.Allocation, nativeChannelColors[g.nativeChannel])
 	allocation := "LIVE  " + g.nativeAllocationText()
 	if g.nativeSFXMode {
 		allocation = fmt.Sprintf("EFFECT  sfx(%d)  /  CH%d HARDWARE", g.nativeSFXID, g.nativeChannel+1)
@@ -2572,7 +2579,7 @@ func nativeMIDINoteName(note int) string {
 
 func (g *Game) drawNativeInspector(screen *ebiten.Image, layout nativeMusicLayout) {
 	fillRect(screen, layout.Inspector, colorPanel)
-	strokeRect(screen, layout.Inspector, nativeChannelColors[g.nativeChannel])
+	drawLine(screen, layout.Inspector.X, layout.Inspector.Y, layout.Inspector.X, layout.Inspector.Y+layout.Inspector.H, colorSectionBorder)
 	drawSmallText(screen, fmt.Sprintf("CH%d SOUND CONTROLS", g.nativeChannel+1), layout.Inspector.X+12, layout.Inspector.Y+10, nativeChannelColors[g.nativeChannel])
 	drawNativeButton(screen, layout.Advanced, map[bool]string{false: "SIMPLE", true: "ADV"}[g.nativeAdvanced], g.nativeAdvanced, nativeChannelColors[g.nativeChannel])
 	g.clampNativeInstrument(g.nativeChannel)
@@ -2680,9 +2687,9 @@ func (g *Game) drawNativePresetMenu(screen *ebiten.Image, layout nativeMusicLayo
 
 func (g *Game) drawNativeArrangement(screen *ebiten.Image, layout nativeMusicLayout) {
 	fillRect(screen, layout.Arrangement, color.RGBA{R: 24, G: 27, B: 63, A: 255})
-	accent := color.Color(colorBorder)
+	accent := color.Color(colorSectionBorder)
 	if g.nativeFocus == nativeFocusArrangement {
-		accent = colorHighlight
+		accent = colorSelection
 	}
 	strokeRect(screen, layout.Arrangement, accent)
 	if g.nativeSFXMode {
@@ -2732,7 +2739,7 @@ func (g *Game) drawNativeArrangement(screen *ebiten.Image, layout nativeMusicLay
 		fillRect(screen, card, color.RGBA{R: 29, G: 31, B: 72, A: 255})
 		stroke := color.Color(colorBorder)
 		if sequence == g.nativeSequence {
-			stroke = colorHighlight
+			stroke = colorSelection
 		}
 		strokeRect(screen, card, stroke)
 		header := editor.Rect{X: card.X, Y: card.Y, W: card.W, H: 27}

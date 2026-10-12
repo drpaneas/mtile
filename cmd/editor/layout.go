@@ -21,7 +21,7 @@ var (
 const (
 	editorTabsHeight      = 36
 	workspaceHeaderHeight = 72
-	spriteHeaderHeight    = 64
+	spriteHeaderHeight    = workspaceHeaderHeight
 )
 
 // The map camera deliberately stops at 4x, but that makes compact 1x1 and
@@ -109,7 +109,7 @@ func setEditorLayout(width, height int) bool {
 	statusBarHeight := max(28, uiTextHeight+10)
 	statusBarRect = editor.Rect{X: 0, Y: height - statusBarHeight, W: width, H: statusBarHeight}
 	spriteHeaderRect = editor.Rect{X: 0, Y: editorTabsHeight, W: width, H: spriteHeaderHeight}
-	contentY := spriteHeaderRect.Y + spriteHeaderRect.H + 10
+	contentY := spriteHeaderRect.Y + spriteHeaderRect.H + 12
 	spriteRailRect = editor.Rect{X: spriteRailX, Y: contentY, W: spriteRailWidth, H: max(1, statusBarRect.Y-contentY-10)}
 
 	// Choose the rail topology from the actual space required by the desktop

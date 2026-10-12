@@ -26,11 +26,11 @@ type NativeMusicLayout struct {
 
 func NewNativeMusicLayout(screenWidth, tabsHeight, statusBarY int) NativeMusicLayout {
 	compact := screenWidth < 1400
-	headerHeight := 64
+	headerHeight := 72
 	if compact {
 		headerHeight = 112
 	}
-	header := Rect{X: 8, Y: tabsHeight + 8, W: screenWidth - 16, H: headerHeight}
+	header := Rect{X: 0, Y: tabsHeight, W: screenWidth, H: headerHeight}
 	body := Rect{X: 8, Y: header.Y + header.H + 8, W: screenWidth - 16, H: statusBarY - header.Y - header.H - 16}
 	extraWidth := max(0, screenWidth-1600)
 	channelWidth := 218 + min(42, extraWidth/10)

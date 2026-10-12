@@ -125,7 +125,15 @@ func (g *Game) updateMapRooms(layout mapLayout) {
 	g.requestRender()
 }
 func (g *Game) drawMapRoomToolbar(screen *ebiten.Image, layout mapLayout) {
-	drawTactileButton(screen, mapRoomsToolButton(layout), "ROOMS", g.mapRooms, colorMap, true)
+	w, h := g.mapBounds()
+	cols, rows := mapScreenCount(w, editor.MapRoomWidth), mapScreenCount(h, editor.MapRoomHeight)
+	context := fmt.Sprintf("%d × %d ROOMS", cols, rows)
+	if g.mapRooms && g.mapRoomSelected {
+		context = fmt.Sprintf("ROOM %d,%d  /  %d × %d", g.mapRoomCol+1, g.mapRoomRow+1, cols, rows)
+	}
+	x := layout.Header.X + 490
+	drawSmallText(screen, truncateTextToWidth(context, mapRoomsToolButton(layout).X-x-16, uiSmallFace), x, layout.Header.Y+29, colorDim)
+	drawTactileButton(screen, mapRoomsToolButton(layout), "ROOMS", g.mapRooms, colorSelection, true)
 	if g.mapRooms {
 		drawTactileButton(screen, mapDeleteRoomButton(layout), g.mapRoomDeleteLabel(), false, colorMap, g.mapRoomSelected)
 	}
@@ -144,11 +152,11 @@ func (g *Game) drawMapRooms(screen *ebiten.Image, layout mapLayout) {
 			}
 			selected := g.mapRoomSelected && g.mapRoomCol == col && g.mapRoomRow == row
 			if selected {
-				strokeRect(screen, r, colorMap)
+				strokeRect(screen, r, colorSelection)
 			}
 			label := editor.Rect{X: r.X + 6, Y: r.Y + 6, W: 112, H: 26}
 			if r.W > 124 && r.H > 40 {
-				drawTactileButton(screen, label, fmt.Sprintf("ROOM %d,%d", col+1, row+1), selected, colorMap, true)
+				drawTactileButton(screen, label, fmt.Sprintf("ROOM %d,%d", col+1, row+1), selected, colorSelection, true)
 			}
 		}
 	}

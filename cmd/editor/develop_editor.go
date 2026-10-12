@@ -120,8 +120,8 @@ func newDevelopPanelLayout(panel developPanel) developLayout {
 	fileX := 490
 	stopW, resetW, buildW := 124, 124, 164
 	if compact {
-		fileX = 220
-		fileW = min(230, screenWidth/4)
+		fileX = 420
+		fileW = min(140, screenWidth/4)
 		stopW, resetW, buildW = 82, 82, 132
 	}
 	fileRect := editor.Rect{X: fileX, Y: contentY + 17, W: fileW, H: 38}
@@ -247,7 +247,7 @@ func (g *Game) drawDevelopMode(screen *ebiten.Image) {
 func (g *Game) drawDevelopHeader(screen *ebiten.Image, layout developLayout) {
 	drawDevelopWorkspaceHeader(screen, layout.Header, "DEVELOP", "CODE + LIVE CARTRIDGE", colorCode)
 	fillRect(screen, layout.Code.File, colorBackground)
-	strokeRect(screen, layout.Code.File, colorBorder)
+	strokeRect(screen, layout.Code.File, colorSectionBorder)
 	name := filepath.Base(g.codePath)
 	if g.code.Dirty() {
 		name += "  *"
@@ -265,14 +265,20 @@ func (g *Game) drawDevelopHeader(screen *ebiten.Image, layout developLayout) {
 	}
 	fillRoundedRect(screen, layout.SourceMode, 6, color.RGBA{R: 25, G: 31, B: 51, A: 255})
 	globalColor := developGlobalUsageColor(globalUsage)
-	strokeRoundedRect(screen, layout.SourceMode, 6, rgba(globalColor, 150))
+	if globalUsage.Limit != 0 && globalUsage.Count >= globalUsage.Limit {
+		strokeRoundedRect(screen, layout.SourceMode, 6, globalColor)
+	}
 	drawDevelopSmallTextCentered(screen, truncateTextToWidth(globalLabel, layout.SourceMode.W-12, developSmallFace), layout.SourceMode, globalColor)
 
 	g.runMu.Lock()
 	busy := g.runBusy
 	g.runMu.Unlock()
-	drawDevelopButton(screen, layout.Build, "BUILD + RELOAD", busy, colorRun)
-	drawDevelopButton(screen, layout.Reset, "RESET", false, colorHighlight)
+	buildLabel := "BUILD + RELOAD"
+	if busy {
+		buildLabel = "BUILDING..."
+	}
+	drawDevelopButton(screen, layout.Build, buildLabel, true, colorRun)
+	drawDevelopButton(screen, layout.Reset, "RESET", false, colorSelection)
 	drawDevelopButton(screen, layout.Stop, "STOP", false, colorDanger)
 }
 

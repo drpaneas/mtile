@@ -235,5 +235,5 @@ func (g *Game) drawEditorTabs(screen *ebiten.Image) {
 		drawTextCentered(screen, fmt.Sprintf("%d  %s", index+1, primaryModeLabel(mode)), r, colorText)
 	}
 	active := editorTabRect(g.mode)
-	fillRect(screen, editor.Rect{X: active.X, Y: active.Y + active.H - 3, W: active.W, H: 3}, modeAccent(g.mode))
+	fillRect(screen, editor.Rect{X: active.X, Y: active.Y + active.H - 3, W: active.W, H: 3}, colorSprite)
 }

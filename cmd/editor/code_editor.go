@@ -34,7 +34,7 @@ var (
 	codeKeywordColor = color.RGBA{R: 255, G: 174, B: 112, A: 255}
 	codeStringColor  = color.RGBA{R: 184, G: 210, B: 145, A: 255}
 	codeNumberColor  = color.RGBA{R: 178, G: 158, B: 255, A: 255}
-	codeCommentColor = color.RGBA{R: 111, G: 135, B: 126, A: 255}
+	codeCommentColor = color.RGBA{R: 145, G: 167, B: 157, A: 255}
 	codeBuiltinColor = color.RGBA{R: 112, G: 196, B: 224, A: 255}
 	codeCursorColor  = color.RGBA{R: 255, G: 214, B: 94, A: 255}
 )

@@ -109,7 +109,7 @@ func drawHardwarePanel(screen *ebiten.Image, rect editor.Rect, fill, accent colo
 	}
 	_ = accent
 	fillRect(screen, rect, fill)
-	strokeRect(screen, rect, colorBorder)
+	strokeRect(screen, rect, colorSectionBorder)
 }
 
 func rgba(clr color.Color, alpha uint8) color.Color {
@@ -140,6 +140,8 @@ func drawTactileButtonWithTypography(screen *ebiten.Image, rect editor.Rect, lab
 		textColor = accent
 	} else if pressed {
 		fill = color.RGBA{R: 39, G: 38, B: 67, A: 255}
+	} else if rectContains(rect, mx, my) {
+		fill = color.RGBA{R: 43, G: 41, B: 70, A: 255}
 	}
 	fillRect(screen, face, fill)
 	border := color.Color(colorBorder)
@@ -179,48 +181,20 @@ func (g *Game) flashMap(x, y int) {
 }
 
 func drawWorkspaceHeader(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color) {
-	drawWorkspaceHeaderWithTypography(screen, r, title, subtitle, accent, false)
+	drawWorkspaceHeaderChrome(screen, r, title, subtitle, accent)
 }
 
 func drawDevelopWorkspaceHeader(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color) {
-	drawWorkspaceHeaderWithTypography(screen, r, title, subtitle, accent, true)
+	drawWorkspaceHeader(screen, r, title, subtitle, accent)
 }
 
-func drawWorkspaceHeaderWithTypography(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color, develop bool) {
+func drawWorkspaceHeaderChrome(screen *ebiten.Image, r editor.Rect, title, subtitle string, accent color.Color) {
 	fillRect(screen, r, color.RGBA{R: 29, G: 31, B: 78, A: 255})
-	fillRect(screen, editor.Rect{X: r.X, Y: r.Y, W: r.W, H: 3}, accent)
-	strokeRect(screen, r, colorBorder)
-	titleX := r.X + 260
-	if r.W >= 1400 {
-		logoY := r.Y + max(8, (r.H-48)/2)
-		drawMtileHeaderLogo(screen, r.X+16, logoY, 220, 48)
-	} else {
-		titleX = r.X + 18
-	}
-	titleY := r.Y + 4
-	if develop {
-		drawDevelopTextScale(screen, title, titleX, titleY, 2, accent)
-	} else {
-		drawTextScale(screen, title, titleX, titleY, 2, accent)
-	}
-	textHeight := uiTextHeight
-	titleHeight := uiTitleHeight
-	if develop {
-		textHeight = developTextHeight
-		titleHeight = developTitleHeight
-	}
-	subtitleY := r.Y + r.H - textHeight - 4
-	if r.W < 1400 && r.H > 84 {
-		if develop {
-			drawDevelopSmallText(screen, subtitle, titleX, r.Y+titleHeight+2, rgba(accent, 220))
-		} else {
-			drawSmallText(screen, subtitle, titleX, r.Y+titleHeight+2, rgba(accent, 220))
-		}
-		return
-	}
-	if develop {
-		drawDevelopText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
-	} else {
-		drawText(screen, subtitle, titleX, subtitleY, rgba(accent, 220))
-	}
+	// The navigation already supplies the top divider. Keep workspace chrome
+	// consistent, including when Audio adds a second row of controls.
+	fillRect(screen, editor.Rect{X: r.X, Y: r.Y + r.H - 1, W: r.W, H: 1}, colorBorder)
+	drawMtileHeaderLogo(screen, r.X+16, r.Y+17, 190, 38)
+	titleX := r.X + 230
+	drawTextScale(screen, title, titleX, r.Y+7, 2, accent)
+	drawSmallText(screen, subtitle, titleX, r.Y+43, colorDim)
 }
