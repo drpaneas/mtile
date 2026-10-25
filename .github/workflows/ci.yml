@@ -173,6 +173,14 @@ jobs:
           version: v2.13.2
           working-directory: runtime
 
+      # Built with the go.mod toolchain so it can load this module's packages.
+      - name: govulncheck (CLI module)
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+      - name: govulncheck (runtime module)
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        working-directory: runtime
+
   rom:
     name: ROM build (TinyGo)
     runs-on: ubuntu-latest
