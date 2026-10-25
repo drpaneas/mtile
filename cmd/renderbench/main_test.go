@@ -378,3 +378,19 @@ func writeBenchmarkFile(t *testing.T, path, contents string) {
 		t.Fatal(err)
 	}
 }
+
+func TestMemoryGateAllowsBoundedMode0Cost(t *testing.T) {
+	for _, test := range []struct {
+		gain int64
+		want bool
+	}{
+		{34040, true},
+		{0, true},
+		{-maximumEWRAMCost, true},
+		{-maximumEWRAMCost - 1, false},
+	} {
+		if got := memoryGatePass(test.gain); got != test.want {
+			t.Errorf("memoryGatePass(%d) = %t, want %t", test.gain, got, test.want)
+		}
+	}
+}

@@ -2,6 +2,9 @@
 
 package runtime
 
+// framebufferInVRAM is false: this renderer's software framebuffer is RAM.
+const framebufferInVRAM = false
+
 // renderState is the entire Mode 0 renderer allocation. framebuffer is a nil
 // compatibility slice so common, statically unreachable Mode 4 primitives can
 // still compile; unlike Mode 4 it contributes no 38,400-byte EWRAM backing
@@ -76,3 +79,9 @@ func (c *Context) RendererUploadStats() RendererUploadStats {
 	}
 	return c.mode0UploadStats
 }
+
+// Mode 0 has no software framebuffer; these keep the common Mode 4
+// primitives compiling and are statically unreachable.
+func (c *Context) ensureFramebuffer()          {}
+func (c *Context) writableFramebuffer() []byte { return c.framebuffer }
+func (c *Context) clearTarget() []byte         { return c.framebuffer }

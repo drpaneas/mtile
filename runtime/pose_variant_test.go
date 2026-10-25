@@ -47,7 +47,7 @@ func TestPoseVariantSelectionAndAnimation(t *testing.T) {
 				} else {
 					c.PSpr(0, 10, 20, false, false)
 				}
-				if got := c.framebuffer[20*ScreenWidth+11]; got != tc.want {
+				if got := c.fbForTest()[20*ScreenWidth+11]; got != tc.want {
 					t.Fatalf("animation=%v pixel=%d want %d", animation, got, tc.want)
 				}
 			}
@@ -55,7 +55,7 @@ func TestPoseVariantSelectionAndAnimation(t *testing.T) {
 	}
 	c.Cls(0)
 	c.PSpr(1, 10, 20, false, false)
-	if got := c.framebuffer[20*ScreenWidth+11]; got != 0 {
+	if got := c.fbForTest()[20*ScreenWidth+11]; got != 0 {
 		t.Fatalf("internal pose ID publicly accessible: %d", got)
 	}
 }

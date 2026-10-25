@@ -161,8 +161,8 @@ func (c *Context) PaceFrame30() {
 }
 
 // accountPostPaceWork folds renderer work that must run in the presentation
-// window into stat(1)/debug CPU totals. Mode 4's material page copy runs before
-// pacing; Mode 0's visible VRAM/OAM commit necessarily runs after
+// window into stat(1)/debug CPU totals. Mode 4 draws directly into its hidden page
+// before pacing; Mode 0's visible VRAM/OAM commit necessarily runs after
 // WaitForPresentWindow. elapsed is the free-running tick counter at the end of
 // that commit, so deadline misses remain wall-clock truthful while
 // lastFrameCycles continues to exclude the deliberate pace wait itself.

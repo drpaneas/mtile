@@ -21,7 +21,7 @@ func copyMapPackedSpans(src, dst, spans unsafe.Pointer, count, originOffset, x0,
 			if span.Length&mapPackedUniformFlag == 0 {
 				color = *(*byte)(unsafe.Add(src, int(span.Offset)+sx-x))
 			}
-			*(*byte)(unsafe.Add(dst, y*ScreenWidth+sx+originOffset)) = color
+			storeFramebufferByte(unsafe.Add(dst, y*ScreenWidth+sx+originOffset), color)
 		}
 	}
 }

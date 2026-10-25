@@ -63,7 +63,7 @@ func blitPackedKey0(sheetPtr, fbPtr unsafe.Pointer, src, dst int) {
 	} else {
 		for col := 0; col < 4; col++ {
 			if source := *(*byte)(unsafe.Add(srcW, col)); source != 0 {
-				*(*byte)(unsafe.Add(dstW, col)) = source
+				storeFramebufferByte(unsafe.Add(dstW, col), source)
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func blitPackedKey0(sheetPtr, fbPtr unsafe.Pointer, src, dst int) {
 	} else {
 		for col := 4; col < 8; col++ {
 			if source := *(*byte)(unsafe.Add(srcW, col)); source != 0 {
-				*(*byte)(unsafe.Add(dstW, col)) = source
+				storeFramebufferByte(unsafe.Add(dstW, col), source)
 			}
 		}
 	}
@@ -96,7 +96,7 @@ func blitSpriteRow(sheet, fb []byte, pal *[256]byte, transp *[256]bool, src, dst
 		// loop so the per-pixel path tests one register, not two flags.
 		for col := 0; col < 8; col++ {
 			if source := *(*byte)(unsafe.Add(srcP, col)); source != 0 {
-				*(*byte)(unsafe.Add(dstP, col)) = source
+				storeFramebufferByte(unsafe.Add(dstP, col), source)
 			}
 		}
 		return
@@ -111,9 +111,9 @@ func blitSpriteRow(sheet, fb []byte, pal *[256]byte, transp *[256]bool, src, dst
 			continue
 		}
 		if identity {
-			*(*byte)(unsafe.Add(dstP, col)) = source
+			storeFramebufferByte(unsafe.Add(dstP, col), source)
 		} else {
-			*(*byte)(unsafe.Add(dstP, col)) = pal[source]
+			storeFramebufferByte(unsafe.Add(dstP, col), pal[source])
 		}
 	}
 }
@@ -139,10 +139,10 @@ func writeSpritePixel(fb []byte, pal *[256]byte, transp *[256]bool, dst int, sou
 		return
 	}
 	if identity {
-		fb[dst] = source
+		setFramebufferByte(fb, dst, source)
 		return
 	}
-	fb[dst] = pal[source]
+	setFramebufferByte(fb, dst, pal[source])
 }
 
 // blitUnflippedCell8 copies one unflipped 8x8 cell from (srcX0,srcY0) onto
@@ -383,7 +383,7 @@ func (c *Context) drawSprite(id, x, y, w, h int, flipX, flipY bool) {
 			srcY0 = (int(slot) - 1) * 8
 		}
 	}
-	fb := c.framebuffer[:]
+	fb := c.writableFramebuffer()
 	pal := &c.drawPal
 	transp := &c.transp
 	identity := c.drawPalIdentity
@@ -475,7 +475,7 @@ func (c *Context) drawObjectCell(id, x, y int, flipX, flipY bool) {
 		sheetH = len(sheet)
 		srcY0 = (int(slot) - 1) * 8
 	}
-	fb := c.framebuffer[:]
+	fb := c.writableFramebuffer()
 	pal := &c.drawPal
 	transp := &c.transp
 	identity := c.drawPalIdentity
@@ -543,7 +543,7 @@ func (c *Context) SSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bool) {
 	sheet := c.cart.Sheet
 	sheetW := c.cart.SheetW
 	sheetH := c.cart.SheetH
-	fb := c.framebuffer[:]
+	fb := c.writableFramebuffer()
 	pal := &c.drawPal
 	transp := &c.transp
 	identity := c.drawPalIdentity

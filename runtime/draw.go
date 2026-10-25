@@ -29,6 +29,7 @@ func (c *Context) pixelRaw(x, y int) byte {
 	if x < 0 || x >= ScreenWidth || y < 0 || y >= ScreenHeight {
 		return 0
 	}
+	c.ensureFramebuffer()
 	return c.framebuffer[y*ScreenWidth+x]
 }
 
@@ -44,7 +45,7 @@ func (c *Context) Pset(x, y, color int) {
 	c.setWorldPixel(x, y, c.drawPal[color])
 }
 
-// Pget reads the logical index currently stored in the software framebuffer.
+// Pget reads the logical index currently stored in the framebuffer image.
 // Camera applies; clip does not.
 func (c *Context) Pget(x, y int) byte {
 	if tileCanvasExperiment {
@@ -73,7 +74,7 @@ func (c *Context) clearMode4(color int) {
 	c.cursor.x, c.cursor.y = 0, 0
 	value := c.drawPal[color]
 	word := uint32(value) | uint32(value)<<8 | uint32(value)<<16 | uint32(value)<<24
-	hw.Fill32(c.framebuffer[:], word, FramebufferSize/4)
+	hw.Fill32(c.clearTarget(), word, FramebufferSize/4)
 }
 
 // Rectfill draws an inclusive rectangle, normalizing reversed corners and
@@ -124,7 +125,7 @@ func (c *Context) hlineSpan(x0, x1, y0, y1 int, value byte) {
 			c.markCanvasRect(sx0, sy0, sx1, sy1)
 		}
 		start := sy0 * ScreenWidth
-		hw.Fill32(c.framebuffer[start:], word, (sy1-sy0+1)*ScreenWidth/4)
+		hw.Fill32(c.writableFramebuffer()[start:], word, (sy1-sy0+1)*ScreenWidth/4)
 		return
 	}
 	for y := sy0; y <= sy1; y++ {
@@ -148,16 +149,17 @@ func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
 	if tileCanvasExperiment {
 		c.markCanvasRect(x0, y, x1, y)
 	}
+	fb := c.writableFramebuffer()
 	row := y * ScreenWidth
 	x := x0
 	for ; x <= x1 && x&3 != 0; x++ {
-		c.framebuffer[row+x] = value
+		setFramebufferByte(fb, row+x, value)
 	}
 	words := (x1 + 1 - x) / 4
 	if words > 0 {
 		// The caller clipped this span. Check its base once, then use the
 		// aligned pointer instead of checking framebuffer[row+x] per word.
-		dst := unsafe.Pointer(&c.framebuffer[row+x])
+		dst := unsafe.Pointer(&fb[row+x])
 		x += words * 4
 		for ; words >= 4; words -= 4 {
 			*(*uint32)(dst) = word
@@ -172,7 +174,7 @@ func (c *Context) fillRowWord(y, x0, x1 int, value byte, word uint32) {
 		}
 	}
 	for ; x <= x1; x++ {
-		c.framebuffer[row+x] = value
+		setFramebufferByte(fb, row+x, value)
 	}
 }
 
@@ -186,10 +188,10 @@ func (c *Context) fillColumn(x, y0, y1 int, value byte) {
 	if tileCanvasExperiment {
 		c.markCanvasRect(x, y0, x, y1)
 	}
-	first := unsafe.Pointer(&c.framebuffer[y0*ScreenWidth+x])
+	first := unsafe.Pointer(&c.writableFramebuffer()[y0*ScreenWidth+x])
 	end := (y1 - y0) * ScreenWidth
 	for offset := 0; offset <= end; offset += ScreenWidth {
-		*(*byte)(unsafe.Add(first, offset)) = value
+		storeFramebufferByte(unsafe.Add(first, offset), value)
 	}
 }
 

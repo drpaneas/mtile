@@ -40,11 +40,11 @@ func TestGoldenFramebufferScene(t *testing.T) {
 	c.Print("HI", 200, 8, 7)
 
 	want := goldenReference(sheet, image.Map)
-	for i, got := range c.framebuffer {
+	for i, got := range c.fbForTest() {
 		if got != want[i] {
 			mismatches := 1
-			for j := i + 1; j < len(c.framebuffer); j++ {
-				if c.framebuffer[j] != want[j] {
+			for j := i + 1; j < len(c.fbForTest()); j++ {
+				if c.fbForTest()[j] != want[j] {
 					mismatches++
 				}
 			}

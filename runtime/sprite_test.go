@@ -81,9 +81,9 @@ func TestCompactSheetSprAndMapMatchDense(t *testing.T) {
 	compact.Spr(0, 24, 8, 1, 1, true, true)
 	// map() reserves ID 0 as empty, so compare with direct framebuffer
 	// equality after the normal and flipped sprite paths above.
-	for i := range dense.framebuffer {
-		if dense.framebuffer[i] != compact.framebuffer[i] {
-			t.Fatalf("compact framebuffer mismatch at byte %d: %d != %d", i, compact.framebuffer[i], dense.framebuffer[i])
+	for i := range dense.fbForTest() {
+		if dense.fbForTest()[i] != compact.fbForTest()[i] {
+			t.Fatalf("compact framebuffer mismatch at byte %d: %d != %d", i, compact.fbForTest()[i], dense.fbForTest()[i])
 		}
 	}
 }

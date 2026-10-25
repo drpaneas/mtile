@@ -50,6 +50,9 @@ cycles, missed frames, GC pauses, and IWRAM use from the debug mailbox:
 ```sh
 go run ./cmd/perfsurvey                          # every examples/ project
 go run ./cmd/perfsurvey -input right -spikes 400000 examples/mapdemo
+# pixel parity: hash every displayed frame with tick-keyed input, then compare
+# the hash files from two runtimes
+go run ./cmd/perfsurvey -renderer mode4 -tick-input -hashes /tmp/frames examples/pong
 ```
 
 The October 25, 2026 survey (TinyGo 0.42.0, 3,600 frames per project, first
@@ -63,10 +66,26 @@ fixed without changing results:
 | Stop the GC sweep at the highest handle ever allocated, and run it from IWRAM | `pong` collection (2,048 handles, 540 live bytes) | 161,197 | 71,266 |
 | Run GC tracing and copying from IWRAM and read only each slot's kind and ref | 26 KB live heap, 164 objects | 449,086 | 198,977 |
 
-Mode 4's fixed cost is the remaining large item: an empty `_draw` still spends
-77,360 cycles copying the EWRAM framebuffer to VRAM, and `cls()` about 62,000
-filling it. Both run at EWRAM's bus limit, so lowering them requires drawing
-into the hidden VRAM page directly.
+Mode 4 then drew into a 38,400-byte EWRAM framebuffer and copied it to the
+hidden VRAM page every tick. Both costs ran at EWRAM's bus limit, so Mode 4 now
+draws into the hidden VRAM page directly. Pixel writes merge into halfwords,
+because VRAM ignores 8-bit stores. After a flip, the first write of a tick copies
+the visible page across (VRAM to VRAM) to keep the framebuffer persistent; a
+full `cls()` replaces the page and skips that copy, and a tick that draws
+nothing does not flip. The EWRAM framebuffer is gone. Median Mode 4 tick cost:
+
+| Workload | EWRAM framebuffer | Direct VRAM | Change |
+| --- | ---: | ---: | ---: |
+| empty `_draw` | 77,360 | 190 | -99.8% |
+| `cls()` only | 139,425 | 23,876 | -82.9% |
+| `print` only (no `cls`) | 83,592 | 45,653 | -45.4% |
+| `hello` | 207,221 | 94,811 | -54.2% |
+| `pong` | 186,430 | 71,072 | -61.9% |
+| `mapdemo` | 263,980 | 146,232 | -44.6% |
+| `multi-file` | 292,963 | 154,387 | -47.3% |
+
+Every paired `cmd/renderbench` workload still reports zero differing pixels
+between Mode 4 and Mode 0.
 
 ## Paired static-map proof
 
@@ -259,12 +278,12 @@ every two display frames, PICO-8's native rate - so one game tick owns
 
 | Cost | Cycles | % tick |
 | --- | ---: | ---: |
-| DMA blit of the framebuffer to VRAM | ~77,000 | 14% |
+| First write after a flip: copy the visible page to the hidden page (skipped by a full `cls()`) | ~39,000 | 7% |
 | Input poll, tick, palette, flip | ~1,000 | <1% |
 
-The blit targets the hidden page (which cannot tear), so it runs as soon as
-`_draw` finishes rather than waiting for VBlank. In practice, treat
-**~480,000 cycles as the ceiling for `_update` plus `_draw` combined**.
+Drawing targets the hidden page (which cannot tear), and nothing is copied at
+present time. In practice, treat **~520,000 cycles as the ceiling for
+`_update` plus `_draw` combined**.
 
 Two display frames provide twice the CPU budget of a one-frame loop. In the
 recorded per-cell Mode 4 workload, a dense 16x16 room redraw fits, while a
@@ -440,13 +459,13 @@ placement; omitting the array preserves existing projects' behavior.
 
 **Do:**
 
-- **Call `cls()` every tick without guilt.** It is a single fixed-cost
-  DMA3 hardware fill: 67,542 cycles, 12% of the tick, no matter what was
-  on screen. It is not a 38,400-pixel software loop. The framebuffer is
-  persistent (nothing implicitly clears it), so the real choice is
-  `cls` + redraw everything (simple, 12%) versus no `cls` + patch only
-  what changed (fastest, but you own the bookkeeping). Start with `cls`;
-  drop it only if the profiler says you must.
+- **Call `cls()` every tick without guilt.** It is a fixed-cost 32-bit
+  fill of the hidden VRAM page: about 24,000 cycles, 4% of the tick, no
+  matter what was on screen. The framebuffer is persistent (nothing
+  implicitly clears it), so a tick that draws without `cls` first copies
+  the previous image (~39,000 cycles). For a full redraw, `cls` is
+  therefore cheaper than skipping it. Patching only what changed pays off
+  when the patch is small and you accept the bookkeeping.
 - Keep per-frame table work on the array part (`t[i]` with `i` in
   1..cap). Array access is a direct indexed read; hash access costs a
   probe sequence with 12-byte compares.

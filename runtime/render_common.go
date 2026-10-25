@@ -8,9 +8,9 @@ const (
 	cyclesPerFrame    = cyclesPerScanline * scanlinesPerFrame
 )
 
-// BlitKind selects the diagnostic Mode 4 framebuffer copy. It remains part of
-// the common profiling surface so benchmark code can report the selected
-// renderer without changing Context's shape at runtime.
+// BlitKind is a diagnostic compatibility setting from the former Mode 4
+// framebuffer copy. Renderers keep it so benchmark code can still record it;
+// no renderer copies a framebuffer to present any more.
 type BlitKind int
 
 const (

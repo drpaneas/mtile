@@ -13,7 +13,7 @@ func copyMapCell8Key0(src, dst unsafe.Pointer) {
 		for x := 0; x < 8; x++ {
 			color := *(*byte)(unsafe.Add(src, y*8+x))
 			if color != 0 {
-				*(*byte)(unsafe.Add(dst, y*ScreenWidth+x)) = color
+				storeFramebufferByte(unsafe.Add(dst, y*ScreenWidth+x), color)
 			}
 		}
 	}

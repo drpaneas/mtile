@@ -3,6 +3,7 @@
 package runtime
 
 import (
+	"bytes"
 	"math/rand"
 	"testing"
 	"unsafe"
@@ -164,9 +165,9 @@ func TestPackedMapSparsePlaneAndReinitialization(t *testing.T) {
 	c.Cls(91)
 	c.Camera(7, 3)
 	c.Clip(5, 5, 220, 150)
-	before, cursor := c.framebuffer, c.cursor
+	before, cursor := bytes.Clone(c.fbForTest()), c.cursor
 	c.PrepareMapPacked()
-	if c.framebuffer != before || c.cursor != cursor {
+	if !bytes.Equal(c.fbForTest(), before) || c.cursor != cursor {
 		t.Fatal("prepare changed draw state")
 	}
 	if !c.mapPackedReady[3] || c.mapPackedReady[0] {
@@ -208,7 +209,7 @@ func TestPackedMapEmptyAndFragmentationFallback(t *testing.T) {
 	}
 	c.Cls(91)
 	c.MapBGAt(0, 0, 0, 0, 0, 0, 30, 4, 0)
-	for _, pixel := range c.framebuffer {
+	for _, pixel := range c.fbForTest() {
 		if pixel != 91 {
 			t.Fatal("empty cache changed pixels")
 		}

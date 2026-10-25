@@ -2,6 +2,9 @@
 
 package runtime
 
+// framebufferInVRAM is false: this renderer's software framebuffer is RAM.
+const framebufferInVRAM = false
+
 // Generic private hybrid: ordinary tiled backgrounds plus a sparse OBJ canvas.
 // Resource limits come from the hardware/memory plan, never a game identity.
 type renderState struct {
@@ -71,3 +74,8 @@ func (c *Context) renderSSpr(sx, sy, sw, sh, dx, dy, dw, dh int, flipX, flipY bo
 func (c *Context) RendererUploadStats() RendererUploadStats { return c.mode0UploadStats }
 func (c *Context) TileCanvasDMARuns() uint32                { return uint32(c.canvasRunCount) }
 func (c *Context) TileCanvasOBJCount() uint32               { return c.canvasCommittedObjects }
+
+// The tile canvas draws into its RAM framebuffer; there is no page state.
+func (c *Context) ensureFramebuffer()          {}
+func (c *Context) writableFramebuffer() []byte { return c.framebuffer[:] }
+func (c *Context) clearTarget() []byte         { return c.framebuffer[:] }

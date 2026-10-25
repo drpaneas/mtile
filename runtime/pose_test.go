@@ -49,9 +49,9 @@ func TestPSprMatchesSprSequenceAndFlip(t *testing.T) {
 	pose.PSpr(0, 10, 20, true, false)
 	spr.Spr(0, 10+16-0-8, 20, 1, 1, true, false)  // part0 flipped within 16px bounds
 	spr.Spr(1, 10+16-8-8, 20, 1, 1, false, false) // part1 FlipX xor true
-	for i := range pose.framebuffer {
-		if pose.framebuffer[i] != spr.framebuffer[i] {
-			t.Fatalf("pixel %d: pose=%d spr=%d", i, pose.framebuffer[i], spr.framebuffer[i])
+	for i := range pose.fbForTest() {
+		if pose.fbForTest()[i] != spr.fbForTest()[i] {
+			t.Fatalf("pixel %d: pose=%d spr=%d", i, pose.fbForTest()[i], spr.fbForTest()[i])
 		}
 	}
 }
@@ -75,9 +75,9 @@ func TestPSprUnflippedMatchesPlainSprSequence(t *testing.T) {
 	pose.PSpr(0, 10, 20, false, false)
 	spr.Spr(0, 10, 20, 1, 1, false, false)
 	spr.Spr(1, 18, 20, 1, 1, true, false)
-	for i := range pose.framebuffer {
-		if pose.framebuffer[i] != spr.framebuffer[i] {
-			t.Fatalf("pixel %d: pose=%d spr=%d", i, pose.framebuffer[i], spr.framebuffer[i])
+	for i := range pose.fbForTest() {
+		if pose.fbForTest()[i] != spr.fbForTest()[i] {
+			t.Fatalf("pixel %d: pose=%d spr=%d", i, pose.fbForTest()[i], spr.fbForTest()[i])
 		}
 	}
 }
@@ -176,7 +176,7 @@ func TestPSprReadsObjectSheetNotSpritesheet(t *testing.T) {
 	}
 	pose.Cls(0)
 	pose.PSpr(0, 0, 0, false, false)
-	if got := pose.framebuffer[1]; got != 11 {
+	if got := pose.fbForTest()[1]; got != 11 {
 		t.Fatalf("object-sheet pixel = %d, want 11 (spritesheet has 3 at the same cell)", got)
 	}
 }
@@ -198,7 +198,7 @@ func TestPSprUsesFullUint16TileAndWidePoseRanges(t *testing.T) {
 	}
 	c.Cls(0)
 	c.PSpr(0, 0, 0, false, false)
-	if got := c.framebuffer[0]; got != 11 {
+	if got := c.fbForTest()[0]; got != 11 {
 		t.Fatalf("last bank tile pixel=%d, want11", got)
 	}
 }

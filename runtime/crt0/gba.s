@@ -1,3 +1,20 @@
+// vram_strb stores the low byte of \val at \addr without an 8-bit store.
+// Mode 4 draws into BG VRAM, which writes an 8-bit store's byte to both
+// halves of its halfword, so the byte is merged into the aligned halfword.
+// \val's upper bits are ignored. Clobbers \t1, \t2 and the flags.
+.macro vram_strb val, addr, t1, t2
+    bic     \t1, \addr, #1
+    ldrh    \t2, [\t1]
+    tst     \addr, #1
+    eoreq   \t1, \val, \t2
+    andeq   \t1, \t1, #0xFF
+    eoreq   \t2, \t2, \t1
+    andne   \t2, \t2, #0xFF
+    orrne   \t2, \t2, \val, lsl #8
+    bic     \t1, \addr, #1
+    strh    \t2, [\t1]
+.endm
+
 .section    .init
 .global     _start
 .align
@@ -126,7 +143,8 @@ mtile_copy_map_raster_full:
     tst     r1, #3
     beq     .Lmap_raster_words16
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     sub     r2, r2, #1
     b       .Lmap_raster_prefix
 .Lmap_raster_words16:
@@ -147,7 +165,8 @@ mtile_copy_map_raster_full:
     cmp     r2, #0
     beq     .Lmap_raster_advance
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     subs    r2, r2, #1
     bne     .Lmap_raster_tail
 .Lmap_raster_advance:
@@ -208,7 +227,8 @@ mtile_copy_map_raster_shifted:
     tst     r1, #3
     beq     .Lmap_shift_alignment
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     sub     r2, r2, #1
     b       .Lmap_shift_prefix
 .Lmap_shift_alignment:
@@ -284,7 +304,8 @@ mtile_copy_map_raster_shifted:
     cmp     r2, #0
     beq     .Lmap_shift_advance
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     subs    r2, r2, #1
     bne     .Lmap_shift_tail
 .Lmap_shift_advance:
@@ -771,7 +792,7 @@ __aeabi_ldivmod:
 .global mtile_copy_map_cell8_key0
 .type mtile_copy_map_cell8_key0,%function
 mtile_copy_map_cell8_key0:
-    stmdb   sp!, {r4-r7}
+    stmdb   sp!, {r4-r9}
     mov     r2, #8
     ldr     r5, .Lmapcell_ones
     mov     r6, r5, lsl #7
@@ -792,7 +813,7 @@ mtile_copy_map_cell8_key0:
     beq     .Lmapcell_next
     tst     r1, #1
     beq     .Lmapcell_halfwords
-    strb    r3, [r1]
+    vram_strb r3, r1, r8, r9
     mov     r4, r3, lsr #8
     strh    r4, [r1, #1]
     mov     r4, r3, lsr #24
@@ -801,7 +822,8 @@ mtile_copy_map_cell8_key0:
     mov     r4, r12, lsr #8
     strh    r4, [r1, #5]
     mov     r4, r12, lsr #24
-    strb    r4, [r1, #7]
+    add     r7, r1, #7
+    vram_strb r4, r7, r8, r9
     b       .Lmapcell_next
 .Lmapcell_halfwords:
     strh    r3, [r1]
@@ -812,36 +834,33 @@ mtile_copy_map_cell8_key0:
     strh    r4, [r1, #6]
     b       .Lmapcell_next
 .Lmapcell_mixed:
-    cmp     r3, #0
-    beq     .Lmapcell_second
+    // Store each nonzero source byte; zero keeps the destination pixel.
+    mov     r4, r1
+    mov     r7, #4
+.Lmapcell_mixed_first:
     tst     r3, #255
-    strbne  r3, [r1]
+    beq     .Lmapcell_mixed_first_skip
+    vram_strb r3, r4, r8, r9
+.Lmapcell_mixed_first_skip:
+    add     r4, r4, #1
     mov     r3, r3, lsr #8
-    tst     r3, #255
-    strbne  r3, [r1, #1]
-    mov     r3, r3, lsr #8
-    tst     r3, #255
-    strbne  r3, [r1, #2]
-    movs    r3, r3, lsr #8
-    strbne  r3, [r1, #3]
-.Lmapcell_second:
-    cmp     r12, #0
-    beq     .Lmapcell_next
+    subs    r7, r7, #1
+    bne     .Lmapcell_mixed_first
+    mov     r7, #4
+.Lmapcell_mixed_second:
     tst     r12, #255
-    strbne  r12, [r1, #4]
+    beq     .Lmapcell_mixed_second_skip
+    vram_strb r12, r4, r8, r9
+.Lmapcell_mixed_second_skip:
+    add     r4, r4, #1
     mov     r12, r12, lsr #8
-    tst     r12, #255
-    strbne  r12, [r1, #5]
-    mov     r12, r12, lsr #8
-    tst     r12, #255
-    strbne  r12, [r1, #6]
-    movs    r12, r12, lsr #8
-    strbne  r12, [r1, #7]
+    subs    r7, r7, #1
+    bne     .Lmapcell_mixed_second
 .Lmapcell_next:
     add     r1, r1, #240
     subs    r2, r2, #1
     bne     .Lmapcell_row
-    ldmia   sp!, {r4-r7}
+    ldmia   sp!, {r4-r9}
     bx      lr
 .Lmapcell_ones:
     .word   0x01010101
@@ -907,7 +926,8 @@ mtile_copy_map_packed_spans:
     tst     r1, #3
     beq     .Lmap_packed_alignment
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     sub     r2, r2, #1
     b       .Lmap_packed_prefix
 .Lmap_packed_alignment:
@@ -982,7 +1002,8 @@ mtile_copy_map_packed_spans:
     cmp     r2, #0
     beq     .Lmap_packed_advance
     ldrb    r3, [r0], #1
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     subs    r2, r2, #1
     bne     .Lmap_packed_tail
     b       .Lmap_packed_advance
@@ -991,7 +1012,8 @@ mtile_copy_map_packed_spans:
 .Lmap_packed_fill_prefix:
     tst     r1, #3
     beq     .Lmap_packed_fill_words
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     subs    r2, r2, #1
     beq     .Lmap_packed_advance
     b       .Lmap_packed_fill_prefix
@@ -1018,7 +1040,8 @@ mtile_copy_map_packed_spans:
     cmp     r2, #0
     beq     .Lmap_packed_advance
 .Lmap_packed_fill_byte:
-    strb    r3, [r1], #1
+    vram_strb r3, r1, r8, r9
+    add     r1, r1, #1
     subs    r2, r2, #1
     bne     .Lmap_packed_fill_byte
 .Lmap_packed_advance:

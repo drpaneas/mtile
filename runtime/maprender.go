@@ -135,7 +135,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	// Hoist the id -> cell divide out of the 600-cell loop: one reciprocal
 	// multiply per cell instead of two software divides (see spriteCellRecip).
 	colsRecip := spriteCellRecip(cols)
-	fb := c.framebuffer[:]
+	fb := c.writableFramebuffer()
 	pal := &c.drawPal
 	transp := &c.transp
 	identity := c.drawPalIdentity

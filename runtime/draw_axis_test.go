@@ -2,7 +2,10 @@
 
 package runtime
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestAxisPrimitivesMatchGeometry(t *testing.T) {
 	shapes := []struct {
@@ -59,8 +62,8 @@ func TestAxisPrimitivesMatchGeometry(t *testing.T) {
 					}
 					t.Run(name, func(t *testing.T) {
 						var c Context
-						for i := range c.framebuffer {
-							c.framebuffer[i] = byte(32 + i%13)
+						for i := range c.fbForTest() {
+							c.fbForTest()[i] = byte(32 + i%13)
 						}
 						c.Color(14)
 						c.Pal(color.logical, color.pixel, 0)
@@ -84,7 +87,7 @@ func TestAxisPrimitivesMatchGeometry(t *testing.T) {
 						// Decide independently whether each screen pixel belongs to the
 						// world-space geometric boundary. Do not reproduce span clipping,
 						// endpoint normalization, or the optimized storage loops here.
-						for i, got := range c.framebuffer {
+						for i, got := range c.fbForTest() {
 							sx, sy := i%ScreenWidth, i/ScreenWidth
 							wx, wy := sx+state.camX, sy+state.camY
 							inside := axisBetween(wx, x0, x1) && axisBetween(wy, y0, y1)
@@ -114,14 +117,14 @@ func TestAxisPrimitivesRejectInvalidColor(t *testing.T) {
 		for _, color := range []int{-1, 256} {
 			var c Context
 			c.Color(14)
-			c.framebuffer[7*ScreenWidth+7] = 42
-			before := c.framebuffer
+			c.fbForTest()[7*ScreenWidth+7] = 42
+			before := bytes.Clone(c.fbForTest())
 			if rect {
 				c.Rect(7, 1, 7, 17, color)
 			} else {
 				c.Line(7, 1, 7, 17, color)
 			}
-			if c.framebuffer != before || c.currentDrawColor() != 14 {
+			if !bytes.Equal(c.fbForTest(), before) || c.currentDrawColor() != 14 {
 				t.Fatalf("rect=%v color=%d changed framebuffer or current draw color", rect, color)
 			}
 		}

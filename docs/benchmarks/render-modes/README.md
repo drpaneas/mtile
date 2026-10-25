@@ -25,6 +25,16 @@ Every record uses TinyGo 0.41.1, a pinned headless mGBA helper, 20 warm-up
 frames, and 120 synchronized 30 Hz ticks. Deferred Mode 0 VRAM/OAM work is
 included in total cycles.
 
+These records predate direct-VRAM Mode 4 (October 2026). Their Mode 4 cycles
+and EWRAM gains include the former 38,400-byte EWRAM framebuffer and its
+per-tick copy. Rerunning the CI workloads with TinyGo 0.42.0 after that change
+still gives zero differing pixels and at least a 20% Mode 0 median saving in
+every workload; for example, the testio static map measures 105,619 Mode 4
+versus 1,579 Mode 0 median cycles, and 64 distributed 8x8 sprites measure
+95,295 versus 41,405. Mode 0's EWRAM gain now ranges from -7,708 to +24,556
+bytes, so the full gate's memory check became a non-regression bound: Mode 0
+may use at most 8 KiB more EWRAM than Mode 4.
+
 | Workload | Pixel diff | Mode 0 median saving | EWRAM gain | AUTO |
 | --- | ---: | ---: | ---: | --- |
 | backdrop + OBJ text, no BG | 0 | 49.84% | 35,032 B | Mode 0 |

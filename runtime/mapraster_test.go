@@ -197,7 +197,7 @@ func TestMapRasterPrewarmUsesInitEditsWithoutDrawing(t *testing.T) {
 	if !c.mapRasterReady || c.mapRasterBG != 1 {
 		t.Fatal("startup did not prepare the logical populated plane")
 	}
-	for _, pixel := range c.framebuffer {
+	for _, pixel := range c.fbForTest() {
 		if pixel != 199 {
 			t.Fatal("startup preparation modified the display")
 		}

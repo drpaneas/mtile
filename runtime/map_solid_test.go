@@ -128,8 +128,8 @@ func TestSolidMapRunsMatchCellRenderer(t *testing.T) {
 				c.ClipReset()
 				c.PalReset()
 				c.PaltReset()
-				for i := range c.framebuffer {
-					c.framebuffer[i] = byte(i*17 + i/240 + trial)
+				for i := range c.fbForTest() {
+					c.fbForTest()[i] = byte(i*17 + i/240 + trial)
 				}
 				switch trial % 8 {
 				case 1:

@@ -91,8 +91,9 @@ The current implementation already provides most measurement primitives:
 - `internal/transpiler/render_modes.go` exhaustively classifies all public
   builtins.
 - `runtime.Context` owns graphics, assets, input, heap, profiling, and audio
-  state; its graphics state currently includes the 38,400-byte framebuffer.
-- `runtime/mode4.go` owns hidden-page copy and page flip.
+  state. Mode 4 draws directly into the hidden VRAM page; it links no EWRAM
+  framebuffer.
+- `runtime/mode4.go` owns the page state, persistence copy, and page flip.
 - `runtime/cmd/benchspike` already measures ARM7TDMI cycles with TM0/TM1.
 - `runtime.PerformanceStats` already exposes frame, update, draw, GC, blit, and
   missed-frame counters.
@@ -145,8 +146,8 @@ lifecycle without changing its order or timing:
 6. collect if needed and pace;
 7. commit/present during the safe display window.
 
-Mode 4 maps this lifecycle to framebuffer draw, hidden-page DMA copy, palette
-apply, and page flip. Mode 0 maps it to EWRAM shadow state, bounded tile/map/OAM
+Mode 4 maps this lifecycle to drawing on the hidden VRAM page, palette apply,
+and page flip. Mode 0 maps it to EWRAM shadow state, bounded tile/map/OAM
 uploads, palette/window register commit, and BG/OAM activation. The paired
 benchmark times the complete lifecycle, including work deferred to step 7.
 
@@ -378,7 +379,9 @@ map scenarios have:
 - zero missed ticks after warm-up;
 - at least 20% lower median total work than forced Mode 4;
 - at least 10% of one 30 Hz tick (56,179 cycles) additional p95 headroom;
-- at least 24 KiB net EWRAM savings versus Mode 4; and
+- no more than 8 KiB less free EWRAM than Mode 4 (until October 2026 this
+  gate required at least 24 KiB net savings, which held only while Mode 4
+  linked a 38,400-byte EWRAM framebuffer); and
 - bounded, tear-free cold upload, reported separately from steady state.
 
 These are minimum evidence thresholds, not promises for every compatible game.
@@ -418,7 +421,7 @@ defines crossover rules:
 - if Mode 0 is compatible and its workload profile has a measured material win,
   `auto` may select Mode 0;
 - if measured results are within 5%, prefer Mode 4 until Mode 0 has another
-  concrete benefit such as at least 24 KiB EWRAM savings;
+  concrete benefit such as a material EWRAM saving;
 - if static analysis cannot bound mutation, OAM, palette, layer, or upload cost,
   `auto` selects Mode 4;
 - forced `mode0` may choose a semantically safe but slower backend, but the build

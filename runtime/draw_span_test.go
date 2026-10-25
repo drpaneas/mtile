@@ -11,10 +11,10 @@ func TestFillRowWordAllAlignmentsAndLengths(t *testing.T) {
 	const color byte = 173
 	const word uint32 = 0xadadadad
 	for _, y := range []int{0, 79, 159} {
-		for i := range c.framebuffer {
-			c.framebuffer[i] = 37
+		for i := range c.fbForTest() {
+			c.fbForTest()[i] = 37
 		}
-		row := c.framebuffer[y*ScreenWidth : (y+1)*ScreenWidth]
+		row := c.fbForTest()[y*ScreenWidth : (y+1)*ScreenWidth]
 		for left := 0; left < ScreenWidth; left++ {
 			for right := left; right < ScreenWidth; right++ {
 				for i := range row {
@@ -34,7 +34,7 @@ func TestFillRowWordAllAlignmentsAndLengths(t *testing.T) {
 		}
 		// Only the selected row was reset between spans. Any stray store
 		// elsewhere survives and is detected here.
-		for i, got := range c.framebuffer {
+		for i, got := range c.fbForTest() {
 			if i/ScreenWidth != y && got != 37 {
 				t.Fatalf("row%d clobbered pixel%d with%d", y, i, got)
 			}

@@ -8,7 +8,14 @@ import "testing"
 func requireSoftwareFramebuffer(t *testing.T) {
 	t.Helper()
 	var c Context
-	if len(c.framebuffer) == 0 {
+	if len(c.fbForTest()) == 0 {
 		t.Skip("test exercises the Mode 4 software framebuffer")
 	}
+}
+
+// fbForTest returns the logical software framebuffer image. Mode 4 binds its
+// hidden page on first use, so tests that seed pixels need this accessor.
+func (c *Context) fbForTest() []byte {
+	c.ensureFramebuffer()
+	return c.framebuffer[:]
 }

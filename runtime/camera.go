@@ -111,7 +111,7 @@ func (c *Context) plotClipped(sx, sy int, color byte) {
 	if tileCanvasExperiment {
 		c.markCanvasPixel(sx, sy)
 	}
-	c.framebuffer[sy*ScreenWidth+sx] = color
+	setFramebufferByte(c.writableFramebuffer(), sy*ScreenWidth+sx, color)
 }
 
 // hlineWorld is the inner span-fill helper shared by Rect and Circfill's

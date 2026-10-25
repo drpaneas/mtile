@@ -3,6 +3,7 @@
 package runtime
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 )
@@ -48,7 +49,7 @@ func TestMapBGAtVDefaultsEveryOptionalArgumentAfterBG(t *testing.T) {
 			}
 			want := makeContext()
 			want.MapBGAt(0, expected[0], expected[1], expected[2], expected[3], expected[4], expected[5], expected[6], expected[7])
-			if got.framebuffer != want.framebuffer {
+			if !bytes.Equal(got.fbForTest(), want.fbForTest()) {
 				t.Fatalf("MapBGAtV arity %d did not match explicit defaults", provided)
 			}
 		})

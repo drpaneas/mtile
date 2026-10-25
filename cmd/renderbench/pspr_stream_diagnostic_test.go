@@ -156,7 +156,7 @@ func TestPSprStreamTargetDiagnostic(t *testing.T) {
 				Mode0MedianSavingPC: 100 * (1 - float64(m0.MedianCycles)/float64(m4.MedianCycles)),
 				Mode0P95Headroom:    int64(twoFrameCycleBudget) - int64(m0.P95Cycles),
 				Mode0:               m0, Mode4: m4, ParityPass: differences == 0,
-				MemoryPass:      int64(m0.EWRAMFree)-int64(m4.EWRAMFree) >= minimumEWRAMGain,
+				MemoryPass:      memoryGatePass(int64(m0.EWRAMFree) - int64(m4.EWRAMFree)),
 				MedianCyclePass: uint64(m0.MedianCycles)*100 <= uint64(m4.MedianCycles)*mode0MedianPercent,
 				P95HeadroomPass: int64(twoFrameCycleBudget)-int64(m0.P95Cycles) >= minimumP95Headroom,
 				MissedFramePass: mode4.missed == 0 && mode0.missed == 0,

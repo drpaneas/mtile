@@ -139,7 +139,7 @@ func (c *Context) drawMapPacked(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1,
 	y0 := max((cellY+my0)*8, c.clipY0-originY)
 	y1 := min((cellY+my1)*8, c.clipY1-originY)
 	src := unsafe.Pointer(&c.cart.MapPackedPixels[0])
-	dst := unsafe.Pointer(&c.framebuffer[0])
+	dst := unsafe.Pointer(&c.writableFramebuffer()[0])
 	if uintptr(src)&3 != 0 {
 		return false
 	}

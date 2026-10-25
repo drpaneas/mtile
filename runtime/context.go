@@ -3,8 +3,8 @@ package runtime
 import "github.com/drpaneas/mtile/runtime/audio"
 
 // Screen dimensions are the native GBA display dimensions. FramebufferSize is
-// retained as the Mode 4 backing-store size; the selected renderer decides at
-// compile time whether Context actually contains that 38,400-byte array.
+// one 240x160 indexed image: a Mode 4 VRAM page, or the tile canvas's RAM
+// framebuffer. The selected renderer decides its storage at compile time.
 const (
 	ScreenWidth      = 240
 	ScreenHeight     = 160
@@ -13,8 +13,8 @@ const (
 )
 
 // Context owns all mutable runtime state. It must always be passed by pointer.
-// renderState is build-tag selected so a Mode 0 ROM does not pay for the Mode 4
-// software framebuffer in EWRAM.
+// renderState is build-tag selected so each renderer links only its own
+// graphics state.
 type Context struct {
 	poseVariant int
 	cart        *AssetMemory

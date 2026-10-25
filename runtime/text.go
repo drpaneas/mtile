@@ -394,6 +394,7 @@ func (c *Context) drawGlyph(ch byte, sx, sy int, value byte) {
 	// test and write straight into the framebuffer. The bits loop also exits
 	// as soon as a column has no remaining set pixels.
 	if sx >= c.clipX0 && sx+glyphBitmapW <= c.clipX1 && sy >= c.clipY0 && sy+glyphBitmapH <= c.clipY1 {
+		fb := c.writableFramebuffer()
 		base := sy*ScreenWidth + sx
 		for col := 0; col < glyphBitmapW; col++ {
 			// Mask to the 5 bitmap rows.
@@ -404,7 +405,7 @@ func (c *Context) drawGlyph(ch byte, sx, sy int, value byte) {
 					if tileCanvasExperiment {
 						c.markCanvasPixel(sx+col, sy+row)
 					}
-					c.framebuffer[dst] = value
+					setFramebufferByte(fb, dst, value)
 				}
 				dst += ScreenWidth
 			}

@@ -398,8 +398,8 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\tgame.Draw(&ctx)")
 	b.line("\t\tctx.EndProfilePhase(rt.ProfileDraw)")
 
-	b.line("\t\t// Copy to the hidden page immediately - it is never on screen, so")
-	b.line("\t\t// this cannot tear, and update+draw+copy own the full two-frame")
+	b.line("\t\t// Finish renderer work off screen: Mode 4 already drew on the hidden")
+	b.line("\t\t// page, so nothing tears, and update+draw own the full two-frame")
 	b.line("\t\t// window (~562k cycles) minus only the flip itself.")
 	b.line("\t\tctx.PrepareRender()")
 

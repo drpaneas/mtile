@@ -11,15 +11,20 @@
 package main
 
 import (
+	"crypto/sha256"
 	"flag"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"text/tabwriter"
 
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/emulator"
+	"github.com/drpaneas/mtile/internal/transpiler"
 )
 
 // tickBudget is one 30 Hz update: two 280,896-cycle GBA frames.
@@ -41,6 +46,14 @@ func main() {
 	helper := flag.String("player", "build/player/mtile-player", "headless mtile-player path")
 	out := flag.String("out", "", "ROM output directory (default: temporary directory)")
 	flag.StringVar(&inputMode, "input", "explore", "input script: explore (title presses, then cycling directions) or right (hold right, press A)")
+	flag.StringVar(&hashDir, "hashes", "", "write one SHA-256 per displayed frame to <dir>/<project>.txt for pixel-parity comparisons")
+	flag.Func("dump", "write this 0-based frame as PNG into the -hashes directory (repeatable)", func(v string) error {
+		n, err := strconv.Atoi(v)
+		dumpFrames = append(dumpFrames, n)
+		return err
+	})
+	flag.BoolVar(&tickInput, "tick-input", false, "key the input script to game ticks instead of display frames, so timing changes cannot change game state")
+	renderer := flag.String("renderer", "", "override every project's renderer: mode4, mode0, or auto")
 	spikes := flag.Uint("spikes", 0, "also print every sampled tick costing at least this many cycles")
 	flag.Parse()
 
@@ -64,6 +77,12 @@ func main() {
 	}
 	service.Debug = true
 	service.UseProjectRenderer = true
+	if *renderer != "" {
+		if service.Renderer, err = transpiler.ParseRenderer(*renderer); err != nil {
+			fatal(err)
+		}
+		service.UseProjectRenderer = false
+	}
 
 	var reports []report
 	for _, project := range projects {
@@ -91,13 +110,36 @@ func survey(service build.Service, helper, project, rom string, frames int, spik
 		return r
 	}
 	defer session.Close()
+	var hashes *os.File
+	if hashDir != "" {
+		if hashes, err = os.Create(filepath.Join(hashDir, filepath.Base(project)+".txt")); err != nil {
+			r.err = err
+			return r
+		}
+		defer hashes.Close()
+	}
 
 	var lastFrames, missedAtStart uint32
 	for i := range frames {
-		frame, err := session.Step(inputAt(i), false)
+		at := i
+		if tickInput {
+			at = 2 * int(lastFrames)
+		}
+		frame, err := session.Step(inputAt(at), false)
 		if err != nil {
 			r.err = err
 			return r
+		}
+		if hashes != nil {
+			fmt.Fprintf(hashes, "%x\n", sha256.Sum256(frame.RGBA))
+			if slices.Contains(dumpFrames, i) {
+				img := &image.RGBA{Pix: frame.RGBA, Stride: 4 * 240, Rect: image.Rect(0, 0, 240, 160)}
+				f, err := os.Create(filepath.Join(hashDir, fmt.Sprintf("%s-%d.png", filepath.Base(project), i)))
+				if err == nil {
+					png.Encode(f, img)
+					f.Close()
+				}
+			}
 		}
 		t := frame.Telemetry
 		if !t.DebugValid {
@@ -129,7 +171,11 @@ func survey(service build.Service, helper, project, rom string, frames int, spik
 
 // inputAt presses Start and A to leave title screens, then cycles through
 // directions with periodic A/B presses so movement, scrolling, and actions run.
-var inputMode string
+var (
+	inputMode, hashDir string
+	tickInput          bool
+	dumpFrames         []int
+)
 
 func inputAt(frame int) uint16 {
 	const (

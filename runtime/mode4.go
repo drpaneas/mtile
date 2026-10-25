@@ -14,16 +14,10 @@ const (
 	pageBit      = 0x0010
 )
 
-func clearPage(base uintptr, value byte) {
-	word := uint32(value) | uint32(value)<<8 | uint32(value)<<16 | uint32(value)<<24
-	for offset := 0; offset < hw.PageStride; offset += 4 {
-		hw.SetVRAM32(base+uintptr(offset), word)
-	}
-}
-
-// InitHardware configures affine BG2 as an identity transform, clears both
-// full Mode 4 page slots with 32-bit writes, loads all palette entries, and
-// shows page A. Page B's slot overlaps OBJ character memory, so OBJ is never
+// InitHardware configures affine BG2 as an identity transform, fills the
+// visible page with index 255, loads all palette entries, and shows page A.
+// The logical image lives on hidden page B, so pixels drawn before this call
+// survive it. Page B's slot overlaps OBJ character memory, so OBJ is never
 // enabled by this runtime.
 func (c *Context) InitHardware() {
 	hw.SetReg16(hw.DISPCNT, forceBlank)
@@ -33,22 +27,74 @@ func (c *Context) InitHardware() {
 	hw.SetReg16(hw.BG2PD, 0x0100)
 	hw.SetReg32(hw.BG2X, 0)
 	hw.SetReg32(hw.BG2Y, 0)
-	clearPage(hw.Page0, 0xFF)
-	clearPage(hw.Page1, 0xFF)
+	c.ensureFramebuffer()
+	hidden := c.mode4Page(1)
+	if &c.framebuffer[0] != &hidden[0] {
+		copyMode4Page(hidden, c.framebuffer)
+	}
+	c.framebuffer, c.pageFront, c.pageStale = hidden, 0, false
+	fillMode4Page(c.mode4Page(0), 0xFF)
+	// The first present must show the logical image even if the first tick
+	// draws nothing, as the former copy-and-flip presentation did.
+	c.pageDirty = true
 	c.paletteDirty = true
 	c.ApplyDisplayPalette()
 	hw.SetReg16(hw.DISPCNT, mode4Display)
 }
 
-func (c *Context) clearRender(color int) {
-	c.clearMode4(color)
+// ensureFramebuffer binds a fresh Context to hidden page B with the all-zero
+// logical image of a newly initialized framebuffer.
+func (c *Context) ensureFramebuffer() {
+	if c.framebuffer != nil {
+		return
+	}
+	c.framebuffer = c.mode4Page(1)
+	fillMode4Page(c.framebuffer, 0)
+	c.pageFront, c.pageStale, c.pageDirty = 0, false, false
 }
 
-func (c *Context) hiddenPage() uintptr {
-	if hw.GetReg16(hw.DISPCNT)&pageBit == 0 {
-		return hw.Page1
+// writableFramebuffer returns the hidden page for drawing. Every pixel writer
+// calls it first. After a flip the hidden page holds the image from two ticks
+// earlier, so the first write copies the visible page across to keep the
+// framebuffer persistent; cls avoids that copy through clearTarget.
+func (c *Context) writableFramebuffer() []byte {
+	if c.pageStale || c.framebuffer == nil {
+		c.syncHiddenPage()
 	}
-	return hw.Page0
+	c.pageDirty = true
+	return c.framebuffer
+}
+
+//go:noinline
+func (c *Context) syncHiddenPage() {
+	c.ensureFramebuffer()
+	if !c.pageStale {
+		return
+	}
+	hidden := c.mode4Page(1 - int(c.pageFront))
+	if c.profileEnabled {
+		cycleStart := startShortCycleMeasurement()
+		copyMode4Page(hidden, c.framebuffer)
+		c.lastBlitCycles = stopShortCycleMeasurement(cycleStart)
+	} else {
+		copyMode4Page(hidden, c.framebuffer)
+	}
+	c.framebuffer, c.pageStale = hidden, false
+}
+
+// clearTarget returns the hidden page for a full-page clear, which replaces
+// every pixel, so a stale page needs no copy first.
+func (c *Context) clearTarget() []byte {
+	c.ensureFramebuffer()
+	if c.pageStale {
+		c.framebuffer, c.pageStale = c.mode4Page(1-int(c.pageFront)), false
+	}
+	c.pageDirty = true
+	return c.framebuffer
+}
+
+func (c *Context) clearRender(color int) {
+	c.clearMode4(color)
 }
 
 func (c *Context) SetBlitKind(kind BlitKind) {
@@ -62,49 +108,13 @@ func (c *Context) BlitKind() BlitKind {
 	return c.blitKind
 }
 
-func (c *Context) copyFramebuffer(dest uintptr) {
-	words := FramebufferSize / 4
-	src := c.framebuffer[:]
-	switch c.blitKind {
-	case BlitCPU:
-		hw.CopyToVRAM32CPU(src, dest, words)
-	case BlitIWRAM:
-		hw.CopyToVRAM32IWRAM(src, dest, words)
-	default:
-		hw.CopyToVRAM32DMA(src, dest, words)
-	}
-}
-
-// PrepareHiddenPage copies the logical framebuffer into the hidden VRAM
-// page immediately, without waiting for VBlank first. This is the
-// production presentation path used by the generated loop: it is always
-// safe to write to the hidden page at any VCOUNT, because that page is by
-// definition not the one currently being scanned out for display, so the
-// write cannot produce a visible tear. Only the page flip itself
-// (FlipPage) is display-order-sensitive and must still happen during
-// VBlank; ApplyDisplayPalette and FlipPage handle that.
-//
-// Calling this as soon as Draw finishes - rather than waiting for VBlank
-// first, as the diagnostic BlitToHiddenPage below does - gives the copy
-// the entire ~197,120-cycle VDraw window to run in instead of sharing the
-// ~83,776-cycle VBlank window with the palette write and the flip. The
-// production DMA copy measures ~76,970 cycles (see BlitToHiddenPage's doc
-// comment), which used ~92% of the old VBlank-only budget; against the
-// VDraw window it uses under 40%, removing the deadline risk entirely for
-// any per-frame workload that was already fitting before.
+// PrepareHiddenPage is the generated loop's pre-present hook. Drawing already
+// happened on the hidden page, so nothing is copied; it records the VCOUNT
+// window for diagnostics. LastBlitCycles reports the most recent stale-page
+// copy instead, the only presentation copy Mode 4 still performs.
 func (c *Context) PrepareHiddenPage() {
-	start := hw.GetReg16(hw.VCOUNT)
-	base := c.hiddenPage()
-	if c.profileEnabled {
-		cycleStart := startShortCycleMeasurement()
-		c.copyFramebuffer(base)
-		c.lastBlitCycles = stopShortCycleMeasurement(cycleStart)
-	} else {
-		c.copyFramebuffer(base)
-		c.lastBlitCycles = 0
-	}
-	c.lastBlitStart = start
-	c.lastBlitEnd = hw.GetReg16(hw.VCOUNT)
+	now := hw.GetReg16(hw.VCOUNT)
+	c.lastBlitStart, c.lastBlitEnd = now, now
 }
 
 // BeginRenderFrame, PrepareRender, and PresentRender are the only renderer
@@ -122,38 +132,28 @@ func (c *Context) PresentRender() {
 	c.FlipPage()
 }
 
-// BlitToHiddenPage copies the logical framebuffer as packed 32-bit Mode 4
-// indices. It refuses to flip if VBlank is already over or wraps before the
-// final volatile VCOUNT read. Cycle count covers only the copy.
-//
-// This VBlank-gated form is kept for the drawspike DMA/CPU/IWRAM comparison,
-// which needs to know whether a copy fits inside one VBlank window, and for
-// any caller that still wants that guarantee. The generated production loop
-// calls PrepareHiddenPage right after Draw and FlipPage once VBlank arrives.
+// BlitToHiddenPage is the VBlank-gated diagnostic present used by drawspike.
+// It refuses to proceed outside VBlank; the hidden page already holds the
+// frame, so success means the caller may flip.
 func (c *Context) BlitToHiddenPage() bool {
 	start := hw.GetReg16(hw.VCOUNT)
-	c.lastBlitStart = start
-	c.lastBlitCycles = 0
+	c.lastBlitStart, c.lastBlitEnd = start, start
 	if start < ScreenHeight {
-		c.frameSkips++
-		c.lastBlitEnd = start
-		return false
-	}
-
-	base := c.hiddenPage()
-	cycleStart := startShortCycleMeasurement()
-	c.copyFramebuffer(base)
-	c.lastBlitCycles = stopShortCycleMeasurement(cycleStart)
-
-	end := hw.GetReg16(hw.VCOUNT)
-	c.lastBlitEnd = end
-	if c.lastBlitCycles >= cyclesPerFrame || end < ScreenHeight || end < start {
 		c.frameSkips++
 		return false
 	}
 	return true
 }
 
+// FlipPage shows the hidden page when anything was drawn since the last flip.
+// Otherwise the visible page already holds the logical image. The flipped-in
+// page stays the logical image until the next write or clear.
 func (c *Context) FlipPage() {
-	hw.SetReg16(hw.DISPCNT, hw.GetReg16(hw.DISPCNT)^pageBit)
+	c.ensureFramebuffer()
+	if !c.pageDirty {
+		return
+	}
+	c.pageFront ^= 1
+	hw.SetReg16(hw.DISPCNT, hw.GetReg16(hw.DISPCNT)&^pageBit|uint16(c.pageFront)<<4)
+	c.pageStale, c.pageDirty = true, false
 }

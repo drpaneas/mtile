@@ -480,7 +480,7 @@ A correct tile renderer is more than changing `DISPCNT`:
    into silently missing sprites.
 6. Keep audio, input, heap, update cadence, and fixed-point behavior identical.
 
-Mode 0 removes the full 38,400-byte framebuffer clear/blit path for compatible
+Mode 0 removes Mode 4's full-page clear and software redraw for compatible
 tile scenes and lets the PPU compose BGs and OBJs. It does not make Lua, the
 TinyGo runtime, garbage collection, audio scheduling, or game logic free.
 

@@ -51,7 +51,7 @@ func TestPSprFlipsInsideAuthoredBoundsWithCameraPaletteAndPartFlips(t *testing.T
 					c := newPoseFlipContextForTest(t, tc.parts, []PoseRange{{Count: uint16(len(tc.parts)), FlipOffsetX: tc.xOffset, FlipOffsetY: tc.yOffset}})
 					c.Cls(3)
 					c.PSpr(0, 80, 64, false, false)
-					want := reflectedFrameForTest(c.framebuffer[:], 80-3+tc.left, 64-5+tc.top, tc.width, tc.height, flip&1 != 0, flip&2 != 0)
+					want := reflectedFrameForTest(c.fbForTest()[:], 80-3+tc.left, 64-5+tc.top, tc.width, tc.height, flip&1 != 0, flip&2 != 0)
 					c.Cls(3)
 					switch wrapper {
 					case 0:
@@ -61,7 +61,7 @@ func TestPSprFlipsInsideAuthoredBoundsWithCameraPaletteAndPartFlips(t *testing.T
 					case 2:
 						c.PSprSiteFromBaseV(IntVal(0), IntVal(0), IntVal(4), IntVal(0), IntVal(80), IntVal(64), BoolVal(flip&1 != 0), BoolVal(flip&2 != 0))
 					}
-					if !bytes.Equal(c.framebuffer[:], want) {
+					if !bytes.Equal(c.fbForTest()[:], want) {
 						t.Fatal("pose flip moved outside its original bounds or changed authored pixel/palette semantics")
 					}
 				})
@@ -104,10 +104,10 @@ func TestAnimationAllDispatchPathsUseOneStableClipReflectionArea(t *testing.T) {
 						}
 						c.Cls(3)
 						c.PSpr(frame, 80, 64, false, false)
-						want := reflectedFrameForTest(c.framebuffer[:], 80-3+left, 64-5+top, width, height, flip&1 != 0, flip&2 != 0)
+						want := reflectedFrameForTest(c.fbForTest()[:], 80-3+left, 64-5+top, width, height, flip&1 != 0, flip&2 != 0)
 						c.Cls(3)
 						call.draw(c, 0, name, flip&1 != 0, flip&2 != 0, IntVal(frame))
-						if !bytes.Equal(c.framebuffer[:], want) {
+						if !bytes.Equal(c.fbForTest()[:], want) {
 							t.Fatal("animation used per-pose bounds, double adjustment, or changed the common clip anchor")
 						}
 					})
@@ -121,7 +121,7 @@ func TestAutomaticFlipInvalidAndEmptyDrawsAreNoOps(t *testing.T) {
 	c := newPoseFlipContextForTest(t, nil, []PoseRange{{}})
 	c.cart.AnimationClips = []AnimationClip{{Name: "empty", FPS: 1}}
 	c.Cls(3)
-	want := append([]byte(nil), c.framebuffer[:]...)
+	want := append([]byte(nil), c.fbForTest()[:]...)
 	for _, id := range []int{-1, 0, 1} {
 		c.PSpr(id, 80, 64, true, true)
 		c.PSprSite(0, 0, id, 80, 64, true, true)
@@ -132,7 +132,7 @@ func TestAutomaticFlipInvalidAndEmptyDrawsAreNoOps(t *testing.T) {
 		call.draw(c, -1, c.InternStatic("missing"), true, true, NilVal())
 		call.draw(nil, 0, NilVal(), true, true, NilVal())
 	}
-	if !bytes.Equal(c.framebuffer[:], want) {
+	if !bytes.Equal(c.fbForTest()[:], want) {
 		t.Fatal("invalid or empty flipped draw changed pixels")
 	}
 }

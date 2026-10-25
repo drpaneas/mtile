@@ -42,8 +42,8 @@ func objectCanvasDrawContext(compact bool) *Context {
 // zero against a nonzero sentinel so an actual opaque-zero write is distinct
 // from an untouched destination, irrespective of the source artwork colors.
 func objectCanvasAlphaOracle(c *Context) {
-	for i := range c.framebuffer {
-		c.framebuffer[i] = 254
+	for i := range c.fbForTest() {
+		c.fbForTest()[i] = 254
 	}
 	for i := range c.drawPal {
 		c.drawPal[i] = 0
@@ -53,7 +53,7 @@ func objectCanvasAlphaOracle(c *Context) {
 func assertObjectCanvasCoverage(t *testing.T, c, oracle *Context) {
 	t.Helper()
 	any := false
-	for offset, color := range oracle.framebuffer {
+	for offset, color := range oracle.fbForTest() {
 		want := color == 0
 		got := c.canvasCoverage[offset>>5]&(1<<uint(offset&31)) != 0
 		if got != want {
@@ -150,14 +150,14 @@ func TestObjectCanvasExactRectangleCoverageAndPixelOffsets(t *testing.T) {
 		c.markCanvasRect(rect[0], rect[1], rect[2], rect[3])
 		for y := max(rect[1], 5); y <= min(rect[3], 157); y++ {
 			for x := max(rect[0], 3); x <= min(rect[2], 235); x++ {
-				oracle.framebuffer[y*ScreenWidth+x] = 0
+				oracle.fbForTest()[y*ScreenWidth+x] = 0
 			}
 		}
 	}
 	for _, dst := range []int{-1, FramebufferSize, 0, 15, 16, 239, 240, FramebufferSize - 1} {
 		c.markCanvasPixelOffset(dst)
 		if dst >= 0 && dst < FramebufferSize {
-			oracle.framebuffer[dst] = 0
+			oracle.fbForTest()[dst] = 0
 		}
 	}
 	assertObjectCanvasCoverage(t, c, oracle)

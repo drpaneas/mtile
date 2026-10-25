@@ -107,7 +107,7 @@ func (c *Context) drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1,
 	y0 := max((cellY+my0)*8, c.clipY0-originY)
 	y1 := min((cellY+my1)*8, c.clipY1-originY)
 	src := unsafe.Pointer(&cart.MapRasterPixels[0])
-	dst := unsafe.Pointer(&c.framebuffer[0])
+	dst := unsafe.Pointer(&c.writableFramebuffer()[0])
 	// This also makes the rounded-down loads used by shifted copies safe at
 	// the first span. Generated EWRAM arrays are aligned; unusual Go callers
 	// may supply an intentionally unaligned byte slice and retain the old path.
@@ -157,7 +157,7 @@ func copyMapRasterSpan(src, dst unsafe.Pointer, n int) {
 	// either allocation after the final store (invalid under Go checkptr).
 	i := 0
 	for i < n && (uintptr(dst)+uintptr(i))&3 != 0 {
-		*(*byte)(unsafe.Add(dst, i)) = *(*byte)(unsafe.Add(src, i))
+		storeFramebufferByte(unsafe.Add(dst, i), *(*byte)(unsafe.Add(src, i)))
 		i++
 	}
 	if (uintptr(src)+uintptr(i))&3 == 0 {
@@ -185,7 +185,7 @@ func copyMapRasterSpan(src, dst unsafe.Pointer, n int) {
 		}
 	}
 	for i < n {
-		*(*byte)(unsafe.Add(dst, i)) = *(*byte)(unsafe.Add(src, i))
+		storeFramebufferByte(unsafe.Add(dst, i), *(*byte)(unsafe.Add(src, i)))
 		i++
 	}
 }

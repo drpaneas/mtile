@@ -2,14 +2,25 @@
 
 package runtime
 
-// renderState is embedded in Context. Keeping the Mode 4 framebuffer behind a
+// framebufferInVRAM selects VRAM-safe pixel stores: Mode 4 draws directly
+// into the hidden display page.
+const framebufferInVRAM = true
+
+// renderState is embedded in Context. Keeping the Mode 4 page state behind a
 // build tag makes renderer selection a link-time memory decision, not a hot
 // runtime branch.
 type renderState struct {
 	mapPackedReady     [4]bool
 	mapPackedFailed    [4]bool
 	mapPackedSpanCount [4]int
-	framebuffer        [FramebufferSize]byte
+	// framebuffer views the page that holds the logical image. Drawing goes
+	// to the hidden page; after a flip the logical image is the visible page
+	// (pageStale) until the next write copies it back or cls replaces it.
+	framebuffer        []byte
+	pages              mode4PageStorage
+	pageFront          uint8
+	pageStale          bool
+	pageDirty          bool
 	mapRasterReady     bool
 	mapRasterFailed    bool
 	mapRasterBG        int
