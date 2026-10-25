@@ -5,6 +5,8 @@ draws them. Each one was painted in Map Lab as a shared tile. Two of those
 tiles are **linked**: the flower tile to the `sway` clip and the lamp tile to
 the `lamp` pose. `map()` draws the linked object at every occurrence.
 
+![Linked flowers sway while the camera pauses, scrolls right, and returns across Windy Meadow.](../../docs/media/tile-links/play.gif)
+
 ```sh
 go run ./cmd/mtile edit examples/tile-links
 ```

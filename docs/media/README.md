@@ -76,6 +76,29 @@ captures. Run the verifier again after changing assets or game code.
 published PNGs into `learning-games.png`, without altering their pixels.
 Its order is Tidewalk, Moth Study, Moon Door, and Lantern Rooms.
 
+## Tile links
+
+[`tile-links/play.gif`](tile-links/play.gif) captures the actual
+[`examples/tile-links`](../../examples/tile-links/README.md) ROM. The camera
+holds still for two seconds so the flowers' sway is visible, scrolls right
+and back for one second each, then holds still for two more seconds. The
+six-second GIF loops, crops the screen to the flowers, lamps, and controls,
+uses exact captured colors at 3× nearest-neighbour scale, and omits audio.
+The example's code and artwork are unchanged.
+
+The capture script checks that the flower band changes through at least
+three images while the camera is stationary. The adjacent
+[`capture.json`](tile-links/capture.json) records the ROM/helper hashes,
+sampling, duration, and inputs. Regenerate from the repository root:
+
+```sh
+go run ./cmd/mtile build -o build/tile-links-preview.gba examples/tile-links
+python3 scripts/docs/capture_tile_links.py \
+  --player build/player/mtile-player \
+  --rom build/tile-links-preview.gba \
+  --out docs/media/tile-links
+```
+
 ## Editor screenshots
 
 `editor/*.png` are actual mTile `Game.Draw` renders, captured by the native

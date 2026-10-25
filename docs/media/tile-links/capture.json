@@ -1,0 +1,43 @@
+{
+  "project": "examples/tile-links",
+  "renderer": "project setting (mode0)",
+  "rom_sha256": "7bf1815b5f65e4050c51586cb83a0e785e5ee99f52fc4709e132f07ebac802fa",
+  "player_sha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "sampled_frames": 90,
+  "warmup_lcd_frames": 30,
+  "sample_every_lcd_frames": 4,
+  "input_segments": [
+    {
+      "lcd_frames": 120,
+      "keys": 0,
+      "action": "still"
+    },
+    {
+      "lcd_frames": 60,
+      "keys": 16,
+      "action": "right"
+    },
+    {
+      "lcd_frames": 60,
+      "keys": 32,
+      "action": "left"
+    },
+    {
+      "lcd_frames": 120,
+      "keys": 0,
+      "action": "still"
+    }
+  ],
+  "stationary_flower_images": 3,
+  "duration_ms": 6030,
+  "loop": "forever",
+  "crop_native_pixels": [
+    0,
+    104,
+    240,
+    160
+  ],
+  "scale": "3x nearest neighbour",
+  "palette": "exact captured colors",
+  "audio": "omitted from GIF"
+}

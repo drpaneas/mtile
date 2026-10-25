@@ -14,6 +14,12 @@ scan the map for marker tiles at startup, store their positions in a Lua table,
 and draw each one with `anim` every frame; a tile link does all of that for
 you, faster, and without the 256-entry limit of a Lua table array.
 
+![Windy Meadow running on the GBA: linked flowers sway in place, then the camera scrolls right and back.](media/tile-links/play.gif)
+
+The flowers keep swaying while the camera stands still and scrolls. This is
+the actual Windy Meadow ROM: `map()` plays every linked clip without any
+`anim` call in the game code.
+
 ## Try it
 
 ```sh
