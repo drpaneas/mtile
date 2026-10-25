@@ -41,6 +41,33 @@ partial clearing and uploads against that optimized renderer. The tested
 implementations preserve pixels but regress performance, so the existing
 renderer remains enabled.
 
+## Frame-stability survey
+
+`cmd/perfsurvey` builds projects as debug ROMs with their own renderer policy,
+plays a fixed input script in the headless mGBA helper, and reports per-tick
+cycles, missed frames, GC pauses, and IWRAM use from the debug mailbox:
+
+```sh
+go run ./cmd/perfsurvey                          # every examples/ project
+go run ./cmd/perfsurvey -input right -spikes 400000 examples/mapdemo
+```
+
+The October 25, 2026 survey (TinyGo 0.42.0, 3,600 frames per project, first
+two seconds excluded) found that every example stays well inside the
+561,792-cycle tick. Its worst ticks came from three runtime paths, each now
+fixed without changing results:
+
+| Change | Workload | Before | After |
+| --- | --- | ---: | ---: |
+| Row-copy streamed map chunk loads instead of per-cell index math | `mapdemo`, scrolling right for 60 s | 3 missed frames, worst tick 605,617 | 0 missed, worst tick 331,796 |
+| Stop the GC sweep at the highest handle ever allocated, and run it from IWRAM | `pong` collection (2,048 handles, 540 live bytes) | 161,197 | 71,266 |
+| Run GC tracing and copying from IWRAM and read only each slot's kind and ref | 26 KB live heap, 164 objects | 449,086 | 198,977 |
+
+Mode 4's fixed cost is the remaining large item: an empty `_draw` still spends
+77,360 cycles copying the EWRAM framebuffer to VRAM, and `cls()` about 62,000
+filling it. Both run at EWRAM's bus limit, so lowering them requires drawing
+into the hidden VRAM page directly.
+
 ## Paired static-map proof
 
 `cmd/renderbench` built `testdata/projects/testio` twice with identical source/assets,

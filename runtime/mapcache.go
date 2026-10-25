@@ -430,21 +430,49 @@ func (c *Context) loadMapLayerChunk(layer, chunkX, chunkY int) int {
 	stamp := c.nextMapStamp()
 	meta := &c.cart.MapChunks[slot]
 	meta.X, meta.Y, meta.Stamp, meta.Valid, meta.Layer = uint32(chunkX), uint32(chunkY), stamp, 1, uint16(layer)
-	base := slot * MapChunkCells
+	// A scrolling game loads a chunk whenever it crosses a 32-cell boundary,
+	// so this runs inside an ordinary frame. Each in-map chunk row is one
+	// contiguous ROM run: copy it whole, then apply sparse edits, instead of
+	// recomputing the cell index for each of the 1,024 cells.
+	mapW, mapH := c.cart.MapW, c.cart.MapH
+	layers := mapMaskPopulation(c.cart.MapPlaneMask)
+	x0 := chunkX * MapChunkWidth
+	width := min(MapChunkWidth, mapW-x0)
+	chunk := c.cart.Map[slot*MapChunkCells : (slot+1)*MapChunkCells]
 	for localY := 0; localY < MapChunkHeight; localY++ {
+		row := chunk[localY*MapChunkWidth : (localY+1)*MapChunkWidth]
 		mapY := chunkY*MapChunkHeight + localY
-		for localX := 0; localX < MapChunkWidth; localX++ {
-			mapX := chunkX*MapChunkWidth + localX
-			value := uint16(0)
-			if mapX >= 0 && mapY >= 0 && mapX < c.cart.MapW && mapY < c.cart.MapH {
-				index, _ := mapLayerCellIndex(storageLayer, mapX, mapY, c.cart.MapW, c.cart.MapH, mapMaskPopulation(c.cart.MapPlaneMask))
-				value = c.mapROM[int(index)]
-				if edited, found := c.mapEditLookup(index); found {
-					value = edited
+		first, firstOK := mapLayerCellIndex(storageLayer, x0, mapY, mapW, mapH, layers)
+		_, lastOK := mapLayerCellIndex(storageLayer, x0+width-1, mapY, mapW, mapH, layers)
+		filled := 0
+		switch {
+		case mapY >= mapH || width <= 0:
+		case firstOK && lastOK:
+			filled = copy(row[:width], c.mapROM[first:int(first)+width])
+			if c.mapEditCount > 0 {
+				for localX := range filled {
+					if edited, found := c.mapEditLookup(first + uint32(localX)); found {
+						row[localX] = edited
+					}
 				}
 			}
-			c.cart.Map[base+localY*MapChunkWidth+localX] = value
+		default:
+			// Out-of-range coordinates keep the exact per-cell rules.
+			filled = MapChunkWidth
+			for localX := range MapChunkWidth {
+				mapX := x0 + localX
+				value := uint16(0)
+				if mapX >= 0 && mapY >= 0 && mapX < mapW && mapY < mapH {
+					index, _ := mapLayerCellIndex(storageLayer, mapX, mapY, mapW, mapH, layers)
+					value = c.mapROM[int(index)]
+					if edited, found := c.mapEditLookup(index); found {
+						value = edited
+					}
+				}
+				row[localX] = value
+			}
 		}
+		clear(row[filled:])
 	}
 	return slot
 }

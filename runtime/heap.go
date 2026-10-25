@@ -81,11 +81,15 @@ type RootSet struct {
 }
 
 type Heap struct {
-	localSpaces        *heapSpacePair
-	active             int
-	cursor             uint32
-	handles            [maxHandles]ObjectHeader
-	freeHead           Ref
+	localSpaces *heapSpacePair
+	active      int
+	cursor      uint32
+	handles     [maxHandles]ObjectHeader
+	freeHead    Ref
+	// handleHigh is one past the highest handle index ever allocated. Every
+	// Allocated or Forwarded handle lies below it, so the collector's sweep
+	// stops there instead of visiting all slots.
+	handleHigh         uint16
 	scanQueue          [maxHandles]Ref
 	scanLen            uint16
 	collecting         bool
@@ -119,6 +123,7 @@ func (h *Heap) initHeap() {
 	h.handles[maxHandles-1].SetState(HandleFree)
 	h.handles[maxHandles-1].Offset = uint32(invalidRef)
 	h.freeHead = 0
+	h.handleHigh = 0
 	h.active = 0
 	h.cursor = 0
 	h.collecting = false
@@ -265,6 +270,9 @@ func (h *Heap) allocObject(kind ObjectKind, dataSize uint16) (Ref, HeapError) {
 		return 0, HeapCorrupt
 	}
 	h.freeHead = Ref(hdr.Offset)
+	if uint16(ref) >= h.handleHigh {
+		h.handleHigh = uint16(ref) + 1
+	}
 	off := h.cursor
 	space := h.space(h.active)
 	// Bounds were proved above. Allocated payloads are normally word-aligned;
@@ -337,6 +345,9 @@ func (h *Heap) allocObjectFilled(kind ObjectKind, image []byte) (Ref, HeapError)
 		return 0, HeapCorrupt
 	}
 	h.freeHead = Ref(hdr.Offset)
+	if uint16(ref) >= h.handleHigh {
+		h.handleHigh = uint16(ref) + 1
+	}
 	off := h.cursor
 	space := h.space(h.active)
 	base := unsafe.Add(unsafe.Pointer(&space[0]), off)
@@ -435,19 +446,7 @@ func (h *Heap) collectCore() HeapError {
 	if err := h.scanCopied(); err != HeapOK {
 		return h.failCollection(err)
 	}
-	for i := 0; i < maxHandles; i++ {
-		hdr := &h.handles[i]
-		switch hdr.State() {
-		case HandleAllocated:
-			hdr.SetState(HandleFree)
-			hdr.Offset = uint32(h.freeHead)
-			h.freeHead = Ref(i)
-		case HandleForwarded:
-			// Tracing is finished: restoring copied handles while reclaiming
-			// dead ones preserves the same free-list order in one sweep.
-			hdr.SetState(HandleAllocated)
-		}
-	}
+	h.freeHead = sweepHandles(&h.handles, int(h.handleHigh), h.freeHead)
 	h.active = 1 - h.active
 	h.cursor = h.toCursor
 	h.lastLiveBytes = h.cursor
@@ -457,6 +456,28 @@ func (h *Heap) collectCore() HeapError {
 	h.handleN = h.copiedN
 	h.collecting = false
 	return HeapOK
+}
+
+// sweepHandles reclaims every handle that tracing did not reach and restores
+// the forwarded ones. Tracing is finished: doing both in one ascending pass
+// preserves the free-list order. The handle table lives in EWRAM and a
+// handle-exhausted collection visits all of it, so the loop runs from IWRAM.
+//
+//go:noinline
+//go:section .iwram
+func sweepHandles(handles *[maxHandles]ObjectHeader, n int, freeHead Ref) Ref {
+	for i := 0; i < n; i++ {
+		hdr := &handles[i]
+		switch HandleState(hdr.KindState & 3) {
+		case HandleAllocated:
+			hdr.KindState &^= 3 // HandleFree
+			hdr.Offset = uint32(freeHead)
+			freeHead = Ref(i)
+		case HandleForwarded:
+			hdr.KindState = hdr.KindState&^3 | uint8(HandleAllocated)
+		}
+	}
+	return freeHead
 }
 
 func (h *Heap) failCollection(err HeapError) HeapError {
@@ -474,6 +495,11 @@ func (h *Heap) copyRoot(v Value) HeapError {
 	return HeapOK
 }
 
+// Tracing and copying are the collector's live-data loops. Like the sweep, they
+// run from IWRAM so their per-slot and per-word cost is not paid in ROM.
+//
+//go:noinline
+//go:section .iwram
 func (h *Heap) scanCopied() HeapError {
 	to := h.space(1 - h.active)
 	scanHead := 0
@@ -496,19 +522,26 @@ func (h *Heap) scanCopied() HeapError {
 		if !ok || computed > uint32(hdr.Size) {
 			return HeapCorrupt
 		}
-		base := hdr.Offset + 8
+		// The layout check above keeps every slot inside the copied object.
+		// Load only each slot's kind, and its ref for heap kinds, instead of
+		// the whole 12-byte Value from EWRAM.
+		slot := unsafe.Add(unsafe.Pointer(&to[0]), hdr.Offset+8)
 		for i := uint32(0); i < slots; i++ {
-			slot := readValue(to, base+i*uint32(valueBytes))
-			if slot.Kind == KindTable || slot.Kind == KindString {
-				if err := h.copyObject(slot.Ref); err != HeapOK {
+			kind := *(*Kind)(slot)
+			if kind == KindTable || kind == KindString {
+				ref := *(*Ref)(unsafe.Add(slot, unsafe.Offsetof(Value{}.Ref)))
+				if err := h.copyObject(ref); err != HeapOK {
 					return err
 				}
 			}
+			slot = unsafe.Add(slot, valueBytes)
 		}
 	}
 	return HeapOK
 }
 
+//go:noinline
+//go:section .iwram
 func (h *Heap) copyObject(ref Ref) HeapError {
 	if ref >= maxHandles || ref == invalidRef {
 		return HeapCorruptRef
