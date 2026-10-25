@@ -18,7 +18,7 @@ GUIDES = (
     "website/README.md", "docs/first-game.md", "internal/build/templates/coin-quest/README.md",
     "docs/launch-checklist.md", "docs/third-party/README.md", "docs/media/README.md",
     "examples/README.md", "scripts/release/README.md",
-    "docs/ide.md", "docs/render-modes.md", "scripts/release/BUNDLE-README.md",
+    "docs/ide.md", "docs/poses-and-animations.md", "docs/tile-links.md", "docs/render-modes.md", "scripts/release/BUNDLE-README.md",
     "docs/toolchain-042-performance.md",
     "docs/audio/captures/README.md", "docs/audio/captures/v2/README.md",
     *(str(path.relative_to(ROOT)) for path in sorted((ROOT / "docs/audio").glob("*.md"))),

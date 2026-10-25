@@ -78,7 +78,7 @@ func (c *Context) patchMode0MapCell(layer, mapX, mapY int, id uint16) {
 	}
 	value := id
 	mask := c.mode0MapLayer[layer]
-	if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask {
+	if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask || c.tileLinkOf(id) != 0 {
 		value = 0
 	}
 	entry := mode0ScreenEntry(c.mode0MapTileX[layer]+mx, c.mode0MapTileY[layer]+my) * 2

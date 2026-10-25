@@ -33,6 +33,13 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		if (name == "pspr" || name == "anim") && g.opts.Renderer == RendererMode0 {
 			return g.emitMode0Pspr(call, value)
 		}
+		if name == "map" && g.opts.Renderer == RendererMode0 && len(g.opts.TileLinks) != 0 {
+			if allocation, ok := g.tileLinkPlan[call]; ok {
+				g.pending = append(g.pending, fmt.Sprintf("c.SetTileLinkSites(%d, %d, %d)", allocation.site, allocation.window, allocation.stride))
+			} else {
+				g.pending = append(g.pending, "c.SetTileLinkSites(-1, 0, 0)")
+			}
+		}
 		return g.emitBuiltin(name, call.Args, value)
 	}
 	var fn *functionInfo

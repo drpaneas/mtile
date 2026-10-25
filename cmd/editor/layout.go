@@ -118,6 +118,8 @@ func setEditorLayout(width, height int) bool {
 	contentOffset := spritePanelContentOffset()
 	canvasFooterHeight := spriteCanvasFooterGap + uiSmallTextHeight + spritePanelPadding
 	buttonPanelHeight := contentOffset + spriteButtonHeight + spritePanelPadding
+	// Below its button row, Shared tiles shows the tile-link row and Poses two
+	// lines of tile-reuse text.
 	flagsPanelHeight := buttonPanelHeight + 2*(uiSmallTextHeight+6)
 	pickerMinHeight := contentOffset + 2*pickerSliderRowHeight + pickerSliderHeight + spritePanelPadding
 	desktopChromeHeight := contentOffset + canvasFooterHeight + 4*spriteSectionGap +

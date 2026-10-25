@@ -1,0 +1,49 @@
+{
+  "capturedFrames": 120,
+  "differingPixels": 0,
+  "environment": {
+    "goVersion": "go1.27.1",
+    "goos": "darwin",
+    "goarch": "arm64",
+    "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+    "gitRevision": "03e82a25915e8dd591bf6d22595a9ba4a0fd4a5f",
+    "gitDirty": true,
+    "projectSha256": "c64a1f001a703ec3c414821a78f44542721a28b6056add5b1c4b125ff02c2b08",
+    "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+  },
+  "mode0": {
+    "renderer": "mode0",
+    "romPath": "/tmp/mtile-tilelinks-evidence-native/default-extent/mode0.gba",
+    "romSha256": "67a3e4d866b15568b70d5de8ffae97e6ead58bdbdecaedb8735dd7930d95eca4",
+    "romBytes": 27176,
+    "ewramFree": 244084,
+    "cycleSamples": 120,
+    "medianCycles": 93024,
+    "p95Cycles": 98627,
+    "medianDrawCycles": 80892,
+    "medianCommitCycles": 11004,
+    "coldUploadCycles": 800489,
+    "missedFrames": 0,
+    "finalFramePng": "/tmp/mtile-tilelinks-evidence-native/default-extent/mode0-final.png",
+    "selectionReason": "M0_FORCED_PROVEN",
+    "mode0OAMEntries": 5,
+    "mode0OBJLineCycles": 40
+  },
+  "mode4": {
+    "renderer": "mode4",
+    "romPath": "/tmp/mtile-tilelinks-evidence-native/default-extent/mode4.gba",
+    "romSha256": "b8c4fcf210f0e3ac7d5ce290f387a253b82ab380f69a84d8c829ea43c5fdc191",
+    "romBytes": 26892,
+    "ewramFree": 254120,
+    "cycleSamples": 120,
+    "medianCycles": 49113,
+    "p95Cycles": 58508,
+    "medianDrawCycles": 47379,
+    "medianCommitCycles": 0,
+    "coldUploadCycles": 0,
+    "missedFrames": 0,
+    "finalFramePng": "/tmp/mtile-tilelinks-evidence-native/default-extent/mode4-final.png",
+    "selectionReason": "M4_FORCED"
+  },
+  "warmupFrames": 20
+}

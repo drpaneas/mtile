@@ -12,3 +12,11 @@ func flattenAssetAnimations(assets *assetsync.Assets) []rt.AnimationClip {
 	}
 	return clips
 }
+
+func flattenAssetTileLinks(assets *assetsync.Assets) []rt.TileLink {
+	links := make([]rt.TileLink, len(assets.TileLinks))
+	for i, link := range assets.TileLinks {
+		links[i] = rt.TileLink{Tile: link.Tile, Clip: link.Clip, ID: link.ID}
+	}
+	return links
+}

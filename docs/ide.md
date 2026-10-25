@@ -50,7 +50,9 @@ open: a later editor save can replace external changes.
 
 Choose a tile or rectangular tile stamp in **Sprite Editor → Shared Tiles**,
 then open **Map Editor**. Left-drag paints the selected stamp; right-drag erases
-using transparent tile 0. Poses and animation frames are not map cells.
+using transparent tile 0. Poses and animation frames are not map cells, but a
+[linked tile](tile-links.md) draws one wherever you paint it; Map Lab outlines
+linked cells in amber and names the link in the status line.
 
 The BG0–BG3 buttons below the map select the plane you edit. BG0 is backmost;
 BG3 is frontmost. Each eye control hides that plane only in the editor composite;
@@ -159,7 +161,9 @@ table and examples before implementing frame selection or object assembly in Lua
 
 Sprite Lab separates three jobs:
 
-- **Shared tiles** draws the bank used by `map`, `spr`, and `sspr`.
+- **Shared tiles** draws the bank used by `map`, `spr`, and `sspr`. Its
+  **SPRITE FLAGS · LINK** panel links the selected tile to a pose or clip, or
+  unlinks it; see [tile links](tile-links.md).
 - **Poses** draws character artwork and registers complete poses for `pspr`.
 - **Animations** assembles registered poses into named clips for `anim`.
 

@@ -42,10 +42,13 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		return RendererMode0Conditional
 	case "camera", "color", "cursor", "sget", "sset", "fget", "fset":
 		return RendererBoth
-	case "mget", "mset":
+	case "mset":
+		// Linked maps size Mode 0 objects from authored cells. Writes must
+		// prove an unlinked tile ID, with no expanded argument list.
+		return RendererMode0Conditional
+	case "mget":
 		// Both the legacy BG0 arities and the layer-first arities access the
-		// shared logical map exactly. AUTO applies a separate cost proof to
-		// layered mset; renderer compatibility itself is unconditional.
+		// shared logical map exactly, independently of linked objects.
 		return RendererBoth
 	case "btn", "btnp",
 		"flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",

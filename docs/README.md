@@ -33,6 +33,7 @@ are there when you want to understand the code.
 | Start and finish a one-shot animation | [Moon Door](../examples/moon-door/README.md) |
 | Add a map, following camera, or parallax | [Tidewalk](../examples/tidewalk/README.md) |
 | Switch between rooms and choose the entry position | [Lantern Rooms](../examples/lantern-rooms/README.md) |
+| Place animated decorations by painting them in the map | [Tile links](tile-links.md) |
 | Make a sound or song | [Audio](audio/README.md) |
 
 ## Look up details when you need them

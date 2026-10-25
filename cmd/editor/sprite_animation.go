@@ -458,6 +458,7 @@ func (g *Game) commitAnimationNameEdit() bool {
 		delete(g.animation.newClips, clip.Name)
 		g.animation.newClips[name] = true
 	}
+	editor.RenameAnimationInTileLinks(&g.model.TileLinks, clip.Name, name)
 	clip.Name = name
 	g.animation.nameEditing = false
 	g.commitAnimationEdit("Animation: " + name)

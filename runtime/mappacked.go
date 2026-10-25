@@ -36,7 +36,7 @@ func (c *Context) PrepareMapPacked() {
 
 func packedMapColor(cart *AssetMemory, planeBase, x, y int) byte {
 	id := int(cart.Map[planeBase+(y>>3)*cart.MapW+(x>>3)])
-	if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) {
+	if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) || id < len(cart.TileLinkOf) && cart.TileLinkOf[id] != 0 {
 		return 0
 	}
 	slot := int(cart.SheetIndex[id])

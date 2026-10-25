@@ -239,6 +239,49 @@ hardware copy of the finite rectangle. For source origin `(cx,cy)`, destination
 Outside these bounds the existing viewport materializer is used automatically;
 the renderer does not wrap a finite Lua map or approximate its clipping.
 
+A `map` call without a size covers the clip. Mode 4 counts every cell hidden
+before the clip as part of that rectangle; once the camera is far enough into
+a wide or tall map for that count to exceed 64x32, Mode 0 starts the
+rectangle at the first visible cell instead. Cells keep their positions, so
+the image is identical.
+
+### Linked tiles
+
+A shared tile linked to a pose or clip in `assets/tilelinks.json` never draws
+as a map tile. Each `map` call draws the linked objects of its visible cells
+after its tiles, in row-major order, exactly like `pspr`/`anim` calls at that
+point; the map's flag mask filters linked marker IDs using their current
+`fget` flags too. An omitted width or height includes off-screen anchors
+whose poses reach into the clip; a positive size still limits the explicit
+source rectangle. The map still stores the tile for `mget`, `fget`, and
+`mset`. See the [tile links guide](tile-links.md) for the full semantics.
+
+Mode 0 hides linked tiles from every BG shadow (viewport, full-rectangle
+cache, and `mset` patches) and draws the objects through the pose machinery.
+The compiler adds one pose call site to each `map` call, repeated once for the
+most linked cells that call can show at once: the largest count in any window
+of the call's cell size (or the screen widened by the objects' reach) over
+each drawn plane. Positions are treated as unknown and flips as absent, so the
+OAM and scanline proofs assume every object coincides. Those sites share the
+ordinary 128-entry, 1,226-cycle, and OBJ VRAM budgets.
+
+The count is sound only while linked cells stay where the map placed them, so
+Mode 0 rejects any `mset` whose value may be a linked tile. A value must be a
+literal or a finite set that the ID analysis enumerates, and none of its
+values may be linked. Expanded multi-result argument lists such as
+`mset(values())` are rejected for linked maps because the syntax's last
+expression need not be the written tile ID. A linked or unproven ID, or an
+expanded argument list, fails forced Mode 0 with `M0_TILE_LINKS` at that
+`mset`, and AUTO falls back to Mode 4. Mode 4 has no
+such restriction: placing a linked tile on a cell outside the build-time index
+switches that layer to scanning its visible cells.
+
+Independent runtime pixel fixtures cover both lookup paths, live flag changes,
+all mask defaults, right/bottom reach, and explicit rectangle limits in both
+renderers. The [native regression records](benchmarks/tile-links/README.md#regression-call-shapes)
+add synchronized pixel comparisons and cycle measurements for filtered maps
+with default or explicit extents and unlinked `mset` writes.
+
 The cache uses the existing screen storage and one state flag per BG. Source,
 size, flags and cache/materializer transitions invalidate it as needed. `mset`
 and `fset` also update affected cached off-screen cells, since those cells can
@@ -411,7 +454,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `anim` | Mode 0 conditional | Selects a registered clip frame at saved FPS, then uses the pose draw path and budgets. Call-level flips use one build-calculated union of every referenced pose’s local tile bounds, not the current frame’s bounds; this fixes the mirror axis throughout playback. Omitted elapsed time follows the shared game update clock; explicit seconds clamp below zero, loop or hold the last frame according to the clip. Literal names budget that clip; dynamic names budget all registered clips. Empty/missing dynamic names draw nothing; missing literal names fail with `ANIM_UNKNOWN_CLIP`. Bounded `_draw` invocations must satisfy the same ordering, VRAM, OAM, scanline, and transfer proofs as `pspr`; otherwise forced Mode 0 fails and AUTO uses Mode 4. |
 | `spr` | Mode 0 conditional | A literal source or scalar assigned only from an explicitly enumerable integer frame set can become hardware OBJ/metasprites when every candidate fits resident tiles plus OAM, scanline, size/shape, flip, layering, clipping, and the order-derived BG depth lane. Width and height use the worst proven 1..32 values in the object budget. An enumerated one-cell ID 0 is an OAM-free runtime inactive slot only while its logical source tile is fully default-transparent; the static proof still budgets it conservatively. Arithmetic, table, and helper-derived IDs are admitted when the finite-number proof above succeeds; otherwise use Mode 4. |
 | `sspr` | Mode 0 conditional | Requires a backend-proven pixel-identical mapping: an 8x8-aligned in-bounds source rectangle whose `sx`/`sy`/`sw`/`sh` (and `dw`/`dh` if present) are proven singleton integers, not merely similar crops. Literals and singleton table-index/helper results from the `spr` finite-number proof count, including indexes into a nested named numeric array field (`idle.fr1[1]` when `idle.fr1` is a single immutable `{0,8,40,80}`-style table). A multi-value set or unproven index does not. Like `spr`, an admitted call after a materialized explicit map derives its OBJ depth from painter order. Arbitrary source crops, resampling, or scaling require Mode 4. |
-| `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. Retained compact maps select a link-time compact runtime in both renderers; large maps select the fixed streaming runtime in Mode 0, while Mode 4 keeps the semantically identical generic path because target benchmarks reject the fixed variant there. |
+| `map` | Mode 0 conditional | `map()` draws every authored non-empty plane. Any 1..8-argument call uses its first argument as logical BG0..BG3 and keeps the remaining optional source/destination/size/mask semantics. Larger logical maps and compact multi-plane maps use deterministic layer-aware window streaming; the selected dense BG/screen-block and tile budgets must fit. Retained compact maps select a link-time compact runtime in both renderers; large maps select the fixed streaming runtime in Mode 0, while Mode 4 keeps the semantically identical generic path because target benchmarks reject the fixed variant there. Linked tiles draw their poses or clips instead; see [Linked tiles](#linked-tiles). |
 | `camera` | Both | It is logical draw state. Mode 0 can apply it through BG scroll and OBJ coordinates; other reachable calls still decide whether that frame is compatible. |
 | `clip` | Mode 0 conditional | Only `clip()` and `clip(0,0,240,160)` are currently admitted. Every other clipping rectangle requires Mode 4; a forced Mode 0 build rejects it. |
 | `pal` | Mode 0 conditional | Display-time palette remaps are native. Draw-time remaps are compatible only when palette/tile/OBJ assignments can preserve every simultaneous remap without conflicts or excess duplicated assets. |
@@ -427,9 +470,10 @@ palette mapping, or return an invented value from `pget`.
 
 ## Asset API
 
-These calls are compatible with both backends. A Mode 0 implementation still
-has synchronization work to do because the logical cartridge data and the
-visible VRAM tile/map copies are separate.
+These calls access the same logical cartridge data in both backends. `mset`
+is Mode 0 conditional when linked tiles require an object-count proof. A
+Mode 0 implementation also synchronizes the logical data with separate
+visible VRAM tile/map copies.
 
 When no `sset` call exists, the generated compact sheet is immutable. Mode 4
 selects a measured compile-time read-only sampler that removes the mutable
@@ -446,7 +490,7 @@ sampler. These build choices do not change either API's semantics.
 | `fget` | Both | Read the logical sprite flag byte used by map-layer filtering. |
 | `fset` | Both | Update flags so later `map` calls observe the new value in either backend. |
 | `mget` | Both | `mget(x,y)` reads legacy BG0; `mget(bg,x,y)` reads logical BG0..BG3. Invalid layers/coordinates and sparse absent planes return 0. Both forms read the authoritative compact or streamed map plus its edit overlay, independently of renderer. Compact maps lower implicit BG0 and proven-constant layers directly to their dense storage slot; dynamic layers and streaming maps retain logical lookup. |
-| `mset` | Both | `mset(x,y,id)` updates legacy BG0; `mset(bg,x,y,id)` updates logical BG0..BG3. Invalid inputs are no-ops. Mode 0 patches or invalidates only visible passes whose logical source matches the target, preserving draw-call order exactly. A literal target retains that plane in compact generated storage; a dynamic target retains all logical planes. Compact-map constant layers use their proven dense slot while retaining the logical BG for invalidation. AUTO additionally requires a literal layer and the bounded placement/count rule, while forced Mode 0 supports dynamic layers exactly. |
+| `mset` | Mode 0 conditional | `mset(x,y,id)` updates legacy BG0; `mset(bg,x,y,id)` updates logical BG0..BG3. Invalid inputs are no-ops. Mode 0 patches or invalidates only visible passes whose logical source matches the target, preserving draw-call order exactly. A literal target retains that plane in compact generated storage; a dynamic target retains all logical planes. Compact-map constant layers use their proven dense slot while retaining the logical BG for invalidation. With linked tiles, Mode 0 requires explicit arguments and a literal or enumerated finite tile-ID set containing no linked ID, because linked-object allocations come from authored map cells; unproven IDs, linked writes, or expanded multi-results fail with source-positioned `M0_TILE_LINKS`, and AUTO falls back to Mode 4. Without linked tiles, expanded arguments remain supported. AUTO additionally requires a literal layer and the bounded placement/count rule, while forced Mode 0 supports dynamic layers exactly. |
 
 ## Renderer-independent API
 

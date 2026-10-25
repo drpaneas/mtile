@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "name": "OBJ 1",
+      "x": 0,
+      "y": 0,
+      "width": 512,
+      "height": 320
+    }
+  ],
+  "clips": [
+    {
+      "name": "sway",
+      "frames": [
+        1,
+        0,
+        1,
+        2
+      ],
+      "fps": 4,
+      "loop": true
+    }
+  ]
+}

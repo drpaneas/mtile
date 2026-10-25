@@ -166,6 +166,19 @@ func drawTactileButtonWithTypography(screen *ebiten.Image, rect editor.Rect, lab
 	}
 }
 
+// drawDisabledTactileButton draws a button that cannot be pressed: a flat
+// face, dim border and label, and no hover or press feedback.
+func drawDisabledTactileButton(screen *ebiten.Image, rect editor.Rect, label string, compact bool) {
+	fillRect(screen, rect, colorBackground)
+	strokeRect(screen, rect, color.RGBA{R: 52, G: 50, B: 82, A: 255})
+	faded := color.RGBA{R: 86, G: 84, B: 116, A: 255}
+	if compact {
+		drawSmallTextCentered(screen, label, rect, faded)
+	} else {
+		drawTextCentered(screen, label, rect, faded)
+	}
+}
+
 func (g *Game) flashInk(x, y int) {
 	if g.theme.level == effectsClean {
 		return

@@ -342,6 +342,7 @@ func (g *Game) deleteSelectedPose() {
 	}
 	id := g.selectedPose
 	editor.RemovePoseFromAnimationClips(&g.model.Animation, id)
+	editor.RemovePoseFromTileLinks(&g.model.TileLinks, id)
 	g.model.Poses.Poses = append(g.model.Poses.Poses[:id], g.model.Poses.Poses[id+1:]...)
 	if g.selectedPose >= len(g.model.Poses.Poses) {
 		g.selectedPose = len(g.model.Poses.Poses) - 1

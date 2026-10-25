@@ -53,6 +53,8 @@ type Model struct {
 	Poses     assetsync.PoseFile
 	Animation assetsync.AnimationWorkspace
 	Map       assetsync.Map
+	// TileLinks draw linked shared tiles as poses or clips; see tilelinks.go.
+	TileLinks assetsync.TileLinkFile
 
 	AudioVersion int
 	NativeAudio  assetsync.NativeAudioAssets
@@ -121,6 +123,10 @@ func Open(dir string) (*Model, error) {
 	if err != nil {
 		return nil, err
 	}
+	tileLinks, err := assetsync.LoadTileLinks(dir)
+	if err != nil {
+		return nil, err
+	}
 	model := &Model{
 		Dir:           dir,
 		Project:       project,
@@ -129,8 +135,12 @@ func Open(dir string) (*Model, error) {
 		Poses:         *poses,
 		Animation:     *animation,
 		Map:           *mapData,
+		TileLinks:     *tileLinks,
 		ActivePalette: *palette,
 		PaletteNames:  names,
+	}
+	if err := model.validateTileLinks(); err != nil {
+		return nil, err
 	}
 	if err := model.NormalizeObjPages(); err != nil {
 		return nil, err
@@ -191,6 +201,9 @@ func (m *Model) Save() error {
 	if err := assetsync.ValidateAnimationWorkspace(animation, animationSheet.Width, animationSheet.Height, len(m.Poses.Poses)); err != nil {
 		return err
 	}
+	if err := m.validateTileLinks(); err != nil {
+		return err
+	}
 	if m.AudioVersion == assetsync.NativeAudioSchemaVersion {
 		library, err := assetsync.CompileNativeAudio(m.NativeAudio.Settings, m.NativeAudio.Sounds, m.NativeAudio.Music)
 		if err != nil {
@@ -213,6 +226,10 @@ func (m *Model) Save() error {
 		if err := assetsync.SaveObjSheet(m.Dir, m.ObjSheet); err != nil {
 			return err
 		}
+	} else if err := assetsync.RemoveObjSheet(m.Dir); err != nil {
+		// Undo can return to a state before the object sheet existed. Its
+		// poses then index the shared sheet again, so the file must go too.
+		return err
 	}
 	if err := assetsync.SavePoses(m.Dir, &m.Poses); err != nil {
 		return err
@@ -221,6 +238,9 @@ func (m *Model) Save() error {
 		return err
 	}
 	if err := assetsync.SaveMap(m.Dir, &m.Map); err != nil {
+		return err
+	}
+	if err := assetsync.SaveTileLinks(m.Dir, &m.TileLinks); err != nil {
 		return err
 	}
 	if m.AudioVersion == assetsync.NativeAudioSchemaVersion {

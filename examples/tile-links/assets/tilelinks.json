@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "links": [
+    {
+      "tile": 4,
+      "animation": "sway"
+    },
+    {
+      "tile": 5,
+      "pose": 3
+    }
+  ]
+}

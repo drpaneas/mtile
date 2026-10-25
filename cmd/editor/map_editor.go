@@ -328,6 +328,9 @@ func (g *Game) drawMapTiles(screen *ebiten.Image, layout mapLayout) {
 					continue
 				}
 				g.drawSpriteThumb(screen, id, sx, sy, tile, tile)
+				if g.tileLinked(id) {
+					drawTileLinkMarker(screen, editor.Rect{X: int(sx), Y: int(sy), W: max(1, int(tile)), H: max(1, int(tile))})
+				}
 			}
 		}
 	}
@@ -481,7 +484,11 @@ func (g *Game) drawMapBottomStrip(screen *ebiten.Image, layout mapLayout, tileX,
 
 	hoverText := "tile: -,- sprite: -"
 	if ok {
-		hoverText = fmt.Sprintf("BG%d tile: %d,%d sprite: %d", g.mapActiveLayer, tileX, tileY, g.mapCellAt(tileX, tileY))
+		id := g.mapCellAt(tileX, tileY)
+		hoverText = fmt.Sprintf("BG%d tile: %d,%d sprite: %d", g.mapActiveLayer, tileX, tileY, id)
+		if link, linked := g.model.TileLinkFor(id); linked && id > 0 {
+			hoverText += " (draws " + tileLinkLabel(link) + ")"
+		}
 	}
 	mw, mh := g.mapBounds()
 	hoverText += fmt.Sprintf("  map: %dx%d (%dx%d screens)", mw, mh, mapScreenCount(mw, gbaScreenWidthTiles), mapScreenCount(mh, gbaScreenHeightTiles))

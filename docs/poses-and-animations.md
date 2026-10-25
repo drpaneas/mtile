@@ -1,4 +1,4 @@
-# When to use sprites, poses, and animations
+# When to use shared tiles, poses, and animations
 
 [Documentation index](README.md) · [Editor walkthrough](ide.md#poses-and-animations) · [Exact API reference](reference.md#pose-sprites-and-animation-storage)
 
@@ -9,6 +9,13 @@ also used by the map. Start with [Moth Study](../examples/moth-study/README.md):
 one still pose, then a looping clip, then input and facing, with ready artwork
 and a complete program at each step. The sections below answer the next
 question you encounter; the existing Nerdo exercise is another quick option.
+
+> **Words used here.** **Shared tiles** is the Sprite Lab tab holding the
+> shared sheet: one bank of 8×8 cells used by `map`, `spr`, and `sspr`. In
+> `spr`, "sprite" means a cell or rectangle of that sheet, not a character.
+> **Poses** is the separate tab for character and object artwork, drawn with
+> `pspr` and `anim`. A player character usually belongs in Poses even though
+> `spr` could draw it.
 
 ## Try it with Nerdo
 
@@ -57,16 +64,79 @@ can wait until you need them.
 
 ## Choose by what you are making
 
-| What you need | Choose | Why |
-| --- | --- | --- |
-| Ground, walls, or other repeated scenery | Shared tiles + `map` | Maps place shared-sheet cells; pose registrations are not map cells. |
-| One coin/icon tile, or a simple rectangle already on the shared sheet | `spr` | A direct cell/rectangle draw is enough; no pose registration is needed. |
-| A still character, lantern, sign, or interface panel assembled from artwork | Register a pose + `pspr` | One draw uses the saved tile layout, offsets, and part flips. Gameplay does not assemble it tile by tile. |
-| Idle, walking, flying, flickering, or another repeating visual sequence | Register poses + a looping clip + `anim` | Frame order, FPS, and looping are saved and previewed in the editor. |
+| What you need | Choose | Why | Mode 0 hardware cost |
+| --- | --- | --- | --- |
+| Ground, walls, or other repeated scenery | Shared tiles + `map` | Maps place shared-sheet cells; pose registrations are not map cells. | A background layer: no per-copy cost, no object limit. |
+| One coin/icon tile, or a simple rectangle already on the shared sheet | `spr` | A direct cell/rectangle draw is enough; no pose registration is needed. | Hardware objects, one or more per draw. |
+| A still character, lantern, sign, or interface panel assembled from artwork | Register a pose + `pspr` | One draw uses the saved tile layout, offsets, and part flips. Gameplay does not assemble it tile by tile. | Hardware objects, one or more per draw. |
+| Idle, walking, flying, flickering, or another repeating visual sequence | Register poses + a looping clip + `anim` | Frame order, FPS, and looping are saved and previewed in the editor. | Hardware objects for the selected pose. |
+
+In Mode 0, `spr`, `sspr`, `pspr`, `anim`, and `print` all become hardware
+objects. Every drawn copy counts against 128 object entries and a per-scanline
+drawing budget, and the build fails or falls back to Mode 4 if a scene can
+exceed them. Map cells cost neither. In Mode 4 there is no object limit, but
+each draw costs CPU time for every pixel it covers, while a static map can be
+cached. See [What do poses and clips buy you in Mode 0?](#what-do-poses-and-clips-buy-you-in-mode-0)
+for the details.
 
 Maps, `spr`, `pspr`, and `anim` can coexist in one game. A character does not
 need a clip if it has only one visual state, and a simple shared-sheet coin
 does not need a pose.
+
+## Repeated level objects: shared tiles or poses?
+
+Coins, torches, breakable blocks, doors, and pickups sit between scenery and
+characters. Decide with these questions:
+
+| Question | Favors shared tiles + `map` | Favors poses + `pspr`/`anim` |
+| --- | --- | --- |
+| How many are on screen? | Many: dozens of torches or coins cost nothing extra as map cells. | A few: each copy uses object entries and scanline time in Mode 0. |
+| Must each one animate on its own schedule? | No: all copies can animate in step. | Yes: each draw can use its own clip time. |
+| Do they move freely, flip, or overlap other objects? | No: they stay on the 8×8 grid. | Yes: positions are pixels, and flips and layering are per draw. |
+| Where are they placed? | In Map Lab, by painting. | In Lua tables or level data you maintain. |
+
+Shared-tile objects change in two ways:
+
+- **Change the tile's pixels with `sset`** to animate every copy at once. One
+  shared tile has one appearance, so **all of its map occurrences always
+  animate in step**; you cannot give one torch a different phase this way.
+  [Shared tile animation](../examples/shared-tile-animation/README.md) does
+  this for 128 copies of a tile: 5,368 median cycles per frame and no object
+  entries, versus 52,115 cycles and 128 entries for the same scene drawn as
+  128 individual objects.
+- **Change one map cell's tile ID with `mset`** to alter a single occurrence,
+  such as a block that becomes "used" when hit, or to give individual cells
+  their own frames by swapping between tile IDs. Each change is one write per
+  cell. [Coin block](../examples/coin-block/README.md) shows a cell that
+  animates, then changes state.
+
+To make copies independent with shared tiles, give each phase its own tile ID
+and assign cells to those IDs. When objects need their own timers, movement,
+or flips anyway, poses are usually simpler.
+
+**Want both?** [Link a shared tile](tile-links.md) to a pose or clip. You paint
+the tile in Map Lab like scenery, and `map()` draws the pose or plays the clip
+at every occurrence, with pixel positions and pose artwork. `mget` still sees
+the tile, and `mset` removes the object. Each object costs a hardware object
+in Mode 0, like any pose.
+
+## What only poses give you
+
+Choose poses when you need any of these:
+
+- **A saved multi-tile layout.** A pose stores its tiles' positions, offsets,
+  and individual flips, and need not be rectangular. One `pspr` draws it;
+  gameplay never assembles tiles.
+- **Editor-owned playback.** Clips store frame order, FPS, and looping, so you
+  retime an animation without touching Lua.
+- **A stable mirror axis.** Flipping an `anim` clip mirrors inside one
+  rectangle enclosing all its poses, so frames of different widths do not
+  shift.
+- **Color variants.** `pvariant` recolors subsequent `pspr` and `anim` draws
+  without duplicate artwork; it does not affect `spr` or maps.
+- **References independent of sheet layout.** Lua uses pose IDs and clip
+  names, not sheet coordinates. Moving artwork with the editor's move
+  operation keeps them valid; deleting a pose still shifts later IDs.
 
 ## A pose is one picture; a clip is a sequence
 

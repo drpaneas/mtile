@@ -52,17 +52,20 @@ func (c *Context) tryMode0FullMap(slot, bg, cx, cy, x, y, w, h, flags int) bool 
 			if end := min(right, 32); left < end {
 				entry := mode0ScreenEntry(left, my) * 2
 				mode0CopyMapSpan(screen[entry:entry+(end-left)*2], cells[row+left:row+end], flags, limit, mask)
+				c.hideMode0LinkedSpan(screen[entry:entry+(end-left)*2], cells[row+left:row+end])
 			}
 			if start := max(left, 32); start < right {
 				entry := mode0ScreenEntry(start, my) * 2
 				mode0CopyMapSpan(screen[entry:entry+(right-start)*2], cells[row+start:row+right], flags, limit, mask)
+				c.hideMode0LinkedSpan(screen[entry:entry+(right-start)*2], cells[row+start:row+right])
 			}
 		}
 	} else if present {
+		cur := c.newMapCursor(bg)
 		for my := max(0, -cy); my < min(h, c.cart.MapH-cy); my++ {
 			for mx := max(0, -cx); mx < min(w, c.cart.MapW-cx); mx++ {
-				id := c.mapGetLayer(bg, cx+mx, cy+my)
-				if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask {
+				id := c.mapCursorCell(&cur, cx+mx, cy+my)
+				if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask || c.tileLinkOf(id) != 0 {
 					continue
 				}
 				entry := mode0ScreenEntry(mx, my) * 2
@@ -77,4 +80,17 @@ func (c *Context) tryMode0FullMap(slot, bg, cx, cy, x, y, w, h, flags int) bool 
 	c.mode0MapLayer[slot], c.mode0MapSource[slot] = mask, uint8(bg)
 	c.mode0MapSigSet[slot], c.mode0MapReady[slot], c.mode0MapDirty[slot] = true, true, true
 	return true
+}
+
+// hideMode0LinkedSpan blanks linked tiles after a span copy; their objects
+// are drawn by drawTileLinks. Carts without links skip the pass entirely.
+func (c *Context) hideMode0LinkedSpan(dst []byte, src []uint16) {
+	if len(c.cart.TileLinkOf) == 0 {
+		return
+	}
+	for i, id := range src {
+		if c.tileLinkOf(id) != 0 {
+			dst[i*2], dst[i*2+1] = 0, 0
+		}
+	}
 }

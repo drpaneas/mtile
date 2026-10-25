@@ -17,7 +17,12 @@ const (
 // graphics state.
 type Context struct {
 	poseVariant int
-	cart        *AssetMemory
+	// tileLinkScanLayers marks logical layers whose linked objects are found
+	// by scanning visible cells (see tileLinkMutated). tileLinkSite and its
+	// window/stride are the next map draw's Mode 0 object allocation.
+	tileLinkScanLayers                           uint8
+	tileLinkSite, tileLinkWindow, tileLinkStride int
+	cart                                         *AssetMemory
 
 	renderState
 	drawPal         [256]byte
@@ -92,6 +97,7 @@ type drawCursor struct {
 // c.cart first so a failed re-init cannot leave a stale pointer.
 func (c *Context) Init(image *AssetImage, ram *AssetMemory) bool {
 	c.poseVariant = 0
+	c.tileLinkScanLayers = 0
 	c.cart = nil
 	c.resetRendererState()
 	c.mapROM = nil

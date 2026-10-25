@@ -58,6 +58,9 @@ func Load(projectDir string) (*Assets, error) {
 	if err := attachAnimations(projectDir, assets); err != nil {
 		return nil, err
 	}
+	if err := attachTileLinks(projectDir, assets, len(poses.Poses)); err != nil {
+		return nil, err
+	}
 	if err := attachPoseColorVariants(assets, *poses); err != nil {
 		return nil, err
 	}

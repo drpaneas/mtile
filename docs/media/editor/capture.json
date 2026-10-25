@@ -33,6 +33,14 @@
     {
       "image": "preferences.png",
       "project": "examples/nerdo"
+    },
+    {
+      "image": "tile-links.png",
+      "project": "examples/tile-links"
+    },
+    {
+      "image": "tile-links-map.png",
+      "project": "examples/tile-links"
     }
   ],
   "Note": "Actual editor Draw output; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated."

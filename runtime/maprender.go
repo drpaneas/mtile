@@ -48,28 +48,6 @@ func (c *Context) MapAll(mask uint8) {
 	}
 }
 
-// mapVisibleCellRange intersects a requested cell span with the map and
-// screen clip before walking it. A camera far into a large map must not make
-// every frame visit all the off-screen cells preceding the visible ones.
-func mapVisibleCellRange(cellStart, cells, mapSize, origin, clipStart, clipEnd int) (int, int) {
-	first, end := 0, cells
-	if first < -cellStart {
-		first = -cellStart
-	}
-	if end > mapSize-cellStart {
-		end = mapSize - cellStart
-	}
-	// Signed shifts round down, including when the first cell starts to the
-	// right of the clip. The end uses ceil so a partly visible cell survives.
-	if visible := (clipStart - origin) >> 3; first < visible {
-		first = visible
-	}
-	if visible := (clipEnd - origin + 7) >> 3; end > visible {
-		end = visible
-	}
-	return first, end
-}
-
 func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	if c == nil || c.cart == nil {
 		return
@@ -85,6 +63,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	if c.clipX0 >= c.clipX1 || c.clipY0 >= c.clipY1 {
 		return
 	}
+	linkCellsW, linkCellsH := cellsW, cellsH
 	if cellsW <= 0 {
 		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
 		// Account for every cell hidden before the clip, not just a single
@@ -109,6 +88,8 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	mx0, mx1 := mapVisibleCellRange(cellX, cellsW, mapW, baseXOrigin, clipX0, clipX1)
 	my0, my1 := mapVisibleCellRange(cellY, cellsH, mapH, baseYOrigin, clipY0, clipY1)
 	if mx0 >= mx1 || my0 >= my1 {
+		// Linked objects can reach into view from cells just off screen.
+		c.drawTileLinks(bg, cellX, cellY, linkCellsW, linkCellsH, screenX, screenY, layer)
 		return
 	}
 	mapPlaneN := mapW * mapH
@@ -116,6 +97,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	mapStreaming := mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming
 	spriteN := c.cart.SpriteN
 	flags := c.cart.Flags
+	linkOf := c.cart.TileLinkOf
 	var mask byte
 	if layer > 0 && layer <= 255 {
 		mask = byte(layer)
@@ -130,6 +112,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 	}
 	if mask == 0 && c.drawPalIdentity && c.transpKey0 &&
 		(c.drawMapPacked(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin) || c.drawMapRaster(bg, storageBG, cellX, cellY, mx0, mx1, my0, my1, baseXOrigin, baseYOrigin)) {
+		c.drawTileLinks(bg, cellX, cellY, linkCellsW, linkCellsH, screenX, screenY, layer)
 		return
 	}
 	// Hoist the id -> cell divide out of the 600-cell loop: one reciprocal
@@ -188,7 +171,7 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 			} else {
 				id = mapData[mapRowBase+mapX]
 			}
-			if id == 0 || int(id) >= spriteN {
+			if id == 0 || int(id) >= spriteN || linkOf != nil && int(id) < len(linkOf) && linkOf[id] != 0 {
 				continue
 			}
 			if mask != 0 && flags[id]&mask != mask {
@@ -276,4 +259,5 @@ func (c *Context) mapLayer(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, l
 				rowY0, rowY1, colX0, colX1, identity, key0, packed)
 		}
 	}
+	c.drawTileLinks(bg, cellX, cellY, linkCellsW, linkCellsH, screenX, screenY, layer)
 }

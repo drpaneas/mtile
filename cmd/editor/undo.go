@@ -23,6 +23,7 @@ type undoSnapshot struct {
 	Animation assetsync.AnimationWorkspace `json:"animation"`
 	ObjPage   int                          `json:"objPage"`
 	Map       assetsync.Map                `json:"map"`
+	TileLinks assetsync.TileLinkFile       `json:"tileLinks"`
 
 	NativeAudio        assetsync.NativeAudioAssets `json:"nativeAudio"`
 	Project            assetsync.Project           `json:"project"`

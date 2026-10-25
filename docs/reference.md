@@ -144,7 +144,9 @@ Choose `spr` for simple cells from the shared spritesheet, `pspr` for a
 complete authored character or object, and `anim` for an ordered, timed
 sequence of poses. A pose can be static; it does not need an animation clip.
 See [when to use poses and animations](poses-and-animations.md) for the
-decision table, editor workflow, and gameplay examples.
+decision table, editor workflow, and gameplay examples. A
+[linked tile](tile-links.md) makes `map()` draw a pose or clip wherever the
+tile is painted.
 
 `pspr(id, x, y [, flip_x [, flip_y]])` draws the zero-based pose in
 `assets/poses.json`. Each pose lists 8x8 tile IDs, pixel offsets from its origin,

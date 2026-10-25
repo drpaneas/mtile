@@ -61,8 +61,10 @@ For characters and reusable object artwork, start with registered poses:
 `pspr` draws a still visual state and `anim` selects a pose from a timed clip.
 Use `spr` when a shared-sheet cell or simple rectangle already does the job,
 especially art also used by the map. Terrain belongs in shared tiles and maps.
+To place poses or clips by painting the map, [link a shared tile](tile-links.md)
+to them; `map()` then draws the linked object at each occurrence.
 
-The [sprites, poses, and animations decision guide](poses-and-animations.md)
+The [shared tiles, poses, and animations decision guide](poses-and-animations.md)
 compares concrete use cases, replaces manual frame arithmetic, and shows how
 to restart or pause an action. It also distinguishes authoring benefits from
 conditional Mode 0 packing and memory benefits; no object API guarantees

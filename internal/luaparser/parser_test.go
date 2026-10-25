@@ -955,3 +955,17 @@ func TestParenthesizedExpressionRetainsAdjustmentBoundary(t *testing.T) {
 		t.Fatalf("parenthesized value = %T, want *CallExpr", paren.Expr)
 	}
 }
+
+func TestParseMsetKeepsExpandedArgumentCall(t *testing.T) {
+	chunk, err := ParseString("mset.lua", "function values() return 3, 3, 1 end\nmset(values())")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmt, ok := chunk.Body[1].(*CallStmt)
+	if !ok || len(stmt.Call.Args) != 1 {
+		t.Fatalf("statement = %#v, want mset with one syntax argument", chunk.Body[1])
+	}
+	if arg, ok := stmt.Call.Args[0].(*CallExpr); !ok || len(arg.Args) != 0 {
+		t.Fatalf("argument = %#v, want the expandable values() call", stmt.Call.Args[0])
+	}
+}

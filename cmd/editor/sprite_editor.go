@@ -48,6 +48,7 @@ func (g *Game) updateSpriteMode() {
 	g.updatePixelCanvas(mx, my)
 	if !g.objEditing {
 		g.updateFlags(mx, my)
+		g.updateTileLinkControls(mx, my)
 	} else {
 		g.updateObjTileReuse(mx, my)
 	}
@@ -84,6 +85,7 @@ func (g *Game) drawSpriteMode(screen *ebiten.Image) {
 	g.drawSpriteTools(screen)
 	if !g.objEditing {
 		g.drawFlags(screen)
+		g.drawTileLinkControls(screen)
 	} else {
 		g.drawObjTileReuse(screen)
 	}
@@ -148,9 +150,15 @@ func (g *Game) updateSpriteBankToggle(mx, my int) bool {
 		_ = g.setObjEditing(false)
 	case rectContains(poses, mx, my), rectContains(animations, mx, my):
 		if !g.objEditing {
+			creating := g.model != nil && g.model.ObjSheet == nil
 			if err := g.setObjEditing(true); err != nil {
 				g.statusMsg = err.Error()
 				return true
+			}
+			if creating {
+				// Creating the sheet remaps pose parts. Record it as its own
+				// undo step so undoing a later edit cannot revert it too.
+				g.undo.forcePush(g.snapshot())
 			}
 		}
 		g.setAnimationWorkspaceActive(rectContains(animations, mx, my))
@@ -859,7 +867,7 @@ func (g *Game) flagBitState(bit int) (allTrue, anyTrue bool) {
 }
 
 func (g *Game) drawFlags(screen *ebiten.Image) {
-	drawSpritePanelTitle(screen, spriteFlagsPanelRect, "SPRITE FLAGS")
+	drawSpritePanelTitle(screen, spriteFlagsPanelRect, "SPRITE FLAGS · LINK")
 	for i := 0; i < 8; i++ {
 		r := flagCheckboxRect(i)
 		allTrue, anyTrue := g.flagBitState(i)
@@ -1065,6 +1073,9 @@ func (g *Game) drawSpritesheetPanel(screen *ebiten.Image) {
 			g.drawSpriteThumb(screen, id, sx, sy, tileW, tileH, cell)
 			if !g.objEditing && spriteSheetCellShowsLock(id) {
 				drawSpriteLockOverlay(screen, cell)
+			}
+			if !g.objEditing && g.tileLinked(id) {
+				drawTileLinkMarker(screen, cell)
 			}
 		}
 	}

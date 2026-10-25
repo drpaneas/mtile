@@ -201,6 +201,8 @@ type Assets struct {
 	PoseNames       []string
 	AnimationClips  []FlatAnimationClip
 	AnimationFrames []uint16
+	// TileLinks draw linked shared tiles as poses or clips; see tilelinks.go.
+	TileLinks []FlatTileLink
 }
 
 // Valid reports whether each component is a 5-bit GBA channel (0..31).

@@ -9,8 +9,8 @@ import (
 func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
 	want := map[RendererCompatibility]int{
 		RendererIndependent:      45,
-		RendererBoth:             9,
-		RendererMode0Conditional: 11,
+		RendererBoth:             8,
+		RendererMode0Conditional: 12,
 		RendererMode4Only:        7,
 	}
 	counts := make(map[RendererCompatibility]int, len(want))
@@ -42,7 +42,7 @@ func TestRendererCompatibilityKeepsExactRasterCallsInMode4(t *testing.T) {
 			t.Errorf("%s compatibility = %d, want Mode 4-only", name, got)
 		}
 	}
-	for _, name := range []string{"map", "spr", "print", "pal", "pspr"} {
+	for _, name := range []string{"map", "mset", "spr", "print", "pal", "pspr"} {
 		if got := BuiltinRendererCompatibility(name); got != RendererMode0Conditional {
 			t.Errorf("%s compatibility = %d, want conditional Mode 0", name, got)
 		}
@@ -70,8 +70,12 @@ func TestLayeredMapMemoryBuiltinsPreserveLegacyArities(t *testing.T) {
 		if got := Builtins[name]; got != want {
 			t.Fatalf("%s spec = %+v, want %+v", name, got, want)
 		}
-		if got := BuiltinRendererCompatibility(name); got != RendererBoth {
-			t.Fatalf("%s renderer class = %v, want RendererBoth", name, got)
+		wantClass := RendererBoth
+		if name == "mset" {
+			wantClass = RendererMode0Conditional
+		}
+		if got := BuiltinRendererCompatibility(name); got != wantClass {
+			t.Fatalf("%s renderer class = %v, want %v", name, got, wantClass)
 		}
 	}
 }

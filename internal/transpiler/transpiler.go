@@ -176,6 +176,9 @@ type Options struct {
 	AnimationClips       []runtimeapi.AnimationClip
 	AnimationFrames      []uint16
 	PoseParts            []runtimeapi.PosePart
+	// TileLinks draw linked shared tiles as poses or animation clips inside
+	// map(); see runtime/tilelink.go.
+	TileLinks []runtimeapi.TileLink
 	// ObjSheet is the optional dense object warehouse. ObjSheetW == 0 means
 	// poses index the spritesheet. Generated carts always compact this into
 	// read-only ROM; there is no EWRAM copy.
@@ -231,8 +234,11 @@ var Builtins = map[string]BuiltinSpec{
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
 	"print": {"PrintV", 1, 4, 1},
 	"sget":  {"Sget", 2, 2, 1}, "sset": {"Sset", 3, 3, 0}, "fget": {"Fget", 1, 2, 1},
-	"fset": {"Fset", 2, 3, 0}, "mget": {"Mget", 2, 3, 1}, "mset": {"Mset", 3, 4, 0},
-	"btn": {"BtnV", 1, 2, 1}, "btnp": {"BtnpV", 1, 2, 1},
+	"fset": {"Fset", 2, 3, 0}, "mget": {"Mget", 2, 3, 1},
+	// Linked maps require provably unlinked writes in Mode 0; expanded Lua
+	// arguments retain their normal semantics in Mode 4 and unlinked maps.
+	"mset": {"Mset", 3, 4, 0},
+	"btn":  {"BtnV", 1, 2, 1}, "btnp": {"BtnpV", 1, 2, 1},
 	"flr": {"Flr", 1, 1, 1}, "ceil": {"Ceil", 1, 1, 1}, "abs": {"Abs", 1, 1, 1},
 	"sgn": {"Sgn", 1, 1, 1}, "min": {"Min", 2, 2, 1}, "max": {"Max", 2, 2, 1},
 	"mid": {"Mid", 3, 3, 1}, "sin": {"Sin", 1, 1, 1}, "cos": {"Cos", 1, 1, 1},
@@ -534,14 +540,16 @@ type generator struct {
 	objSheetCompact  []byte
 	objSheetIndex    []uint32
 	psprPlan         map[*luaparser.CallExpr]mode0PsprAllocation
-	poseOBJIndex     []runtimeapi.PoseOBJRange
-	poseOBJParts     []runtimeapi.PoseOBJ
-	poseOBJTiles     []uint16
-	poseOBJResident  *mode0ResidentPosePlan
-	packedMap        [4]packedMapPlane
-	mapCompact       []uint16
-	mode0TextKeys    []uint16
-	mode0TextTiles   []uint32
+	// tileLinkPlan holds each map() call's Mode 0 linked-object allocation.
+	tileLinkPlan    map[*luaparser.CallExpr]mode0PsprAllocation
+	poseOBJIndex    []runtimeapi.PoseOBJRange
+	poseOBJParts    []runtimeapi.PoseOBJ
+	poseOBJTiles    []uint16
+	poseOBJResident *mode0ResidentPosePlan
+	packedMap       [4]packedMapPlane
+	mapCompact      []uint16
+	mode0TextKeys   []uint16
+	mode0TextTiles  []uint32
 
 	nativeAudioEnabled bool
 	nativeAudioDecl    string
@@ -692,7 +700,8 @@ func (g *generator) prepare() error {
 		}
 	}
 	g.inputEnabled = chunkCallsBuiltin(g.chunk, "btn") || chunkCallsBuiltin(g.chunk, "btnp")
-	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time") || chunkCallsBuiltin(g.chunk, "anim")
+	g.timeEnabled = chunkCallsBuiltin(g.chunk, "t") || chunkCallsBuiltin(g.chunk, "time") || chunkCallsBuiltin(g.chunk, "anim") ||
+		chunkCallsBuiltin(g.chunk, "map") && tileLinksUseClips(g.opts.TileLinks)
 	if len(g.opts.Palette) == 256 {
 		canonical := assetsync.CanonicalPaletteROM()
 		g.paletteIsDefault = slices.Equal(g.opts.Palette, canonical[:])
@@ -725,6 +734,14 @@ func (g *generator) prepare() error {
 		if info := g.funcs["_draw"]; info != nil && info.decl != nil {
 			if ops, _, err := mode0WalkDraw(g.chunk, info.decl, newMode0SpriteIDAnalysis(g.chunk), g.opts); err == nil {
 				g.psprPlan = mode0PsprEmitPlan(ops)
+				for _, op := range ops {
+					if op.tileLinkMap != nil {
+						if g.tileLinkPlan == nil {
+							g.tileLinkPlan = make(map[*luaparser.CallExpr]mode0PsprAllocation)
+						}
+						g.tileLinkPlan[op.tileLinkMap] = g.psprPlan[op.call]
+					}
+				}
 				g.poseOBJResident = planMode0ResidentPoses(g.chunk, ops, g.opts)
 				if g.poseOBJResident != nil {
 					g.poseOBJIndex, g.poseOBJParts = g.poseOBJResident.index, g.poseOBJResident.parts

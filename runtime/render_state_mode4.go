@@ -27,12 +27,17 @@ type renderState struct {
 	mapRasterSpanCount int
 }
 
-func (c *Context) resetRendererState()            { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
-func (c *Context) sheetMutated(x, y int)          { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
-func (c *Context) mapMutated(x, y int, id uint16) { c.invalidateMapRaster(); c.invalidateMapPacked(0) }
+func (c *Context) resetRendererState()   { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
+func (c *Context) sheetMutated(x, y int) { c.invalidateMapRaster(); c.invalidateMapPacked(-1) }
+func (c *Context) mapMutated(x, y int, id uint16) {
+	c.invalidateMapRaster()
+	c.invalidateMapPacked(0)
+	c.tileLinkMutated(0, x, y, id)
+}
 func (c *Context) mapLayerMutated(layer, x, y int, id uint16) {
 	c.invalidateMapRaster()
 	c.invalidateMapPacked(layer)
+	c.tileLinkMutated(layer, x, y, id)
 }
 func (c *Context) flagsMutated(id int) {}
 func (c *Context) drawPaletteMutated() {}

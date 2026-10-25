@@ -238,6 +238,9 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	if err != nil {
 		return result, fmt.Errorf("load assets: %w", err)
 	}
+	if s.tileCanvasExperiment && len(assets.TileLinks) != 0 {
+		return result, fmt.Errorf("load assets: linked tiles (assets/tilelinks.json) are not supported by -experimental-tilecanvas; build with mode4 or mode0")
+	}
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
 	poseIndex, poseParts := flattenAssetPoses(assets)
 	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
@@ -267,6 +270,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		PoseVariantNames:     assets.PoseVariantNames,
 		PoseIndex:            poseIndex,
 		PoseParts:            poseParts,
+		TileLinks:            flattenAssetTileLinks(assets),
 		ObjSheetW:            assets.ObjSheetW,
 		ObjSheetH:            assets.ObjSheetH,
 		ObjSheet:             assets.ObjSheetROM,

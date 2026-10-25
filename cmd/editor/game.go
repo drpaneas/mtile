@@ -39,6 +39,10 @@ const idleRedrawTicks = 5 * 60
 // Game is the editor's ebiten.Game. It owns all UI state; internal/editor's
 // Model owns the actual asset data and its persistence/validation rules.
 type Game struct {
+	// tileLinkChoice indexes tileLinkTargets in the Shared tiles link row;
+	// tileLinkSyncedTile is the selection it was last synced to.
+	tileLinkChoice         int
+	tileLinkSyncedTile     int
 	mapRooms               bool
 	mapRoomSelected        bool
 	mapRoomCol, mapRoomRow int
@@ -535,6 +539,7 @@ func (g *Game) snapshot() undoSnapshot {
 		Animation:          g.model.Animation,
 		ObjPage:            g.objPage,
 		Map:                g.model.Map,
+		TileLinks:          g.model.TileLinks,
 		Project:            g.model.Project,
 		Palette:            g.model.ActivePalette,
 		CurrentSprite:      g.currentSprite,
@@ -592,6 +597,7 @@ func (g *Game) restore(s undoSnapshot) {
 	g.objUsage = nil
 	g.resetAnimationEditorAfterRestore()
 	g.model.Map = s.Map
+	g.model.TileLinks = s.TileLinks
 	g.model.NativeAudio = s.NativeAudio
 	g.model.Project = s.Project
 	g.model.ActivePalette = s.Palette

@@ -114,6 +114,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line(fmt.Sprintf("var mapROM = [ %d ]uint16{%s}", mapCells, u16Literal(g.mapCompact, mapCells)))
 	b.line("//go:section .rodata")
 	b.line(fmt.Sprintf("var flagROM = [ %d ]byte{%s}", g.spriteN, byteLiteral(g.opts.Flags, g.spriteN)))
+	g.renderTileLinkTables(b)
 	poseIndex, poseParts := g.opts.PoseIndex, g.opts.PoseParts
 	if g.poseOBJResident != nil && len(g.poseOBJResident.palettes) != 0 {
 		// Hardware variants share canonical geometry as well as pixels.
@@ -321,6 +322,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]")
 	b.line(fmt.Sprintf("\tcartData.PoseVariantBaseCount, cartData.PoseVariantNames = %d, poseVariantNamesROM", g.opts.PoseVariantBaseCount))
 	b.line("\tcartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]")
+	g.renderTileLinkBindings(b)
 	if base, tiles := g.poseOBJStageWindow(); tiles > 0 {
 		b.line(fmt.Sprintf("\tcartData.PoseOBJStage, cartData.PoseOBJStageBase = poseOBJStageRAM[:], %d", base))
 	}

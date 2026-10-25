@@ -35,6 +35,17 @@ func LoadObjSheet(projectDir string) (*Spritesheet, error) {
 	return &sheet, nil
 }
 
+// RemoveObjSheet deletes objsheet.json. A project without an object sheet
+// sources its poses from the shared sheet; a leftover file would silently
+// redirect every pose part to unrelated object-sheet tiles.
+func RemoveObjSheet(projectDir string) error {
+	err := os.Remove(filepath.Join(projectDir, "assets", "objsheet.json"))
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("remove objsheet.json: %w", err)
+	}
+	return nil
+}
+
 func SaveObjSheet(projectDir string, sheet *Spritesheet) error {
 	if sheet == nil {
 		return fmt.Errorf("object sheet is required")

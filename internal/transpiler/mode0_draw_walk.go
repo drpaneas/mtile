@@ -19,6 +19,9 @@ type mode0DrawOp struct {
 	psprUnique     int
 	psprParts      int
 	psprIDs        []int
+	// tileLinkMap is the map() call whose linked objects this synthetic pose
+	// site draws; see mode0_tile_links.go.
+	tileLinkMap *luaparser.CallExpr
 }
 
 func mode0WalkDraw(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, analysis *mode0SpriteIDAnalysis, opts Options) ([]mode0DrawOp, bool, error) {
@@ -227,6 +230,11 @@ func (w *mode0DrawWalker) walkCall(call *luaparser.CallExpr, env mode0NumEnv, co
 				call.Pos(), reasonMode0DrawShape)
 		}
 		w.ops = append(w.ops, mode0DrawOp{name: name, call: call, copies: copies})
+		if name == "map" {
+			if op, ok := mode0TileLinkOp(call, copies, w.opts); ok {
+				w.ops = append(w.ops, op)
+			}
+		}
 		return nil
 	case "spr":
 		lastID, sprW, sprH := -1, 1, 1

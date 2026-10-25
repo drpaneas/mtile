@@ -131,6 +131,7 @@ const (
 	reasonMode0ObjectBudget    = "M0_OBJ_BUDGET"
 	reasonMode0ResourceLimit   = "M0_RESOURCE_LIMIT"
 	reasonExplicitMapContract  = "MAP_EXPLICIT_CONTRACT"
+	reasonMode0TileLinks       = "M0_TILE_LINKS"
 	autoProfileTileV1          = "tile-v1"
 )
 
@@ -568,6 +569,9 @@ func validateAutoMode0Cost(chunk *luaparser.Chunk, analysis *generator) error {
 }
 
 func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContractPlan) (int, bool, bool, error) {
+	if err := validateMode0TileLinkMsets(chunk, opts, plan.analysis); err != nil {
+		return 0, false, false, err
+	}
 	cols, rows := opts.SheetW/8, opts.SheetH/8
 	if opts.SheetW <= 0 || opts.SheetH <= 0 || opts.SheetW%8 != 0 || opts.SheetH%8 != 0 {
 		return 0, false, false, fmt.Errorf("transpiler: [%s] Mode 0 requires an 8x8-aligned sheet", reasonMode0ResourceLimit)
@@ -612,7 +616,9 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			if !ok {
 				return
 			}
-			if plan.analysis != nil && BuiltinRendererCompatibility(name) == RendererMode0Conditional &&
+			// mset's linked-object proof checks expanded arguments itself;
+			// ordinary map writes retain their unrestricted argument semantics.
+			if name != "mset" && plan.analysis != nil && BuiltinRendererCompatibility(name) == RendererMode0Conditional &&
 				plan.analysis.exprListWidth(call.Args) != len(call.Args) {
 				firstErr = mode0CallError(call, reasonMode0DrawShape,
 					name+"() receives expanded multi-results; Mode 0 requires explicit arguments so its static shape and object budget can be proven")
@@ -644,7 +650,7 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 			case RendererMode4Only:
 				firstErr = mode0CallError(call, reasonMode0Mode4Builtin, name+"() requires the Mode 4 framebuffer")
 			case RendererMode0Conditional:
-				if name != "pvariant" && name != "cls" && name != "map" && name != "spr" && name != "sspr" && name != "pspr" && name != "anim" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
+				if name != "pvariant" && name != "cls" && name != "map" && name != "mset" && name != "spr" && name != "sspr" && name != "pspr" && name != "anim" && name != "print" && name != "clip" && name != "pal" && name != "palt" {
 					firstErr = mode0CallError(call, reasonMode0UnsupportedCall, name+"() is not in the Mode 0 tile-v1 proof")
 				}
 			}

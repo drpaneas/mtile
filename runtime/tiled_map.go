@@ -77,12 +77,14 @@ func (c *Context) Map(cellX, cellY, screenX, screenY, cellsW, cellsH, layer int)
 	}
 	mapIndex := c.mode0MapCalls
 	c.mapLayerAt(mapIndex, 0, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+	c.drawTileLinks(0, cellX, cellY, cellsW, cellsH, screenX, screenY, layer)
 }
 
 // MapBG binds one authored plane to its matching logical hardware BG slot.
 // The transpiler proves stable BG IDs and ordering before selecting Mode 0.
 func (c *Context) MapBG(bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer int) {
 	c.mapLayerAt(bg, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+	c.drawTileLinks(bg, cellX, cellY, cellsW, cellsH, screenX, screenY, layer)
 }
 
 // MapBGAt binds a stable logical source plane to a densely allocated hardware
@@ -93,6 +95,7 @@ func (c *Context) MapBGAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cell
 		return
 	}
 	c.mapLayerAt(slot, bg, cellX, cellY, screenX, screenY, cellsW, cellsH, layer)
+	c.drawTileLinks(bg, cellX, cellY, cellsW, cellsH, screenX, screenY, layer)
 }
 
 // MapAll materializes the selected non-empty logical planes in BG order while
@@ -119,16 +122,29 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 		return
 	}
 	c.ensureDrawState()
+	// A size of zero covers the clip. Mode 4 counts every cell hidden before
+	// the clip too; that window outgrows the 64x32 hardware screen once the
+	// camera moves far into a wide or tall map. Start at the first visible
+	// cell instead when needed. Cells keep their positions, because cell N is
+	// always drawn at screen + N*8, so the visible image is unchanged.
 	if cellsW <= 0 {
 		cellsW = (c.clipX1 - c.clipX0 + 7) / 8
 		if hidden := c.clipX0 - (screenX + cellX*8 - c.camX); hidden > 0 {
 			cellsW += (hidden + 7) / 8
+			if cellsW > 64 {
+				cellX += hidden >> 3
+				cellsW = (c.clipX1 - c.clipX0 + hidden&7 + 7) / 8
+			}
 		}
 	}
 	if cellsH <= 0 {
 		cellsH = (c.clipY1 - c.clipY0 + 7) / 8
 		if hidden := c.clipY0 - (screenY + cellY*8 - c.camY); hidden > 0 {
 			cellsH += (hidden + 7) / 8
+			if cellsH > 32 {
+				cellY += hidden >> 3
+				cellsH = (c.clipY1 - c.clipY0 + hidden&7 + 7) / 8
+			}
 		}
 	}
 	if cellsW <= 0 || cellsH <= 0 || cellsW > 64 || cellsH > 32 {
@@ -174,6 +190,7 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 	storageLayer, present := mapPlaneSlot(c.cart.MapPlaneMask, sourceBG, c.cart.MapLayers)
 	streaming := mapStorageStreaming || !mapStorageFixed && c.cart.MapStreaming
 	mapData, flags, spriteN := c.cart.Map, c.cart.Flags, c.cart.SpriteN
+	linkOf := c.cart.TileLinkOf
 	mapPlaneOffset := storageLayer * mapW * mapH
 	// Keep the cell exactly on the right/bottom clip boundary as a guard.
 	// A one-pixel pan can reveal it without changing the cached tile placement.
@@ -183,6 +200,7 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 	mx1 := min(cellsW, mapW-cellX, ((c.clipX1-originX)>>3)+1)
 	my1 := min(cellsH, mapH-cellY, ((c.clipY1-originY)>>3)+1)
 	if present {
+		cur := c.newMapCursor(sourceBG)
 		for my := my0; my < my1; my++ {
 			mapY := cellY + my
 			mapRow := mapPlaneOffset + mapY*mapW + cellX
@@ -190,11 +208,11 @@ func (c *Context) mapLayerAt(mapIndex, sourceBG, cellX, cellY, screenX, screenY,
 			for mx := mx0; mx < mx1; mx++ {
 				var id uint16
 				if streaming {
-					id = c.mapGetLayer(sourceBG, cellX+mx, mapY)
+					id = c.mapCursorCell(&cur, cellX+mx, mapY)
 				} else {
 					id = mapData[mapRow+mx]
 				}
-				if id == 0 || int(id) >= spriteN || id >= mode0TileLimit {
+				if id == 0 || int(id) >= spriteN || id >= mode0TileLimit || int(id) < len(linkOf) && linkOf[id] != 0 {
 					continue
 				}
 				if mask != 0 && flags[id]&mask != mask {

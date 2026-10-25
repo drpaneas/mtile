@@ -43,7 +43,7 @@ func (c *Context) buildMapRaster(bg, storageBG int) bool {
 	for y := 0; y < cart.MapH; y++ {
 		for x := 0; x < cart.MapW; x++ {
 			id := int(cart.Map[storageBG*cart.MapW*cart.MapH+y*cart.MapW+x])
-			if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) {
+			if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) || id < len(cart.TileLinkOf) && cart.TileLinkOf[id] != 0 {
 				continue
 			}
 			slot := int(cart.SheetIndex[id])

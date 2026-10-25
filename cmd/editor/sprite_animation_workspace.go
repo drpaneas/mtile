@@ -116,6 +116,7 @@ func (g *Game) deleteAnimationClip() {
 	}
 	name, index := clip.Name, g.animation.clip-1
 	g.model.Animation.Clips = append(g.model.Animation.Clips[:index], g.model.Animation.Clips[index+1:]...)
+	editor.RemoveAnimationFromTileLinks(&g.model.TileLinks, name)
 	delete(g.animation.newClips, name)
 	g.selectAnimationClip(min(index+1, len(g.model.Animation.Clips)))
 	g.commitAnimationEdit("Deleted clip " + name + ". Registered poses are unchanged; Undo restores the clip.")

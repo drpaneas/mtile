@@ -30,8 +30,9 @@ GUIDES = [
     ("lantern-rooms", "Lantern Rooms: change rooms & spawn", "maps", "examples/lantern-rooms/README.md", "Visit a hanging garden and return; learn how Lua selects a room and its entry position."),
     ("game-loop", "The game loop", "loop", "website/content/game-loop.md", "Set up once, update your world, and draw each frame."),
     ("reference", "Language & commands", "loop", "docs/reference.md", "The Lua dialect, project files, commands, and controls."),
-    ("poses-and-animations", "Sprites, poses & animation", "sprites", "docs/poses-and-animations.md", "Choose spr, pspr, or anim for your artwork, and give each action the right timing."),
+    ("poses-and-animations", "Shared tiles, poses & animation", "sprites", "docs/poses-and-animations.md", "Choose shared tiles, spr, pspr, or anim for your artwork, and give each action the right timing."),
     ("graphics", "Maps & drawing order", "maps", "docs/graphics-model.md", "Tile maps, layers, scrolling, and sprite placement."),
+    ("tile-links", "Tile links: objects from the map", "maps", "docs/tile-links.md", "Link a shared tile to a pose or clip, then place objects by painting Map Lab."),
     ("renderers", "Renderer compatibility", "debug", "docs/render-modes.md", "Understand hardware tiles, bitmap drawing, and AUTO selection."),
     ("performance", "Frame budgets", "debug", "docs/performance.md", "Measure your cartridge and keep it within its frame budget."),
     ("lua-api", "Lua API walkthrough", "loop", "docs/lua-api.md", "Common signatures, examples, and behavior notes for every supported builtin."),
@@ -49,7 +50,7 @@ DOC_ROUTES[(ROOT / "examples/README.md").resolve()] = "examples.html"
 DOC_ROUTES[(ROOT / "docs/first-game.md").resolve()] = "guides/first-game.html"
 CATEGORY_GUIDES = {
     "start": ["install", "first-game", "small-games"], "loop": ["game-loop", "reference", "lua-api"], "input": [],
-    "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
+    "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
     "math": [], "data": ["foreach"], "debug": ["performance", "renderers"], "editor": ["editor"],
 }
 ICON_PATHS = {

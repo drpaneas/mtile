@@ -29,6 +29,7 @@ func TestDocumentationScreenshots(t *testing.T) {
 		{"animations", "nerdo"}, {"color-variants", "nerdo"},
 		{"map-rooms", "background-layers"}, {"audio", "audio-gb-melody"},
 		{"develop", "nerdo"}, {"preferences", "nerdo"},
+		{"tile-links", "tile-links"}, {"tile-links-map", "tile-links"},
 	}
 	for _, capture := range captures {
 		t.Run(capture.name, func(t *testing.T) {
@@ -48,6 +49,12 @@ func TestDocumentationScreenshots(t *testing.T) {
 			case "shared-tiles":
 				g.mode = modeSprites
 				g.currentSprite = 1
+			case "tile-links":
+				g.mode = modeSprites
+				g.currentSprite = 4 // the flower marker, linked to clip "sway"
+			case "tile-links-map":
+				g.mode = modeMap
+				g.prepareMapView()
 			case "poses", "animations", "color-variants":
 				g.mode = modeSprites
 				if err := g.setObjEditing(true); err != nil {

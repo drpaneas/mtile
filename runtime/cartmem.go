@@ -80,9 +80,16 @@ type AssetMemory struct {
 	// PoseIndex/PoseParts are Init-copied slice headers from AssetImage; the
 	// backing arrays stay in ROM (or wherever the image lives), since poses
 	// are not mutated at runtime.
-	AnimationClips       []AnimationClip
-	AnimationFrames      []uint16
-	PoseIndex            []PoseRange
+	AnimationClips  []AnimationClip
+	AnimationFrames []uint16
+	PoseIndex       []PoseRange
+	// TileLinkOf maps a shared tile ID to its TileLinks index plus one (zero
+	// for unlinked tiles). Linked tiles never draw as map tiles.
+	TileLinkOf           []uint8
+	TileLinks            []TileLink
+	TileLinkInstances    []TileLinkInstance
+	TileLinkRows         []uint32
+	TileLinkReach        TileLinkReach
 	PoseParts            []PosePart
 	PoseOBJIndex         []PoseOBJRange
 	PoseOBJParts         []PoseOBJ

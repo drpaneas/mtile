@@ -1,1 +1,92 @@
-{"version":1,"pages":[{"name":"Lumen actors and lettering","x":0,"y":0,"width":512,"height":320}],"clips":[{"name":"moth-flight","frames":[0,1,2,3],"fps":10,"loop":true},{"name":"moth-dash","frames":[0,1,2,3],"fps":18,"loop":true},{"name":"ember-glow","frames":[4,5,6,7],"fps":5,"loop":true},{"name":"shadow-drift","frames":[8,9],"fps":4,"loop":true},{"name":"lantern-lit","frames":[11,12,13],"fps":6,"loop":true},{"name":"bloom-opening","frames":[15,16,17],"fps":6,"loop":false},{"name":"dash-recharge","frames":[39,40,41,42,43,44,45,46,47],"fps":6,"loop":false}]}
+{
+  "version": 1,
+  "pages": [
+    {
+      "name": "Lumen actors and lettering",
+      "x": 0,
+      "y": 0,
+      "width": 512,
+      "height": 320
+    }
+  ],
+  "clips": [
+    {
+      "name": "moth-flight",
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "name": "moth-dash",
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fps": 18,
+      "loop": true
+    },
+    {
+      "name": "ember-glow",
+      "frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 5,
+      "loop": true
+    },
+    {
+      "name": "shadow-drift",
+      "frames": [
+        8,
+        9
+      ],
+      "fps": 4,
+      "loop": true
+    },
+    {
+      "name": "lantern-lit",
+      "frames": [
+        11,
+        12,
+        13
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    {
+      "name": "bloom-opening",
+      "frames": [
+        15,
+        16,
+        17
+      ],
+      "fps": 6,
+      "loop": false
+    },
+    {
+      "name": "dash-recharge",
+      "frames": [
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "fps": 6,
+      "loop": false
+    }
+  ]
+}
