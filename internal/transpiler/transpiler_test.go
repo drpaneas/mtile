@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
@@ -1843,10 +1844,7 @@ func buildGeneratedWithTinyGo(t *testing.T, got string) {
 		t.Skip("tinygo is not installed")
 	}
 	dir := writeGeneratedPackage(t, got)
-	target, err := filepath.Abs(filepath.Join("..", "..", "runtime", "target-gba.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	target := runtimeTinyGoTarget(t)
 	outROM := filepath.Join(dir, "generated.gba")
 	cmd := exec.Command("tinygo", "build", "-target", target, "-gc=none", "-opt=2", "-print-allocs-cover=.", "-o", outROM, ".")
 	cmd.Dir = dir
@@ -1868,6 +1866,37 @@ func buildGeneratedWithTinyGo(t *testing.T, got string) {
 	if info, err := os.Stat(outROM); err != nil || info.Size() == 0 {
 		t.Fatalf("TinyGo did not produce a ROM: %v", err)
 	}
+}
+
+var (
+	runtimeTargetOnce sync.Once
+	runtimeTargetErr  error
+)
+
+// runtimeTinyGoTarget returns the runtime's generated TinyGo target. The JSON
+// holds machine-local paths and is gitignored, so a fresh checkout creates it
+// with the same generator the runtime documents.
+func runtimeTinyGoTarget(t *testing.T) string {
+	t.Helper()
+	runtimeDir, err := filepath.Abs(filepath.Join("..", "..", "runtime"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(runtimeDir, "target-gba.json")
+	runtimeTargetOnce.Do(func() {
+		if _, err := os.Stat(target); err == nil {
+			return
+		}
+		cmd := exec.Command("go", "run", "./internal/cmd/gentarget")
+		cmd.Dir = runtimeDir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			runtimeTargetErr = fmt.Errorf("generate %s: %v\n%s", target, err, out)
+		}
+	})
+	if runtimeTargetErr != nil {
+		t.Fatal(runtimeTargetErr)
+	}
+	return target
 }
 
 func nonZeroTinyGoAllocations(output string) []string {
