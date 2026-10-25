@@ -42,7 +42,7 @@ mutations = [
      lambda s: replace_once(s,
                            '\t\t\tg.pending = append(g.pending, "if "+guard+" {")',
                            '\t\t\tguard = "true"\n\t\t\tg.pending = append(g.pending, "if "+guard+" {")')),
-    ("reversed-evaluation", "internal/transpiler/transpiler.go", "^TestDifferentialExecution$", reverse_sequence),
+    ("reversed-evaluation", "internal/transpiler/emit_stmt.go", "^TestDifferentialExecution$", reverse_sequence),
 ]
 
 results = []
@@ -86,7 +86,7 @@ with tempfile.TemporaryDirectory(prefix="mtile-differential-mutants-") as direct
 
     # This separately reproduces the real compile failure found by the oracle.
     # Compile rejection does NOT count as a killed semantic mutant above.
-    path = work / "internal/transpiler/transpiler.go"
+    path = work / "internal/transpiler/emit_expr.go"
     original = path.read_text()
     regressed = replace_once(original,
         '\t\t\ttmp := g.next("neg")\n\t\t\tg.pending = append(g.pending, tmp+" := "+value)\n\t\t\treturn "-(" + tmp + ")"',

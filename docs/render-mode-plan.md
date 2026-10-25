@@ -86,7 +86,7 @@ The current implementation already provides most measurement primitives:
 
 - `internal/build/build.go` owns project loading, transpiler options, TinyGo
   invocation, linker-map memory accounting, and the build result.
-- `internal/transpiler/transpiler.go` emits the hardware initialization and
+- `internal/transpiler/render.go` emits the hardware initialization and
   30 Hz update/draw/present loop.
 - `internal/transpiler/render_modes.go` exhaustively classifies all public
   builtins.
