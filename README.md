@@ -48,30 +48,47 @@ Follow [installation](docs/getting-started.md#requirements) for your system.
 git clone --recurse-submodules https://github.com/drpaneas/mtile.git
 cd mtile
 go run ./cmd/mtile doctor
-go run ./cmd/mtile new mygame
+go run ./cmd/mtile new -template coin-quest mygame
 go run ./cmd/mtile build mygame
 ```
 
-Your first ROM is `mygame/game.gba`. Open the project in the editor:
+This creates **Coin Quest**, a complete game with editable artwork, sound, and
+four small lessons. Your first ROM is `mygame/game.gba`. Open the project in
+the editor:
 
 ```sh
 go run ./cmd/mtile edit mygame
 ```
 
-Choose **Develop**, edit `game.lua`, and press **Build + Reload**. Click the
+Choose **Develop** and press **Build + Reload**. Click the
 GBA preview to play: arrow keys move, Z/X are A/B, and Escape returns focus to
-code. The first source-checkout preview builds the bundled emulator helper.
+code. Collect five coins and press Z to restart. The first source-checkout
+preview builds the bundled emulator helper.
 
-Prefer an existing project? Try `go run ./cmd/mtile edit examples/hello`.
-For a guided game, use `go run ./cmd/mtile new -template coin-quest mygame`
-instead of the blank-project command above; choose an unused directory name.
+**Now make one change:** in `game.lua`, change `speed = 2` to `speed = 3`, save,
+and select **Build + Reload**. The explorer moves faster. Follow
+[Your first game](docs/first-game.md) for the next small step; you can leave
+renderer rules and performance details until you need them.
+
+For a blank project, use `go run ./cmd/mtile new blankgame` with an unused
+directory name. To inspect an existing example, try
+`go run ./cmd/mtile edit examples/hello`.
 The [getting-started guide](docs/getting-started.md) also covers installed
 bundles, command-line builds, and troubleshooting.
 
+![mTile Sprite Lab showing registered Nerdo poses, drawing tools, and the OBJ artwork page.](docs/media/editor/poses.png)
+
+*The desktop editor. See the [illustrated IDE guide](docs/ide.md) for all four
+workspaces, color variants, animations, rooms, and preferences.*
+
+For character and object artwork, read [when to use poses and animations](docs/poses-and-animations.md).
+Use `spr` for simple shared-sheet cells, `pspr` for a complete authored object,
+and `anim` for a timed sequence of poses.
+
 ## A small game fits in a small file
 
-Replace the generated `game.lua` with this complete example. Move the circle
-with the left and right arrow keys:
+For a separate experiment in the blank project above, replace its `game.lua`
+with this complete example. Move the circle with the left and right arrow keys:
 
 ```lua
 x = 120
@@ -115,6 +132,7 @@ the generated files on any static host.
 
 - [Getting started](docs/getting-started.md): installation, first ROM, and editor preview.
 - [IDE guide](docs/ide.md): sprite, map, audio, and code controls.
+- [Poses and animations](docs/poses-and-animations.md): when to use `spr`, `pspr`, or `anim`, with working examples.
 - [Reference](docs/reference.md): commands, project structure, input, and Lua builtins.
 - [Audio guide](docs/audio/README.md): hardware sounds and music.
 - [Performance](docs/performance.md): frame budgets, memory limits, and benchmark evidence.

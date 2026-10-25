@@ -2,6 +2,10 @@
 
 [Documentation index](README.md) · [Command reference](reference.md#commands)
 
+This page gets your tools ready and opens **Coin Quest**, a complete starter
+game. Once it runs, continue with [one small code change](first-game.md#your-first-change).
+You can return to the remaining setup details when you need them.
+
 Start with a source checkout. This guide does not assume a published binary
 release is available. If you already have a maintainer-built desktop bundle,
 see [using a bundle](#using-a-desktop-bundle).
@@ -44,19 +48,23 @@ The CLI-only `new` and `build` commands do not open a desktop window.
 
 ## Build your first ROM
 
-For a playable game with lessons, follow [Your first game](first-game.md).
-The commands below create a blank project instead.
+Create Coin Quest so your first build already has something to play:
 
 ```sh
 git clone --recurse-submodules https://github.com/drpaneas/mtile.git
 cd mtile
-go run ./cmd/mtile new mygame
+go run ./cmd/mtile doctor
+go run ./cmd/mtile new -template coin-quest mygame
 go run ./cmd/mtile build mygame
 ```
 
 `new` creates the source and graphics assets and refuses to overwrite an
 existing directory. `build` writes `mygame/game.gba` and reports the selected
 renderer and memory use. Keep command flags before the project directory.
+
+**Ready:** `mygame/game.gba` exists. Next, open it in the editor below. If you
+prefer an empty canvas later, `go run ./cmd/mtile new blankgame` creates a
+blank project in a different directory.
 
 If you cloned without submodules, initialize the pinned emulator source:
 
@@ -73,15 +81,36 @@ go run ./cmd/mtile edit mygame
 ```
 
 The first preview in a source checkout builds the headless mGBA helper and
-caches it. Choose **Develop**, edit `game.lua`, and select **Build + Reload**
+caches it. Choose **Develop** and select **Build + Reload**
 (or Ctrl/Cmd+R). A successful build starts the ROM in the same window.
 
 Click the GBA display to give it keyboard focus. Arrow keys are the D-pad,
 Z/X are GBA A/B, and Escape returns focus to the source editor. The
 [IDE guide](ide.md) describes the remaining controls and workspaces.
 
+**Ready:** collect five coins and press Z to restart. Continue with
+[your first change](first-game.md#your-first-change): change one value, rebuild,
+and see the result. That is enough setup to begin making the game your own.
+
+![Develop workspace showing Lua code, Build + Reload, diagnostics, and the preview before building.](media/editor/develop.png)
+
+For readable text, open Preferences with Ctrl/Cmd+`,` and choose COMFORT or
+LARGE, or use Ctrl/Cmd+`+`/`-`. Ctrl/Cmd+`0` restores COMFORT.
+
 You can also load `mygame/game.gba` in a separately installed emulator or
 transfer it to compatible GBA flash-cartridge hardware.
+
+## When you are ready to change the artwork
+
+Coin Quest uses simple shared-sheet sprites. Start by recoloring its explorer
+in **Sprites**, save, and rebuild. The [first-game walkthrough](first-game.md)
+shows where to find it.
+
+For a character with several visual states, try
+[Moth Study](../examples/moth-study/README.md): one pose, then a clip, then
+input and facing. For scenery, [Tidewalk](../examples/tidewalk/README.md)
+introduces a map, camera, and parallax separately. Or
+[choose another small game](small-games.md); each comes with ready artwork.
 
 ## Build the desktop tools
 
@@ -104,10 +133,15 @@ executable: the sibling editor/player and bundled compiler are part of the
 installation.
 
 ```sh
-mtile new mygame
+mtile doctor
+mtile new -template coin-quest mygame
 mtile build mygame
 mtile edit mygame
 ```
+
+Continue with [Play the complete game](first-game.md#play-the-complete-game),
+then change its movement speed. To start with an empty project instead, use
+`mtile new blankgame` with an unused directory name.
 
 The bundle supplies TinyGo, the Mtile runtime, and the mGBA helper. Go remains
 a host dependency. You do not need a separate Lua installation, mGBA frontend,

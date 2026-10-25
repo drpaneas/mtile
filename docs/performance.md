@@ -2,10 +2,12 @@
 
 This is the "Effective Mtile" for frame budgets: what the hardware gives
 you, what each operation costs in measured ARM7TDMI cycles, and which
-patterns keep a real game at 30 Hz. Every number below was measured with
-`runtime/cmd/benchspike` on mGBA (cycle-accurate ARM7TDMI timing) using the
-GBA's own TM0/TM1 hardware timers, on a 128x128 sheet with realistic
-half-transparent art. Re-measure after runtime changes with:
+patterns help a game stay within its approximately 30 Hz budget. These are
+recorded benchmark snapshots, not guarantees for arbitrary games or the current
+checkout. The per-call table uses `runtime/cmd/benchspike`, mGBA, TM0/TM1
+timers, and a 128x128 sheet with half-transparent art unless a row says
+otherwise. Later sections link their own workloads, toolchains, and evidence.
+Re-measure the relevant workload after runtime changes:
 
 Unless a section explicitly says otherwise, graphics numbers in this guide
 describe the Mode 4 software framebuffer backend. The compile-time Mode 0
@@ -41,7 +43,7 @@ renderer remains enabled.
 
 ## Paired static-map proof
 
-`cmd/renderbench` built `examples/testio` twice with identical source/assets,
+`cmd/renderbench` built `testdata/projects/testio` twice with identical source/assets,
 TinyGo 0.41.1, `-gc=none -opt=2`, and the pinned headless mGBA core. After 20
 warm-up frames it compared and sampled 120 synchronized 30 Hz ticks.
 
@@ -216,15 +218,17 @@ cd runtime
 go test -bench=. -benchmem
 ```
 
-Every benchmark must report `0 allocs/op`. The runtime never allocates on
-the Go heap after `Init`; a nonzero allocation count is a bug.
+Target runtime hot paths must report `0 allocs/op` on the Go heap after
+initialization. This does not mean Lua tables and strings are allocation-free:
+they use the separate managed Lua heap. Host tooling and benchmark setup may
+have different allocation requirements.
 
 ## The budget
 
 One display frame is **280,896 cycles** (1232 cycles x 228 scanlines,
 59.73 Hz). The generated loop runs `_update`/`_draw` at **30 Hz** - once
 every two display frames, PICO-8's native rate - so one game tick owns
-**561,792 cycles**. Fixed per-tick costs already spent on your behalf:
+**561,792 cycles**. For the Mode 4 framebuffer path, fixed per-tick costs include:
 
 | Cost | Cycles | % tick |
 | --- | ---: | ---: |
@@ -235,16 +239,14 @@ The blit targets the hidden page (which cannot tear), so it runs as soon as
 `_draw` finishes rather than waiting for VBlank. In practice, treat
 **~480,000 cycles as the ceiling for `_update` plus `_draw` combined**.
 
-Why 30 Hz and not 60: the measured table below shows a full-screen `map()`
-is ~832k cycles and 100 sprites are ~210k. At 60 Hz those numbers made
-whole game genres impossible; at 30 Hz a map redraw plus a normal sprite
-load plus HUD text fits with headroom. The GBA's LCD still scans at
-59.73 Hz - each rendered image is simply shown for exactly two scans,
-which is how most commercial GBA games shipped. A hardware timer
-(TM2/TM3) paces the flip so a fast tick can never land one frame early:
-the cadence is a metronomic 2 frames per flip, which the eye reads as
-steady 30 FPS, not jitter. Jitter only happens when cadence *alternates*
-(1-2-1-2); the pacer makes that impossible by construction.
+Two display frames provide twice the CPU budget of a one-frame loop. In the
+recorded per-cell Mode 4 workload, a dense 16x16 room redraw fits, while a
+30x20 redraw at ~832k cycles exceeds even the two-frame budget. Sparse rooms
+or eligible raster-cache calls have different costs; measure the actual game.
+The LCD scans at approximately 59.73 Hz, so the two-frame target is about
+29.86 updates per second. The TM2/TM3 pacer prevents an early flip; on-time
+ticks show each image for two scans. An overrun can hold an image longer and
+cause uneven cadence. Pacing does not make an expensive frame fit.
 
 The frame profiler (`Context.SetProfiling`) reports exact per-phase costs
 on real hardware; `MissedFrames` counts ticks that overran the two-frame
@@ -261,12 +263,10 @@ slot.
 | Aligned 8x8 sprites after `cls` | ~70-95 | **~180** |
 | Input latency | up to ~17 ms | up to ~33 ms |
 
-The last row is the honest trade-off: one extra display frame of input
-latency, the same cost PICO-8 itself and most shipped GBA titles accepted.
-Everything else is a doubling. The panel still scans at 59.73 Hz; each
-image is simply shown for exactly two scans, paced by a hardware timer so
-the cadence cannot alternate (alternation, not the rate, is what reads as
-jitter).
+The input-latency row describes the polling interval, not total end-to-end
+latency: rendering, display scanout, and an emulator can add delay. The
+approximately 30 Hz loop trades a longer polling interval for twice the CPU
+budget. Overruns can still extend a tick beyond its target slot.
 
 ## Measured costs per call
 
@@ -293,16 +293,15 @@ jitter).
 | **complete PICO-8 tick** | **344,785** | **61%** | cls + 16x16 room + 30 sprites + 24 particles + HUD |
 | **complete GBA tick** | **352,077** | **62%** | cls + 17% 30x20 room + 1 sprite + HUD ([`mapdemo`](../examples/mapdemo)) |
 
-The last row is the go/no-go proof for PICO-8-class ports: a full game tick
-- clear, whole-room redraw, 30 sprites (some flipped), 24 particle
-rectfills, HUD text - plus the 14% blit totals ~75% of the tick, leaving
-~140k cycles for game logic. Lua value operations cost tens of cycles, so
-logic is effectively never the bottleneck; pixels are.
+The complete PICO-8 tick fixture costs 344,785 cycles before the ~77k upload,
+leaving approximately 140k cycles in the two-frame slot. This is evidence for
+that synthetic workload, not a guarantee for a port. Game logic, allocations,
+collection, and other drawing can consume the remaining budget.
 
 ### What these numbers mean in practice
 
-- **A PICO-8-sized room (16x16 cells) redraws fully every tick** - even
-  with worst-case dense art (63%). This is the workload that makes
+- **The measured PICO-8-sized room (16x16 cells) redraw fits the tick budget**
+  with the tested dense art (63% before clearing, sprites, and upload). This is the workload that makes
   room-based platformer ports straightforward: no dirty-rectangle
   bookkeeping needed.
 - **Map-cell cost hierarchy** (each measured): an *empty* cell (sprite 0)
@@ -319,7 +318,8 @@ logic is effectively never the bottleneck; pixels are.
 - **A dense 30x20 full-GBA-screen `map()` every tick still does not fit**
   (149%). Workarounds, in preference order: sparse platformer rooms fit
   (62% for a full tick at 17% cell density - see [`mapdemo`](../examples/mapdemo));
-  half-empty maps fit (61%); masked layer passes fit (18% per pass); or draw
+  the measured 30x16 half-empty band costs 61% before other work; the
+  measured 16x16 masked pass costs 18%; or draw
   once per room and per tick patch only the strip a camera scroll exposed
   (~90k cycles per 64-cell patch).
 - **Sprite budget by scenario** (8x8 `spr`, blit already subtracted;
@@ -335,8 +335,8 @@ logic is effectively never the bottleneck; pixels are.
   | `cls` + dense 16x16 `map` + sprites | 30 | ~25 |
 
   Rule of thumb: **~200 sprites bare, ~90-110 in a real game that also
-  redraws its room**. A PICO-8-class game (15-25 live objects) never
-  approaches this wall. 16x16 sprites cost ~4x an 8x8, so ~50 of them
+  redraws its room**. A short object list can fit comfortably in these measured scenarios, but
+  object count alone does not bound game cost. 16x16 sprites cost ~4x an 8x8, so ~50 of them
   after `cls`. Offscreen sprites reject before pixel work and are
   near-free, so drawing the whole entity list without camera culling is
   fine.
@@ -394,7 +394,8 @@ placement; omitting the array preserves existing projects' behavior.
 
 1. **Zero Go-heap allocations after Init.** `make smoke-gba` fails the
    build if TinyGo reports any runtime allocation. Lua tables and strings
-   live in a fixed 56 KB semispace pair with a Cheney collector.
+   live in two fixed 56 KiB semispaces with a Cheney collector when the Lua
+   heap is linked.
 2. **No divides in per-pixel or per-cell loops.** ARM7TDMI has no divide
    instruction; a software divide costs hundreds of cycles. `spr`/`map`
    convert sprite ids to cells with a fixed-point reciprocal multiply.
@@ -510,7 +511,7 @@ placement; omitting the array preserves existing projects' behavior.
   and operations. Reassigning one of those bindings or fields to a different
   Lua type is unsupported. Keep genuinely polymorphic values behind bracket
   indexing or separate bindings. The paired 16-body physics fixture in
-  [`examples/physics-stress`](../examples/physics-stress) measured a 32.10%
+  [`testdata/projects/physics-stress`](../testdata/projects/physics-stress) measured a 32.10%
   reduction in update/overhead cycles with zero differing pixels across 600
   Mode 4 frames.
 - A chunk-scope numeric binding initialized once from a literal or an earlier
@@ -548,7 +549,7 @@ placement; omitting the array preserves existing projects' behavior.
   mixed, nil-padded, falling-through, or unknown positions stay as `rt.Value`.
   The paired 12-body,
   ~280-call/tick fixture in
-  [`examples/function-physics-stress`](../examples/function-physics-stress)
+  [`testdata/projects/function-physics-stress`](../testdata/projects/function-physics-stress)
   measured 985,948 -> 740,131 median cycles (-24.93%) and a 36.27% reduction
   in update/overhead residual, with zero differing pixels across 600 Mode 4
   frames. This deliberately over-budget workload amplifies call overhead; the
@@ -556,7 +557,7 @@ placement; omitting the array preserves existing projects' behavior.
 - Multi-return specialization preserves Lua expansion while allowing mixed Go
   tuples such as `(rt.Number, rt.Value, rt.Number)`. In the dedicated 240-call
   fixture at
-  [`examples/multi-return-physics-stress`](../examples/multi-return-physics-stress),
+  [`testdata/projects/multi-return-physics-stress`](../testdata/projects/multi-return-physics-stress),
   native tuple results measured 2,206,075 -> 1,169,327 shipping-path cycles
   (-47.00%), 1,927,649 -> 896,819 update/overhead cycles (-53.48%), and 50,688
   -> 50,532 ROM bytes (-0.31%). With the same root-protected path in both
@@ -569,7 +570,7 @@ placement; omitting the array preserves existing projects' behavior.
   string creation/concatenation, an unknown builtin, or an unproven recursive
   cycle keeps the protected path. A dedicated workload with one live table
   root and 384 pure numeric calls per tick in
-  [`examples/noalloc-call-stress`](../examples/noalloc-call-stress) measured
+  [`testdata/projects/noalloc-call-stress`](../testdata/projects/noalloc-call-stress) measured
   330,184 -> 239,432 median cycles (-27.49%) and 106,632 -> 15,774
   update/overhead cycles (-85.21%), with zero differing pixels across 600 Mode
   4 frames. Its one cold-start missed tick fell to zero. This fixture isolates
@@ -582,11 +583,13 @@ placement; omitting the array preserves existing projects' behavior.
   26,796 ROM bytes; Mode 4 measured 688,174 -> 632,906 cycles (-8.03%) and
   27,976 -> 26,688 ROM bytes. EWRAM was unchanged and both pairs produced zero
   differing pixels. Mode 0 retained zero missed frames in both runs.
-- Reuse tables. `local pool = {}` at `_init`, indices recycled, beats
+- Reuse tables. Create a persistent pool at chunk scope or assign a global
+  in `_init`, then recycle its entries. This avoids
   `add`/`del` churn: `#t` and `add` both walk the array border, and the
   collector's pause grows with live data.
 - Use `flr()` results cached in locals when the same coordinate feeds
-  several draws; every Lua arithmetic op is a function call at -opt=2.
+  several draws; repeated conversions and arithmetic still consume CPU cycles, even with
+  numeric specialization.
 - Profile on hardware early with `SetProfiling` + `PerformanceStats`;
   `MaxUpdate`/`MaxDraw` catch the worst frame, not the average.
 
@@ -601,7 +604,7 @@ placement; omitting the array preserves existing projects' behavior.
   heap every call and drives collector pauses; `print` of a static string
   allocates nothing.
 - Deep `del(t, value)` on long arrays: it is a linear search plus a
-  shift. `deli(t, i)` with a known index halves that; swap-with-last and
+  shift. `deli(t, i)` with a known index avoids the search but still shifts entries; swap-with-last and
   pop is O(1).
 
 ## Known limits (clear expectations)
@@ -609,7 +612,7 @@ placement; omitting the array preserves existing projects' behavior.
 | Limit | Value | Where enforced |
 | --- | --- | --- |
 | Update rate | 30 Hz (two 59.73 Hz scans per tick) | generated loop |
-| Sprites on screen per tick (cls + draw) | ~180 8x8 | budget math above |
+| Measured Mode 4 sprite budget (cls + draw) | ~180 8x8, workload dependent; Mode 0 instead has OAM/scanline limits | budget math above |
 | Full-screen map redraws per tick | cache/renderer dependent; measure the full frame | map raster eligibility and target timing |
 | Lua heap | 56 KB live data when allocation is reachable; collector and both 56 KiB semispaces are link-elided after a whole-program no-allocation proof | `runtime/heap.go`, transpiler effect analysis |
 | Table array part | 256 entries | `maxArrayCap` |
@@ -638,8 +641,11 @@ function _draw()
 end
 ```
 
-Build with profiling by calling `SetProfiling(true)` from generated code
-(exposed to Lua as a debug builtin in a future release), or run the ROM in
-mGBA and read `PerformanceStats` fields with the debugger. `MissedFrames`
-counts frames whose update+draw exceeded a full display interval - the
-number that must stay at zero before shipping on hardware.
+`stat(1)` reports the previous tick's work as a fraction of the two-display-frame
+budget; `stat(2)` reports the maximum since boot. Both work without enabling
+phase profiling. Display either with `print(stat(1), 8, 8, 15)` inside `_draw()`.
+Editor preview builds enable `SetProfiling(true)` automatically for detailed
+phase telemetry; hand-written Go cartridges can enable it explicitly.
+`MissedFrames` counts ticks that overrun the two-frame slot, including the
+renderer presentation deadline. Validate both cadence and pixels on your
+intended emulator/hardware; host CPU percentage is not this measurement.

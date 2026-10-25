@@ -61,10 +61,17 @@ The expansion is preservation-safe:
 
 The Map Editor displays a horizontal BG0-to-BG3 toolbar below the canvas: BG0
 is the back plane on the left and BG3 is the front plane on the right. Clicking
-a background selects the only plane modified by paint, stamp, erase, or resize
-operations. Its separate eye control changes only the editor composite; it does
+a background selects the only plane modified by paint, stamp, or erase
+operations. Resizing changes every plane together. Its separate eye control changes only the editor composite; it does
 not delete cells or alter runtime visibility. Every project opens with BG0
 active; number keys 1–4 select BG0–BG3 while Map Lab has focus.
+
+Room controls operate on all planes together. **+ LEFT/RIGHT** adds a
+30-tile-wide column; **+ ABOVE/BELOW** adds a 20-tile-high row. Adding at the
+left/top translates existing cells on every plane. Deletion closes gaps only
+for a horizontal/vertical room strip; a two-dimensional room grid uses Clear
+Room to preserve neighboring coordinates. These edits do not create level
+transition code. See the [illustrated room workflow](ide.md#map-rooms).
 
 ## Build and runtime layout
 

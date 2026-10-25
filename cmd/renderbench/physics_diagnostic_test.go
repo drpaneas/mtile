@@ -18,7 +18,7 @@ func TestPhysicsMode4Diagnostic(t *testing.T) {
 	service.Debug = true
 	// Keep later call-path optimizations out of this numeric-storage A/B.
 	service.DisableNoAllocFunctionCalls = true
-	project := filepath.Join("..", "..", "examples", "physics-stress")
+	project := filepath.Join("..", "..", "testdata", "projects", "physics-stress")
 	helper := filepath.Join("..", "..", "build", "player", "mtile-player")
 	legacyService := service
 	legacyService.DisableMonomorphicNumbers = true

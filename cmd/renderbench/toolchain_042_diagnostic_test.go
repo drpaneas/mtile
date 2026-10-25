@@ -52,7 +52,7 @@ func TestToolchain042RuntimeDiagnostic(t *testing.T) {
 	for _, workload := range []struct{ name, fixture, project string }{{"hash", "numeric_hash_keys.lua", "hello"}, {"strings", "string_hash_keys.lua", "hello"}, {"camera", "camera.lua", "testio"}} {
 		for _, mode := range []transpiler.Renderer{transpiler.RendererMode0, transpiler.RendererMode4} {
 			t.Run(workload.name+"-"+mode.String(), func(t *testing.T) {
-				project, err := stageProjectWithSource(filepath.Join("..", "..", "examples", workload.project), filepath.Join("testdata", "workloads", workload.fixture))
+				project, err := stageProjectWithSource(filepath.Join("..", "..", diagnosticProjectPath(workload.project)), filepath.Join("testdata", "workloads", workload.fixture))
 				if err != nil {
 					t.Fatal(err)
 				}

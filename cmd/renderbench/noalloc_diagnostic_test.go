@@ -16,7 +16,7 @@ func TestNoAllocCallDiagnostic(t *testing.T) {
 		t.Fatal(err)
 	}
 	service.Debug = true
-	project := filepath.Join("..", "..", "examples", "noalloc-call-stress")
+	project := filepath.Join("..", "..", "testdata", "projects", "noalloc-call-stress")
 	helper := filepath.Join("..", "..", "build", "player", "mtile-player")
 	baselineService := service
 	baselineService.DisableNoAllocFunctionCalls = true

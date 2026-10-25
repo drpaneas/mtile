@@ -1,0 +1,551 @@
+@font-face {
+  font-family:Rubik;
+  src:url('Rubik.ttf') format('truetype');
+  font-display:swap;
+  font-weight:300 900
+}
+
+@font-face {
+  font-family:Mono;
+  src:url('JetBrainsMono-Regular.ttf') format('truetype');
+  font-display:swap
+}
+
+* {
+  box-sizing:border-box
+}
+
+body {
+  margin:0;
+  background:#eee8dc;
+  color:#332c49;
+  font-family:Rubik,Arial,sans-serif
+}
+
+a {
+  color:inherit;
+  text-decoration:none
+}
+
+::selection {
+  background:#d9cdef;
+  color:#302445
+}
+
+.page {
+  min-height:100vh;
+  padding:30px 50px 20px;
+  overflow:hidden
+}
+
+.top {
+  max-width:1280px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  color:#665d74;
+  font-size:13px
+}
+
+.top a {
+  text-decoration:underline;
+  text-underline-offset:4px
+}
+
+.intro {
+  text-align:center;
+  margin:36px auto 0
+}
+
+.intro h1 {
+  font-weight:750;
+  font-size:52px;
+  line-height:1.1;
+  letter-spacing:-.035em;
+  margin:0
+}
+
+.intro p {
+  font-size:17px;
+  color:#6d6276;
+  margin:18px 0 0;
+  line-height:1.65
+}
+
+.console {
+  position:relative;
+  width:min(1130px,100%);
+  height:548px;
+  margin:30px auto 0;
+  border-radius:145px 145px 165px 165px;
+  background:linear-gradient(165deg,#9a8ac6 0%,#8473b2 24%,#7864a8 55%,#6a5898 100%);
+  box-shadow:inset 0 4px 2px #d5c9eb9c,inset 0 -12px 4px #47356b66,0 30px 40px #4c38572a;
+  display:flex;
+  align-items:center;
+  justify-content:center
+}
+
+.console:before {
+  content:'';
+  position:absolute;
+  top:-8px;
+  height:24px;
+  left:105px;
+  right:105px;
+  border-radius:60px 60px 0 0;
+  background:#b9b3c4;
+  box-shadow:inset 0 2px #e6e2e9;
+  z-index:-1
+}
+
+.bezel {
+  width:662px;
+  background:#352d47;
+  border-radius:24px 24px 38px 38px;
+  padding:21px 30px 15px;
+  box-shadow:inset 0 3px 5px #201a31a6,0 2px 1px #b4a3d7
+}
+
+.lcd {
+  aspect-ratio:3/2;
+  width:100%;
+  background:#292e49;
+  border-radius:5px;
+  box-shadow:inset 0 3px 12px #11182790;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:25px 35px 20px;
+  color:#f4edcd;
+  font-family:Mono,monospace
+}
+
+.lcd-logo {
+  width:220px;
+  height:48px;
+  image-rendering:pixelated;
+  object-fit:contain
+}
+
+.lcd h2 {
+  font-size:12px;
+  font-weight:400;
+  color:#bbbdd0;
+  margin:14px 0 20px;
+  letter-spacing:.04em
+}
+
+.game-menu {
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:390px;
+  gap:7px
+}
+
+.game-menu a {
+  font-size:17px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 15px 10px 36px;
+  border-radius:6px;
+  position:relative
+}
+
+.game-menu a.selected {
+  background:#eee7c7;
+  color:#34344d
+}
+
+.game-menu a.selected:before {
+  content:'';
+  position:absolute;
+  left:17px;
+  border-left:8px solid #b56d5b;
+  border-top:5px solid transparent;
+  border-bottom:5px solid transparent
+}
+
+.game-menu a:hover {
+  background:#65627c;
+  color:#fff5d8
+}
+
+.game-menu small {
+  font-size:10px;
+  opacity:.72
+}
+
+.screen-tip {
+  font-size:10px;
+  color:#aeb3c6;
+  margin:15px 0 0
+}
+
+.bezel-label {
+  text-align:center;
+  color:#a8a0b8;
+  font-size:12px;
+  font-weight:700;
+  font-style:italic;
+  letter-spacing:2px;
+  padding-top:12px
+}
+
+.pad {
+  position:absolute;
+  left:51px;
+  top:195px;
+  width:112px;
+  height:112px;
+  filter:drop-shadow(0 4px 3px #47395c88)
+}
+
+.pad:before,.pad:after {
+  content:'';
+  position:absolute;
+  background:linear-gradient(135deg,#5b5366,#393440);
+  box-shadow:inset 1px 1px 1px #958a9f;
+  border-radius:5px
+}
+
+.pad:before {
+  left:37px;
+  top:0;
+  width:38px;
+  height:112px
+}
+
+.pad:after {
+  left:0;
+  top:37px;
+  width:112px;
+  height:38px
+}
+
+.pad i {
+  position:absolute;
+  z-index:1;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#49414f;
+  top:47px;
+  left:47px;
+  box-shadow:inset 0 2px 3px #302b39
+}
+
+.ab {
+  position:absolute;
+  right:39px;
+  top:190px;
+  width:150px;
+  height:105px;
+  transform:rotate(-24deg);
+  border-radius:65px;
+  background:#6a589835;
+  box-shadow:inset 0 3px 6px #4c3b7350
+}
+
+.ab i {
+  position:absolute;
+  top:20px;
+  width:59px;
+  height:59px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#746c7b,#4b4655);
+  box-shadow:inset 0 2px 1px #b4a7ba,0 5px 5px #4e3c7199;
+  color:#d4c7e4;
+  display:grid;
+  place-items:center;
+  font-style:normal;
+  font-size:20px
+}
+
+.ab i:first-child {
+  left:10px
+}
+
+.ab i:last-child {
+  right:10px
+}
+
+.power {
+  position:absolute;
+  right:90px;
+  top:142px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  color:#e3d8f1;
+  font-size:8px;
+  letter-spacing:1px
+}
+
+.power i {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#bee1a2;
+  box-shadow:0 1px 3px #31442d
+}
+
+.select-start {
+  position:absolute;
+  left:61px;
+  top:350px;
+  display:flex;
+  gap:16px;
+  transform:rotate(10deg)
+}
+
+.select-start span {
+  font-size:7px;
+  letter-spacing:1px;
+  color:#e2d6ec;
+  text-align:center
+}
+
+.select-start i {
+  display:block;
+  width:34px;
+  height:9px;
+  border-radius:8px;
+  background:#5e536e;
+  box-shadow:inset 0 2px #342d43;
+  margin-bottom:8px
+}
+
+.speaker {
+  position:absolute;
+  right:53px;
+  bottom:96px;
+  display:flex;
+  gap:10px;
+  transform:rotate(20deg)
+}
+
+.speaker i {
+  width:4px;
+  height:40px;
+  border-radius:4px;
+  background:#57477e;
+  box-shadow:1px 0 #a592c8
+}
+
+.after {
+  text-align:center;
+  margin:32px auto 0;
+  color:#6d6078;
+  font-size:14px
+}
+
+.after em {
+  font-style:normal;
+  color:#594275;
+  font-weight:700
+}
+
+.bottom {
+  max-width:1280px;
+  display:flex;
+  justify-content:space-between;
+  margin:28px auto 0;
+  gap:24px;
+  color:#6d6378;
+  font-size:10px;
+  line-height:1.6
+}
+
+.bottom a {
+  text-decoration:underline;
+  text-underline-offset:3px
+}
+
+a:focus-visible {
+  outline:3px solid #b8835f;
+  outline-offset:4px
+}
+
+@media(max-width:1000px) {
+  .console {
+    height:auto;
+    padding:32px 90px;
+    border-radius:90px
+  }
+
+  .bezel {
+    width:100%;
+    padding:18px
+  }
+
+  .pad {
+    transform:scale(.55);
+    transform-origin:left center;
+    left:18px;
+    top:35%
+  }
+
+  .ab {
+    transform:scale(.55) rotate(-24deg);
+    transform-origin:right center;
+    right:8px;
+    top:30%
+  }
+
+  .power,.speaker,.select-start {
+    display:none
+  }
+
+  .lcd {
+    aspect-ratio:auto;
+    min-height:350px;
+    padding:18px
+  }
+
+  .game-menu a {
+    font-size:14px
+  }
+
+  .intro h1 {
+    font-size:44px
+  }
+
+}
+
+@media(max-width:620px) {
+  .page {
+    padding:22px 16px
+  }
+
+  .top {
+    font-size:11px
+  }
+
+  .intro {
+    margin-top:42px
+  }
+
+  .intro h1 {
+    font-size:38px
+  }
+
+  .intro p {
+    font-size:14px
+  }
+
+  .console {
+    margin-top:35px;
+    padding:25px 14px 58px;
+    border-radius:40px 40px 55px 55px
+  }
+
+  .bezel {
+    padding:14px 10px 10px;
+    border-radius:18px 18px 25px 25px
+  }
+
+  .lcd {
+    aspect-ratio:auto;
+    min-height:340px;
+    padding:24px 12px
+  }
+
+  .lcd-logo {
+    width:220px;
+    height:48px
+  }
+
+  .lcd h2 {
+    font-size:10px
+  }
+
+  .game-menu a {
+    font-size:13px;
+    padding:11px 10px 11px 28px
+  }
+
+  .game-menu a.selected:before {
+    left:11px
+  }
+
+  .game-menu small {
+    font-size:9px
+  }
+
+  .screen-tip {
+    font-size:8px
+  }
+
+  .pad,.ab,.console:before {
+    display:none
+  }
+
+  .select-start {
+    display:flex;
+    top:auto;
+    bottom:17px;
+    left:calc(50% - 42px);
+    transform:none
+  }
+
+  .select-start i {
+    width:27px
+  }
+
+  .select-start span {
+    font-size:6px
+  }
+
+  .bezel-label {
+    font-size:10px
+  }
+
+  .after {
+    line-height:1.8;
+    font-size:12px
+  }
+
+  .bottom {
+    flex-direction:column;
+    text-align:center;
+    gap:10px;
+    font-size:9px
+  }
+
+}
+
+.skip-link {
+  position:absolute;
+  top:-100px;
+  left:20px;
+  padding:10px 16px;
+  border-radius:8px;
+  background:#eee7c7;
+  color:#34344d;
+  z-index:10
+}
+
+.skip-link:focus {
+  top:15px
+}
+
+.game-menu a:focus-visible {
+  outline:3px solid #efbd89;
+  outline-offset:3px
+}
+
+.screen-tip {
+  letter-spacing:.04em
+}
+
+@media(prefers-reduced-motion:reduce) {
+  * {
+    scroll-behavior:auto!important
+  }
+
+}

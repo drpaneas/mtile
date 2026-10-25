@@ -2286,7 +2286,7 @@ func builtinNoAlloc(name string) bool {
 		"del", "deli", "count", "all", "pairs",
 		"sget", "sset", "fget", "fset", "mget", "mset",
 		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "pspr", "anim", "map",
-		"camera", "clip", "pal", "palt", "color", "cursor":
+		"camera", "clip", "pal", "palt", "pvariant", "color", "cursor":
 		return true
 	}
 	return false

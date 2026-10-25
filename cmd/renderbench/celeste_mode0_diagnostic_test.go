@@ -26,7 +26,7 @@ func TestCelesteMode0SourceDiagnostic(t *testing.T) {
 	if os.Getenv("MTILE_CELESTE_MODE0_SOURCE") != "1" {
 		t.Skip("set MTILE_CELESTE_MODE0_SOURCE=1 to inspect public Mode 0 admission and scalar pose storage")
 	}
-	project, err := filepath.Abs(filepath.Join("..", "..", "examples", "celeste-mode0"))
+	project, err := filepath.Abs(filepath.Join("..", "..", "research", "celeste-mode0"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestCelesteMode0NativeDiagnostic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	source := filepath.Join(repository, "examples", "celeste-mode0")
+	source := filepath.Join(repository, "research", "celeste-mode0")
 	out, project, runtimeDir, routeLength := prepareCelesteParallaxProbe(t, os.TempDir(), source,
 		filepath.Join(repository, "runtime"), "celeste-mode0-")
 	// Reuse the low byte of the existing display watch rather than displacing

@@ -18,7 +18,7 @@ func TestFunctionPhysicsDiagnostic(t *testing.T) {
 	service.Debug = true
 	// Keep later call-path optimizations out of this function-signature A/B.
 	service.DisableNoAllocFunctionCalls = true
-	project := filepath.Join("..", "..", "examples", "function-physics-stress")
+	project := filepath.Join("..", "..", "testdata", "projects", "function-physics-stress")
 	helper := filepath.Join("..", "..", "build", "player", "mtile-player")
 	baselineService := service
 	baselineService.DisableMonomorphicFunctions = true

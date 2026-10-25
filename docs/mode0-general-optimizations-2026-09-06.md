@@ -1,13 +1,13 @@
 # General mtile optimizations measured with Celeste Mode 0
 
-The optimized game is `examples/celeste-mode0`, using ordinary public Mode 0.
+The optimized game is `research/celeste-mode0`, using ordinary public Mode 0.
 The compiler and runtime changes below apply by types, dimensions and rendering
 state, without checking game names, source identifiers or particular sprite IDs.
 The original `examples/celeste` is separate. No new Lua builtin, renderer
 classification, AUTO admission exception or experimental flag was added.
 
 ```sh
-go run ./cmd/mtile edit examples/celeste-mode0
+go run ./cmd/mtile edit research/celeste-mode0
 ```
 
 ## What changed, and how
@@ -217,7 +217,7 @@ Artifacts are under `build/experiments/mode0-general-optimizations/`:
 MTILE_CELESTE_MODE0_NATIVE=1 go test ./cmd/renderbench \
   -tags=runtimeperfdiagnostic -run '^TestCelesteMode0NativeDiagnostic$' \
   -count=1 -timeout=15m -v
-python3 examples/celeste-mode0/tests/verify_all.py --gba
+python3 research/celeste-mode0/tests/verify_all.py --gba
 go test ./internal/transpiler ./internal/build ./cmd/mtile
 cd runtime && go test ./...
 ```

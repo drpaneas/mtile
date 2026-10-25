@@ -10,3 +10,6 @@ Open it in Music Lab with:
 ```sh
 go run ./cmd/mtile edit examples/audio-gb-melody
 ```
+
+In the cartridge, **A plays/restarts** the song and **B stops** it. In the
+editor preview, click the display first; Z is A and X is B.

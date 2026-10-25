@@ -24,7 +24,7 @@ func TestCallSiteCloningDiagnostic(t *testing.T) {
 	}
 	service.Debug = true
 
-	baseProject := filepath.Join("..", "..", "examples", "testio")
+	baseProject := filepath.Join("..", "..", "testdata", "projects", "testio")
 	workloads := filepath.Join("testdata", "workloads")
 	baselineProject, err := stageProjectWithSource(baseProject, filepath.Join(workloads, "callsite_clone_baseline.lua"))
 	if err != nil {

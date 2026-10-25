@@ -13,3 +13,6 @@ go run ./cmd/mtile render-audio examples/audio-gb-song
 The checked-in `music-preview.wav` is the same PSG simulation that feeds the
 Music Lab Play button. It contains all four channels and is useful for checking
 host audio independently of the editor window.
+
+In the cartridge, **A plays/restarts** the song and **B stops** it. In the
+editor preview, click the display first; Z is A and X is B.

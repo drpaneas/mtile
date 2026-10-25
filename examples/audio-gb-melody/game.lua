@@ -3,8 +3,8 @@ function _init()
 end
 
 function _update()
-  if btnp(4) then music(0) end
-  if btnp(5) then music(-1) end
+  if btnp(5) then music(0) end
+  if btnp(4) then music(-1) end
 end
 
 function _draw()

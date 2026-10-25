@@ -214,7 +214,7 @@ func TestPow2DivisionAndModulo(t *testing.T) {
 }
 
 func TestCelesteMode0SpecializesTileDivision(t *testing.T) {
-	dir := filepath.Join("..", "..", "examples", "celeste-mode0")
+	dir := filepath.Join("..", "..", "research", "celeste-mode0")
 	if _, err := os.Stat(filepath.Join(dir, "game.lua")); err != nil {
 		t.Skip("celeste-mode0 example is not present")
 	}

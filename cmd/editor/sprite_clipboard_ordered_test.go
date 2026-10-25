@@ -153,7 +153,11 @@ func TestSpritePasteDitherToggleLatency(t *testing.T) {
 	img := spriteDitherFixture(128, 128)
 	results := make(map[string]any)
 	for _, p := range []struct{ name, project string }{{"pico-8", "pong"}, {"aurora", "testio"}} {
-		palette, err := assetsync.LoadPalette(filepath.Join("..", "..", "examples", p.project), p.name)
+		base := "examples"
+		if p.project == "testio" {
+			base = filepath.Join("testdata", "projects")
+		}
+		palette, err := assetsync.LoadPalette(filepath.Join("..", "..", base, p.project), p.name)
 		if err != nil {
 			t.Fatal(err)
 		}

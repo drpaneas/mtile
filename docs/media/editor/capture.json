@@ -1,0 +1,39 @@
+{
+  "Width": 1600,
+  "Height": 1000,
+  "Captures": [
+    {
+      "image": "shared-tiles.png",
+      "project": "examples/background-layers"
+    },
+    {
+      "image": "poses.png",
+      "project": "examples/nerdo"
+    },
+    {
+      "image": "animations.png",
+      "project": "examples/nerdo"
+    },
+    {
+      "image": "color-variants.png",
+      "project": "examples/nerdo"
+    },
+    {
+      "image": "map-rooms.png",
+      "project": "examples/background-layers"
+    },
+    {
+      "image": "audio.png",
+      "project": "examples/audio-gb-melody"
+    },
+    {
+      "image": "develop.png",
+      "project": "examples/nerdo"
+    },
+    {
+      "image": "preferences.png",
+      "project": "examples/nerdo"
+    }
+  ],
+  "Note": "Actual editor Draw output; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated."
+}

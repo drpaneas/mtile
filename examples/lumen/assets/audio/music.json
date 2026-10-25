@@ -1,0 +1,1476 @@
+{
+  "version": 2,
+  "ppqn": 96,
+  "clips": [
+    {
+      "id": 0,
+      "name": "Ember gathered",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 24,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 10,
+          "note": 86,
+          "soundId": 4,
+          "priority": 160
+        },
+        {
+          "tick": 12,
+          "durationTicks": 12,
+          "note": 93,
+          "soundId": 4,
+          "priority": 160
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Lantern restored",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 84,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 15,
+          "note": 74,
+          "soundId": 5,
+          "priority": 176
+        },
+        {
+          "tick": 18,
+          "durationTicks": 15,
+          "note": 81,
+          "soundId": 5,
+          "priority": 176
+        },
+        {
+          "tick": 36,
+          "durationTicks": 18,
+          "note": 86,
+          "soundId": 5,
+          "priority": 176
+        },
+        {
+          "tick": 57,
+          "durationTicks": 27,
+          "note": 90,
+          "soundId": 5,
+          "priority": 176
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Air dash",
+      "kind": "ch4",
+      "sfx": true,
+      "lengthTicks": 18,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 18,
+          "note": 60,
+          "soundId": 6,
+          "priority": 160
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Bruised wing",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 36,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 16,
+          "note": 53,
+          "soundId": 7,
+          "priority": 168
+        },
+        {
+          "tick": 18,
+          "durationTicks": 18,
+          "note": 48,
+          "soundId": 7,
+          "priority": 168
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "The garden remembers",
+      "kind": "ch1",
+      "sfx": true,
+      "lengthTicks": 192,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 24,
+          "note": 74,
+          "soundId": 8,
+          "priority": 192
+        },
+        {
+          "tick": 27,
+          "durationTicks": 24,
+          "note": 78,
+          "soundId": 8,
+          "priority": 192
+        },
+        {
+          "tick": 54,
+          "durationTicks": 24,
+          "note": 81,
+          "soundId": 8,
+          "priority": 192
+        },
+        {
+          "tick": 81,
+          "durationTicks": 27,
+          "note": 85,
+          "soundId": 8,
+          "priority": 192
+        },
+        {
+          "tick": 111,
+          "durationTicks": 27,
+          "note": 86,
+          "soundId": 8,
+          "priority": 192
+        },
+        {
+          "tick": 141,
+          "durationTicks": 51,
+          "note": 90,
+          "soundId": 8,
+          "priority": 192
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "The sleeping gate / dew",
+      "kind": "ch1",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 96,
+          "durationTicks": 84,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 288,
+          "durationTicks": 72,
+          "note": 76,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 576,
+          "durationTicks": 144,
+          "note": 73,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 816,
+          "durationTicks": 96,
+          "note": 74,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 72,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 144,
+          "note": 81,
+          "soundId": 0,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "name": "The sleeping gate / glass",
+      "kind": "ch2",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 72,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 144,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 192,
+          "durationTicks": 30,
+          "note": 76,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 264,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 336,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 384,
+          "durationTicks": 30,
+          "note": 61,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 456,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 528,
+          "durationTicks": 30,
+          "note": 76,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 576,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 648,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 720,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 768,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 840,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 912,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 960,
+          "durationTicks": 30,
+          "note": 73,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1032,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1224,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1416,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1488,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "The sleeping gate / root",
+      "kind": "ch3",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 276,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 288,
+          "durationTicks": 84,
+          "note": 45,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 384,
+          "durationTicks": 276,
+          "note": 37,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 672,
+          "durationTicks": 84,
+          "note": 44,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 768,
+          "durationTicks": 276,
+          "note": 35,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1056,
+          "durationTicks": 84,
+          "note": 42,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 276,
+          "note": 31,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1440,
+          "durationTicks": 84,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "name": "The sleeping gate / pollen",
+      "kind": "ch4",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Glass under leaves / dew",
+      "kind": "ch1",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 48,
+          "durationTicks": 120,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 336,
+          "durationTicks": 72,
+          "note": 76,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 624,
+          "durationTicks": 96,
+          "note": 74,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 864,
+          "durationTicks": 120,
+          "note": 71,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 96,
+          "note": 73,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1368,
+          "durationTicks": 120,
+          "note": 76,
+          "soundId": 0,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Glass under leaves / glass",
+      "kind": "ch2",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 72,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 144,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 192,
+          "durationTicks": 30,
+          "note": 76,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 264,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 336,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 384,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 456,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 528,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 576,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 648,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 720,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 768,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 840,
+          "durationTicks": 30,
+          "note": 67,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 912,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 960,
+          "durationTicks": 30,
+          "note": 71,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1032,
+          "durationTicks": 30,
+          "note": 67,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1224,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 30,
+          "note": 74,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1416,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1488,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Glass under leaves / root",
+      "kind": "ch3",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 276,
+          "note": 30,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 288,
+          "durationTicks": 84,
+          "note": 37,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 384,
+          "durationTicks": 276,
+          "note": 31,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 672,
+          "durationTicks": 84,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 768,
+          "durationTicks": 276,
+          "note": 28,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1056,
+          "durationTicks": 84,
+          "note": 35,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 276,
+          "note": 33,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1440,
+          "durationTicks": 84,
+          "note": 40,
+          "soundId": 2,
+          "priority": 80
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Glass under leaves / pollen",
+      "kind": "ch4",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Fireflies remember / dew",
+      "kind": "ch1",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 96,
+          "durationTicks": 144,
+          "note": 81,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 384,
+          "durationTicks": 96,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 672,
+          "durationTicks": 72,
+          "note": 76,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 864,
+          "durationTicks": 144,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 96,
+          "note": 81,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1392,
+          "durationTicks": 120,
+          "note": 83,
+          "soundId": 0,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Fireflies remember / glass",
+      "kind": "ch2",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 30,
+          "note": 61,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 72,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 144,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 192,
+          "durationTicks": 30,
+          "note": 73,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 264,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 336,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 384,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 456,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 528,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 576,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 648,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 720,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 768,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 840,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 912,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 960,
+          "durationTicks": 30,
+          "note": 76,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1032,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 30,
+          "note": 61,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1224,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 30,
+          "note": 71,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1416,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1488,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Fireflies remember / root",
+      "kind": "ch3",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 276,
+          "note": 35,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 288,
+          "durationTicks": 84,
+          "note": 42,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 384,
+          "durationTicks": 276,
+          "note": 31,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 672,
+          "durationTicks": 84,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 768,
+          "durationTicks": 276,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1056,
+          "durationTicks": 84,
+          "note": 45,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 276,
+          "note": 33,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1440,
+          "durationTicks": 84,
+          "note": 40,
+          "soundId": 2,
+          "priority": 80
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Fireflies remember / pollen",
+      "kind": "ch4",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "name": "A path toward morning / dew",
+      "kind": "ch1",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 48,
+          "durationTicks": 120,
+          "note": 79,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 288,
+          "durationTicks": 72,
+          "note": 78,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 576,
+          "durationTicks": 144,
+          "note": 74,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 864,
+          "durationTicks": 96,
+          "note": 73,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 96,
+          "note": 76,
+          "soundId": 0,
+          "priority": 104
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 144,
+          "note": 74,
+          "soundId": 0,
+          "priority": 104
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "name": "A path toward morning / glass",
+      "kind": "ch2",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 72,
+          "durationTicks": 30,
+          "note": 67,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 144,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 192,
+          "durationTicks": 30,
+          "note": 71,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 264,
+          "durationTicks": 30,
+          "note": 67,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 336,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 384,
+          "durationTicks": 30,
+          "note": 59,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 456,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 528,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 576,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 648,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 720,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 768,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 840,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 912,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 960,
+          "durationTicks": 30,
+          "note": 74,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1032,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1104,
+          "durationTicks": 30,
+          "note": 64,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 30,
+          "note": 62,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1224,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1296,
+          "durationTicks": 30,
+          "note": 76,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1344,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1416,
+          "durationTicks": 30,
+          "note": 66,
+          "soundId": 1,
+          "priority": 88
+        },
+        {
+          "tick": 1488,
+          "durationTicks": 30,
+          "note": 69,
+          "soundId": 1,
+          "priority": 88
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "name": "A path toward morning / root",
+      "kind": "ch3",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 0,
+          "durationTicks": 276,
+          "note": 28,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 288,
+          "durationTicks": 84,
+          "note": 35,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 384,
+          "durationTicks": 276,
+          "note": 31,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 672,
+          "durationTicks": 84,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 768,
+          "durationTicks": 276,
+          "note": 33,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1056,
+          "durationTicks": 84,
+          "note": 40,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1152,
+          "durationTicks": 276,
+          "note": 38,
+          "soundId": 2,
+          "priority": 80
+        },
+        {
+          "tick": 1440,
+          "durationTicks": 84,
+          "note": 45,
+          "soundId": 2,
+          "priority": 80
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "name": "A path toward morning / pollen",
+      "kind": "ch4",
+      "lengthTicks": 1536,
+      "events": [
+        {
+          "tick": 240,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        },
+        {
+          "tick": 1008,
+          "durationTicks": 12,
+          "note": 60,
+          "soundId": 3,
+          "priority": 64
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": 0,
+      "name": "The sleeping gate",
+      "lengthTicks": 1536,
+      "bars": 4,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 16,
+        "ch2": 17,
+        "ch3": 18,
+        "ch4": 19
+      }
+    },
+    {
+      "id": 1,
+      "name": "Glass under leaves",
+      "lengthTicks": 1536,
+      "bars": 4,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 20,
+        "ch2": 21,
+        "ch3": 22,
+        "ch4": 23
+      }
+    },
+    {
+      "id": 2,
+      "name": "Fireflies remember",
+      "lengthTicks": 1536,
+      "bars": 4,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 24,
+        "ch2": 25,
+        "ch3": 26,
+        "ch4": 27
+      }
+    },
+    {
+      "id": 3,
+      "name": "A path toward morning",
+      "lengthTicks": 1536,
+      "bars": 4,
+      "beatsPerBar": 4,
+      "beatUnit": 4,
+      "lanes": {
+        "ch1": 28,
+        "ch2": 29,
+        "ch3": 30,
+        "ch4": 31
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": 0,
+      "name": "Lumen - A Garden After Dark",
+      "tempo": 80,
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "loopStart": 0
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "version": 2,
+  "sounds": [
+    {
+      "id": 0,
+      "name": "Dewbell",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 4,
+          "direction": "down",
+          "pace": 4
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    },
+    {
+      "id": 1,
+      "name": "Glass fern",
+      "kind": "ch2",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 3,
+          "direction": "down",
+          "pace": 3
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Moonroot",
+      "kind": "ch3",
+      "route": "both",
+      "wave": {
+        "samples": [
+          8,
+          9,
+          11,
+          12,
+          13,
+          13,
+          13,
+          13,
+          13,
+          13,
+          12,
+          11,
+          11,
+          10,
+          9,
+          9,
+          8,
+          7,
+          7,
+          6,
+          5,
+          5,
+          4,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          4,
+          5,
+          7
+        ],
+        "level": 25,
+        "startBank": 0,
+        "length": 0,
+        "useLength": false
+      }
+    },
+    {
+      "id": 3,
+      "name": "Pollen in moonlight",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 3,
+        "shift": 3,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 1,
+          "direction": "down",
+          "pace": 1
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Ember droplet",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 12.5,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 7,
+          "direction": "down",
+          "pace": 1
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Lantern glass",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 7,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Moth wing",
+      "kind": "ch4",
+      "route": "both",
+      "noise": {
+        "width": 15,
+        "divisor": 3,
+        "shift": 2,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 3,
+          "direction": "down",
+          "pace": 1
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Soft landing",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 5,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      },
+      "macro": {
+        "steps": [
+          {},
+          {
+            "periodDelta": -10
+          },
+          {
+            "periodDelta": -22
+          },
+          {
+            "periodDelta": -10
+          },
+          {
+            "periodDelta": -26
+          },
+          {
+            "periodDelta": -18
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "name": "Dawn blossoms",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 25,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 7,
+          "direction": "down",
+          "pace": 3
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "down",
+          "shift": 0
+        }
+      }
+    }
+  ]
+}

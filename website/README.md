@@ -4,8 +4,9 @@ A static learning site with category browsing, dedicated API pages, a first-game
 course, full-text search, and links back to the project's maintained guides.
 The category-first navigation is inspired by the
 [Nerdy Teachers guide](https://nerdyteachers.com/PICO-8/Guide/); its text,
-images, icons, and CSS are not copied. mTile's art, screenshots, and identity
-remain its own.
+images, icons, and CSS are not copied. mTile keeps its own identity and actual
+game/editor captures. An indigo handheld title screen opens into the guide;
+third-party game content in captures is credited separately.
 
 ## Build and preview
 
@@ -33,8 +34,11 @@ belong in the files below. It is ignored by Git.
 | `categories.json` | Topic names, descriptions, and ordering |
 | `content/` | Original introductory lessons |
 | `api.json` | Common call shapes, short examples, and beginner explanations |
-| `build.py` | Page routes, guide selection, templates, and link rewriting |
-| `assets/site.css` | Layout, typography, responsive behavior, and colors |
+| `build.py` | Page routes, guide selection, shared markup, asset copying, and link rewriting |
+| `templates/menu.html` | Handheld title screen and its navigation links |
+| `assets/menu.css` | Title-screen console illustration and responsive styling |
+| `assets/menu.js` | Focus and arrow-key selection in the title-screen menu |
+| `assets/site.css` | Guide layout, typography, responsive behavior, and colors |
 | `assets/site.js` | Search, mobile navigation, and copy buttons |
 | Repository Markdown | Installation, tutorial, editor, audio, performance, and renderer guides |
 
@@ -44,10 +48,28 @@ The build fails if the API index drifts from the public builtin registry.
 `sample` is deliberately excluded because native Audio v2 projects reject it;
 the API landing page explains that limitation.
 
+`docs/lua-api.md` is generated from the same `api.json`, so the repository and
+website share API explanations. After editing API text, run:
+
+```sh
+python3 scripts/docs/generate_lua_api.py
+python3 scripts/docs/generate_lua_api.py --check
+```
+
+The site tests reject a stale generated guide. Editor screenshots are copied
+from the Markdown image references during each build; see the
+[capture instructions](../docs/media/README.md#editor-screenshots).
+
 API examples show common usage, not every accepted compatibility overload.
-When editing them, check the runtime, public Lua registry, and native asset
-validation. Update renderer documentation alongside any actual API change, as
+The `TestWebsiteAPIExamples` Go test parses/transpiles every API snippet with
+fixture assets. It checks compilation, not pixel output or performance. When
+editing examples, also check runtime behavior and native asset validation. Update renderer documentation alongside any actual API change, as
 required by [AGENTS.md](../AGENTS.md).
+
+`index.html` is the title/menu screen; `guide.html` is the guide landing page.
+The menu links to the first-game course, guide, examples, and installation.
+The guide keeps the existing lesson, category, API, example, and long-guide
+routes. Its navigation includes a return to the title screen.
 
 All site routes use relative URLs, including search results. The output can
 live at a domain root or a subdirectory such as `/mtile/`. Search is a local
@@ -64,7 +86,9 @@ website/.venv/bin/python -m unittest discover -s website -p 'test_*.py'
 The checks build the entire site and verify every local link and heading
 fragment, API coverage, renderer labels, search routes, image alternatives,
 and page structure. Also inspect a desktop and mobile browser after layout
-changes, and exercise search, copy, and the topic menu with the keyboard.
+changes, and exercise title-menu selection, direct guide entry, search, copy,
+and the topic menu with the keyboard. Menu links work without JavaScript; its
+script adds Arrow Up/Down and Home/End focus navigation.
 
 The **Website** GitHub Actions workflow builds and tests the site and uploads
 an `mtile-guide` artifact. It does not publish it automatically.
@@ -81,14 +105,34 @@ release, and no repository Pages settings are changed by this build.
 
 ## Design and licensing
 
-The palette takes its cue from purple GBA shells: deep plum navigation,
-muted purple surfaces, lilac controls, and small mint/gold accents. The category
-index stays compact, while article pages leave room for readable code and a
-section table of contents. The console illustration is CSS and the icons are
-original SVG. The screen contains an actual Coin Quest ROM capture.
+The selected direction evokes an indigo GBA and the instruction booklet in its
+box. The title screen uses a CSS console shell, a dark screen, a green power
+light, and four real navigation choices. The guide carries that identity into
+cream reading surfaces, indigo chapter navigation, soft corners, and readable prose.
+See [DESIGN.md](DESIGN.md) for the design system and maintenance guidance.
 
-The bundled JetBrains Mono font is used for code and the wordmark. Its OFL
-license is copied into the output as `assets/FONT-LICENSE.txt`. Body text uses
-local system fonts. Original site code and game artwork follow the repository's
-[MIT license](../LICENSE); palette and other component attribution remain in
-the [project notices](../docs/third-party/README.md).
+There is one logo: the application asset at
+`cmd/editor/assets/mtile-header.png`, copied into the website at build time. Do
+not create a separate menu or website wordmark. The console illustration is
+CSS, the topic icons are original SVG, and the demo screen contains an actual
+Coin Quest ROM capture. The production theme does not use the decorative
+Nintendo character artwork from earlier style previews.
+
+Rubik supplies title-screen body text and guide display headings; guide prose
+and controls use Trebuchet MS / Segoe UI / system sans-serif. JetBrains Mono
+supplies code, keyboard hints, API names, and the title-screen menu. Rubik is
+bundled as `assets/Rubik.ttf` with `assets/RUBIK-OFL.txt`; JetBrains Mono and its
+SIL Open Font License notice are copied from the repository during the build.
+No external font service is required.
+
+Original site code and original project artwork follow the repository's
+[MIT license](../LICENSE). Third-party content retains its own rights; the
+project license does not cover Nintendo characters or other third-party game
+artwork present in screenshots. The title screen and guide pages retain a
+credits link and a Nintendo trademark/non-affiliation notice. Attribution and
+disclaimers do not grant permission to reuse third-party material. Additional
+component attribution remains in the [project notices](../docs/third-party/README.md).
+
+The [content review](../docs/website-content-review.md) records factual corrections,
+implementation evidence, and the limits of automated verification. Run the
+API snippet gate with `go test ./internal/transpiler -run TestWebsiteAPIExamples`.

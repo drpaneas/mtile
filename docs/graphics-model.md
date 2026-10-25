@@ -1,5 +1,11 @@
 # Graphics model
 
+New to maps? Start with [Tidewalk](../examples/tidewalk/README.md): one map,
+then a following camera, then a slower distant plane. For discrete room
+changes and entry positions, try [Lantern Rooms](../examples/lantern-rooms/README.md).
+Both include ready artwork and small runnable lessons. Return here when you
+need the exact storage, coordinates, and drawing-order rules.
+
 This document records Mtile's logical-background semantics. Version-0 map
 assets remain supported as BG0; version 2 adds four independently authored
 planes. The Lua API deliberately changed so the first argument of every
@@ -10,7 +16,8 @@ non-empty `map(...)` call is always the logical BG number.
 One project currently owns:
 
 - one shared 8bpp spritesheet addressed as complete 8x8 cells;
-- an optional ROM-backed animation sheet, pose recipes, and named animation clips;
+- an optional ROM-backed animation sheet, pose recipes, named animation clips,
+  and project-wide pose color variants;
 - one logical map asset, either one legacy plane or four versioned BG planes,
   whose cells contain spritesheet IDs;
 - one eight-bit flag value per spritesheet cell; and
@@ -40,6 +47,26 @@ named clips from poses across pages. `assets/animation.json` stores page metadat
 and clip names, pose order, FPS and loop behavior. Builds compile clips for
 `anim(name, x, y)` and deduplicate equal nonblank tile pixels. Source copies stay
 independently editable; poses referencing one source tile share its edits.
+
+Pose color variants are named simultaneous palette-index replacements stored
+in `assets/poses.json`. `pvariant` changes subsequent pose/animation draws,
+not source pixels or shared-sheet map/sprite draws. Mode 0 can share 4bpp
+pixels across variants with separate hardware palettes; Mode 4 compiles exact
+recolored artwork. See the [authoring workflow](ide.md#color-variants) and
+[renderer restrictions](render-modes.md#pose-color-variants-pvariant).
+
+### Choosing an object draw API
+
+For characters and reusable object artwork, start with registered poses:
+`pspr` draws a still visual state and `anim` selects a pose from a timed clip.
+Use `spr` when a shared-sheet cell or simple rectangle already does the job,
+especially art also used by the map. Terrain belongs in shared tiles and maps.
+
+The [sprites, poses, and animations decision guide](poses-and-animations.md)
+compares concrete use cases, replaces manual frame arithmetic, and shows how
+to restart or pause an action. It also distinguishes authoring benefits from
+conditional Mode 0 packing and memory benefits; no object API guarantees
+hardware rendering or a lower OAM count by itself.
 
 ## `map()` contract
 
@@ -389,19 +416,22 @@ its poses so the flip axis stays fixed throughout playback. The build stores
 the two coordinate adjustments in ROM; drawing needs no bounds scan or extra
 tile upload just to change facing. Mode 4 blits those cells from the
 object sheet when present, otherwise the spritesheet. Proven Mode 0 carts
-compile exact larger hardware objects from complete pose rectangles and
-stream their pixels into disjoint OBJ VRAM windows. Ordinary sprites and
+compile exact larger hardware objects from complete pose rectangles, using
+proven streaming windows or an immutable resident bank. Ordinary sprites and
 multiple poses can share a frame. Sprite Lab separates Shared tiles, Poses and
 Animations tabs, with uniform OBJ pages, PNG clipboard imports, named clips
 playable from Lua, and tile-reuse highlighting. Page additions and switches need no restart; artwork,
 poses, pages, and clips participate in undo and normal project saves.
-Pose pixels are staged before VBlank in a buffer sized to the compiled working
-set, then committed in bulk. See [the renderer contract](render-modes.md) and
+Streaming pose pixels are staged before VBlank in a buffer sized to the compiled
+working set, then committed in bulk. Eligible immutable reachable pose libraries
+can instead remain resident in OBJ VRAM after one startup upload, without that
+staging buffer. See [the renderer contract](render-modes.md) and
 [the implementation plan](pspr-capacity-plan.md) for budgets and verification.
-4bpp palette allocation and cross-character VRAM sharing
-remain held. Do not begin those while Stages
-3-6 are unsettled. They multiply allocator and renderer work and would turn
-the remaining background-tile problems into an engine architecture commitment.
+Pose color variants now use bounded 4bpp OBJ palette allocation where the
+renderer proof permits it. This does not provide a general 4bpp background
+allocator or unrestricted cross-character VRAM sharing; those remain separate
+engineering work. See the current renderer contract rather than treating this
+roadmap as an eligibility rule.
 
 The long-term semantic design remains recorded in
 [Semantic tile types, scene layers, and background animation](design/tile-types-proposal.md),

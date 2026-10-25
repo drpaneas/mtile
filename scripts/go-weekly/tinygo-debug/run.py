@@ -152,7 +152,7 @@ def main():
         for variant,debug in [("original",False),("patched",False),("original",True),("patched-debug",True)]:
             label = mode+"-"+("preview-" if debug else "release-")+variant
             rom = work/(label+".gba")
-            command = [harness,"-compiler",wrappers[variant],"-runtime",ROOT/"runtime","-project",ROOT/"examples/testio","-out",rom,"-renderer",mode]
+            command = [harness,"-compiler",wrappers[variant],"-runtime",ROOT/"runtime","-project",ROOT/"testdata/projects/testio","-out",rom,"-renderer",mode]
             if debug: command += ["-debug","-player",player,"-samples",args.samples]
             result = json.loads(run(command,label).stdout)
             if not debug: result["capture"] = play(rom,label)

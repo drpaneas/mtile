@@ -37,8 +37,8 @@ graphics/audio availability or compile a ROM.
 | `-template` | `blank` | `blank` or `coin-quest`, a playable game with four lessons; Coin Quest needs a sheet at least 24×8 pixels |
 | `-width` | 240 | Sprite-sheet width in pixels |
 | `-height` | 160 | Sprite-sheet height in pixels |
-| `-map-width` | 30 | Map width in 8x8 cells |
-| `-map-height` | 20 | Map height in 8x8 cells |
+| `-map-width` | automatic | Map width in 8x8 cells; normally 30, or no map if the sheet has no complete cell |
+| `-map-height` | automatic | Map height in 8x8 cells; normally 20, or no map if the sheet has no complete cell |
 
 `build` transpiles `game.lua`, embeds the assets, and links a ROM.
 
@@ -62,12 +62,13 @@ mailbox from the running cartridge; it does not invent CPU, memory, channel,
 or watch values. Host audio buffering is labelled separately from cartridge
 audio so a PSG-only game is never presented as using Direct Sound PCM.
 
-Click the tabs, press `1` through `4`, or use Tab to switch workspaces. Saves
+Click the tabs or use Tab outside text fields to switch workspaces. Keys
+`1` through `4` switch workspaces except in Map Lab, where they select BG0–BG3. Saves
 go to disk on mode switch, Ctrl/Cmd+S, normal quit, and—when enabled—before a
-build. The shared GBA-inspired shell offers CLEAN, SOFT, and FULL visual effect
-levels (`F6`). **Settings** persists that choice together with LCD treatment,
+build. The editor uses a clean, still shell. **Preferences** (Ctrl/Cmd+`,`) stores
 preview volume, autosave-before-build, and compact/comfort/large interface
-text. See the [IDE guide](ide.md) for controls and architecture.
+text; project renderer policy is saved in `project.json`. Legacy effect settings
+normalize to CLEAN. See the [IDE guide](ide.md) for controls and architecture.
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
@@ -93,6 +94,9 @@ mygame/
 ├── project.json                 # palette, renderer policy, optional Lua entry
 └── assets/
     ├── spritesheet.json         # 8bpp pixels, 8x8 sprite cells, flags
+    ├── objsheet.json            # optional pose pixel bank
+    ├── poses.json               # optional pose recipes and color variants
+    ├── animation.json           # optional OBJ page layout and named clips
     ├── map.json                 # legacy BG0 grid or versioned BG0-BG3 planes
     ├── palettes/
     │   └── aurora.json          # 16 or 256 RGB15 colors
@@ -136,6 +140,12 @@ internal build/runtime detail.
 
 ## Pose sprites and animation storage
 
+Choose `spr` for simple cells from the shared spritesheet, `pspr` for a
+complete authored character or object, and `anim` for an ordered, timed
+sequence of poses. A pose can be static; it does not need an animation clip.
+See [when to use poses and animations](poses-and-animations.md) for the
+decision table, editor workflow, and gameplay examples.
+
 `pspr(id, x, y [, flip_x [, flip_y]])` draws the zero-based pose in
 `assets/poses.json`. Each pose lists 8x8 tile IDs, pixel offsets from its origin,
 and optional per-part flips. Call-level flips mirror inside the pose's calculated
@@ -145,8 +155,9 @@ follow the renderer contract.
 
 When `assets/objsheet.json` exists, pose IDs reference tiles in that animation
 sheet; otherwise they reference the shared spritesheet. `spr`, `sspr`, `sget`,
-`sset`, and map flags continue to use the shared sheet. Animation pixels are
-immutable during gameplay and remain in compact ROM in both renderers.
+`sset`, and map flags continue to use the shared sheet. The separate object bank is immutable during gameplay and remains in compact
+ROM in both renderers. Without it, poses read the shared sheet, whose runtime
+pixels can be changed by `sset`.
 
 The editor organizes this bank into 512×320-pixel OBJ pages (2,560 tiles).
 `PAGE+` adds full pages until only 1,536 of the 65,536 source slots remain,
@@ -241,10 +252,13 @@ complete cartridge by ROM capacity. These storage limits do not imply that all
 frames can be displayed simultaneously.
 
 In Mode 0, complete nonoverlapping rectangles are packed into larger hardware
-objects, and only current poses are staged and streamed. A 64x64 rectangular
-pose can use one OAM entry. Sparse, overlapping, or individually flipped art
-may need more objects. Mode 4 keeps the original ordered cell recipe. Consult
-[render modes](render-modes.md) for exact eligibility and AUTO fallback.
+objects. A 64x64 rectangular pose can use one OAM entry. Sparse, overlapping,
+or individually flipped art may need more objects. The streaming path stages
+the active pose working set; the immutable resident alternative holds all
+statically reachable pose artwork in OBJ VRAM. Both paths budget the objects
+actually drawn against OAM and scanline limits. Mode 4 keeps the original
+ordered cell recipe. Consult [render modes](render-modes.md#implemented-mode-0-subset)
+for the exact storage, transfer, eligibility, and AUTO fallback rules.
 
 ## Game loop
 
@@ -289,7 +303,7 @@ are appended:
 | 8 | L | `ButtonL` |
 | 9 | R | `ButtonR` |
 
-Held-button repeat for `btnp`: first extra fire at 15 update ticks, then
+Held-button repeat for `btnp`: first fire on held tick 1, repeat on held tick 15, then
 every 4 - PICO-8's native schedule at the same 30 Hz rate.
 
 ## Drawing
@@ -304,9 +318,9 @@ The compatibility renderer draws into a 240x160 Mode 4 software framebuffer:
 The exhaustive [render-mode compatibility matrix](render-modes.md)
 classifies every builtin as renderer-independent, compatible with both
 backends, conditionally compatible with Mode 0, or Mode 4 only. Mode 0 supports
-statically proven map layers, camera/streaming/mutations, bounded sprites and
-text, palette remaps, full clip reset, and aligned unscaled `sspr`; unsupported
-forms fail before TinyGo. `auto` combines that semantic proof with the
+statically proven map layers, camera/streaming/mutations, bounded `spr`, `pspr`,
+`anim`, and text, palette remaps, full clip reset, and aligned unscaled `sspr`;
+unsupported forms fail before TinyGo. `auto` combines that semantic proof with the
 benchmark-backed `tile-v1` cost profile: bounded `sset`/`mset` remain eligible,
 including literal-layer `mset(bg,...)`, while runtime `fset`, dynamic-layer
 mutation, and unbounded mutation fall back exactly to Mode 4 with a diagnostic.
@@ -414,6 +428,13 @@ examples, performance guidance, and mutation pitfalls.
 
 ## Built-in functions
 
+The [complete Lua API walkthrough](lua-api.md) gives common signatures,
+examples, and behavior notes for every supported builtin. Use the detailed
+[pose/animation reference](#pose-sprites-and-animation-storage),
+[audio API](audio/api-v2.md), and [renderer contract](render-modes.md) for their
+full storage, channel, and hardware restrictions.
+
+
 The function set and calling conventions follow
 [PIGO8](https://drpaneas.com/pigo8/)'s PICO-8-style API.
 Renderer compatibility and the exact Mode 0 restrictions for every function
@@ -435,11 +456,13 @@ Tables: `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach`
 
 Strings: `sub`, `tostr`, `tonum`, `chr`, `ord`
 
-Time: `t`, `time`, `stat`
+Time/telemetry: `t`, `time`, `stat`
+
+Compatibility: `printh` accepts arguments but writes no log or file.
 
 `stat(n)` reports runtime telemetry: `stat(1)` is last tick's CPU load and
-`stat(2)` is the worst since boot, each as a 0..1 fraction of the 30 Hz
-budget (1.0 = the whole tick consumed by update, draw, and blit).
+`stat(2)` is the worst since boot, each as a fraction of the approximately 30 Hz
+budget (1.0 = the whole tick consumed; values above 1 indicate overload).
 
 Native Audio v2 games expose these bounded integer counters:
 

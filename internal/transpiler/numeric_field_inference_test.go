@@ -350,7 +350,7 @@ func TestNumericFieldSum(t *testing.T) {
 func TestCelesteExamplesDropNumericCoercionWrappers(t *testing.T) {
 	roots := []string{
 		filepath.Join("..", "..", "examples", "celeste"),
-		filepath.Join("..", "..", "examples", "celeste-mode0"),
+		filepath.Join("..", "..", "research", "celeste-mode0"),
 	}
 	found := false
 	for _, root := range roots {

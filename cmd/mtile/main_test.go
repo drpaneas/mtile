@@ -66,7 +66,7 @@ func TestRunSubcommandHelpSucceeds(t *testing.T) {
 }
 
 func TestRunRenderAudioExportsAudiblePSGWAV(t *testing.T) {
-	project := filepath.Join("..", "..", "examples", "audio-gb-editor")
+	project := filepath.Join("..", "..", "testdata", "projects", "audio-gb-editor")
 	output := filepath.Join(t.TempDir(), "preview.wav")
 	var stdout bytes.Buffer
 	if err := run([]string{"render-audio", "-o", output, project}, &stdout, &bytes.Buffer{}); err != nil {

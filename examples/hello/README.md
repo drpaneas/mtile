@@ -2,7 +2,7 @@
 
 The smallest native GBA example. It uses `_init`, `_update`, `_draw`, `btn`,
 `cls`, `spr`, and `print`. In mGBA, click the window and use the arrow keys
-(D-pad) to move the sprite one pixel per frame on the 240x160 screen.
+(D-pad) to move the sprite one pixel per update on the 240x160 screen.
 
 From the repository root:
 
@@ -10,5 +10,5 @@ From the repository root:
 go run ./cmd/mtile build examples/hello/
 ```
 
-The resulting `examples/hello/game.gba` is a native Mode 4 ROM suitable for
-mGBA.
+Build output reports the selected renderer. The ROM is `examples/hello/game.gba`;
+use the editor preview or a GBA emulator to play it.

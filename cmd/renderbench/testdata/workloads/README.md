@@ -1,6 +1,6 @@
 # Renderbench workloads
 
-These Lua files replace `examples/testio/game.lua` through `renderbench`'s
+These Lua files replace `testdata/projects/testio/game.lua` through `renderbench`'s
 `-source` flag. They deliberately reuse the same map, sheet, palette, toolchain,
 input trace, warm-up, and capture count so a paired Mode 4/Mode 0 comparison
 changes only the renderer.
@@ -178,7 +178,7 @@ Example:
 
 ```sh
 go run ./cmd/renderbench \
-  -project examples/testio \
+  -project testdata/projects/testio \
   -source cmd/renderbench/testdata/workloads/mset16.lua \
   -player build/player/mtile-player \
   -out /tmp/mtile-mset16

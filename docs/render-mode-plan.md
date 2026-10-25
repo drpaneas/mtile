@@ -15,7 +15,7 @@ the [graphics evolution roadmap](graphics-model.md#graphics-evolution-roadmap).
 
 The final software matrix used 120 paired headless-mGBA ticks per workload and
 had zero differing pixels and zero missed frames throughout. On
-`examples/testio`, Mode 0 reclaimed 34,040 EWRAM bytes and reduced median work
+`testdata/projects/testio`, Mode 0 reclaimed 34,040 EWRAM bytes and reduced median work
 from 544,417 to 38,409 cycles. Camera, bounded `sset`/`mset`, multi-BG, OBJ,
 text, palette, clip, and `sspr` profiles passed the material-win gate. Runtime
 `fset` was exact but saved only 15.67%, below the conservative 20% AUTO gate;
@@ -332,7 +332,7 @@ defers a large upload into VBlank has not won until the upload is included.
 | Sprites | 1, 32, 64, 100 distributed; bounded ID-0 inactive slots; four interleaved BG depth lanes; separate scanline-pressure case | OAM construction cost, transparent-slot fast path, exact painter-order depth, and semantic resource rejection. |
 | Text | 10 and 40 characters; static and changing | Tile-font/OBJ update crossover. |
 | Palette/clip | static and per-frame accepted changes | Register/upload pressure and semantic parity. |
-| `examples/testio` | exact project assets and Lua | First real-project proof. |
+| `testdata/projects/testio` | exact project assets and Lua | First real-project proof. |
 | GBA platformer tick | map + sprites + HUD, no Mode 4-only primitives | End-to-end game-shaped comparison. |
 | PSG coexistence | platformer tick + all four channels active | Shared timing and interrupt headroom. |
 | Mode 4 controls | `pset`, primitives, arbitrary `sspr` | Proves analyzer selects Mode 4; not a false paired comparison. |
@@ -371,7 +371,7 @@ The neutral lifecycle refactor and all later dual-renderer work must keep:
 
 ### Map-only proof gate
 
-Proceed beyond the first Mode 0 slice only if `examples/testio` and the static
+Proceed beyond the first Mode 0 slice only if `testdata/projects/testio` and the static
 map scenarios have:
 
 - zero pixel differences;
@@ -383,7 +383,7 @@ map scenarios have:
 
 These are minimum evidence thresholds, not promises for every compatible game.
 
-The first `examples/testio` run passed all minimum thresholds:
+The first `testdata/projects/testio` run passed all minimum thresholds:
 
 | Metric | Mode 4 | Mode 0 | Gate result |
 | --- | ---: | ---: | --- |
@@ -400,7 +400,7 @@ Reproduce the paired emulator gate from the repository root:
 
 ```sh
 go run ./cmd/renderbench \
-  -project examples/testio \
+  -project testdata/projects/testio \
   -player build/player/mtile-player
 ```
 
@@ -452,7 +452,7 @@ Deliverables:
 
 - pin toolchain/emulator metadata;
 - capture current Mode 4 microbenchmarks, game-shaped scenarios, linker memory,
-  `examples/testio` frames, and PSG coexistence;
+  `testdata/projects/testio` frames, and PSG coexistence;
 - define the checked-in result schema.
 
 Exit: results are reproducible and the same ROM hash gives stable cycle ranges.
@@ -483,11 +483,11 @@ Exit: incompatible projects fail before TinyGo; default builds are unchanged.
 Deliverables:
 
 - one 8bpp BG map, frame-initial `cls`, and default transparency;
-- exact `examples/testio` Mode 0 ROM;
+- exact `testdata/projects/testio` Mode 0 ROM;
 - Mode 0 linker/VRAM allocation validation;
 - paired map benchmarks and LCD parity captures.
 
-Exit: the `examples/testio` gate passed. Camera, streaming, mutations, sprites,
+Exit: the `testdata/projects/testio` gate passed. Camera, streaming, mutations, sprites,
 and text remain deferred; do not infer them from this result.
 
 ### 4. Map streaming and mutations — complete
@@ -547,7 +547,7 @@ fallback from Mode 4 remains a separate compatibility decision.
 ## Historical first stop point
 
 The first implementation effort ends after Milestone 3. The complete narrow
-outcome is: **the exact `examples/testio` project builds in both modes, produces
+outcome is: **the exact `testdata/projects/testio` project builds in both modes, produces
 identical captured frames, and has a trustworthy paired CPU/memory report.**
 
 That evidence authorized the completed later milestones above. It is retained

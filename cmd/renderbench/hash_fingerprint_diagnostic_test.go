@@ -66,7 +66,7 @@ func TestHashFingerprintDiagnostic(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			project, err := stageProjectWithSource(filepath.Join("..", "..", "examples", workload.project), filepath.Join("testdata", "workloads", workload.fixture))
+			project, err := stageProjectWithSource(filepath.Join("..", "..", diagnosticProjectPath(workload.project)), filepath.Join("testdata", "workloads", workload.fixture))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -200,7 +200,7 @@ func TestHashFingerprintCelesteDiagnostic(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, project, frozenBaseline, routeLength := prepareCelesteParallaxProbe(t, parent,
-		filepath.Join(repository, "examples", "celeste-mode0"), baseline, "celeste-")
+		filepath.Join(repository, "research", "celeste-mode0"), baseline, "celeste-")
 	// Mode 0's baseline native-audio/pal/four-BG guard rejects this game. This
 	// attempted Mode 4 fallback also failed baseline linking: .data overflowed
 	// IWRAM by 880 bytes and .bss by 1252 bytes. Neither yields candidate timing.

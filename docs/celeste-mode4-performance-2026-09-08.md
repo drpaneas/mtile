@@ -15,7 +15,7 @@ blitting and map caching apply to Mode 4.
 The baseline is the reviewed working tree after the separate
 [division optimization pass](division-performance-2026-09-08.md). This comparison
 uses the original `examples/celeste`, whose AUTO policy selects Mode 4. It does
-not use the separate `examples/celeste-mode0` port. Measurements are GBA CPU
+not use the separate `research/celeste-mode0` port. Measurements are GBA CPU
 cycles from TinyGo ROMs executed by the pinned mGBA core; they are not host
 Activity Monitor CPU percentages. The 30 Hz work budget is 561,792 cycles.
 

@@ -93,7 +93,11 @@ func TestCelesteParallaxCompareDiagnostic(t *testing.T) {
 	projects := make(map[string]string)
 	var inputs []int
 	for _, name := range []string{"celeste", "celeste-parallax"} {
-		source := filepath.Join(root, "examples", name)
+		base := "examples"
+		if name == "celeste-parallax" {
+			base = "research"
+		}
+		source := filepath.Join(root, base, name)
 		snapshot := filepath.Join(out, "snapshot", name)
 		if err := tileCanvasCopyTree(source, snapshot, true); err != nil {
 			t.Fatal(err)

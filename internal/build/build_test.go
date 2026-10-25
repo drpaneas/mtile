@@ -1506,9 +1506,13 @@ func examplesProjectDir(t *testing.T, name string) string {
 	if !ok {
 		t.Fatal("runtime.Caller could not locate this test file")
 	}
-	dir := filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "examples", name))
+	base := "examples"
+	if name == "audio-gb-editor" || name == "parallax-rectangles" {
+		base = filepath.Join("testdata", "projects")
+	}
+	dir := filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", base, name))
 	if info, err := os.Stat(filepath.Join(dir, GameFileName)); err != nil || info.IsDir() {
-		t.Fatalf("examples/%s fixture is missing or invalid: %v", name, err)
+		t.Fatalf("%s fixture is missing or invalid: %v", dir, err)
 	}
 	return dir
 }

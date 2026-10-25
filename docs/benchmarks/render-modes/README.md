@@ -20,7 +20,7 @@ from the statically enumerated set `{1,32,35}`. Compiler tests for
 and `layered-map-access-v1.json` records the layer-first `mget`/`mset` API,
 legacy hot-path controls, literal-layer AUTO bound, and dynamic-layer holdback.
 The original matrix, packed-sprite, and OAM-budget records use
-`examples/testio`; the other focused records use their own authored projects.
+`testdata/projects/testio`; the other focused records use their own authored projects.
 Every record uses TinyGo 0.41.1, a pinned headless mGBA helper, 20 warm-up
 frames, and 120 synchronized 30 Hz ticks. Deferred Mode 0 VRAM/OAM work is
 included in total cycles.

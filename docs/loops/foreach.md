@@ -230,9 +230,9 @@ Lua `Value` operations are not free. For short object lists this is usually
 irrelevant, but an inline `all()` or numeric loop avoids callback overhead in
 a measured hot path.
 
-Also note that the current `all()` implementation checks the table's
-contiguous length as it iterates. For a long stable array, a numeric loop
-caches the length once and is the more predictable choice:
+The generic `all()` path checks the table's contiguous length as it iterates.
+The compiler can hoist that length when it proves the loop cannot mutate the
+array structure. A numeric loop makes a single captured upper bound explicit:
 
 ```lua
 local n = #objects

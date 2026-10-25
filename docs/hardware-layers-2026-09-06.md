@@ -30,7 +30,7 @@ unchanged.
 This follow-up changes no original Celeste Lua or assets. It adds:
 
 * A generic optimization to the ordinary Mode 0 map materialization loop.
-* An editable, independent `examples/parallax-rectangles` demonstration using
+* An editable, independent `testdata/projects/parallax-rectangles` demonstration using
   the existing public renderer and APIs.
 * A separately enabled hardware OBJ experiment on top of the private canvas.
 
@@ -77,7 +77,7 @@ also requires no misses in the Mode 4 control. No gate threshold was changed.
 Open and run the example normally:
 
 ```sh
-go run ./cmd/mtile edit examples/parallax-rectangles
+go run ./cmd/mtile edit testdata/projects/parallax-rectangles
 ```
 
 Celeste currently moves 17 clouds independently, with random speeds and new
@@ -149,7 +149,7 @@ MTILE_TILECANVAS_DIAGNOSTIC=1 MTILE_TILECANVAS_OBJECTS=1 \
   go test ./cmd/renderbench -tags=runtimeperfdiagnostic \
   -run '^TestCelesteTileCanvasDiagnostic$' -count=1 -timeout=15m -v
 
-go run ./cmd/renderbench -project examples/parallax-rectangles \
+go run ./cmd/renderbench -project testdata/projects/parallax-rectangles \
   -samples 260 -gate parity -out /tmp/mtile-parallax-rectangles
 ```
 

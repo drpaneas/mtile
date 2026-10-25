@@ -5,7 +5,7 @@
     "signature": "btn(index)",
     "summary": "Check whether a button is held down.",
     "example": "if btn(0) then x -= 2 end",
-    "note": "Use indices 0\u20133 for left, right, up, and down; 4 is B and 5 is A. In the editor preview, Z is A and X is B."
+    "note": "Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B."
   },
   {
     "name": "btnp",
@@ -13,15 +13,15 @@
     "signature": "btnp(index)",
     "summary": "React to a button press, with held-button repeat.",
     "example": "if btnp(5) then score = 0 end",
-    "note": "A held button repeats after 15 update ticks and then every four ticks. Use btn() for continuous movement."
+    "note": "Fires on held tick 1, then 15, 19, 23, and every four held ticks thereafter. Releasing resets the counter. Use btn() for continuous movement."
   },
   {
     "name": "spr",
     "category": "sprites",
     "signature": "spr(id, x, y [, w, h, flip_x, flip_y])",
-    "summary": "Draw a sprite from your sheet.",
+    "summary": "Draw a cell or rectangle from the shared sprite sheet.",
     "example": "spr(1, 112, 72)",
-    "note": "Sprite cells are 8\u00d78 pixels. Position is the top-left corner; width and height are in cells. Color 0 is transparent by default. Create the artwork in the Sprites workspace first."
+    "note": "Use spr for shared-sheet tiles and simple sheet-based objects, especially artwork also used by a map. Sprite cells are 8×8 pixels. Position is the top-left corner; width and height are in cells. Color 0 is transparent by default. Create the artwork in Sprite Lab → Shared Tiles first. If an object's tile layout and offsets should be reusable editor assets, draw an authored pose with pspr. If it should play an ordered sequence of poses, use anim."
   },
   {
     "name": "sspr",
@@ -30,6 +30,30 @@
     "summary": "Draw a rectangular part of the sprite sheet.",
     "example": "sspr(8, 0, 8, 8, 112, 72)",
     "note": "Source coordinates and sizes are in pixels. Scaling or arbitrary crops require the bitmap renderer; aligned, unscaled rectangles may use hardware sprites."
+  },
+  {
+    "name": "pspr",
+    "category": "sprites",
+    "signature": "pspr(id, x, y [, flip_x [, flip_y]])",
+    "summary": "Draw one authored pose: a reusable image assembled from tiles.",
+    "example": "function _draw()\n  cls(0)\n  pspr(0, 100, 60)\nend",
+    "note": "Use pspr for a static character frame, prop, effect, or UI element whose tile layout and offsets belong in Sprite Lab rather than repeated Lua spr calls. A pose may combine several tile parts; pspr draws that one pose and does not advance frames. Use anim for a timed pose sequence. Register the artwork in Sprite Lab → Poses first. IDs are zero-based; deleting a pose shifts later IDs, so update numeric references. The origin and offsets come from the recipe; flips mirror within its calculated tile bounds. Missing/out-of-range IDs draw nothing. Poses use objsheet.json when present, otherwise the shared sheet. Mode 0 still requires a proven working set and hardware resource budgets; choosing a pose alone does not guarantee eligibility."
+  },
+  {
+    "name": "anim",
+    "category": "sprites",
+    "signature": "anim(name, x, y [, flip_x [, flip_y [, elapsed_seconds]]])",
+    "summary": "Draw a timed sequence of poses using an authored animation clip.",
+    "example": "function _draw()\n  cls(0)\n  anim(\"idle\", 100, 60)\nend",
+    "note": "Use anim for walking, flying, pickups, attacks, or other ordered pose sequences: the editor owns the frame order, FPS, and loop setting instead of Lua frame-index arithmetic. Use pspr for one static pose. Register idle in Sprite Lab → Animations before building. Without elapsed_seconds, calls use the shared game clock and identical clips stay synchronized. Switching the clip name does not restart it: anim is stateless. For an action or independent entity, store started when the action begins and supply time() - started; do not reset started every draw. Negative elapsed time selects the first frame; nonlooping clips hold their final frame. Flips use a fixed rectangle across every pose in the clip. Unknown literal names fail the build; unknown dynamic names or empty clips draw nothing. No entity or playback state is allocated."
+  },
+  {
+    "name": "pvariant",
+    "category": "sprites",
+    "signature": "pvariant() / pvariant(name_or_id)",
+    "summary": "Select a named color variant for subsequent pose and animation draws.",
+    "example": "pvariant(\"alternate\")\nanim(\"idle\", 100, 60)\npvariant() -- restore original colors",
+    "note": "Create alternate in Sprite Lab → Poses → Color Variants. Variants are project-wide simultaneous palette-index replacements; index 0 remains transparent. They affect pspr and anim, not spr or maps, and remain active across frames until reset. Numeric IDs are 1-based; prefer names when editing the library. Unknown literal names fail builds; unknown dynamic names/IDs reset original colors. Mode 0 may share 4bpp pixels with separate hardware palettes; Mode 4 compiles recolored artwork. Exact resource and call-shape restrictions are in the renderer contract."
   },
   {
     "name": "sget",
@@ -45,13 +69,13 @@
     "signature": "sset(x, y, color)",
     "summary": "Change a pixel in the sprite sheet.",
     "example": "sset(8, 0, 40)",
-    "note": "This changes the game\u2019s runtime copy. It does not save artwork back to your project. Hardware rendering requires bounded mutation placement; see the renderer contract."
+    "note": "This changes the game’s runtime copy. It does not save artwork back to your project. Hardware rendering requires bounded mutation placement; see the renderer contract."
   },
   {
     "name": "fget",
     "category": "sprites",
     "signature": "fget(id [, flag])",
-    "summary": "Read a sprite\u2019s flags.",
+    "summary": "Read a sprite’s flags.",
     "example": "solid = fget(1, 0)",
     "note": "With a flag index, reads that bit; without it, returns the flag byte. Flags are useful for labeling solid or collectible tiles."
   },
@@ -59,7 +83,7 @@
     "name": "fset",
     "category": "sprites",
     "signature": "fset(id, flags) / fset(id, flag, value)",
-    "summary": "Change a sprite\u2019s flags.",
+    "summary": "Change a sprite’s flags.",
     "example": "fset(1, 0, true)",
     "note": "A flag affects the logical sprite and later map filtering. Runtime mutation can change AUTO renderer selection."
   },
@@ -69,7 +93,7 @@
     "signature": "map() / map(bg [, cx, cy, x, y, w, h, mask])",
     "summary": "Draw the tile maps you created in the editor.",
     "example": "function _draw()\n  cls(24)\n  map()\n  spr(1, 112, 72)\nend",
-    "note": "map() draws all authored non-empty planes, back to front. With arguments, the first is always a literal BG0\u2013BG3 layer. Do not mix automatic and explicit forms. Source-cell offsets contribute to world positions; read the map contract before scrolling a subsection."
+    "note": "map() draws all authored non-empty planes, back to front. With arguments, the first is always a literal BG0–BG3 layer. Do not mix automatic and explicit forms. Source-cell offsets contribute to world positions; read the map contract before scrolling a subsection."
   },
   {
     "name": "mget",
@@ -77,7 +101,7 @@
     "signature": "mget(x, y) / mget(bg, x, y)",
     "summary": "Read the sprite ID in a map cell.",
     "example": "tile = mget(3, 4)",
-    "note": "Map coordinates are in 8\u00d78 cells. The two-argument form uses BG0. Invalid coordinates or absent planes return 0."
+    "note": "Map coordinates are in 8×8 cells. The two-argument form uses BG0. Invalid coordinates or absent planes return 0."
   },
   {
     "name": "mset",
@@ -109,7 +133,7 @@
     "signature": "print(text, x, y, color)",
     "summary": "Draw text or a number on the screen.",
     "example": "print(\"COINS\", 8, 8, 15)\nprint(5, 56, 8, 15)",
-    "note": "This explicit four-argument form is the easiest to start with. Separate labels and numeric values to keep them eligible for hardware rendering. Text uses a 6\u00d78 cell font; Mode 0 has additional glyph and object limits."
+    "note": "This explicit four-argument form is the easiest to start with. Separate labels and numeric values to keep them eligible for hardware rendering. Text uses a 6×8 cell font; Mode 0 has additional glyph and object limits."
   },
   {
     "name": "pset",
@@ -194,10 +218,10 @@
   {
     "name": "pal",
     "category": "drawing",
-    "signature": "pal() / pal(source, replacement [, bank])",
+    "signature": "pal() / pal(bank) / pal(source, replacement [, bank])",
     "summary": "Remap one palette color to another.",
     "example": "pal(40, 17)",
-    "note": "Remapping changes how colors are used or displayed. Mode 0 has placement and remapping restrictions; see the exact contract."
+    "note": "Bank 0 (default) remaps subsequent drawing; bank 1 remaps the displayed palette, including already drawn pixels. pal(bank) resets that bank. pal() resets both banks and restores default transparency. Only banks 0 and 1 are supported. Mode 0 imposes placement and remapping restrictions; see the renderer contract."
   },
   {
     "name": "palt",
@@ -213,7 +237,7 @@
     "signature": "sfx(id [, priority])",
     "summary": "Play a short sound-effect clip.",
     "example": "sfx(0)",
-    "note": "Create an SFX clip with this ID in Audio first, or use Coin Quest\u2019s included clip 0. Default priority is 160. sfx(-1) stops gameplay-owned effects."
+    "note": "Create an SFX clip with this ID in Audio first, or use Coin Quest’s included clip 0. Default priority is 160. sfx(-1) stops gameplay-owned effects."
   },
   {
     "name": "music",
@@ -229,7 +253,7 @@
     "signature": "gba_note(channel, note, sound_id [, duration_ticks])",
     "summary": "Play a hardware note using a saved sound.",
     "example": "gba_note(1, 72, 0, 24)",
-    "note": "Channels are 1\u20134. The sound must match the channel. Timed notes use 96 ticks per quarter note; zero duration sustains until stopped."
+    "note": "Channels are 1–4. The sound must match the channel. Timed notes use 96 ticks per quarter note; zero duration sustains until stopped."
   },
   {
     "name": "gba_stop",
@@ -237,7 +261,7 @@
     "signature": "gba_stop(channel)",
     "summary": "Stop notes on a hardware channel.",
     "example": "gba_stop(1)",
-    "note": "Use channel numbers 1\u20134. This is a direct channel command; music and effects share these hardware channels."
+    "note": "Use channel numbers 1–4. This is a direct channel command; music and effects share these hardware channels."
   },
   {
     "name": "flr",
@@ -325,15 +349,15 @@
     "signature": "sqrt(number)",
     "summary": "Find a square root.",
     "example": "distance = sqrt(3 * 3 + 4 * 4)",
-    "note": "Fixed-point precision is finite. Squared distances are often sufficient when comparing distances."
+    "note": "Zero and negative inputs return 0. Fixed-point precision is finite; squared distances can avoid square roots when comparing distances."
   },
   {
     "name": "rnd",
     "category": "math",
     "signature": "rnd([limit])",
-    "summary": "Choose a pseudorandom number, or an item from a table.",
+    "summary": "Choose a pseudorandom fixed-point number.",
     "example": "roll = flr(rnd(6)) + 1",
-    "note": "The numeric form ranges from zero up to, but excluding, the limit. rnd() uses a limit of 1."
+    "note": "The numeric form ranges from zero up to, but excluding, a positive limit. rnd() uses a limit of 1; a zero or negative limit returns 0. Table-item selection is not implemented: choose an index with flr(rnd(#items)) + 1 for a nonempty list."
   },
   {
     "name": "srand",
@@ -357,7 +381,7 @@
     "signature": "del(table, value)",
     "summary": "Remove the first matching value from a list.",
     "example": "coins = {10, 20, 30}\ndel(coins, 20)",
-    "note": "Use deli() when you know the index rather than the value."
+    "note": "Searches the contiguous list first and shifts it when removing an item; if no list match exists, also searches named/hash entries. Returns the removed value, or nil when absent. Use deli() to remove by list index."
   },
   {
     "name": "deli",
@@ -371,24 +395,24 @@
     "name": "count",
     "category": "data",
     "signature": "count(table [, value])",
-    "summary": "Count list entries, optionally matching a value.",
+    "summary": "Count the list prefix or matching table values.",
     "example": "coins = {1, 2, 1}\ntotal = count(coins, 1)",
-    "note": "The optional value filters the count."
+    "note": "Without a value (or with nil), returns the contiguous numbered length, stopping at the first nil. With a non-nil value, counts matches across occupied array and hash slots, including named fields."
   },
   {
     "name": "all",
     "category": "data",
     "signature": "for value in all(table) do ... end",
     "summary": "Visit each value in a list.",
-    "example": "for value in all({10, 20, 30}) do\n  printh(value)\nend",
+    "example": "total = 0\nfor value in all({10, 20, 30}) do\n  total += value\nend -- total is 60",
     "note": "all() is iterator syntax here. Do not assign the iterator itself to a variable."
   },
   {
     "name": "pairs",
     "category": "data",
     "signature": "for key, value in pairs(table) do ... end",
-    "summary": "Visit a table\u2019s keys and values.",
-    "example": "for key, value in pairs({score=5}) do\n  printh(key)\nend",
+    "summary": "Visit a table’s keys and values.",
+    "example": "total = 0\nfor key, value in pairs({score=5}) do\n  total += value\nend -- total is 5",
     "note": "Do not rely on a particular traversal order."
   },
   {
@@ -396,7 +420,7 @@
     "category": "data",
     "signature": "foreach(table, callback)",
     "summary": "Call a function for each list element.",
-    "example": "function show(value)\n  printh(value)\nend\nforeach({10, 20}, show)",
+    "example": "total = 0\nfunction accumulate(value)\n  total += value\nend\nforeach({10, 20}, accumulate) -- total is 30",
     "note": "Use a named, statically bound callback. Read the foreach guide for mutation rules."
   },
   {
@@ -421,7 +445,7 @@
     "signature": "tonum(text)",
     "summary": "Convert numeric text to a number.",
     "example": "speed = tonum(\"2.5\")",
-    "note": "Check input before using a conversion in game logic."
+    "note": "Invalid or nonnumeric input returns nil; test the result before arithmetic. Numeric input is returned unchanged."
   },
   {
     "name": "chr",
@@ -435,9 +459,9 @@
     "name": "ord",
     "category": "data",
     "signature": "ord(text [, index])",
-    "summary": "Read a byte\u2019s numeric character code.",
+    "summary": "Read a byte’s numeric character code.",
     "example": "code = ord(\"GBA\", 1)",
-    "note": "Indices start at 1."
+    "note": "Indices start at 1. An index outside the string returns nil."
   },
   {
     "name": "time",
@@ -445,7 +469,7 @@
     "signature": "time()",
     "summary": "Read elapsed game time in seconds.",
     "example": "seconds = time()",
-    "note": "t() is an alias. This is game time, not the computer\u2019s wall clock."
+    "note": "t() is an alias. This is game time, not the computer’s wall clock."
   },
   {
     "name": "t",
@@ -461,15 +485,15 @@
     "signature": "stat(id)",
     "summary": "Read runtime performance counters.",
     "example": "load = stat(1)",
-    "note": "stat(1) is the previous tick\u2019s share of the roughly 30 Hz frame budget: 1 means the entire budget. It is not host CPU percentage. See the performance guide for other counters."
+    "note": "stat(1) is the previous tick’s share of the roughly 30 Hz frame budget: 1 means the entire budget. It is not host CPU percentage. See the performance guide for other counters."
   },
   {
     "name": "printh",
     "category": "debug",
-    "signature": "printh(value)",
-    "summary": "Write a value to the preview debug log.",
+    "signature": "printh(value [, filename])",
+    "summary": "Accept a compatibility call without producing output.",
     "example": "printh(\"coin collected\")",
-    "note": "Useful for observing game logic while running in the editor\u2019s instrumented preview."
+    "note": "Currently a no-op in compiled games and the editor ROM preview. Arguments are evaluated, but no console log or file is written. Use print() in _draw() to display a value on screen."
   },
   {
     "name": "band",

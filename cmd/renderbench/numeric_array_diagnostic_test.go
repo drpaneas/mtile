@@ -19,7 +19,7 @@ func TestNumericArrayDiagnostic(t *testing.T) {
 	}
 	service.Debug = true
 	project, err := stageProjectWithSource(
-		filepath.Join("..", "..", "examples", "testio"),
+		filepath.Join("..", "..", "testdata", "projects", "testio"),
 		filepath.Join("testdata", "workloads", "numeric_array_particles.lua"),
 	)
 	if err != nil {

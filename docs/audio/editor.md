@@ -1,5 +1,9 @@
 # Music Lab editor
 
+![Music Lab with the four hardware channels, piano roll, sound controls, and song order.](../media/editor/audio.png)
+
+[IDE overview](../ide.md#audio-studio) · [Audio API](api-v2.md) · [Output settings](settings.md)
+
 ## One screen, one document
 
 Audio Studio contains one Music Lab. There are no CREATE, SONG, GBA, Sample
@@ -33,8 +37,8 @@ PICO instrument list.
 Select CH1, CH2, or CH3 and click the piano roll to place a note. Selecting CH4
 turns the same editor into eight labeled hardware-noise rows: kick, snare,
 closed/open hat, two toms, click, and FX. Right-click erases. Delete/Backspace
-removes the selected note. The matching piano key and moving playback cursor
-use the selected channel's color.
+removes the selected note. The matching piano key uses the selected channel's color. The moving playback
+cursor uses the shared yellow transport highlight.
 
 The authoring clock is 96 PPQN. Straight grid guides reach 1/64 (6 ticks), but
 event positions and durations retain their exact tick values. `NOTE LENGTH`

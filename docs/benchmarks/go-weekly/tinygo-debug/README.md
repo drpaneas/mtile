@@ -61,7 +61,7 @@ checker for every successful diagnostic build.
 
 ## Healthy cartridge preservation and cost
 
-The fixture is `examples/testio`, forced separately to Mode 0 and Mode 4, with
+The fixture is `testdata/projects/testio`, forced separately to Mode 0 and Mode 4, with
 no keys held. The patch with `mgbadebug` **disabled** produces byte-identical
 release ROMs, identical generated Go, identical memory totals and matching
 first-four-frame hashes in both modes. This is direct evidence of zero release

@@ -82,7 +82,11 @@ func TestOrderedImportBayerCoverageAndTilePhase(t *testing.T) {
 
 func TestOrderedImportPreservesAuthoredPixelArt(t *testing.T) {
 	for _, project := range []string{"loop", "testio"} {
-		dir := filepath.Join("..", "..", "examples", project)
+		base := filepath.Join("testdata", "projects")
+		if project == "loop" {
+			base = "research"
+		}
+		dir := filepath.Join("..", "..", base, project)
 		p, err := assetsync.LoadProject(dir)
 		if err != nil {
 			t.Fatal(err)
@@ -280,7 +284,11 @@ func TestOrderedDitherReport(t *testing.T) {
 	}
 	slices.Sort(names)
 	for _, p := range []struct{ name, project string }{{"pico-8", "pong"}, {"aurora", "testio"}} {
-		palette, err := assetsync.LoadPalette(filepath.Join("..", "..", "examples", p.project), p.name)
+		base := "examples"
+		if p.project == "testio" {
+			base = filepath.Join("testdata", "projects")
+		}
+		palette, err := assetsync.LoadPalette(filepath.Join("..", "..", base, p.project), p.name)
 		if err != nil {
 			t.Fatal(err)
 		}

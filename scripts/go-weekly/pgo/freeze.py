@@ -16,10 +16,14 @@ if snapshot.exists():
     raise SystemExit("Choose a new snapshot directory; existing evidence is never overwritten")
 corpus = {"train": ["celeste", "multi-file", "audio-gb-song"],
           "heldout": ["platformer", "pong", "mapdemo"], "controls": ["hello", "noalloc-call-stress"]}
+def project_source(name):
+    base = "testdata/projects" if name in {"platformer", "noalloc-call-stress"} else "examples"
+    return root / base / name
+
 for names in corpus.values():
     for name in names:
-        if not (root / "examples" / name).is_dir():
-            raise SystemExit(f"Missing frozen-corpus source: examples/{name}; do not substitute another project silently")
+        if not project_source(name).is_dir():
+            raise SystemExit(f"Missing frozen-corpus source: {project_source(name)}; do not substitute another project silently")
 snapshot.mkdir(parents=True)
 evidence.mkdir(parents=True, exist_ok=True)
 digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -36,7 +40,7 @@ for name in ["go.mod", "go.sum", "internal", "cmd", "runtime"]:
 inputs = {}
 for role, names in corpus.items():
     for name in names:
-        src, dst = root / "examples" / name, snapshot / "inputs" / name
+        src, dst = project_source(name), snapshot / "inputs" / name
         shutil.copytree(src, dst)
         files = [f for f in dst.rglob("*") if f.is_file()]
         inputs[name] = {"role": role, "sourcePath": str(src), "snapshotPath": str(dst),

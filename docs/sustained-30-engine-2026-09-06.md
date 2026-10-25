@@ -2,7 +2,7 @@
 
 This engineering loop starts from the completed snapshot in
 `build/experiments/mode0-general-optimizations/final`. The playable Lua,
-project configuration and assets of `examples/celeste-mode0` are frozen.
+project configuration and assets of `research/celeste-mode0` are frozen.
 All new production changes belong to mtile's compiler, runtime or ARM startup
 library. They select paths by proven types, lifetimes, capacities, alignment
 and renderer state, without testing game names or source identifiers.

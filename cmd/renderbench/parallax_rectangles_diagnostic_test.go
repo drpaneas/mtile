@@ -31,7 +31,7 @@ func TestParallaxRectanglesHardwareDiagnostic(t *testing.T) {
 	}
 	t.Log("evidence:", out)
 	project := filepath.Join(out, "project")
-	if err := tileCanvasCopyTree(filepath.Join(repository, "examples", "parallax-rectangles"), project, true); err != nil {
+	if err := tileCanvasCopyTree(filepath.Join(repository, "testdata", "projects", "parallax-rectangles"), project, true); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(project, "game.lua")

@@ -5,13 +5,13 @@
 > οι τρέχουσες μετρήσεις είναι στις
 > [σημειώσεις βελτιστοποίησης](mode0-general-optimizations-2026-09-06.md).
 
-Η έκδοση βρίσκεται στο `examples/celeste-mode0`. Χρησιμοποιεί τον κανονικό
+Η έκδοση βρίσκεται στο `research/celeste-mode0`. Χρησιμοποιεί τον κανονικό
 δημόσιο renderer με `project.json: {"renderer":"mode0"}`. Δεν απαιτεί
 `-experimental-tilecanvas`, ιδιωτικά build tags ή εξαιρέσεις στον transpiler.
 Το `examples/celeste` παραμένει χωριστό.
 
 ```sh
-go run ./cmd/mtile edit examples/celeste-mode0
+go run ./cmd/mtile edit research/celeste-mode0
 ```
 
 ## Τι άλλαξε και πώς
@@ -115,8 +115,8 @@ cycles. Στο trace εμφανίστηκαν έως 43 πραγματικά ε�
 
 ## Αρχεία και αναπαραγωγή
 
-- [Οδηγίες Sprite Lab και οργάνωση αρχείων](../examples/celeste-mode0/README.md)
-- [Συγκεκριμένα budgets και περιορισμοί](../examples/celeste-mode0/MODE0.md)
+- [Οδηγίες Sprite Lab και οργάνωση αρχείων](../research/celeste-mode0/README.md)
+- [Συγκεκριμένα budgets και περιορισμοί](../research/celeste-mode0/MODE0.md)
 - Native ROMs, PNGs, JSON traces και logs:
   `build/experiments/celeste-mode0/final/`.
 - Προηγούμενη έκδοση πριν από palette caching / UI preallocation:
@@ -124,7 +124,7 @@ cycles. Στο trace εμφανίστηκαν έως 43 πραγματικά ε�
 - Τα native results είναι από τον emulator, όχι από φυσική κονσόλα GBA.
 
 ```sh
-python3 examples/celeste-mode0/tests/verify_all.py --gba
+python3 research/celeste-mode0/tests/verify_all.py --gba
 go test ./internal/transpiler ./internal/build ./cmd/mtile
 cd runtime && go test ./...
 ```

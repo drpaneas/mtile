@@ -172,7 +172,7 @@ func TestSizeSpecializedAllocationDiagnostic(t *testing.T) {
 				if err := os.WriteFile(sourcePath, source, 0644); err != nil {
 					t.Fatal(err)
 				}
-				project, err := stageProjectWithSource(filepath.Join("..", "..", "examples", workload.project), sourcePath)
+				project, err := stageProjectWithSource(filepath.Join("..", "..", diagnosticProjectPath(workload.project)), sourcePath)
 				if err != nil {
 					t.Fatal(err)
 				}

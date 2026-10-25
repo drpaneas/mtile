@@ -17,7 +17,7 @@ func TestMultiReturnPhysicsDiagnostic(t *testing.T) {
 		t.Fatal(err)
 	}
 	service.Debug = true
-	project := filepath.Join("..", "..", "examples", "multi-return-physics-stress")
+	project := filepath.Join("..", "..", "testdata", "projects", "multi-return-physics-stress")
 	helper := filepath.Join("..", "..", "build", "player", "mtile-player")
 	logResult := func(label string, result build.Result, captured capture) {
 		median := percentile(captured.cycles, 50)

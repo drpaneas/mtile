@@ -1,6 +1,6 @@
 # Celeste: απλή φάση parallax, 8 Σεπτεμβρίου 2026
 
-Το νέο [`examples/celeste-parallax`](../examples/celeste-parallax/README.md)
+Το νέο [`research/celeste-parallax`](../research/celeste-parallax/README.md)
 λειτουργεί με το experimental renderer, αλλά **δεν βελτίωσε την επίδοση**
 στη συγκεκριμένη διαδρομή. Ο διάμεσος χρόνος αυξήθηκε κατά 2,38%, ενώ ο
 παρατηρούμενος ρυθμός άλλαξε από 26,88 σε 26,73 game updates/s.
@@ -8,7 +8,7 @@
 ## Τι συγκρίθηκε
 
 Το σημερινό `examples/celeste` έχει ήδη τα ίδια τέσσερα tiled backgrounds
-με το `examples/celeste-mode0`: τρία cloud planes με ορθογώνια και ένα
+με το `research/celeste-mode0`: τρία cloud planes με ορθογώνια και ένα
 terrain plane. Έλεγχος 4.800 map cells επιβεβαίωσε ίδια pixels και flags,
 μετά την αντιστοίχιση των διαφορετικών sprite IDs. Οι παλέτες είναι ίδιες.
 Συνεπώς δεν υπήρχε πλέον μετατροπή cloud `rectfill` σε hardware maps να γίνει.

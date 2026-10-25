@@ -117,7 +117,7 @@ func main() {
 }
 
 func run() error {
-	project := flag.String("project", "examples/testio", "project directory")
+	project := flag.String("project", "testdata/projects/testio", "project directory")
 	source := flag.String("source", "", "optional game.lua workload override (project is copied to a temporary directory)")
 	helper := flag.String("player", "build/player/mtile-player", "headless mtile-player path")
 	output := flag.String("out", "", "artifact directory (default: temporary directory)")

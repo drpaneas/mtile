@@ -178,7 +178,7 @@ end
 }
 
 func TestMode0FiniteNumsProveCelesteSpriteFields(t *testing.T) {
-	dir := filepath.Join("..", "..", "examples", "celeste-mode0")
+	dir := filepath.Join("..", "..", "research", "celeste-mode0")
 	bundle, err := sourcebundle.Resolve(dir, "game.lua")
 	if err != nil {
 		t.Fatal(err)
