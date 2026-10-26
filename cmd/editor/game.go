@@ -476,10 +476,9 @@ func (g *Game) ensureEditableMap() {
 	if g.spriteN() == 0 {
 		return
 	}
-	g.model.Map = assetsync.Map{
-		Width:  gbaScreenWidthTiles,
-		Height: gbaScreenHeightTiles,
-		Cells:  make([]int, gbaScreenWidthTiles*gbaScreenHeightTiles),
+	if err := g.model.ResizeMap(gbaScreenWidthTiles, gbaScreenHeightTiles); err != nil {
+		g.statusMsg = err.Error()
+		return
 	}
 	g.dirty = true
 }

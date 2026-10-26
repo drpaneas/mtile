@@ -15,14 +15,16 @@ const MaxTileLinks = 255
 // pose or animation clip instead of the tile itself. Exactly one of Pose and
 // Animation is set. The map keeps the tile ID, so mget and fget still see it.
 type TileLink struct {
-	Tile      int    `json:"tile"`
-	Pose      *int   `json:"pose,omitempty"`
-	Animation string `json:"animation,omitempty"`
+	UnknownFields UnknownFields `json:"-"`
+	Tile          int           `json:"tile"`
+	Pose          *int          `json:"pose,omitempty"`
+	Animation     string        `json:"animation,omitempty"`
 }
 
 type TileLinkFile struct {
-	Version int        `json:"version"`
-	Links   []TileLink `json:"links"`
+	UnknownFields UnknownFields `json:"-"`
+	Version       int           `json:"version"`
+	Links         []TileLink    `json:"links"`
 }
 
 // FlatTileLink is one validated link. ID is a pose ID, or an index into
@@ -56,16 +58,17 @@ func LoadTileLinks(projectDir string) (*TileLinkFile, error) {
 }
 
 // SaveTileLinks writes links sorted by tile, and removes the file when there
-// are none so projects without links keep their existing asset set.
+// are none and no unknown metadata needs preserving.
 func SaveTileLinks(projectDir string, file *TileLinkFile) error {
 	path := tileLinksPath(projectDir)
-	if file == nil || len(file.Links) == 0 {
+	if file == nil || len(file.Links) == 0 && file.UnknownFields.IsZero() {
 		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("remove tilelinks.json: %w", err)
 		}
 		return nil
 	}
-	normalized := TileLinkFile{Version: 1, Links: slices.Clone(file.Links)}
+	normalized := *file
+	normalized.Version, normalized.Links = 1, slices.Clone(file.Links)
 	slices.SortFunc(normalized.Links, func(a, b TileLink) int { return a.Tile - b.Tile })
 	return writeJSON(path, normalized)
 }

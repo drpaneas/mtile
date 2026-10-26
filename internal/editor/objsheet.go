@@ -31,9 +31,11 @@ func (m *Model) ResizeObjSheet(width, height int) error {
 		col, row := id%oldCols, id/oldCols
 		return row*newCols + col, col < newCols && row < height/8
 	}
-	poses := assetsync.PoseFile{Version: m.Poses.Version, Poses: make([]assetsync.PoseRecord, len(m.Poses.Poses))}
+	poses := m.Poses
+	poses.Poses = make([]assetsync.PoseRecord, len(m.Poses.Poses))
 	for i, pose := range m.Poses.Poses {
-		poses.Poses[i] = assetsync.PoseRecord{Name: pose.Name, Parts: make([]assetsync.PosePartRecord, len(pose.Parts))}
+		poses.Poses[i] = pose
+		poses.Poses[i].Parts = make([]assetsync.PosePartRecord, len(pose.Parts))
 		for j, part := range pose.Parts {
 			id, ok := remap(part.Tile)
 			if !ok {
@@ -52,12 +54,13 @@ func (m *Model) ResizeObjSheet(width, height int) error {
 		return cells[id]
 	}
 	for _, sprite := range old.Sprites {
-		if sprite.Flags != 0 {
+		if sprite.Flags != 0 || !sprite.UnknownFields.IsZero() {
 			id, ok := remap(sprite.ID)
 			if !ok {
-				return fmt.Errorf("cannot shrink: tile %d has flags outside the new sheet", sprite.ID)
+				return fmt.Errorf("cannot shrink: tile %d has flags or unknown metadata outside the new sheet", sprite.ID)
 			}
 			cell(id).Flags = sprite.Flags
+			cell(id).UnknownFields = sprite.UnknownFields
 		}
 		for y, row := range sprite.Pixels {
 			for x, color := range row {
@@ -73,7 +76,7 @@ func (m *Model) ResizeObjSheet(width, height int) error {
 			}
 		}
 	}
-	resized := assetsync.Spritesheet{Width: width, Height: height, Sprites: make([]assetsync.SpriteRecord, 0, len(cells))}
+	resized := assetsync.Spritesheet{UnknownFields: old.UnknownFields, Width: width, Height: height, Sprites: make([]assetsync.SpriteRecord, 0, len(cells))}
 	for _, sprite := range cells {
 		resized.Sprites = append(resized.Sprites, *sprite)
 	}

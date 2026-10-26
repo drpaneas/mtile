@@ -37,8 +37,9 @@ func (m *Model) EnsureObjPages() {
 }
 
 type objPageCell struct {
-	pixels [64]int
-	flags  int
+	pixels  [64]int
+	flags   int
+	unknown assetsync.UnknownFields
 }
 
 // NormalizeObjPages repacks legacy artwork into 512x320-pixel art boards, with
@@ -84,8 +85,9 @@ func (m *Model) NormalizeObjPages() error {
 		if sprite.ID < 0 || sprite.ID >= oldN || sprite.X < 0 || sprite.Y < 0 || sprite.Width < 1 || sprite.Height < 1 || sprite.X > old.Width-sprite.Width || sprite.Y > old.Height-sprite.Height || len(sprite.Pixels) != sprite.Height {
 			return fmt.Errorf("cannot normalize animation pages: invalid sprite %d", sprite.ID)
 		}
-		if sprite.Flags != 0 {
+		if sprite.Flags != 0 || !sprite.UnknownFields.IsZero() {
 			cell(sprite.ID).flags = sprite.Flags
+			cell(sprite.ID).unknown = sprite.UnknownFields
 		}
 		for y, row := range sprite.Pixels {
 			if len(row) != sprite.Width {
@@ -166,7 +168,14 @@ func (m *Model) NormalizeObjPages() error {
 	if !ok {
 		return fmt.Errorf("cannot normalize animation pages: artwork exceeds %d tiles", assetsync.MaxObjSheetCells)
 	}
-	resized := &assetsync.Spritesheet{Width: ObjPageWidth, Height: min(pageCount*ObjPageHeight, objMaxSheetHeight)}
+	// Normalization reuses page labels by index. Do not discard metadata on
+	// a legacy page that would disappear when several layouts are packed down.
+	for i := pageCount; i < len(m.Animation.Pages); i++ {
+		if !m.Animation.Pages[i].UnknownFields.IsZero() {
+			return fmt.Errorf("cannot normalize animation pages: page %q has unknown JSON fields that would be lost", m.Animation.Pages[i].Name)
+		}
+	}
+	resized := &assetsync.Spritesheet{UnknownFields: old.UnknownFields, Width: ObjPageWidth, Height: min(pageCount*ObjPageHeight, objMaxSheetHeight)}
 	for _, oldID := range needed {
 		data := cells[oldID]
 		if data == nil {
@@ -175,13 +184,15 @@ func (m *Model) NormalizeObjPages() error {
 		id := mapping[oldID]
 		sprite := newCellSprite(id, id%objPageCols*8, id/objPageCols*8)
 		sprite.Flags = data.flags
+		sprite.UnknownFields = data.unknown
 		for y := range sprite.Pixels {
 			copy(sprite.Pixels[y], data.pixels[y*8:(y+1)*8])
 		}
 		resized.Sprites = append(resized.Sprites, sprite)
 	}
 	sort.Slice(resized.Sprites, func(i, j int) bool { return resized.Sprites[i].ID < resized.Sprites[j].ID })
-	poses := assetsync.PoseFile{Version: m.Poses.Version, Poses: append([]assetsync.PoseRecord(nil), m.Poses.Poses...)}
+	poses := m.Poses
+	poses.Poses = append([]assetsync.PoseRecord(nil), m.Poses.Poses...)
 	for i := range poses.Poses {
 		poses.Poses[i].Parts = append([]assetsync.PosePartRecord(nil), poses.Poses[i].Parts...)
 		for j := range poses.Poses[i].Parts {
@@ -203,6 +214,9 @@ func (m *Model) NormalizeObjPages() error {
 		}
 		usedNames[name] = true
 		animation.Pages[i] = assetsync.AnimationPage{Name: name, Y: i * ObjPageHeight, Width: ObjPageWidth, Height: objPageHeight(i)}
+		if i < len(m.Animation.Pages) {
+			animation.Pages[i].UnknownFields = m.Animation.Pages[i].UnknownFields
+		}
 	}
 	if err := assetsync.ValidateAnimationWorkspace(animation, resized.Width, resized.Height, len(poses.Poses)); err != nil {
 		return err

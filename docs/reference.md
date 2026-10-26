@@ -114,6 +114,21 @@ object keys. Duplicate keys, including escaped spellings or case aliases of
 the same recognized field, are rejected with a file-specific error instead of
 silently replacing a value. The editor writes valid JSON automatically.
 
+Unknown fields in `project.json`, palettes, both sprite sheets, poses, maps,
+animation workspaces, and tile links survive loading and saving, including
+fields on nested records. Their JSON values and numeric precision are retained;
+formatting and key order may change. Editing or clearing a recognized field
+takes precedence over its original value. Metadata follows retained records
+through undo/redo, resizing, and reordering; explicitly deleting a record also
+deletes its metadata. An otherwise empty asset file is kept when it contains
+unknown fields.
+
+Unknown data has no runtime meaning to this version of Mtile, and references
+inside it cannot be remapped automatically. OBJ sheet resizing refuses to trim
+a tile with unknown metadata, and OBJ page normalization fails if it would
+discard a page with unknown fields. Existing schema-version checks still apply.
+Audio files retain their strict schema and reject unknown fields.
+
 Projects contain one shared sheet and either a legacy BG0 map or four versioned
 BG0-BG3 planes. The Map Editor selects and hides planes like a layer stack;
 `map()` draws every non-empty authored plane, while every non-empty

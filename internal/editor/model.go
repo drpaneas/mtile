@@ -469,7 +469,7 @@ func (m *Model) SetActiveColor(index int, color assetsync.RGB15) error {
 	}
 	updated := m.ActivePalette
 	updated.Colors = slices.Clone(updated.Colors)
-	updated.Colors[index] = color
+	updated.Colors[index].R, updated.Colors[index].G, updated.Colors[index].B = color.R, color.G, color.B
 	m.ActivePalette = updated
 	return nil
 }
@@ -810,6 +810,14 @@ func (m *Model) ResizeMap(width, height int) error {
 		}
 	} else {
 		resized.Cells = make([]int, width*height)
+	}
+	resized.UnknownFields = m.Map.UnknownFields
+	for i := range resized.Layers {
+		for _, old := range m.Map.Layers {
+			if old.ID == resized.Layers[i].ID {
+				resized.Layers[i].UnknownFields = old.UnknownFields
+			}
+		}
 	}
 	for layer := 0; layer < m.Map.LayerCount(); layer++ {
 		source := m.Map.LayerCells(layer)

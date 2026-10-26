@@ -41,13 +41,16 @@ func (m *Model) setTileLink(link assetsync.TileLink) error {
 	if link.Tile <= 0 || link.Tile >= spriteN {
 		return fmt.Errorf("tile %d is outside the shared sheet", link.Tile)
 	}
+	if previous, ok := m.TileLinkFor(link.Tile); ok {
+		link.UnknownFields = previous.UnknownFields
+	}
 	links := slices.DeleteFunc(slices.Clone(m.TileLinks.Links), func(l assetsync.TileLink) bool { return l.Tile == link.Tile })
 	if len(links) >= assetsync.MaxTileLinks {
 		return fmt.Errorf("a project can link at most %d tiles", assetsync.MaxTileLinks)
 	}
 	links = append(links, link)
 	slices.SortFunc(links, func(a, b assetsync.TileLink) int { return a.Tile - b.Tile })
-	m.TileLinks = assetsync.TileLinkFile{Version: 1, Links: links}
+	m.TileLinks.Version, m.TileLinks.Links = 1, links
 	return nil
 }
 

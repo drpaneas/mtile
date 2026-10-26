@@ -13,24 +13,27 @@ import (
 // AnimationWorkspace is editor metadata. Frames retain their global pose IDs;
 // pages describe where artwork is stored, independently of playback order.
 type AnimationWorkspace struct {
-	Version int             `json:"version"`
-	Pages   []AnimationPage `json:"pages"`
-	Clips   []AnimationClip `json:"clips"`
+	UnknownFields UnknownFields   `json:"-"`
+	Version       int             `json:"version"`
+	Pages         []AnimationPage `json:"pages"`
+	Clips         []AnimationClip `json:"clips"`
 }
 
 type AnimationPage struct {
-	Name   string `json:"name"`
-	X      int    `json:"x"`
-	Y      int    `json:"y"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
+	UnknownFields UnknownFields `json:"-"`
+	Name          string        `json:"name"`
+	X             int           `json:"x"`
+	Y             int           `json:"y"`
+	Width         int           `json:"width"`
+	Height        int           `json:"height"`
 }
 
 type AnimationClip struct {
-	Name   string `json:"name"`
-	Frames []int  `json:"frames"`
-	FPS    int    `json:"fps"`
-	Loop   *bool  `json:"loop,omitempty"`
+	UnknownFields UnknownFields `json:"-"`
+	Name          string        `json:"name"`
+	Frames        []int         `json:"frames"`
+	FPS           int           `json:"fps"`
+	Loop          *bool         `json:"loop,omitempty"`
 }
 
 func LoadAnimationWorkspace(projectDir string) (*AnimationWorkspace, error) {

@@ -34,7 +34,8 @@ const (
 // Project is the small project-level asset configuration. Only one palette
 // is active globally; runtime pal() remaps colors at draw/display time.
 type Project struct {
-	ActivePalette string `json:"activePalette"`
+	UnknownFields UnknownFields `json:"-"`
+	ActivePalette string        `json:"activePalette"`
 	// Entry is an optional project-relative Lua entry point. Empty preserves
 	// the original root game.lua convention.
 	Entry string `json:"entry,omitempty"`
@@ -50,37 +51,41 @@ type Project struct {
 // RGB15 is a GBA-compatible color component triple. Components are five-bit
 // values, not the 0..32 range sometimes used in informal GBA documentation.
 type RGB15 struct {
-	R int `json:"r"`
-	G int `json:"g"`
-	B int `json:"b"`
+	UnknownFields UnknownFields `json:"-"`
+	R             int           `json:"r"`
+	G             int           `json:"g"`
+	B             int           `json:"b"`
 }
 
 // Palette is the on-disk reusable palette format. Exactly 16 colors (a
 // shorthand that expands the remaining entries from color 0) or 256 colors
 // are accepted.
 type Palette struct {
-	Name   string  `json:"name"`
-	Colors []RGB15 `json:"colors"`
+	UnknownFields UnknownFields `json:"-"`
+	Name          string        `json:"name"`
+	Colors        []RGB15       `json:"colors"`
 }
 
 // SpriteRecord describes authored pixels at a location in the native sheet.
 // Entries may be sparse and may use rectangles larger than one 8x8 cell; the
 // runtime still addresses the resulting flattened sheet in 8x8 cells.
 type SpriteRecord struct {
-	ID     int     `json:"id"`
-	X      int     `json:"x"`
-	Y      int     `json:"y"`
-	Width  int     `json:"width"`
-	Height int     `json:"height"`
-	Pixels [][]int `json:"pixels"`
-	Flags  int     `json:"flags"`
+	UnknownFields UnknownFields `json:"-"`
+	ID            int           `json:"id"`
+	X             int           `json:"x"`
+	Y             int           `json:"y"`
+	Width         int           `json:"width"`
+	Height        int           `json:"height"`
+	Pixels        [][]int       `json:"pixels"`
+	Flags         int           `json:"flags"`
 }
 
 // Spritesheet is the native project sheet format.
 type Spritesheet struct {
-	Width   int            `json:"width"`
-	Height  int            `json:"height"`
-	Sprites []SpriteRecord `json:"sprites"`
+	UnknownFields UnknownFields  `json:"-"`
+	Width         int            `json:"width"`
+	Height        int            `json:"height"`
+	Sprites       []SpriteRecord `json:"sprites"`
 }
 
 const (
@@ -93,31 +98,36 @@ const (
 )
 
 type PosePartRecord struct {
-	Tile  int  `json:"tile"`
-	X     int  `json:"x"`
-	Y     int  `json:"y"`
-	FlipX bool `json:"flipX,omitempty"`
-	FlipY bool `json:"flipY,omitempty"`
+	UnknownFields UnknownFields `json:"-"`
+	Tile          int           `json:"tile"`
+	X             int           `json:"x"`
+	Y             int           `json:"y"`
+	FlipX         bool          `json:"flipX,omitempty"`
+	FlipY         bool          `json:"flipY,omitempty"`
 }
 
 type PoseRecord struct {
-	Name  string           `json:"name,omitempty"`
-	Parts []PosePartRecord `json:"parts"`
+	UnknownFields UnknownFields    `json:"-"`
+	Name          string           `json:"name,omitempty"`
+	Parts         []PosePartRecord `json:"parts"`
 }
 
 // PoseColorVariant stores replacements, never another copy of the artwork.
 type PoseColorVariant struct {
-	Name   string          `json:"name"`
-	Colors []PoseColorSwap `json:"colors"`
+	UnknownFields UnknownFields   `json:"-"`
+	Name          string          `json:"name"`
+	Colors        []PoseColorSwap `json:"colors"`
 }
 type PoseColorSwap struct {
-	From int `json:"from"`
-	To   int `json:"to"`
+	UnknownFields UnknownFields `json:"-"`
+	From          int           `json:"from"`
+	To            int           `json:"to"`
 }
 type PoseFile struct {
-	Version  int                `json:"version"`
-	Poses    []PoseRecord       `json:"poses"`
-	Variants []PoseColorVariant `json:"variants,omitempty"`
+	UnknownFields UnknownFields      `json:"-"`
+	Version       int                `json:"version"`
+	Poses         []PoseRecord       `json:"poses"`
+	Variants      []PoseColorVariant `json:"variants,omitempty"`
 }
 
 // FlatPosePart is one draw step within a flattened pose: which sprite tile
@@ -150,8 +160,9 @@ type FlatAnimationClip struct {
 // MapLayer is one fixed logical background plane. IDs are stable and range
 // from BG0 (back) through BG3 (front); array order is not semantic.
 type MapLayer struct {
-	ID    int   `json:"id"`
-	Cells []int `json:"cells"`
+	UnknownFields UnknownFields `json:"-"`
+	ID            int           `json:"id"`
+	Cells         []int         `json:"cells"`
 }
 
 // Map is the native dense uint16-ID map format. Version 0 is the original
@@ -159,11 +170,12 @@ type MapLayer struct {
 // independent background planes in Layers. Readers support both shapes so
 // opening an existing project never rewrites or expands it implicitly.
 type Map struct {
-	Version int        `json:"version,omitempty"`
-	Width   int        `json:"width"`
-	Height  int        `json:"height"`
-	Cells   []int      `json:"cells,omitempty"`
-	Layers  []MapLayer `json:"layers,omitempty"`
+	UnknownFields UnknownFields `json:"-"`
+	Version       int           `json:"version,omitempty"`
+	Width         int           `json:"width"`
+	Height        int           `json:"height"`
+	Cells         []int         `json:"cells,omitempty"`
+	Layers        []MapLayer    `json:"layers,omitempty"`
 }
 
 // Assets is the validated, flattened representation used by code generation.
