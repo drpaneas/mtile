@@ -148,11 +148,21 @@ decision table, editor workflow, and gameplay examples. A
 [linked tile](tile-links.md) makes `map()` draw a pose or clip wherever the
 tile is painted.
 
-`pspr(id, x, y [, flip_x [, flip_y]])` draws the zero-based pose in
-`assets/poses.json`. Each pose lists 8x8 tile IDs, pixel offsets from its origin,
+`pspr(name_or_id, x, y [, flip_x [, flip_y]])` draws a pose in
+`assets/poses.json`. Prefer a literal name such as `pspr("hero_idle", x, y)`:
+the build resolves it to the current zero-based index before renderer analysis,
+without runtime lookup or name storage. Names are case-sensitive and must be
+string literals, optionally parenthesized; generated symbols and dynamic string
+lookup are not supported. Renaming or deleting a referenced name fails the build
+with `PSPR_UNKNOWN_POSE`, its source position, and a close spelling suggestion
+when available. Other poses can be deleted or reordered without changing this
+reference. Each pose lists 8x8 tile IDs, pixel offsets from its origin,
 and optional per-part flips. Call-level flips mirror inside the pose's calculated
 tile bounds, keeping that rectangle in place at the same `(x, y)`. Missing or
-out-of-range IDs draw nothing. Camera, painter order, palette, and transparency
+out-of-range numeric IDs draw nothing. Provably out-of-range numeric literals
+emit nonfatal `PSPR_ID_OUT_OF_RANGE` build warnings after the normal signed
+16:16 conversion. Numeric references can still select the wrong pose after
+library edits; those in-range mistakes cannot be diagnosed. Camera, painter order, palette, and transparency
 follow the renderer contract.
 
 When `assets/objsheet.json` exists, pose IDs reference tiles in that animation

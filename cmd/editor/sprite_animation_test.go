@@ -170,7 +170,7 @@ func TestAnimationRegisterPoseDoesNotChangeClipOrder(t *testing.T) {
 
 func TestAnimationDockControlsFitMinimumWidth(t *testing.T) {
 	layout := newAnimationDockLayout(editor.Rect{X: 12, Y: 20, W: 608, H: 240})
-	controls := []editor.Rect{layout.Track, layout.Preview, layout.RegisterPose, layout.UpdatePose, layout.DeletePose, layout.ScrollPrev, layout.ScrollNext}
+	controls := []editor.Rect{layout.Track, layout.Preview, layout.RegisterPose, layout.UpdatePose, layout.DeletePose, layout.CopyPose, poseVariantsButton(layout.Panel), layout.ScrollPrev, layout.ScrollNext}
 	for i, rect := range controls {
 		if !rectInsideIDE(rect, layout.Panel) {
 			t.Fatalf("control %d outside dock: %+v", i, rect)

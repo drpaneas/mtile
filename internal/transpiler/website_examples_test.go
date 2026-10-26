@@ -23,6 +23,7 @@ func TestWebsiteAPIExamples(t *testing.T) {
 	for _, entry := range entries {
 		t.Run(entry.Name, func(t *testing.T) {
 			opts := animationOptions()
+			opts.PoseNames = []string{"hero_idle", "hero_hold"}
 			opts.Renderer = RendererMode4
 			opts.NativeAudio = nativeTranspilerOptions(t).NativeAudio
 			opts.PoseVariantBaseCount = len(opts.PoseIndex)

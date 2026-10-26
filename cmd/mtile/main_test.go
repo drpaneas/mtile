@@ -278,6 +278,34 @@ func TestRunBuildEndToEndWithRealTinyGo(t *testing.T) {
 	}
 }
 
+func TestRunBuildNamedPoseAndNonfatalNumericWarning(t *testing.T) {
+	if _, err := exec.LookPath("tinygo"); err != nil {
+		t.Skip("tinygo not found on PATH")
+	}
+	if testing.Short() {
+		t.Skip("real TinyGo link")
+	}
+	dir := filepath.Join(t.TempDir(), "poses")
+	if err := build.CreateProject(dir, build.NewProjectOptions{SheetWidth: 8, SheetHeight: 8, MapWidth: 1, MapHeight: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if err := assetsync.SavePoses(dir, &assetsync.PoseFile{Version: 1, Poses: []assetsync.PoseRecord{{Name: "hero_idle", Parts: []assetsync.PosePartRecord{{Tile: 0}}}}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "game.lua"), []byte("function _draw()\n cls()\n pspr(\"hero_idle\",20,30)\n pspr(99,0,0)\nend\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := run([]string{"build", dir}, &out, &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"built ", "warning: game.lua:4:7: [PSPR_ID_OUT_OF_RANGE]", "draws nothing"} {
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("missing %q in %s", want, out.String())
+		}
+	}
+}
+
 func TestRunBuildHelloExampleWithRealTinyGo(t *testing.T) {
 	if _, err := exec.LookPath("tinygo"); err != nil {
 		t.Skip("tinygo not found on PATH")

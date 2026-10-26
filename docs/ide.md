@@ -203,8 +203,14 @@ colored border on every pose. Select a pose to identify it; its name remains in
 
 **UPDATE POSE** replaces the selected pose's tile selection. **DELETE POSE**
 removes its registration and references from clips; it does not erase artwork.
-Deleting a pose shifts later numeric pose IDs, so update any numeric `pspr`
-references in Lua. Registering a pose refers to its existing source tiles;
+Select a registered pose and click **COPY LUA CALL** for
+`pspr("pose_name", x, y)`. The name resolves during the build and remains valid
+when other poses are deleted or reordered. Renaming or deleting that named
+pose reports a source-positioned build error. Older unnamed poses copy a
+numeric call. Deleting a pose shifts later numeric pose IDs, so update any
+numeric `pspr` references in Lua. Out-of-range numeric literals produce
+nonfatal warnings in Develop's Problems panel and the CLI build output.
+Registering a pose refers to its existing source tiles;
 registering two poses over the same tiles links their pixel edits.
 
 ### Copy or move artwork

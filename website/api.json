@@ -34,10 +34,10 @@
   {
     "name": "pspr",
     "category": "sprites",
-    "signature": "pspr(id, x, y [, flip_x [, flip_y]])",
+    "signature": "pspr(name_or_id, x, y [, flip_x [, flip_y]])",
     "summary": "Draw one authored pose: a reusable image assembled from tiles.",
-    "example": "function _draw()\n  cls(0)\n  pspr(0, 100, 60)\nend",
-    "note": "Use pspr for a static character frame, prop, effect, or UI element whose tile layout and offsets belong in Sprite Lab rather than repeated Lua spr calls. A pose may combine several tile parts; pspr draws that one pose and does not advance frames. Use anim for a timed pose sequence. Register the artwork in Sprite Lab → Poses first. IDs are zero-based; deleting a pose shifts later IDs, so update numeric references. The origin and offsets come from the recipe; flips mirror within its calculated tile bounds. Missing/out-of-range IDs draw nothing. Poses use objsheet.json when present, otherwise the shared sheet. Mode 0 still requires a proven working set and hardware resource budgets; choosing a pose alone does not guarantee eligibility."
+    "example": "function _draw()\n  cls(0)\n  pspr(\"hero_idle\", 100, 60)\nend",
+    "note": "Use pspr for a static character frame, prop, effect, or UI element whose tile layout and offsets belong in Sprite Lab rather than repeated Lua spr calls. A pose may combine several tile parts; pspr draws that one pose and does not advance frames. Use anim for a timed pose sequence. Register hero_idle in Sprite Lab → Poses first, then use COPY LUA CALL. Prefer a case-sensitive literal pose name: the build resolves it to the current index with no runtime lookup or name storage. Other poses can be deleted or reordered without changing the call. Missing literal names fail the build with a source position and a close spelling suggestion when available. Names must be string literals, optionally parenthesized; dynamic string lookup and generated symbols are not supported. Existing zero-based numeric IDs still work, but deletion shifts later IDs. Out-of-range numeric literals emit nonfatal build warnings after normal 16:16 conversion; invalid dynamic numeric IDs draw nothing. The origin and offsets come from the recipe; flips mirror within its calculated tile bounds. Poses use objsheet.json when present, otherwise the shared sheet. Mode 0 still requires a proven working set and hardware resource budgets; choosing a pose alone does not guarantee eligibility."
   },
   {
     "name": "anim",

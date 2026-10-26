@@ -34,6 +34,9 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		// objects and compatible hardware palette-bank allocation.
 		return RendererMode0Conditional
 	case "pspr", "anim":
+		// Literal pspr names lower to the identical numeric call before any
+		// renderer proof. Unknown names fail in both modes; names never relax
+		// the pose working-set or resource restrictions.
 		// Both backends use build-derived bounds for automatic flip anchoring
 		// (a pose's bounds or a whole clip's union). Mode 0 still requires the
 		// documented bounded draw sites, OAM budget, and tile streaming proof.

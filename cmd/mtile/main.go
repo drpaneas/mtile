@@ -192,6 +192,9 @@ func runBuild(args []string, out io.Writer) error {
 		return err
 	}
 	_, _ = fmt.Fprintf(out, "built %s (%d bytes, %d bytes EWRAM free)\n", result.ROMPath, result.ROMSize, result.EWRAMFree)
+	for _, warning := range result.Warnings {
+		_, _ = fmt.Fprintln(out, "warning:", warning)
+	}
 	if result.Renderer == transpiler.RendererMode0 {
 		_, _ = fmt.Fprintf(out, "renderer requested %s -> selected %s (%s), %d BG layer(s), OBJ %t, text %t, OAM %d/128, OBJ line %d/1226 cycles\n",
 			result.RendererRequested, result.Renderer, result.RendererReason, result.RendererLayers, result.RendererObjects, result.RendererText,

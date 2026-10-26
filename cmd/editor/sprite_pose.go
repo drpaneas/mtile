@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/editor"
+	"github.com/drpaneas/mtile/internal/hostclipboard"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -20,15 +22,64 @@ const (
 	poseStripWheelStep    = 24
 	poseStripControlW     = 76
 	poseStripControlGap   = 6
-	poseStripControlCount = 3
+	poseStripControlCount = 4
 )
 
+var writePoseUsageClipboard = hostclipboard.Write
+
+func (g *Game) poseUsage() string {
+	poses := g.authoredPoses()
+	if g.selectedPose < 0 || g.selectedPose >= len(poses) {
+		return ""
+	}
+	name := poses[g.selectedPose].Name
+	if name == "" {
+		return fmt.Sprintf("pspr(%d, x, y)", g.selectedPose)
+	}
+	// Asset JSON may contain names outside the editor's identifier alphabet.
+	// Use Lua decimal escapes for control bytes, rather than Go's \x escapes.
+	var literal strings.Builder
+	literal.WriteByte('"')
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		switch {
+		case c == '\\' || c == '"':
+			literal.WriteByte('\\')
+			literal.WriteByte(c)
+		case c < 32 || c == 127:
+			fmt.Fprintf(&literal, "\\%03d", c)
+		default:
+			literal.WriteByte(c)
+		}
+	}
+	literal.WriteByte('"')
+	return "pspr(" + literal.String() + ", x, y)"
+}
+
+func (g *Game) copyPoseUsage() {
+	usage := g.poseUsage()
+	if usage == "" {
+		g.statusMsg = "Select a registered pose to copy its Lua call"
+	} else if err := writePoseUsageClipboard(usage); err != nil {
+		g.statusMsg = "Could not copy pose call: " + err.Error()
+	} else {
+		g.statusMsg = "Copied " + usage
+	}
+	g.requestRender()
+}
+
 func poseStripHeight() int {
-	return poseStripSlotPad + poseStripPreviewH + 4 + uiSmallTextHeight + poseStripSlotPad
+	preview := poseStripSlotPad + poseStripPreviewH + 4 + uiSmallTextHeight + poseStripSlotPad
+	controls := poseStripSlotPad*2 + poseStripControlCount*18 + (poseStripControlCount-1)*poseStripControlGap
+	return max(preview, controls)
+}
+
+func poseStripControlWidth() int {
+	return max(poseStripControlW, smallTextWidth("COPY LUA")+16)
 }
 
 func poseStripControlsWidth() int {
-	return poseStripControlW + poseStripControlGap
+	return poseStripControlWidth() + poseStripControlGap
 }
 
 func (g *Game) authoredPoses() []assetsync.PoseRecord {
@@ -157,9 +208,9 @@ func (g *Game) poseStripControlRect(index int) editor.Rect {
 		buttonH = 18
 	}
 	return editor.Rect{
-		X: strip.X + strip.W - poseStripControlW,
+		X: strip.X + strip.W - poseStripControlWidth(),
 		Y: strip.Y + poseStripSlotPad + index*(buttonH+poseStripControlGap),
-		W: poseStripControlW,
+		W: poseStripControlWidth(),
 		H: buttonH,
 	}
 }
@@ -169,6 +220,8 @@ func (g *Game) poseStripNewRect() editor.Rect { return g.poseStripControlRect(0)
 func (g *Game) poseStripSetRect() editor.Rect { return g.poseStripControlRect(1) }
 
 func (g *Game) poseStripDelRect() editor.Rect { return g.poseStripControlRect(2) }
+
+func (g *Game) poseStripCopyRect() editor.Rect { return g.poseStripControlRect(3) }
 
 func (g *Game) posePreview(id int) editor.PosePreview {
 	sheet := g.activeSheet()
@@ -282,6 +335,8 @@ func (g *Game) updatePoseStrip(mx, my int) {
 		g.capturePoseFromSelection(true)
 	case rectContains(g.poseStripDelRect(), mx, my):
 		g.deleteSelectedPose()
+	case rectContains(g.poseStripCopyRect(), mx, my):
+		g.copyPoseUsage()
 	default:
 		if id := g.poseIndexAt(mx, my); id >= 0 {
 			if id == g.selectedPose && rectContains(g.poseStripLabelRect(id), mx, my) {
@@ -589,6 +644,7 @@ func (g *Game) drawPoseStrip(screen *ebiten.Image) {
 	drawTactileButton(screen, g.poseStripNewRect(), "NEW", false, colorSprite, true)
 	drawTactileButton(screen, g.poseStripSetRect(), "SET", false, colorSprite, true)
 	drawTactileButton(screen, g.poseStripDelRect(), "DEL", false, colorDanger, true)
+	drawTactileButton(screen, g.poseStripCopyRect(), "COPY LUA", false, colorSprite, g.selectedPose >= 0 && g.selectedPose < len(g.authoredPoses()))
 }
 
 func (g *Game) drawPosePreview(screen *ebiten.Image, preview editor.PosePreview, originX, originY, destW, destH float64, clip editor.Rect) {

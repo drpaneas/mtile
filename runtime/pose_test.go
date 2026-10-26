@@ -99,6 +99,32 @@ func TestPSprInvalidIDIsNoOp(t *testing.T) {
 	}
 }
 
+// Named pose calls lower to this same numeric ABI. Warnings for bad literals
+// must not turn intentional dynamic inactive IDs into drawing or panics.
+func TestPSprVNumericInactiveAndWrappedIDs(t *testing.T) {
+	for _, tc := range []struct {
+		value   Value
+		visible bool
+	}{
+		{IntVal(-1), false}, {IntVal(99), false}, {IntVal(65536), true},
+	} {
+		image, ram := poseFixture()
+		var c Context
+		if !c.Init(image, ram) {
+			t.Fatal("init")
+		}
+		c.Cls(3)
+		c.PSprV(tc.value, IntVal(0), IntVal(0), BoolVal(false), BoolVal(false))
+		want := byte(3)
+		if tc.visible {
+			want = 7
+		}
+		if got := c.Pget(1, 0); got != want {
+			t.Fatalf("id=%v pixel=%d want=%d", tc.value, got, want)
+		}
+	}
+}
+
 func TestPSprEmptyPoseIsNoOp(t *testing.T) {
 	image, ram := poseFixture()
 	image.PoseIndex = append(image.PoseIndex, PoseRange{Start: 2, Count: 0})

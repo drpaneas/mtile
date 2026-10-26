@@ -45,7 +45,7 @@ Nerdo's pose **0** is its first idle picture. Replace only the idle draw call
 in `game.lua`:
 
 ```lua
-pspr(0, 100, 60, facing_left)
+pspr("idle_0", 100, 60, facing_left)
 ```
 
 Save and rebuild. **Checkpoint:** while the arrows are released, the character
@@ -155,13 +155,22 @@ The usual asset workflow is:
    and click **REGISTER POSE**. Repeat for the other states.
 3. For moving artwork, open **Animations**, create a named clip, add the poses,
    set FPS and LOOP, preview it, and click **REGISTER CLIP**.
-4. Save and rebuild. Call `pspr` with a numeric pose ID or `anim` with the
+4. Save and rebuild. Call `pspr` with a literal pose name or `anim` with the
    registered clip name. The name must exist before building the example.
 
-`pspr` takes a **zero-based numeric ID**, not the pose's editor name. Store IDs
-in constants when useful: `LANTERN_UNLIT = 0`, then
-`pspr(LANTERN_UNLIT, x, y)`. Deleting a pose shifts later IDs, so update those
-constants. Clip frame order can change without changing the Lua clip name.
+Prefer `pspr("lantern_unlit", x, y)` with the pose's exact saved name. Select
+a registered pose and click **COPY LUA CALL** to copy its call. Literal names
+resolve to the current index at build time, so deleting or reordering other
+poses needs no Lua edits and adds no runtime lookup or string storage. Renaming
+or deleting the referenced pose produces a source-positioned build error with
+a close spelling suggestion when available. Names are case-sensitive and must
+be literals, rather than variables or generated constants.
+
+Existing **zero-based numeric IDs** still work, including dynamic numeric
+selection. Deleting a pose shifts later numeric IDs. Out-of-range numeric
+literals produce build warnings; dynamic invalid IDs retain their no-op
+behavior. Older unnamed poses can keep using numeric IDs, or be named in the
+editor. Clip frame order can change without changing the Lua clip name.
 
 ## Why use a clip instead of selecting frames yourself?
 
@@ -244,7 +253,7 @@ function _draw()
   if opening then
     anim("open", 100, 60, false, false, opening_ticks/30)
   else
-    pspr(0, 100, 60)
+    pspr("door_0", 100, 60)
   end
 end
 ```

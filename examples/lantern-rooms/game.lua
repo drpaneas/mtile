@@ -22,7 +22,7 @@ end
 function _draw()
   cls(1)
   map(0, room * 30, 0, -room * 240, 0, 30, 20)
-  pspr(0, player_x, 112, facing_left)
+  pspr("lantern_keeper", player_x, 112, facing_left)
   if room == 0 then print("MOON ROOM", 20, 8, 6)
   else print("AMBER ROOM", 20, 8, 6) end
   if returned then print("HOME AGAIN. EXPLORE AT YOUR PACE", 12, 150, 6)

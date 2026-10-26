@@ -130,7 +130,7 @@ func TestAnimationPageDockFitsMinimumWindow(t *testing.T) {
 				if rectsOverlapIDE(g.sheetGridCanvas(), layout.Panel) {
 					t.Fatal("animation dock overlaps the page canvas")
 				}
-				controls := []editor.Rect{layout.Track, layout.Preview, layout.RegisterPose, layout.UpdatePose, layout.DeletePose, layout.ScrollPrev, layout.ScrollNext}
+				controls := []editor.Rect{layout.Track, layout.Preview, layout.RegisterPose, layout.UpdatePose, layout.DeletePose, layout.CopyPose, poseVariantsButton(layout.Panel), layout.ScrollPrev, layout.ScrollNext}
 				for index, r := range controls {
 					if r.W <= 0 || r.H <= 0 || r.X < layout.Panel.X || r.Y < layout.Panel.Y || r.X+r.W > layout.Panel.X+layout.Panel.W || r.Y+r.H > layout.Panel.Y+layout.Panel.H {
 						t.Errorf("control %d %+v escapes dock %+v", index, r, layout.Panel)

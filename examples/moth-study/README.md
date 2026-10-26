@@ -28,9 +28,9 @@ select it as the entry point. To restore the final example, copy
 
 ### 1. One still picture
 
-Use **`lessons/01-pose.lua`**. `pspr(0, 88, 48)` draws saved pose **0**, named
+Use **`lessons/01-pose.lua`**. `pspr("rest", 88, 48)` draws the pose named
 `rest` in the editor. A pose is one complete picture, even when its artwork
-uses many tiles. Lua uses its numeric ID, rather than its editor name.
+uses many tiles. The build resolves the name to its current index.
 
 **One edit:** change `88` to `96` in that call and rebuild.
 
@@ -74,13 +74,13 @@ paint a small flower in one empty 8×8 cell below the moth artwork. Drag a
 rectangle around that cell, click **REGISTER POSE**, name it `flower`, and
 press Enter. Save the project.
 
-Replace the numeric ID in `pspr(0, 88, 48)` with your new pose's ID, shown in
-**Registered Poses**. It will be **6** if you have not registered another
-pose. Save and rebuild.
+Replace `"rest"` in the draw call with `"flower"`, or select the flower in
+**Registered Poses** and click **COPY LUA CALL**. Save and rebuild.
 
 **Checkpoint:** your flower appears on the botanical plate. You registered
-one picture and drew it; no animation clip was needed. Deleting a pose shifts
-later numeric IDs, so prefer keeping the supplied poses while experimenting.
+one picture and drew it; no animation clip was needed. Deleting other poses
+does not change this named call. Renaming or deleting `flower` makes the build
+report the missing name at the draw call.
 
 ## Included assets
 

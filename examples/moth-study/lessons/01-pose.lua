@@ -2,5 +2,5 @@
 function _draw()
   cls(1)
   map()
-  pspr(0, 88, 48)
+  pspr("rest", 88, 48)
 end

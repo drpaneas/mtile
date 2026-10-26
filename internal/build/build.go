@@ -124,6 +124,7 @@ type Result struct {
 	SourceFiles        []string
 	GlobalUsage        GlobalUsage
 	GeneratedGo        string
+	Warnings           []string
 	RendererRequested  transpiler.Renderer
 	Renderer           transpiler.Renderer
 	RendererReason     string
@@ -268,6 +269,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		AnimationFrames:      assets.AnimationFrames,
 		PoseVariantBaseCount: assets.PoseVariantBaseCount,
 		PoseVariantNames:     assets.PoseVariantNames,
+		PoseNames:            assets.PoseNames,
 		PoseIndex:            poseIndex,
 		PoseParts:            poseParts,
 		TileLinks:            flattenAssetTileLinks(assets),
@@ -289,6 +291,11 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		// the same original-module positions as rejected forced-mode builds.
 		rendererReport.Diagnostic = bundle.RemapError(errors.New(rendererReport.Diagnostic)).Error()
 	}
+	for i, warning := range rendererReport.Warnings {
+		rendererReport.Warnings[i] = bundle.RemapError(errors.New(warning)).Error()
+		s.emit(PhaseTranspile, "Warning: "+rendererReport.Warnings[i])
+	}
+	result.Warnings = rendererReport.Warnings
 	audioROMBytes, err := validateLinkedAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask, rendererReport.NativeAudioLinked)
 	if err != nil {
 		return result, err
@@ -398,6 +405,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		AudioROMBytes: audioROMBytes, AudioVoices: audioVoices,
 		AudioProfile: audioProfile, AudioPSGRatio: audioPSGRatio,
 		Entry: bundle.Entry, SourceFiles: append([]string(nil), bundle.Files...), GlobalUsage: sourceAnalysis.Globals, GeneratedGo: generated,
+		Warnings:          rendererReport.Warnings,
 		RendererRequested: rendererReport.Requested,
 		Renderer:          rendererReport.Selected, RendererReason: rendererReport.Reason,
 		RendererProfile: rendererReport.Profile, RendererDiagnostic: rendererReport.Diagnostic,

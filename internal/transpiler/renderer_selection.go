@@ -59,6 +59,9 @@ type RendererReport struct {
 	// and successful AUTO Mode 0 proofs. Unlike Reason, it is human-readable
 	// and may include a source position.
 	Diagnostic string
+	// Warnings are nonfatal, source-positioned asset diagnostics. They do not
+	// change renderer selection or numeric API behavior.
+	Warnings []string
 	// Mode0Layers is the exact number of regular BG screen shadows selected
 	// by the proof. It is zero for Mode 4 and drives a link-time build tag so
 	// one-layer cartridges do not reserve four layers of EWRAM.
@@ -142,6 +145,12 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	report := RendererReport{Requested: opts.Renderer, Selected: RendererMode4}
 	if chunk == nil {
 		return report, errors.New("transpiler: nil chunk")
+	}
+	warnings, restore, err := lowerPoseNames(chunk, opts)
+	defer restore()
+	report.Warnings = warnings
+	if err != nil {
+		return report, err
 	}
 	plan, err := validateMapContract(chunk, opts)
 	if err != nil {

@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+func TestPoseLiteralNamesAndOptionalFlips(t *testing.T) {
+	for _, source := range []string{`pspr("hero_idle", x, y)`, `pspr("hero_idle", x, y, true)`, `pspr(("hero_idle"), x, y, false, true)`} {
+		chunk, err := ParseString("pose.lua", source)
+		if err != nil {
+			t.Fatal(err)
+		}
+		call := chunk.Body[0].(*CallStmt).Call
+		name := call.Args[0]
+		if paren, ok := name.(*ParenExpr); ok {
+			name = paren.Expr
+		}
+		if literal, ok := name.(*StringExpr); !ok || literal.Value != "hero_idle" || literal.Pos().Source != "pose.lua" {
+			t.Fatalf("lost pose name or position: %#v", name)
+		}
+	}
+}
+
 func TestLexMtileExtensions(t *testing.T) {
 	source := `a = 0b1010; b != c; d += 1; e \= 2; f ^^= 3; g >>>= 1; h <<> i; j >>< k`
 	tokens, err := Lex("extensions.lua", source)

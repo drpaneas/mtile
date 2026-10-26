@@ -43,8 +43,8 @@ type animationEditorState struct {
 }
 
 type animationDockLayout struct {
-	Panel, Track, Preview                                        editor.Rect
-	RegisterPose, UpdatePose, DeletePose, ScrollPrev, ScrollNext editor.Rect
+	Panel, Track, Preview                                                  editor.Rect
+	RegisterPose, UpdatePose, DeletePose, CopyPose, ScrollPrev, ScrollNext editor.Rect
 }
 
 const animationFrameCellWidth = 84
@@ -56,6 +56,7 @@ func newAnimationDockLayout(panel editor.Rect) animationDockLayout {
 		Track:        editor.Rect{X: panel.X + 8, Y: panel.Y + 36, W: panel.W - 172, H: panel.H - 92},
 		Preview:      editor.Rect{X: panel.X + panel.W - 152, Y: panel.Y + 36, W: 144, H: panel.H - 92},
 		RegisterPose: button(8, 128), UpdatePose: button(144, 116), DeletePose: button(268, 116),
+		CopyPose:   editor.Rect{X: panel.X + panel.W - 292, Y: panel.Y + 4, W: 132, H: 28},
 		ScrollPrev: button(panel.W-72, 28), ScrollNext: button(panel.W-36, 28),
 	}
 }
@@ -406,6 +407,8 @@ func (g *Game) clickAnimationDock(layout animationDockLayout, mx, my int) {
 		g.capturePoseFromSelection(true)
 	case rectContains(layout.DeletePose, mx, my):
 		g.deleteSelectedPose()
+	case rectContains(layout.CopyPose, mx, my):
+		g.copyPoseUsage()
 	case rectContains(layout.ScrollPrev, mx, my):
 		s.scroll--
 	case rectContains(layout.ScrollNext, mx, my):
@@ -555,7 +558,8 @@ func (g *Game) drawAnimationDock(screen *ebiten.Image) {
 	strokeRoundedRect(screen, layout.Panel, 5, colorBorder)
 	g.clampAnimationScroll(layout)
 	poses := g.pageAnimationPoses()
-	drawSmallText(screen, fmt.Sprintf("REGISTERED POSES ON THIS PAGE · %d", len(poses)), layout.Track.X, layout.Panel.Y+10, colorText)
+	title := truncateTextToWidth(fmt.Sprintf("REGISTERED POSES ON THIS PAGE · %d", len(poses)), layout.CopyPose.X-layout.Track.X-8, uiSmallFace)
+	drawSmallText(screen, title, layout.Track.X, layout.Panel.Y+10, colorText)
 	drawSmallText(screen, "POSE PREVIEW", layout.Preview.X, layout.Panel.Y+10, colorDim)
 	drawTactileButton(screen, poseVariantsButton(layout.Panel), "COLOR VARIANTS", false, colorSprite, true)
 	if g.animation.thumbs == nil {
@@ -598,6 +602,7 @@ func (g *Game) drawAnimationDock(screen *ebiten.Image) {
 	} {
 		drawTactileButton(screen, button.rect, button.label, false, colorSprite, true)
 	}
+	drawTactileButton(screen, layout.CopyPose, "COPY LUA CALL", false, colorSprite, g.selectedPose >= 0 && g.selectedPose < len(g.authoredPoses()))
 }
 
 func (g *Game) animationPoseThumbnail(id int) editor.PosePreview {

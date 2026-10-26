@@ -172,10 +172,13 @@ type Options struct {
 	// in .rodata: there is no matching EWRAM budget entry for them.
 	PoseVariantBaseCount int
 	PoseVariantNames     []string
-	PoseIndex            []runtimeapi.PoseRange
-	AnimationClips       []runtimeapi.AnimationClip
-	AnimationFrames      []uint16
-	PoseParts            []runtimeapi.PosePart
+	// PoseNames maps literal pspr names to canonical indices at build time.
+	// Names never enter the cartridge's runtime pose records.
+	PoseNames       []string
+	PoseIndex       []runtimeapi.PoseRange
+	AnimationClips  []runtimeapi.AnimationClip
+	AnimationFrames []uint16
+	PoseParts       []runtimeapi.PosePart
 	// TileLinks draw linked shared tiles as poses or animation clips inside
 	// map(); see runtime/tilelink.go.
 	TileLinks []runtimeapi.TileLink
@@ -228,7 +231,9 @@ var Builtins = map[string]BuiltinSpec{
 	// Flips automatically preserve the pose bounds, or the union bounds of a
 	// named clip; callers keep the same x/y anchor in either facing direction.
 	"pvariant": {"PVariantV", 0, 1, 0},
-	"pspr":     {"PSprV", 3, 5, 0}, "anim": {"AnimV", 3, 6, 0},
+	// pspr accepts a numeric ID or a literal pose name resolved before renderer
+	// selection; the runtime ABI and numeric no-op semantics stay unchanged.
+	"pspr": {"PSprV", 3, 5, 0}, "anim": {"AnimV", 3, 6, 0},
 	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
@@ -353,6 +358,11 @@ type generationMetadata struct {
 func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
 	if chunk == nil {
 		return "", generationMetadata{}, errors.New("transpiler: nil chunk")
+	}
+	_, restore, err := lowerPoseNames(chunk, opts)
+	defer restore()
+	if err != nil {
+		return "", generationMetadata{}, err
 	}
 	if opts.MapLayers == 0 {
 		opts.MapLayers = 1

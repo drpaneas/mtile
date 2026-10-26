@@ -886,8 +886,12 @@ func (g *Game) hasDevelopProblems() bool {
 	g.runMu.Lock()
 	runError, sourceError := g.runError, g.sourceAnalysisError
 	usage := g.runGlobalUsage
+	warnings := false
+	for _, event := range g.runBuildEvents {
+		warnings = warnings || strings.HasPrefix(event.Message, "Warning: ")
+	}
 	g.runMu.Unlock()
-	return g.codeDiagnosticLine != 0 || runError != "" || sourceError != "" || (usage.Limit != 0 && usage.Count > usage.Limit)
+	return warnings || g.codeDiagnosticLine != 0 || runError != "" || sourceError != "" || (usage.Limit != 0 && usage.Count > usage.Limit)
 }
 
 func (g *Game) developPanelLines(panel developPanel) []string {
@@ -913,6 +917,11 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 	switch panel {
 	case developProblems:
 		var lines []string
+		for _, event := range events {
+			if strings.HasPrefix(event.Message, "Warning: ") {
+				lines = append(lines, event.Message)
+			}
+		}
 		if g.codeDiagnosticLine != 0 {
 			name := filepath.Base(g.codePath)
 			if document := g.codeDocuments[g.codePath]; document != nil {
@@ -1028,6 +1037,14 @@ func (g *Game) openDevelopDiagnostic() {
 	message := g.runError
 	if message == "" {
 		message = g.sourceAnalysisError
+	}
+	if message == "" {
+		for _, event := range g.runBuildEvents {
+			if strings.HasPrefix(event.Message, "Warning: ") {
+				message = event.Message
+				break
+			}
+		}
 	}
 	g.runMu.Unlock()
 	match := developDiagnosticLocation.FindStringSubmatch(message)
