@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
+	"github.com/drpaneas/mtile/internal/lsp"
 	"github.com/drpaneas/mtile/internal/transpiler"
 )
 
@@ -30,6 +32,10 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer) error {
+	return runWithInput(args, os.Stdin, stdout, stderr)
+}
+
+func runWithInput(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	if len(args) == 0 {
 		_, _ = fmt.Fprintln(stderr, usageText)
 		return errMissingCommand
@@ -43,6 +49,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return runBuild(args[1:], stdout)
 	case "edit":
 		return runEdit(args[1:], stdout, stderr)
+	case "lsp":
+		return runLSP(args[1:], stdin, stdout, stderr)
 	case "render-audio":
 		return runRenderAudio(args[1:], stdout)
 	case "help", "-h", "--help":
@@ -60,9 +68,22 @@ Commands:
   new    create a native GBA project
   build  transpile Lua and assets, link a .gba ROM
   edit   open the Sprites, Map, Audio, Code, and Play IDE
+  lsp    serve Lua completion, hover, and live diagnostics over stdio
   render-audio  render the PSG editor preview to a WAV file
 
 Run mtile <command> -h for flags.`
+
+func runLSP(args []string, in io.Reader, out, errOut io.Writer) error {
+	flags := flag.NewFlagSet("lsp", flag.ContinueOnError)
+	help, err := parseFlags(flags, args, errOut)
+	if err != nil || help {
+		return err
+	}
+	if flags.NArg() > 1 {
+		return errors.New("lsp accepts at most one project directory")
+	}
+	return lsp.Serve(context.Background(), in, out, flags.Arg(0))
+}
 
 func runRenderAudio(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("render-audio", flag.ContinueOnError)

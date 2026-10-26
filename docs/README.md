@@ -44,6 +44,7 @@ These are references, not prerequisites for your first game.
 | --- | --- |
 | [Lua API walkthrough](lua-api.md) | Builtin signatures, examples, and usage notes |
 | [Reference](reference.md) | CLI flags, project files, Lua, input, and builtins |
+| [Lua language server](language-server.md) | External-editor completion, hover, and live renderer diagnostics |
 | [Renderer compatibility](render-modes.md) | Exact Mode 0, Mode 4, and AUTO restrictions |
 | [Performance](performance.md) | Cycle budgets, memory limits, and measured costs |
 

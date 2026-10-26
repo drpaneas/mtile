@@ -243,43 +243,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		return result, fmt.Errorf("load assets: linked tiles (assets/tilelinks.json) are not supported by -experimental-tilecanvas; build with mode4 or mode0")
 	}
 	s.emit(PhaseTranspile, "Transpiling Lua to Go")
-	poseIndex, poseParts := flattenAssetPoses(assets)
-	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, transpiler.Options{
-		PackageName:                        "main",
-		IWRAMFunctions:                     project.IWRAMFunctions,
-		Renderer:                           renderer,
-		DisableStableTableFields:           s.DisableStableTableFields,
-		DisableMonomorphicNumbers:          s.DisableMonomorphicNumbers,
-		DisableMonomorphicFunctions:        s.DisableMonomorphicFunctions,
-		DisableMonomorphicMultiReturns:     s.DisableMonomorphicMultiReturns,
-		DisableNoAllocFunctionCalls:        s.DisableNoAllocFunctionCalls,
-		DisableNumericArrays:               s.DisableNumericArrays,
-		DisableHeapElision:                 s.DisableHeapElision,
-		DisableNumericConstants:            s.DisableNumericConstants,
-		DisableLiteralPrintSpecialization:  s.DisableLiteralPrintSpecialization,
-		DisableFixedMapLayerSpecialization: s.DisableFixedMapLayerSpecialization,
-		DisableMapRasterCache:              s.DisableMapRasterCache,
-		DisableConditionSpecialization:     s.DisableConditionSpecialization,
-		DisableStableWriteSpecialization:   s.DisableStableWriteSpecialization,
-		DisableConstantDivision:            s.DisableConstantDivision,
-		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
-		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
-		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
-		AnimationClips:       flattenAssetAnimations(assets),
-		AnimationFrames:      assets.AnimationFrames,
-		PoseVariantBaseCount: assets.PoseVariantBaseCount,
-		PoseVariantNames:     assets.PoseVariantNames,
-		PoseNames:            assets.PoseNames,
-		PoseIndex:            poseIndex,
-		PoseParts:            poseParts,
-		TileLinks:            flattenAssetTileLinks(assets),
-		ObjSheetW:            assets.ObjSheetW,
-		ObjSheetH:            assets.ObjSheetH,
-		ObjSheet:             assets.ObjSheetROM,
-		Palette:              assets.PaletteROM[:],
-		NativeAudio:          assets.NativeAudio,
-		Debug:                s.Debug,
-	})
+	generated, rendererReport, err := transpiler.TranspileWithReport(bundle.Entry, bundle.Source, s.transpilerOptions(project, assets, renderer))
 	if err != nil {
 		return result, fmt.Errorf("transpile %s: %w", bundle.Entry, bundle.RemapError(err))
 	}
@@ -427,6 +391,47 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	}
 	s.emit(PhaseComplete, "Build completed successfully")
 	return result, nil
+}
+
+// transpilerOptions is shared by ROM builds and live project analysis.
+func (s Service) transpilerOptions(project assetsync.Project, assets *assetsync.Assets, renderer transpiler.Renderer) transpiler.Options {
+	poseIndex, poseParts := flattenAssetPoses(assets)
+	return transpiler.Options{
+		PackageName:                        "main",
+		IWRAMFunctions:                     project.IWRAMFunctions,
+		Renderer:                           renderer,
+		DisableStableTableFields:           s.DisableStableTableFields,
+		DisableMonomorphicNumbers:          s.DisableMonomorphicNumbers,
+		DisableMonomorphicFunctions:        s.DisableMonomorphicFunctions,
+		DisableMonomorphicMultiReturns:     s.DisableMonomorphicMultiReturns,
+		DisableNoAllocFunctionCalls:        s.DisableNoAllocFunctionCalls,
+		DisableNumericArrays:               s.DisableNumericArrays,
+		DisableHeapElision:                 s.DisableHeapElision,
+		DisableNumericConstants:            s.DisableNumericConstants,
+		DisableLiteralPrintSpecialization:  s.DisableLiteralPrintSpecialization,
+		DisableFixedMapLayerSpecialization: s.DisableFixedMapLayerSpecialization,
+		DisableMapRasterCache:              s.DisableMapRasterCache,
+		DisableConditionSpecialization:     s.DisableConditionSpecialization,
+		DisableStableWriteSpecialization:   s.DisableStableWriteSpecialization,
+		DisableConstantDivision:            s.DisableConstantDivision,
+		SheetW:                             assets.SheetW, SheetH: assets.SheetH,
+		MapW: assets.MapW, MapH: assets.MapH, MapLayers: assets.MapLayers,
+		Sheet: assets.SheetROM, Map: assets.MapROM, Flags: assets.FlagROM,
+		AnimationClips:       flattenAssetAnimations(assets),
+		AnimationFrames:      assets.AnimationFrames,
+		PoseVariantBaseCount: assets.PoseVariantBaseCount,
+		PoseVariantNames:     assets.PoseVariantNames,
+		PoseNames:            assets.PoseNames,
+		PoseIndex:            poseIndex,
+		PoseParts:            poseParts,
+		TileLinks:            flattenAssetTileLinks(assets),
+		ObjSheetW:            assets.ObjSheetW,
+		ObjSheetH:            assets.ObjSheetH,
+		ObjSheet:             assets.ObjSheetROM,
+		Palette:              assets.PaletteROM[:],
+		NativeAudio:          assets.NativeAudio,
+		Debug:                s.Debug,
+	}
 }
 
 func (s Service) resolveRenderer(project assetsync.Project) (transpiler.Renderer, error) {

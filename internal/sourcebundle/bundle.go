@@ -68,8 +68,8 @@ func Resolve(projectDir, entry string) (Bundle, error) {
 }
 
 // ResolveWithOverlay resolves the same graph as Resolve while replacing the
-// contents of selected existing project-relative files. The editor uses this
-// to analyze all open buffers without writing unrelated dirty tabs to disk.
+// contents of selected project-relative files, including new unsaved modules.
+// The editor uses this to analyze all open buffers without saving dirty tabs.
 func ResolveWithOverlay(projectDir, entry string, overlay map[string]string) (Bundle, error) {
 	return resolve(projectDir, entry, overlay)
 }
@@ -86,17 +86,21 @@ func resolve(projectDir, entry string, overlay map[string]string) (Bundle, error
 	if entry == "" {
 		entry = DefaultEntry
 	}
-	entryPath, err := secureProjectPath(root, real, entry)
-	if err != nil {
-		return Bundle{}, fmt.Errorf("entry %q: %w", entry, err)
-	}
 	resolvedOverlay := make(map[string]string, len(overlay))
 	for relative, source := range overlay {
-		path, err := secureProjectPath(root, real, relative)
+		path, err := secureOverlayPath(root, real, relative)
 		if err != nil {
 			return Bundle{}, fmt.Errorf("source overlay %q: %w", relative, err)
 		}
 		resolvedOverlay[path] = source
+	}
+	entryPath, err := secureProjectPath(root, real, entry)
+	if err != nil {
+		candidate := filepath.Clean(filepath.Join(root, filepath.FromSlash(entry)))
+		if _, ok := resolvedOverlay[candidate]; !ok || !os.IsNotExist(err) {
+			return Bundle{}, fmt.Errorf("entry %q: %w", entry, err)
+		}
+		entryPath = candidate
 	}
 	r := &resolver{root: root, rootReal: real, overlay: resolvedOverlay, state: make(map[string]uint8)}
 	if err := r.visit(entryPath); err != nil {
@@ -307,6 +311,9 @@ func (r *resolver) resolveModule(requiringPath, module string) (string, error) {
 			continue
 		}
 		seen[candidate] = true
+		if _, ok := r.overlay[candidate]; ok {
+			return candidate, nil // Overlay paths were secured during resolution.
+		}
 		secure, err := secureExistingPath(r.root, r.rootReal, candidate)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -372,6 +379,30 @@ func secureExistingPath(root, rootReal, candidate string) (string, error) {
 		return "", fmt.Errorf("symlink escapes the project")
 	}
 	return filepath.Clean(candidate), nil
+}
+
+// A new unsaved file has no real path yet. Validate its nearest existing
+// ancestor instead, retaining the same lexical and symlink boundary as disk
+// sources. This never creates files or directories.
+func secureOverlayPath(root, rootReal, relative string) (string, error) {
+	path, err := secureProjectPath(root, rootReal, relative)
+	if err == nil || !os.IsNotExist(err) {
+		return path, err
+	}
+	path = filepath.Clean(filepath.Join(root, filepath.FromSlash(relative)))
+	if _, statErr := os.Lstat(path); statErr == nil {
+		return "", err // An existing dangling symlink is not a virtual file.
+	}
+	for parent := filepath.Dir(path); ; parent = filepath.Dir(parent) {
+		if _, statErr := os.Lstat(parent); statErr == nil {
+			if _, err := secureExistingPath(root, rootReal, parent); err != nil {
+				return "", err
+			}
+			return path, nil
+		} else if !os.IsNotExist(statErr) {
+			return "", statErr
+		}
+	}
 }
 
 func relativeSlash(root, path string) string {

@@ -237,6 +237,11 @@ type Game struct {
 	codeDiagnosticColumn     int
 	codeClipboard            string
 	codeLastParsed           string
+	codeAnalysis             build.ProjectAnalysis
+	codeAnalysisRevision     uint64
+	codeAnalysisDue          time.Time
+	codeAnalysisBusy         bool
+	codeAnalysisResults      chan codeAnalysisResult
 	developGameFocus         bool
 
 	// Build/run state is synchronized because TinyGo and the emulator helper
@@ -658,12 +663,14 @@ func (g *Game) persist() {
 		return
 	}
 	g.markAnimationClipsSaved()
+	g.queueProjectCheck()
 	g.statusMsg = ""
 }
 
 func (g *Game) Update() error {
 	g.dirty = false
 	g.updateRenderDemand()
+	g.pollProjectCheck(time.Now())
 	g.updateTheme()
 	g.advanceAnimationPreview(time.Now())
 	if g.preferencesOpen {

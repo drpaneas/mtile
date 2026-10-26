@@ -76,6 +76,9 @@ directory name. To inspect an existing example, try
 The [getting-started guide](docs/getting-started.md) also covers installed
 bundles, command-line builds, and troubleshooting.
 
+For an external code editor, [`mtile lsp`](docs/language-server.md) provides
+builtin completion, hover help, and live Lua and renderer diagnostics.
+
 ![mTile Sprite Lab showing registered Nerdo poses, drawing tools, and the OBJ artwork page.](docs/media/editor/poses.png)
 
 *The desktop editor. See the [illustrated IDE guide](docs/ide.md) for all four

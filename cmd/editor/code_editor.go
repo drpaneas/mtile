@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"image/color"
 	"math"
@@ -11,9 +10,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/drpaneas/mtile/internal/hostclipboard"
-	"github.com/drpaneas/mtile/internal/luaparser"
+	"github.com/drpaneas/mtile/internal/language"
 	"github.com/drpaneas/mtile/internal/transpiler"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -533,22 +533,20 @@ func (g *Game) refreshCodeDiagnostics() {
 		return
 	}
 	g.codeLastParsed = g.code.Text()
+	g.queueProjectCheck()
 	g.codeDiagnostic = "No problems detected. Ready to build."
 	g.codeDiagnosticLine, g.codeDiagnosticColumn = 0, 0
 	sourceName := filepath.ToSlash(g.codePath)
 	if relative, relErr := filepath.Rel(g.model.Dir, g.codePath); relErr == nil {
 		sourceName = filepath.ToSlash(relative)
 	}
-	_, err := luaparser.ParseString(sourceName, g.code.Text())
-	if err == nil {
+	diagnostics := build.CheckLuaSource(sourceName, g.code.Text())
+	if len(diagnostics) == 0 {
 		return
 	}
-	g.codeDiagnostic = err.Error()
-	var parseError *luaparser.Error
-	if errors.As(err, &parseError) {
-		g.codeDiagnosticLine = parseError.Pos.Line
-		g.codeDiagnosticColumn = parseError.Pos.Column
-	}
+	g.codeDiagnostic = diagnostics[0].Message
+	g.codeDiagnosticLine = diagnostics[0].Line
+	g.codeDiagnosticColumn = diagnostics[0].Column
 	g.syncActiveCodeDocument()
 }
 
@@ -639,8 +637,8 @@ func (g *Game) activeCodeLayout() codeLayout {
 func (g *Game) openCodeCompletions() {
 	prefix := g.codePrefix()
 	items := []string{"_init", "_update", "_draw"}
-	for name := range transpiler.Builtins {
-		items = append(items, name)
+	for _, entry := range language.Complete(prefix) {
+		items = append(items, entry.Name)
 	}
 	sort.Strings(items)
 	g.codeCompletions = g.codeCompletions[:0]

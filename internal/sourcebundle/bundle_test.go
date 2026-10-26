@@ -60,6 +60,43 @@ func TestResolveLegacySingleFile(t *testing.T) {
 	}
 }
 
+func TestOverlaySupportsNewEntryAndModuleWithoutWriting(t *testing.T) {
+	root := t.TempDir()
+	bundle, err := ResolveWithOverlay(root, "game.lua", map[string]string{
+		"game.lua":           "require(\"new_module\")\n",
+		"src/new_module.lua": "score = 1\n",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(bundle.Files, ",") != "src/new_module.lua,game.lua" {
+		t.Fatalf("files = %v", bundle.Files)
+	}
+	entries, err := os.ReadDir(root)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("overlay wrote files: %v / %v", entries, err)
+	}
+	if _, err := ResolveWithOverlay(root, "game.lua", map[string]string{"../escape.lua": "", "game.lua": ""}); err == nil {
+		t.Fatal("overlay escaped the root")
+	}
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(root, "src")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ResolveWithOverlay(root, "game.lua", map[string]string{"game.lua": "", "src/new.lua": ""}); err == nil {
+		t.Fatal("new overlay escaped through a symlink")
+	}
+	if err := os.Remove(filepath.Join(root, "src")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(outside, "missing"), filepath.Join(root, "src")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ResolveWithOverlay(root, "game.lua", map[string]string{"game.lua": "", "src/new.lua": ""}); err == nil {
+		t.Fatal("new overlay accepted a dangling symlink ancestor")
+	}
+}
+
 func TestResolveDependenciesDepthFirstOnce(t *testing.T) {
 	root := t.TempDir()
 	writeSource(t, root, "src/shared.lua", "shared = 1\n")

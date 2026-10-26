@@ -891,7 +891,14 @@ func (g *Game) hasDevelopProblems() bool {
 		warnings = warnings || strings.HasPrefix(event.Message, "Warning: ")
 	}
 	g.runMu.Unlock()
-	return warnings || g.codeDiagnosticLine != 0 || runError != "" || sourceError != "" || (usage.Limit != 0 && usage.Count > usage.Limit)
+	if g.codeAnalysis.Entry != "" {
+		usage = g.codeAnalysis.Globals
+	}
+	liveProblems := false
+	for _, diagnostic := range g.codeAnalysis.Diagnostics {
+		liveProblems = liveProblems || diagnostic.Severity != build.DiagnosticInformation
+	}
+	return liveProblems || warnings || g.codeDiagnosticLine != 0 || runError != "" || sourceError != "" || (usage.Limit != 0 && usage.Count > usage.Limit)
 }
 
 func (g *Game) developPanelLines(panel developPanel) []string {
@@ -916,7 +923,10 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 	watches := append([]emulator.Watch(nil), g.playTelemetry.Watches...)
 	switch panel {
 	case developProblems:
-		var lines []string
+		lines := g.liveAnalysisLines()
+		if g.codeAnalysis.Entry != "" {
+			globalUsage = g.codeAnalysis.Globals
+		}
 		for _, event := range events {
 			if strings.HasPrefix(event.Message, "Warning: ") {
 				lines = append(lines, event.Message)
@@ -1033,6 +1043,11 @@ func (g *Game) openDevelopDiagnostic() {
 		g.keepCodeCursorVisible(newDevelopPanelLayout(g.developPanel).Code)
 		return
 	}
+	if len(g.codeAnalysis.Diagnostics) > 0 {
+		diagnostic := g.codeAnalysis.Diagnostics[0]
+		g.openProjectDiagnostic(diagnostic.Source, diagnostic.Line, diagnostic.Column)
+		return
+	}
 	g.runMu.Lock()
 	message := g.runError
 	if message == "" {
@@ -1053,7 +1068,10 @@ func (g *Game) openDevelopDiagnostic() {
 	}
 	line, _ := strconv.Atoi(match[2])
 	column, _ := strconv.Atoi(match[3])
-	path := match[1]
+	g.openProjectDiagnostic(match[1], line, column)
+}
+
+func (g *Game) openProjectDiagnostic(path string, line, column int) {
 	if !filepath.IsAbs(path) {
 		path = filepath.Join(g.model.Dir, filepath.FromSlash(path))
 	}

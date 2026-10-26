@@ -59,6 +59,7 @@ func (g *Game) refreshProjectSourceAnalysis() (build.GlobalUsage, error) {
 		return build.GlobalUsage{}, fmt.Errorf("project is unavailable")
 	}
 	analysis, err := build.AnalyzeProjectSources(g.model.Dir, g.projectSourceOverlay())
+	g.queueProjectCheck()
 	g.runMu.Lock()
 	g.runEntry = analysis.Entry
 	g.runSourceFiles = append([]string(nil), analysis.SourceFiles...)
