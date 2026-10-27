@@ -112,7 +112,7 @@ func (g *Game) drawCodeVerticalScrollbar(screen *ebiten.Image, layout codeLayout
 	fillRect(screen, layout.Vertical, colorInk)
 	thumb := g.codeVerticalThumb(layout)
 	var clr color.Color = color.RGBA{R: 74, G: 75, B: 105, A: 255}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if g.codeVerticalScrollLimit(layout) > 0 && (g.codeVerticalDragging || rectContains(thumb, mx, my)) {
 		clr = rgba(colorCode, 190)
 	}

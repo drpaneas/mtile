@@ -55,13 +55,13 @@ type themeState struct {
 
 func (g *Game) initTheme() {
 	g.theme.level = effectsClean
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
 }
 
 func (g *Game) updateTheme() {
 	g.theme.frame++
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	g.theme.level = effectsClean
 	g.theme.cursorX, g.theme.cursorY = float64(mx), float64(my)
 	g.theme.buildPulse = 0
@@ -130,7 +130,7 @@ func drawDevelopButton(screen *ebiten.Image, rect editor.Rect, label string, act
 }
 
 func drawTactileButtonWithTypography(screen *ebiten.Image, rect editor.Rect, label string, active bool, accent color.Color, compact, develop bool) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	pressed := rectContains(rect, mx, my) && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	face := rect
 	fill := color.Color(colorButtonFace)

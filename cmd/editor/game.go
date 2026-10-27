@@ -868,9 +868,9 @@ func statusMessageColor(message string) color.Color {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	// One editor pixel must remain one window pixel. In particular, never
-	// clamp this result above the real window size: doing so asks Ebitengine to
-	// downsample the entire UI at a fractional scale and softens every glyph.
+	// Keep layout in logical window coordinates. editorWindow supplies the
+	// physical framebuffer size separately; the two differ on HiDPI displays.
+	// Never enlarge this logical layout beyond the available window space.
 	width := max(1, outsideWidth)
 	height := max(1, outsideHeight)
 	if setEditorLayout(width, height) && g != nil && g.model != nil {
@@ -895,7 +895,7 @@ func (g *Game) updateRenderDemand() {
 	if g == nil {
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	g.renderKeys = inpututil.AppendPressedKeys(g.renderKeys[:0])
 	input := !g.renderCursorKnown || mx != g.renderCursorX || my != g.renderCursorY ||
 		ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) ||

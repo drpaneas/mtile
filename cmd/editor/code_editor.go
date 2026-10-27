@@ -214,7 +214,7 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 			g.finishCodeInput(layout, revealCursor)
 		}
 	}()
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if g.codeQuickOpen {
 		g.updateCodeQuickOpenInput()
 		return
@@ -862,7 +862,7 @@ func (g *Game) drawCodeHorizontalScrollbar(screen *ebiten.Image, layout codeLayo
 	drawLine(screen, layout.Horizontal.X, layout.Horizontal.Y, layout.Horizontal.X+layout.Horizontal.W, layout.Horizontal.Y, colorBorder)
 	thumb := g.codeHorizontalThumb(layout)
 	var clr color.Color = color.RGBA{R: 74, G: 75, B: 105, A: 255}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if g.codeHorizontalScrollLimit(layout) > 0 && (g.codeHorizontalDragging || rectContains(thumb, mx, my)) {
 		clr = rgba(colorCode, 190)
 	}

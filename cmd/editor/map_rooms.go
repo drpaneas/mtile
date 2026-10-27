@@ -23,7 +23,7 @@ func (g *Game) mapRoomDeleteLabel() string {
 }
 func (g *Game) updateMapRoomToolbar(layout mapLayout) bool {
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
-	x, y := ebiten.CursorPosition()
+	x, y := editorCursorPosition()
 	left := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	if g.mapRooms && ((!mod && (inpututil.IsKeyJustPressed(ebiten.KeyM) || inpututil.IsKeyJustPressed(ebiten.KeyC))) || left && (rectContains(layout.MoveArea, x, y) || rectContains(layout.CopyArea, x, y))) {
 		g.mapRooms = false
@@ -86,7 +86,7 @@ func (g *Game) updateMapRooms(layout mapLayout) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		return
 	}
-	x, y := ebiten.CursorPosition()
+	x, y := editorCursorPosition()
 	for i, r := range g.mapRoomEdgeButtons(layout) {
 		if rectContains(r, x, y) {
 			directions := [4][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}

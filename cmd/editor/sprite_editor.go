@@ -17,7 +17,7 @@ func (g *Game) updateSpriteMode() {
 		return
 	}
 	if g.updatePoseNameTyping() {
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !g.poseNameEditClickKeepsFocus(mx, my) {
 			g.commitPoseNameEdit()
 			if g.poseNameEditing {
@@ -27,7 +27,7 @@ func (g *Game) updateSpriteMode() {
 			return
 		}
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if g.updateSpriteBankToggle(mx, my) {
 		return
 	}
@@ -572,7 +572,7 @@ func (g *Game) drawPixelCanvas(screen *ebiten.Image) {
 	g.drawReservedSpriteCanvasLock(screen)
 	strokeRoundedRect(screen, editor.Rect{X: canvasRect.X - 1, Y: canvasRect.Y - 1, W: canvasRect.W + 2, H: canvasRect.H + 2}, 5, colorBorder)
 	if g.theme.level != effectsClean {
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		if col, row, ok := g.spriteCanvasCellAt(mx, my, false); ok {
 			if r, visible := intersectEditorRects(g.canvasPixelBounds(col, row, 1, 1), canvasRect); visible {
 				strokeRect(screen, r, colorSprite)
@@ -1294,7 +1294,7 @@ func (g *Game) updateSpriteKeyboard() {
 	if now.Sub(g.lastNav) < navDebounce {
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if _, yoff := ebiten.Wheel(); yoff != 0 && rectContains(canvasRect, mx, my) {
 		delta := 1
 		if yoff < 0 {

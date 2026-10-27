@@ -372,7 +372,7 @@ func (g *Game) updateNativeMusicMouse(layout nativeMusicLayout) {
 			g.nativePresetMenuOpen = false
 			return
 		}
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		for row := 0; row < visible; row++ {
 			index := g.nativePresetMenuScroll + row
 			if index < len(presets) && rectContains(nativePresetMenuItemRect(layout, len(presets), row), mx, my) {
@@ -403,7 +403,7 @@ func (g *Game) updateNativeMusicMouse(layout nativeMusicLayout) {
 		g.finishNativeNoteDrag()
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		if !g.nativeSFXMode && rectContains(layout.Meter, mx, my) {
 			delta := 1
 			if mx < layout.Meter.X+layout.Meter.W/2 {
@@ -426,7 +426,7 @@ func (g *Game) updateNativeMusicMouse(layout nativeMusicLayout) {
 	if !leftJustPressed {
 		if leftPressed {
 			if g.nativeNoteDrag {
-				mx, my := ebiten.CursorPosition()
+				mx, my := editorCursorPosition()
 				g.extendNativeNoteDrag(layout, mx, my)
 				return
 			}
@@ -434,7 +434,7 @@ func (g *Game) updateNativeMusicMouse(layout nativeMusicLayout) {
 		}
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	switch {
 	case rectContains(layout.SongPrevious, mx, my):
 		g.cycleNativeSong(-1)

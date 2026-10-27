@@ -150,7 +150,7 @@ func (g *Game) updateDevelopMode() {
 	}
 	g.pumpPlaySession()
 	layout := newDevelopPanelLayout(g.developPanel)
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	clicked := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	if clicked {
 		switch {

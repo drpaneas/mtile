@@ -282,7 +282,7 @@ func (g *Game) updateAnimationWorkspaceTyping() bool {
 	}
 	s := &g.animation
 	beforeQuery, beforeScroll, beforeCursor, beforeSelect, beforeOpen := s.pickerSearch, s.pickerScroll, s.pickerCursor, s.searchSelectAll, s.pickerOpen
-	g.updateAnimationWorkspace(ebiten.CursorPosition())
+	g.updateAnimationWorkspace(editorCursorPosition())
 	if !s.pickerOpen {
 		return true
 	}

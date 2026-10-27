@@ -184,7 +184,7 @@ func newHintedMonoFace(parsed *opentype.Font, size float64) (*text.GoXFace, int,
 	integerFace := &integerFontFace{Face: face}
 	charWidth := font.MeasureString(integerFace, "M").Ceil()
 	textHeight := integerFace.Metrics().Height.Ceil()
-	return text.NewGoXFace(integerFace), charWidth, textHeight
+	return registerDisplayFont(text.NewGoXFace(integerFace), parsed, size, integerFace), charWidth, textHeight
 }
 
 // integerFontFace keeps the code editor's measured cell grid exact while
@@ -225,7 +225,7 @@ func newCleanUIFontFace(parsed *opentype.Font, size float64) (*text.GoXFace, int
 	}
 	charWidth := font.MeasureString(face, "M").Ceil()
 	textHeight := face.Metrics().Height.Ceil()
-	return text.NewGoXFace(face), charWidth, textHeight
+	return registerDisplayFont(text.NewGoXFace(face), parsed, size, face), charWidth, textHeight
 }
 
 func setInterfaceTextSize(size interfaceTextSize) {
@@ -276,9 +276,9 @@ func drawSmallText(screen *ebiten.Image, s string, x, y int, clr color.Color) {
 
 func drawTextFace(screen *ebiten.Image, s string, x, y int, face text.Face, clr color.Color) {
 	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(x), float64(y))
+	op.GeoM.Translate(float64(x)*editorDrawScale, float64(y)*editorDrawScale)
 	op.ColorScale.ScaleWithColor(clr)
-	text.Draw(screen, s, face, op)
+	text.Draw(screen, s, displayFont(face, editorDrawScale), op)
 }
 
 func drawTextScale(screen *ebiten.Image, s string, x, y, scale int, clr color.Color) {
@@ -368,14 +368,16 @@ func fillRect(screen *ebiten.Image, r editor.Rect, clr color.Color) {
 	if r.W <= 0 || r.H <= 0 {
 		return
 	}
-	vector.FillRect(screen, float32(r.X), float32(r.Y), float32(r.W), float32(r.H), clr, false)
+	s := float32(editorDrawScale)
+	vector.FillRect(screen, float32(r.X)*s, float32(r.Y)*s, float32(r.W)*s, float32(r.H)*s, clr, false)
 }
 
 func strokeRect(screen *ebiten.Image, r editor.Rect, clr color.Color) {
 	if r.W <= 0 || r.H <= 0 {
 		return
 	}
-	vector.StrokeRect(screen, float32(r.X), float32(r.Y), float32(r.W), float32(r.H), 1, clr, false)
+	s := float32(editorDrawScale)
+	vector.StrokeRect(screen, float32(r.X)*s, float32(r.Y)*s, float32(r.W)*s, float32(r.H)*s, s, clr, false)
 }
 
 func fillRoundedRect(screen *ebiten.Image, r editor.Rect, radius int, clr color.Color) {
@@ -405,7 +407,8 @@ func strokeRoundedRectWidth(screen *ebiten.Image, r editor.Rect, radius, width i
 }
 
 func drawLine(screen *ebiten.Image, x0, y0, x1, y1 int, clr color.Color) {
-	vector.StrokeLine(screen, float32(x0), float32(y0), float32(x1), float32(y1), 1, clr, false)
+	s := float32(editorDrawScale)
+	vector.StrokeLine(screen, float32(x0)*s, float32(y0)*s, float32(x1)*s, float32(y1)*s, s, clr, false)
 }
 
 func rectContains(r editor.Rect, x, y int) bool {
@@ -443,8 +446,9 @@ func drawCheckerboardColors(screen *ebiten.Image, r editor.Rect, checkerA, check
 	if shader, _ := checkerboardFillShader(); shader != nil {
 		op := &ebiten.DrawRectShaderOptions{}
 		op.GeoM.Translate(float64(r.X), float64(r.Y))
+		op.GeoM.Scale(editorDrawScale, editorDrawScale)
 		op.Uniforms = map[string]any{
-			"Cell":   float32(cell),
+			"Cell":   float32(float64(cell) * editorDrawScale),
 			"ColorA": shaderColor(checkerA),
 			"ColorB": shaderColor(checkerB),
 		}

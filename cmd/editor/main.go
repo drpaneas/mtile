@@ -29,7 +29,7 @@ func main() {
 	// Metal command buffer and swap entirely. Dynamic surfaces (transport,
 	// recording, MIDI and the emulator) still request every frame from Update.
 	ebiten.SetScreenClearedEveryFrame(false)
-	runErr := ebiten.RunGame(g)
+	runErr := ebiten.RunGame(&editorWindow{Game: g})
 	g.closePlayMode()
 	g.closeNativePerformance()
 	// Persist before reporting a fatal error too: log.Fatalf calls os.Exit

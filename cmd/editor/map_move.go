@@ -99,7 +99,7 @@ func (g *Game) mapAreaToolPrompt() string {
 }
 
 func (g *Game) handleMapAreaTool(layout mapLayout) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	leftJustPressed := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	requested := mapToolPaint
@@ -236,7 +236,7 @@ func (g *Game) handleMapAreaInteraction(layout mapLayout) {
 	if !g.mapLayerVisible[g.mapActiveLayer] {
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	justPressed := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	justReleased := inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft)
 	leftDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)

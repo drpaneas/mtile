@@ -683,6 +683,7 @@ func (g *Game) drawPlayDisplay(screen *ebiten.Image, layout playLayout) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(float64(layout.Screen.X), float64(layout.Screen.Y))
+	op.GeoM.Scale(editorDrawScale, editorDrawScale)
 	op.Filter = ebiten.FilterNearest
 	screen.DrawImage(g.playImage, op)
 }

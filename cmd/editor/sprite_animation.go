@@ -474,7 +474,7 @@ func (g *Game) updateAnimationNameTyping() bool {
 		return false
 	}
 	if g.animationWorkspaceActive() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		layout := newAnimationWorkspaceLayout(g.animationWorkspaceRect())
 		if !rectContains(layout.ClipName, mx, my) {
 			if g.commitAnimationNameEdit() {

@@ -203,7 +203,7 @@ func (g *Game) handleModeNavigation() bool {
 		mode = nextEditorMode(g.mode)
 		handled = true
 	case inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft):
-		mx, my := ebiten.CursorPosition()
+		mx, my := editorCursorPosition()
 		for _, candidate := range primaryEditorModes {
 			if rectContains(editorTabRect(candidate), mx, my) {
 				mode = candidate

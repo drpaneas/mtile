@@ -1,0 +1,10 @@
+=== RUN   TestEditorHiDPIRender
+    display_render_test.go:77: native monitor density: 2x
+    display_render_test.go:83: native adapter: 1200x800 logical -> 2400x1600 physical
+    display_render_test.go:85: available monitor: Built-in Retina Display (2x)
+    display_render_test.go:124: 2x code region: 3539 logical pixel blocks contain additional glyph detail
+--- PASS: TestEditorHiDPIRender (0.71s)
+=== RUN   TestEditorHiDPIPixelArtAndIdle
+--- PASS: TestEditorHiDPIPixelArtAndIdle (0.06s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	1.727s

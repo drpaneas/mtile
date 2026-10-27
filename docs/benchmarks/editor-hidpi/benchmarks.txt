@@ -1,0 +1,27 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorHiDPI/1x/Idle-12         	      60	  16666766 ns/op	       206.3 work-ns/op	    9206 B/op	     350 allocs/op
+BenchmarkEditorHiDPI/1x/Idle-12         	      60	  16666861 ns/op	       124.2 work-ns/op	    9201 B/op	     350 allocs/op
+BenchmarkEditorHiDPI/1x/Idle-12         	      60	  16665423 ns/op	       131.2 work-ns/op	    9201 B/op	     350 allocs/op
+BenchmarkEditorHiDPI/1x/Typing-12       	      60	  16665685 ns/op	   2616911 work-ns/op	 4496101 B/op	    2442 allocs/op
+BenchmarkEditorHiDPI/1x/Typing-12       	      60	  16644663 ns/op	   2519494 work-ns/op	 4625025 B/op	    2430 allocs/op
+BenchmarkEditorHiDPI/1x/Typing-12       	      60	  16668606 ns/op	   2482435 work-ns/op	 4063070 B/op	    2428 allocs/op
+BenchmarkEditorHiDPI/2x/Idle-12         	      60	  16702686 ns/op	       394.4 work-ns/op	    9216 B/op	     350 allocs/op
+BenchmarkEditorHiDPI/2x/Idle-12         	      60	  16664853 ns/op	       322.3 work-ns/op	    9208 B/op	     350 allocs/op
+BenchmarkEditorHiDPI/2x/Idle-12         	      60	  16666326 ns/op	       151.3 work-ns/op	    9196 B/op	     349 allocs/op
+BenchmarkEditorHiDPI/2x/Typing-12       	      60	  16667353 ns/op	   6038256 work-ns/op	16011345 B/op	    2442 allocs/op
+BenchmarkEditorHiDPI/2x/Typing-12       	      60	  16696605 ns/op	   5532590 work-ns/op	16142446 B/op	    2429 allocs/op
+BenchmarkEditorHiDPI/2x/Typing-12       	      60	  16657215 ns/op	   5581012 work-ns/op	15588684 B/op	    2431 allocs/op
+BenchmarkEditorRender/Sprites-12        	      60	  16666959 ns/op	   3671154 render-ns/op	 3999918 B/op	    5274 allocs/op
+BenchmarkEditorRender/Sprites-12        	      60	  16672058 ns/op	   3935138 render-ns/op	 3997522 B/op	    5274 allocs/op
+BenchmarkEditorRender/Sprites-12        	      60	  16668297 ns/op	   3718812 render-ns/op	 4002034 B/op	    5276 allocs/op
+BenchmarkEditorRender/Map-12            	      60	  16803076 ns/op	  14493313 render-ns/op	17461095 B/op	   33747 allocs/op
+BenchmarkEditorRender/Map-12            	      60	  16672644 ns/op	  14811203 render-ns/op	 4037306 B/op	   33750 allocs/op
+BenchmarkEditorRender/Map-12            	      60	  16742913 ns/op	  14502160 render-ns/op	 4037349 B/op	   33752 allocs/op
+BenchmarkEditorRender/Code-12           	      60	  16687310 ns/op	   3808691 render-ns/op	 3972972 B/op	    1943 allocs/op
+BenchmarkEditorRender/Code-12           	      60	  16675407 ns/op	   3209997 render-ns/op	 3972385 B/op	    1943 allocs/op
+BenchmarkEditorRender/Code-12           	      60	  16673347 ns/op	   4356935 render-ns/op	 3972386 B/op	    1943 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	36.465s

@@ -135,7 +135,7 @@ func (g *Game) updatePoseVariants() {
 		g.requestRender()
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	colors := g.poseVariantColors()
 	s.colorScroll = min(max(0, s.colorScroll), max(0, len(colors)-9))
 	if _, dy := ebiten.Wheel(); dy != 0 && !s.picking {

@@ -478,7 +478,7 @@ func (g *Game) updateNativeWaveDraw(layout nativeMusicLayout) {
 	if g.nativeChannel != 2 || !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	waveRect := nativeWaveEditorRect(layout)
 	if !rectContains(waveRect, mx, my) {
 		return

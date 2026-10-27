@@ -1,0 +1,15 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/cmd/editor
+cpu: Apple M2 Pro
+BenchmarkEditorRender/Sprites-12         	      60	  16656442 ns/op	   3804792 render-ns/op	 4297053 B/op	    5290 allocs/op
+BenchmarkEditorRender/Sprites-12         	      60	  16703285 ns/op	   3930240 render-ns/op	 4003783 B/op	    5273 allocs/op
+BenchmarkEditorRender/Sprites-12         	      60	  16658637 ns/op	   4030789 render-ns/op	 3995160 B/op	    5262 allocs/op
+BenchmarkEditorRender/Map-12             	      60	  16759126 ns/op	  14817635 render-ns/op	10750194 B/op	   33753 allocs/op
+BenchmarkEditorRender/Map-12             	      60	  16697244 ns/op	  14160081 render-ns/op	12987088 B/op	   33750 allocs/op
+BenchmarkEditorRender/Map-12             	      60	  16665489 ns/op	  14208476 render-ns/op	 4037272 B/op	   33749 allocs/op
+BenchmarkEditorRender/Code-12            	      60	  16668615 ns/op	   5026654 render-ns/op	 3972972 B/op	    1943 allocs/op
+BenchmarkEditorRender/Code-12            	      60	  16667938 ns/op	   4550425 render-ns/op	 3972386 B/op	    1943 allocs/op
+BenchmarkEditorRender/Code-12            	      60	  16667953 ns/op	   4699773 render-ns/op	 3972400 B/op	    1944 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	16.029s

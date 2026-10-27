@@ -46,6 +46,7 @@ func drawMtileHeaderLogo(screen *ebiten.Image, x, y, maxWidth, maxHeight int) (w
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(float64(x), float64(y))
+	op.GeoM.Scale(editorDrawScale, editorDrawScale)
 	screen.DrawImage(logo, op)
 	return width, height
 }

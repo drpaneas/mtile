@@ -162,7 +162,7 @@ func (g *Game) updateSpriteToolShortcuts() bool {
 }
 
 func (g *Game) drawSpriteTools(screen *ebiten.Image) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	title := g.spriteTool.String()
 	for i := 0; i < spriteToolButtonCount; i++ {
 		if rectContains(spriteToolButtonRect(i), mx, my) {
@@ -204,7 +204,8 @@ func drawSpriteToolIcon(screen *ebiten.Image, r editor.Rect, index int, clr colo
 		case spriteToolRect:
 			strokeRoundedRect(screen, editor.Rect{X: cx - 8, Y: cy - 7, W: 16, H: 14}, 2, clr)
 		case spriteToolCircle:
-			vector.StrokeCircle(screen, float32(cx), float32(cy), 8, 1, clr, true)
+			s := float32(editorDrawScale)
+			vector.StrokeCircle(screen, float32(cx)*s, float32(cy)*s, 8*s, s, clr, true)
 		}
 		return
 	}
@@ -245,6 +246,7 @@ func drawFilledIconPath(screen *ebiten.Image, path *vector.Path, fill, outline c
 	if screen == nil || path == nil {
 		return
 	}
+	path = displayIconPath(path)
 	fillOp := &vector.DrawPathOptions{}
 	fillOp.AntiAlias = true
 	fillOp.ColorScale.ScaleWithColor(fill)
@@ -252,7 +254,18 @@ func drawFilledIconPath(screen *ebiten.Image, path *vector.Path, fill, outline c
 	strokeOp := &vector.DrawPathOptions{}
 	strokeOp.AntiAlias = true
 	strokeOp.ColorScale.ScaleWithColor(outline)
-	vector.StrokePath(screen, path, &vector.StrokeOptions{Width: 1.5, MiterLimit: 4}, strokeOp)
+	vector.StrokePath(screen, path, &vector.StrokeOptions{Width: 1.5 * float32(editorDrawScale), MiterLimit: 4}, strokeOp)
+}
+
+func displayIconPath(path *vector.Path) *vector.Path {
+	if editorDrawScale == 1 {
+		return path
+	}
+	op := &vector.AddPathOptions{}
+	op.GeoM.Scale(editorDrawScale, editorDrawScale)
+	scaled := &vector.Path{}
+	scaled.AddPath(path, op)
+	return scaled
 }
 
 func drawEraserToolIcon(screen *ebiten.Image, cx, cy int, clr color.Color) {
@@ -304,7 +317,7 @@ func drawFillToolIcon(screen *ebiten.Image, cx, cy int, clr color.Color) {
 	handleStroke := &vector.DrawPathOptions{}
 	handleStroke.AntiAlias = true
 	handleStroke.ColorScale.ScaleWithColor(clr)
-	vector.StrokePath(screen, &handle, &vector.StrokeOptions{Width: 1.5}, handleStroke)
+	vector.StrokePath(screen, displayIconPath(&handle), &vector.StrokeOptions{Width: 1.5 * float32(editorDrawScale)}, handleStroke)
 	drawLine(screen, cx-6, cy+1, cx+6, cy-2, colorText)
 
 	var drop vector.Path

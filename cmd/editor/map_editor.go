@@ -102,7 +102,7 @@ func (g *Game) handleMapLayerPanel(layout mapLayout) {
 	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		return
 	}
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	layer, visibility, ok := mapLayerPanelHit(layout, mx, my)
 	if !ok {
 		return
@@ -151,7 +151,7 @@ func (g *Game) handleMapPan(layout mapLayout) {
 }
 
 func (g *Game) handleMapMouseDrag(layout mapLayout) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	middleDown := ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle)
 	wasDown := g.middleWasDown
 	if middleDown && !g.middleWasDown {
@@ -212,7 +212,7 @@ func (g *Game) nudgeMapSize(dScreensX, dScreensY int) {
 }
 
 func (g *Game) handleMapZoom(layout mapLayout) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if !rectContains(layout.Canvas, mx, my) {
 		return
 	}
@@ -239,7 +239,7 @@ func (g *Game) mapTargetTile(layout mapLayout, mx, my int) (int, int, bool) {
 }
 
 func (g *Game) handleMapPlaceErase(layout mapLayout) {
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	tileX, tileY, ok := g.mapTargetTile(layout, mx, my)
 	if !ok {
 		return
@@ -290,7 +290,7 @@ func (g *Game) drawMapMode(screen *ebiten.Image) {
 
 	g.drawMapTiles(screen, layout)
 	g.drawMapBounds(screen, layout)
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	tileX, tileY, ok := g.mapTargetTile(layout, mx, my)
 	if g.mapTool.isAreaTool() {
 		g.drawMapAreaSelection(screen, layout)

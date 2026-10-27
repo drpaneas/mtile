@@ -236,7 +236,7 @@ func (g *Game) updatePreferences() {
 		return
 	}
 	layout := newPreferencesLayout()
-	mx, my := ebiten.CursorPosition()
+	mx, my := editorCursorPosition()
 	if rectContains(layout.Close, mx, my) || !rectContains(layout.Panel, mx, my) {
 		g.preferencesOpen = false
 		return
