@@ -101,8 +101,10 @@ python3 scripts/docs/capture_tile_links.py \
 
 ## Editor screenshots
 
-`editor/*.png` are actual mTile `Game.Draw` renders, captured by the native
-Ebitengine harness at 1600×1000 with default COMFORT text and CLEAN effects.
+`editor/*.png` are actual mTile `editorWindow.Draw` renders, captured by the native
+Ebitengine harness at 2× display density: a 1600×1000 logical window produces
+3200×2000 physical pixels, with default COMFORT text and CLEAN effects. All
+workspace fonts, controls, and dialogs use the live editor's HiDPI path.
 They are not AI-generated images or reconstructed mockups. No image scaling,
 annotation, or compositing is applied to the distributed PNGs. Window-manager
 chrome and the OS cursor are outside the render target.
@@ -120,7 +122,9 @@ chrome and the OS cursor are outside the render target.
 
 The harness copies projects into temporary directories and never saves the
 tutorial variant back into the example. `editor/capture.json` records the
-project mapping and capture parameters. Regenerate on a desktop session with
+project mapping, logical and physical dimensions, and display scale. Every
+captured workspace is checked for native-resolution detail beyond a stretched
+1× image. Regenerate on a desktop session with
 the editor's normal native graphics/audio dependencies:
 
 ```sh

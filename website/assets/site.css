@@ -934,6 +934,11 @@ kbd {
   border-radius:5px
 }
 
+/* Editor captures contain native-resolution UI text as well as pixel art. */
+.prose img[src*="media/editor/"] {
+  image-rendering:auto
+}
+
 .source-link {
   display:inline-block;
   margin:36px 0;

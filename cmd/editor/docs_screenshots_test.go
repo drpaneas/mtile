@@ -13,8 +13,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+const (
+	documentationWidth        = 1600
+	documentationHeight       = 1000
+	documentationDisplayScale = 2
+)
+
 // Capture the real editor renderer without modifying example assets or user
-// preferences. The variant is a documented, disposable tutorial edit.
+// preferences. Use the window adapter at 2x so exported text, controls, and
+// popups have the same physical-pixel detail as the live Retina interface.
 func TestDocumentationScreenshots(t *testing.T) {
 	out := os.Getenv("MTILE_DOC_SCREENSHOTS")
 	if out == "" {
@@ -23,6 +30,7 @@ func TestDocumentationScreenshots(t *testing.T) {
 	if err := os.MkdirAll(out, 0755); err != nil {
 		t.Fatal(err)
 	}
+	preserveDisplayState(t)
 	t.Cleanup(func() { setInterfaceTextSize(textComfort); setEditorLayout(defaultScreenWidth, defaultScreenHeight) })
 	captures := []struct{ name, project string }{
 		{"shared-tiles", "background-layers"}, {"poses", "nerdo"},
@@ -44,7 +52,8 @@ func TestDocumentationScreenshots(t *testing.T) {
 			defer g.closeNativePerformance()
 			g.preferences = defaultEditorPreferences()
 			g.applyPreferences()
-			g.Layout(1600, 1000)
+			window := &editorWindow{Game: g}
+			width, height := window.layoutAtScale(documentationWidth, documentationHeight, documentationDisplayScale)
 			switch capture.name {
 			case "shared-tiles":
 				g.mode = modeSprites
@@ -95,15 +104,34 @@ func TestDocumentationScreenshots(t *testing.T) {
 				g.mode = modeCode
 				g.preferencesOpen = capture.name == "preferences"
 			}
-			target := ebiten.NewImage(1600, 1000)
+			target := ebiten.NewImage(int(width), int(height))
 			defer target.Deallocate()
-			pixels := make([]byte, 1600*1000*4)
-			onRenderBenchmarkFrame(func() { g.requestRender(); g.Draw(target); target.ReadPixels(pixels) })
+			img := image.NewRGBA(target.Bounds())
+			onRenderBenchmarkFrame(func() { g.requestRender(); window.Draw(target); target.ReadPixels(img.Pix) })
+			if img.Bounds() != image.Rect(0, 0, documentationWidth*documentationDisplayScale, documentationHeight*documentationDisplayScale) {
+				t.Fatalf("documentation framebuffer: %v", img.Bounds())
+			}
+			// A stretched 1x screenshot has constant 2x2 pixel blocks. Check
+			// the workspace body separately from the shared navigation so every
+			// exported surface must demonstrate physical-resolution detail.
+			var detailBlocks int
+			for y := editorTabsHeight * documentationDisplayScale; y < statusBarRect.Y*documentationDisplayScale; y += 2 {
+				for x := 0; x < img.Bounds().Dx(); x += 2 {
+					pixel := img.RGBAAt(x, y)
+					if pixel != img.RGBAAt(x+1, y) || pixel != img.RGBAAt(x, y+1) || pixel != img.RGBAAt(x+1, y+1) {
+						detailBlocks++
+					}
+				}
+			}
+			if detailBlocks < 200 {
+				t.Fatalf("only %d workspace blocks contain native-resolution detail", detailBlocks)
+			}
+			t.Logf("%dx%d logical -> %dx%d physical; %d detailed workspace blocks", screenWidth, screenHeight, img.Bounds().Dx(), img.Bounds().Dy(), detailBlocks)
 			f, err := os.Create(filepath.Join(out, capture.name+".png"))
 			if err != nil {
 				t.Fatal(err)
 			}
-			err = png.Encode(f, &image.NRGBA{Pix: pixels, Stride: 1600 * 4, Rect: image.Rect(0, 0, 1600, 1000)})
+			err = png.Encode(f, img)
 			closeErr := f.Close()
 			if err != nil {
 				t.Fatal(err)
@@ -114,10 +142,16 @@ func TestDocumentationScreenshots(t *testing.T) {
 		})
 	}
 	manifest := struct {
-		Width, Height int
-		Captures      []map[string]string
-		Note          string
-	}{1600, 1000, nil, "Actual editor Draw output; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated."}
+		Width, Height               int
+		LogicalWidth, LogicalHeight int
+		DisplayScale                int
+		Captures                    []map[string]string
+		Note                        string
+	}{
+		Width: documentationWidth * documentationDisplayScale, Height: documentationHeight * documentationDisplayScale,
+		LogicalWidth: documentationWidth, LogicalHeight: documentationHeight, DisplayScale: documentationDisplayScale,
+		Note: "Actual editorWindow Draw output at 2x display density; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated.",
+	}
 	// Export capture descriptions with stable JSON field names.
 	rows := make([]map[string]string, 0, len(captures))
 	for _, c := range captures {

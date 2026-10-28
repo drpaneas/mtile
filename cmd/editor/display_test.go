@@ -59,7 +59,7 @@ func TestEditorInvalidDisplayScale(t *testing.T) {
 
 func TestEditorDisplayFontRasterAndLogicalMetrics(t *testing.T) {
 	for _, style := range uiFontStyles {
-		for _, logical := range []*text.GoXFace{style.face, style.smallFace, style.titleFace, style.codeFace, style.developFace} {
+		for _, logical := range []*text.GoXFace{style.face, style.smallFace, style.titleFace, style.codeFace, style.developFace, style.developSmallFace, style.developTitleFace} {
 			for _, scale := range []float64{1, 1.25, 1.5, 2, 1} {
 				physical := displayFont(logical, scale).(*text.GoXFace)
 				for _, value := range []string{"M", "i", "local value = 1", "()[]{};., /\\ != ->"} {

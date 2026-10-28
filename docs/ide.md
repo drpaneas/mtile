@@ -29,7 +29,8 @@ when you need them.
 - [Edit, build, and play](#develop-controls), or [inspect memory](#memory-inspector).
 - [Adjust text size, preview volume, and renderer](#preferences-and-readability).
 
-The screenshots below are actual editor renders at 1600×1000 with COMFORT text.
+The screenshots below are actual editor renders of a 1600×1000 logical window,
+captured at 2× density (3200×2000 physical pixels) with COMFORT text.
 They use checked-in examples, not interface mockups. The [capture notes](media/README.md#editor-screenshots)
 identify each project and explain how to regenerate them.
 

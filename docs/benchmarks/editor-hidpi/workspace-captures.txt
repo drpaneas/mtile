@@ -1,0 +1,34 @@
+=== RUN   TestDocumentationScreenshots
+=== RUN   TestDocumentationScreenshots/shared-tiles
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 141473 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/poses
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 245239 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/animations
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 61216 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/color-variants
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 157856 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/map-rooms
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 52000 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/audio
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 153591 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/develop
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 71414 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/preferences
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 100812 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/tile-links
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 141940 detailed workspace blocks
+=== RUN   TestDocumentationScreenshots/tile-links-map
+    docs_screenshots_test.go:129: 1600x1000 logical -> 3200x2000 physical; 49865 detailed workspace blocks
+--- PASS: TestDocumentationScreenshots (2.62s)
+    --- PASS: TestDocumentationScreenshots/shared-tiles (0.88s)
+    --- PASS: TestDocumentationScreenshots/poses (0.25s)
+    --- PASS: TestDocumentationScreenshots/animations (0.20s)
+    --- PASS: TestDocumentationScreenshots/color-variants (0.24s)
+    --- PASS: TestDocumentationScreenshots/map-rooms (0.21s)
+    --- PASS: TestDocumentationScreenshots/audio (0.16s)
+    --- PASS: TestDocumentationScreenshots/develop (0.21s)
+    --- PASS: TestDocumentationScreenshots/preferences (0.19s)
+    --- PASS: TestDocumentationScreenshots/tile-links (0.15s)
+    --- PASS: TestDocumentationScreenshots/tile-links-map (0.13s)
+PASS
+ok  	github.com/drpaneas/mtile/cmd/editor	3.838s

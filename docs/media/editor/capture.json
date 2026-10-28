@@ -1,6 +1,9 @@
 {
-  "Width": 1600,
-  "Height": 1000,
+  "Width": 3200,
+  "Height": 2000,
+  "LogicalWidth": 1600,
+  "LogicalHeight": 1000,
+  "DisplayScale": 2,
   "Captures": [
     {
       "image": "shared-tiles.png",
@@ -43,5 +46,5 @@
       "project": "examples/tile-links"
     }
   ],
-  "Note": "Actual editor Draw output; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated."
+  "Note": "Actual editorWindow Draw output at 2x display density; default COMFORT text and CLEAN effects. Disposable copies of checked-in examples. Color Variants adds alternate and remaps the first used opaque color to index 12. Develop is before Build + Reload; no live ROM or telemetry is simulated."
 }
