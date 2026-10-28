@@ -10,7 +10,7 @@ import (
 
 const (
 	mode0ObjectTileLimit = Mode0ObjectTileLimit
-	mode0ObjectLimit     = 128 // physical OAM entry count; scanline cycles are proven statically
+	mode0ObjectLimit     = 127 // physical OAM entry count; scanline cycles are proven statically
 	mode0ObjectDisable   = 0x0200
 )
 
@@ -286,7 +286,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 		if flipY {
 			attr1 |= 1 << 13
 		}
-		mode0PutOAMEntry(&c.mode0OAM, 127-c.mode0ObjectCount, attr0, attr1,
+		mode0PutOAMEntry(&c.mode0OAM, mode0ObjectLimit-1-c.mode0ObjectCount, attr0, attr1,
 			uint16(id*2)|c.mode0ObjectPriorityBits())
 		c.mode0ObjectCount++
 		c.mode0OAMDirty = true
@@ -304,7 +304,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 			if !c.mode0ObjectIntersectsClip(baseX, baseY, w*8, h*8) {
 				return
 			}
-			slot := 127 - c.mode0ObjectCount
+			slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
 			attr0 := uint16(baseY&0xff) | 0x2000 // 8bpp, square
 			attr1 := uint16(baseX&0x1ff) | uint16(packedCells/2)<<14
 			if flipX {
@@ -346,7 +346,7 @@ func (c *Context) renderSprite(id, x, y, w, h int, flipX, flipY bool) {
 			if sourceID == 0 && !c.mode0ObjectZeroVisible {
 				continue
 			}
-			slot := 127 - c.mode0ObjectCount
+			slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
 			attr0 := uint16(objectY&0xff) | 0x2000 // 8bpp, square 8x8
 			attr1 := uint16(objectX & 0x1ff)
 			if flipX {

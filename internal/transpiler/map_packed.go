@@ -26,6 +26,9 @@ func (g *generator) renderPackedMapStorage(b *sourceBuilder) {
 	// Lua semispaces, the stack, mailbox and a further 8 KiB. Large games get
 	// zero-length backing arrays and use ordinary cell rendering.
 	budget := "256*1024 - 512 - 8192 - rt.MapRasterHeapReserve - int(unsafe.Sizeof(ctx)) - int(unsafe.Sizeof(cartData)) - int(unsafe.Sizeof(game)) - int(unsafe.Sizeof(sheetRAM)) - int(unsafe.Sizeof(sheetIndexRAM)) - int(unsafe.Sizeof(mapRAM)) - int(unsafe.Sizeof(flagRAM))"
+	if g.saveEnabled() {
+		budget += " - int(unsafe.Sizeof(saveMemory))"
+	}
 	if g.nativeAudioEnabled {
 		budget += " - int(unsafe.Sizeof(nativeAudioController))"
 	}

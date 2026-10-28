@@ -101,6 +101,10 @@ func mode0PrintAlwaysNumber(expr luaparser.Expr, eval *mode0NumEval, env mode0Nu
 			return false
 		}
 		switch name {
+		case "save_get", "save_read", "save_write":
+			// Save reads/statuses are always numbers, including invalid-index
+			// zero and negative error codes. Arguments need not be numeric.
+			return true
 		case "tostr", "chr", "sub":
 			return false
 		case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd",

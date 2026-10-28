@@ -10,7 +10,7 @@ import (
 
 const (
 	mode0PsprSiteLimit   = mode0OAMEntryLimit
-	mode0PsprWindowTiles = 512
+	mode0PsprWindowTiles = runtimeapi.Mode0ObjectTileLimit
 )
 
 type mode0PsprSite struct {
@@ -159,7 +159,7 @@ func validateMode0PsprProof(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Opti
 	}
 	sites := mode0PsprSitesFromOps(ops)
 	if len(opts.PoseVariantNames) > 0 && len(sites) > 0 {
-		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 16 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
+		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 15 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
 	}
 	if len(sites) == 0 {
 		return nil
@@ -213,7 +213,7 @@ func validateMode0PoseCommit(chunk *luaparser.Chunk, ops []mode0DrawOp, opts Opt
 	}
 	sites := mode0PsprSitesFromOps(ops)
 	if len(opts.PoseVariantNames) > 0 && len(sites) > 0 {
-		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 16 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
+		return mode0CallError(sites[0].call, reasonMode0ResourceLimit, "Mode 0 color variants require a resident 4bpp pose bank: at most 15 visible colors per object, 15 compatible palette banks, no spr/sspr/print/pal/palt/sset, and sufficient OBJ VRAM")
 	}
 	if len(sites) == 0 {
 		return nil

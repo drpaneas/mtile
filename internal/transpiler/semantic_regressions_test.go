@@ -640,7 +640,8 @@ function probe() return max(7, color(3)) end
 
 func TestBuiltinResultAritiesAreExhaustivelyClassified(t *testing.T) {
 	zeroResults := map[string]bool{
-		"cls": true, "pset": true, "line": true, "rect": true, "rectfill": true,
+		"pause_menu": true,
+		"cls":        true, "pset": true, "line": true, "rect": true, "rectfill": true,
 		"circ": true, "circfill": true, "spr": true, "sspr": true, "pspr": true, "anim": true, "map": true,
 		"camera": true, "clip": true, "pal": true, "palt": true, "color": true,
 		"pvariant": true, "cursor": true, "sset": true, "fset": true, "mset": true, "srand": true,

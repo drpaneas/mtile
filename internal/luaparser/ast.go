@@ -55,6 +55,13 @@ type BoolExpr struct {
 
 func (*BoolExpr) exprNode() {}
 
+// AnalysisChoiceExpr is an unknown, side-effect-free condition constructed
+// only by compiler analysis. The parser never produces it and code generation
+// must never emit it. Separate instances do not correlate with game inputs.
+type AnalysisChoiceExpr struct{ NodeBase }
+
+func (*AnalysisChoiceExpr) exprNode() {}
+
 type NumberExpr struct {
 	NodeBase
 	Raw     string

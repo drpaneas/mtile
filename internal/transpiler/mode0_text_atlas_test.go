@@ -105,14 +105,14 @@ func TestGeneratedMode4OmitsMode0TextAtlas(t *testing.T) {
 	}
 }
 
-func TestMode0TextAtlasAccepts128RepeatedOccurrences(t *testing.T) {
-	source := fmt.Sprintf("function _draw() cls() print(%q,0,0,7) end", strings.Repeat("A", 128))
+func TestMode0TextAtlasAccepts127RepeatedOccurrences(t *testing.T) {
+	source := fmt.Sprintf("function _draw() cls() print(%q,0,0,7) end", strings.Repeat("A", 127))
 	_, report, err := TranspileWithReport("text-128.lua", source, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Mode0OAMEntries != 128 || report.Mode0OBJLineCycles != 320 {
-		t.Fatalf("report = %+v, want 128 OAM entries and wrapped 320-cycle peak", report)
+	if report.Mode0OAMEntries != 127 || report.Mode0OBJLineCycles != 320 {
+		t.Fatalf("report = %+v, want 127 OAM entries and wrapped 320-cycle peak", report)
 	}
 }
 
@@ -193,7 +193,7 @@ func TestMode0TextAtlasStampsReservedSheetCells(t *testing.T) {
 		t.Fatalf("report = %+v, want one interned A/7 tile", report)
 	}
 	want := runtimeapi.BuildMode0GlyphTile('A', 7)
-	id := runtimeapi.Mode0TextTileBase
+	id := runtimeapi.Mode0TextSheetBase
 	cols := sheetW / 8
 	origin := (id/cols)*8*sheetW + (id%cols)*8
 	if sheet[origin] != want[0] {

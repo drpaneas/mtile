@@ -5,7 +5,7 @@
     "signature": "btn(index)",
     "summary": "Check whether a button is held down.",
     "example": "if btn(0) then x -= 2 end",
-    "note": "Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B."
+    "note": "Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B. Start is reserved for the shared pause menu in generated games; game input and button-repeat ticks freeze while paused."
   },
   {
     "name": "btnp",
@@ -566,5 +566,45 @@
     "summary": "Rotate bits right.",
     "example": "bits = rotr(4, 2)",
     "note": "These operate on the 32-bit fixed-point representation. Keep bit operations separate from ordinary arithmetic until you are comfortable with that representation."
+  },
+  {
+    "name": "save_set",
+    "category": "data",
+    "signature": "save_set(index, number)",
+    "summary": "Stage a numeric field for the next cartridge save.",
+    "example": "accepted = save_set(0, score)",
+    "note": "Fields are 0..63 and store exact signed 16:16 numbers. Returns true for a valid integer index and numeric value, false otherwise. This only changes RAM. Use save_write to commit. See the dedicated cartridge saving guide."
+  },
+  {
+    "name": "save_get",
+    "category": "data",
+    "signature": "save_get(index)",
+    "summary": "Read a numeric field from the save staging buffer.",
+    "example": "score = save_get(0)",
+    "note": "Fields start at zero. Invalid types, fractional indices, and indices outside 0..63 return 0. A successful save_read fills all 64 fields; an unsuccessful read leaves them unchanged. Renderer-independent."
+  },
+  {
+    "name": "save_read",
+    "category": "data",
+    "signature": "save_read(\"unique-game-v1\")",
+    "summary": "Restore the newest valid cartridge save into the staging buffer.",
+    "example": "if save_read(\"my-game-v1\") == 1 then score = save_get(0) end",
+    "note": "The key must be a literal string of 1..32 bytes. Returns 1 on success, 0 for blank records, -2 for corrupt/unsupported records, -3 for a different key, or -1 for missing runtime storage. Failed reads preserve the buffer. Test == 1 explicitly: zero and negative numbers are truthy in Lua. Uses SRAM-compatible cartridge memory; physical verification remains pending."
+  },
+  {
+    "name": "save_write",
+    "category": "data",
+    "signature": "save_write(\"unique-game-v1\")",
+    "summary": "Write and verify all 64 staged fields in cartridge save memory.",
+    "example": "save_set(0, score)\nresult = save_write(\"my-game-v1\")",
+    "note": "The key must be a literal string of 1..32 bytes. Returns 1 for verified cartridge-visible bytes or -1 on write verification failure. Alternates two checked recovery records and commits last. A failure keeps current progress in RAM. An explicit write can replace another key or damaged data; request player intent before replacement. On the original EZ-Flash Omega, wait five seconds after saving before power-off or reset; SD persistence is controlled by the cart firmware. Renderer-independent. A successful write also restarts the shared pause menu’s five-second resume/power-off reminder."
+  },
+  {
+    "name": "pause_menu",
+    "category": "data",
+    "signature": "pause_menu(\"save_function\", \"load_function\")",
+    "summary": "Connect game progress functions to the shared Start pause menu.",
+    "example": "function store_progress()\n  save_set(0, score)\n  return save_write(\"my-game-v1\")\nend\nfunction restore_progress()\n  local result = save_read(\"my-game-v1\")\n  if result == 1 then score = save_get(0) end\n  return result\nend\nfunction _init()\n  pause_menu(\"store_progress\", \"restore_progress\")\nend",
+    "note": "Every game has the same fixed centered Load, Save, Exit overlay on Start; Start toggles pause/resume. The layout and items cannot be customized or disabled. Save/Load remain unavailable until one direct unconditional _init call binds two literal zero-argument function names. Each function returns one numeric save status. Callbacks run only on menu actions and participate in renderer proofs. A successful save blocks resuming for five seconds; Exit ends the session and shows power-off/reset instructions. Load restores one logical save; the two SRAM records are recovery copies, not slots. The private sprite overlay preserves the frozen game in both renderers; Mode 0 reserves system OBJ resources as documented in the renderer contract."
   }
 ]

@@ -125,7 +125,7 @@ func mode0PaletteLayouts(opts Options, reachable []bool) (map[[2]int]mode0Palett
 			}
 			bank, ok := paletteIDs[palette]
 			if !ok {
-				if len(paletteIDs) == 16 {
+				if len(paletteIDs) == 15 {
 					return nil, nil
 				}
 				bank = uint8(len(paletteIDs) + 1)

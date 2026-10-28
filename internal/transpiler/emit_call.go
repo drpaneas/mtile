@@ -16,6 +16,21 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		name = call.Method
 	}
 	if spec, ok := Builtins[name]; ok {
+		if name == "pause_menu" {
+			if value {
+				g.pending = append(g.pending, "c.ConfigurePauseMenu()")
+				return "rt.NilVal()"
+			}
+			return "c.ConfigurePauseMenu()"
+		}
+		if name == "save_read" || name == "save_write" {
+			key, err := saveKey(call)
+			if err != nil {
+				g.setErr(err)
+				return "rt.NilVal()"
+			}
+			return fmt.Sprintf("rt.IntVal(c.%s(%q))", spec.GoName, key)
+		}
 		argCount := g.exprListWidth(call.Args)
 		if argCount < spec.MinArgs || argCount > spec.MaxArgs {
 			g.setErr(fmt.Errorf("transpiler: %s expects %d..%d arguments, got %d", name, spec.MinArgs, spec.MaxArgs, argCount))
@@ -201,6 +216,8 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return "rt.NilVal()"
 	}
 	switch name {
+	case "save_get", "save_set":
+		return "c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")"
 	case "spr", "camera":
 		if call, ok := g.typedDrawCall(name, adjusted); ok {
 			return void(call)

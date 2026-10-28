@@ -12,7 +12,7 @@ func TestOverlayMode0TextSheetWritesGlyphsAndClearsUnusedCells(t *testing.T) {
 	OverlayMode0TextSheet(sheet, sheetW, sheetH, keys)
 
 	want := BuildMode0GlyphTile('7', 12)
-	id := Mode0TextTileBase
+	id := Mode0TextSheetBase
 	cols := sheetW / 8
 	col, row := id%cols, id/cols
 	origin := row*8*sheetW + col*8
@@ -25,13 +25,25 @@ func TestOverlayMode0TextSheetWritesGlyphsAndClearsUnusedCells(t *testing.T) {
 		}
 	}
 
-	unused := Mode0TextTileBase + 1
+	unused := Mode0TextSheetBase + 1
 	col, row = unused%cols, unused/cols
 	origin = row*8*sheetW + col*8
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
 			if sheet[origin+y*sheetW+x] != 0 {
 				t.Fatalf("unused reserved cell %d kept authored ink", unused)
+			}
+		}
+	}
+	// Physical OBJ glyph relocation must not overwrite newly reserved
+	// addresses in the authored BG sheet. Its legacy text bank stays 480..511.
+	for id := 448; id < 480; id++ {
+		origin := (id/cols)*8*sheetW + (id%cols)*8
+		for y := 0; y < 8; y++ {
+			for x := 0; x < 8; x++ {
+				if sheet[origin+y*sheetW+x] != 9 {
+					t.Fatalf("authored tile %d was overwritten", id)
+				}
 			}
 		}
 	}

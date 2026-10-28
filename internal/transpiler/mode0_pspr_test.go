@@ -120,7 +120,7 @@ function _draw()
   pspr(0, 0, 0)
 end
 `, opts)
-	if err == nil || !strings.Contains(err.Error(), "[M0_RESOURCE_LIMIT]") || !strings.Contains(err.Error(), "512 available") {
+	if err == nil || !strings.Contains(err.Error(), "[M0_RESOURCE_LIMIT]") || !strings.Contains(err.Error(), "480 available") {
 		t.Fatalf("error = %v", err)
 	}
 }

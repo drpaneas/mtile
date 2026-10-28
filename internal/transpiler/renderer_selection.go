@@ -83,7 +83,7 @@ type RendererReport struct {
 	Mode0OAMEntries    int
 	Mode0OBJLineCycles int
 	// Mode0TextKeys is the interned (glyph,color) atlas uploaded into OBJ tiles
-	// 480-511. Build stamps those sheet cells from the same keys.
+	// 448-479. Build stamps authored sheet cells 480-511 from the same keys.
 	Mode0TextKeys []uint16
 	// MapPlaneMask identifies authored (or runtime-mutable) logical planes
 	// that need map storage. MapDrawMask is the subset materialized by map()
@@ -145,6 +145,11 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	report := RendererReport{Requested: opts.Renderer, Selected: RendererMode4}
 	if chunk == nil {
 		return report, errors.New("transpiler: nil chunk")
+	}
+	restorePause, _, pauseErr := lowerPauseAnalysisRoots(chunk)
+	defer restorePause()
+	if pauseErr != nil {
+		return report, pauseErr
 	}
 	warnings, restore, err := lowerPoseNames(chunk, opts)
 	defer restore()
@@ -211,11 +216,11 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	}
 }
 
-const mode0PackedObjectSourceLimit = 448
+const mode0PackedObjectSourceLimit = 416
 
 // mode0ObjectPackingEligible is deliberately an optimization proof, not a
-// renderer eligibility proof. Tiles 448..479 are a private 32-cell cache;
-// text keeps its existing 480..511 range. Mutable sheets retain the ordinary
+// renderer eligibility proof. Tiles 416..447 are a private 32-cell cache;
+// text keeps its 448..479 range. Mutable sheets retain the ordinary
 // metasprite path so sset never aliases this cache in a generated cart.
 func mode0ObjectPackingEligible(chunk *luaparser.Chunk, opts Options) bool {
 	if chunk == nil || chunkCallsBuiltin(chunk, "sset") {
@@ -822,15 +827,18 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	if err := validateMode0PoseCommit(chunk, ops, opts, mode0Layers, directUpdateSset); err != nil {
 		return 0, false, false, err
 	}
+	if err := validateMode0PausePalette(chunk, ops, opts); err != nil {
+		return 0, false, false, err
+	}
 	budget := mode0ObjectBudgetFromOps(chunk, draw, ops, unbounded, opts)
 	if budget.TextTiles > mode0TextTileLimit {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text needs %d unique glyph/color tiles; the reserved text-tile capacity is %d", draw.Pos(), reasonMode0ObjectBudget, budget.TextTiles, mode0TextTileLimit)
 	}
 	if budget.OAMEntries > mode0OAMEntryLimit {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 draw needs %d OAM entries after packing; the hardware limit is %d", draw.Pos(), reasonMode0ObjectBudget, budget.OAMEntries, mode0OAMEntryLimit)
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 draw needs %d OAM entries after packing; the game limit is %d (one OAM entry is reserved for the system pause overlay)", draw.Pos(), reasonMode0ObjectBudget, budget.OAMEntries, mode0OAMEntryLimit)
 	}
 	if budget.MaxLineCycles > mode0OBJLineCycleLimit {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 worst OBJ scanline needs %d rendering cycles; the hardware limit is %d with H-Blank Interval Free disabled", draw.Pos(), reasonMode0ObjectBudget, budget.MaxLineCycles, mode0OBJLineCycleLimit)
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 worst OBJ scanline needs %d rendering cycles; the game limit is %d after reserving 64 cycles for the system pause overlay, with H-Blank Interval Free disabled", draw.Pos(), reasonMode0ObjectBudget, budget.MaxLineCycles, mode0OBJLineCycleLimit)
 	}
 	if textEntryCount != 0 && maxSpriteID >= runtimeapi.Mode0TextTileBase {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text reserves OBJ tiles %d-%d; spr() source IDs must stay below %d",
@@ -968,8 +976,8 @@ func validateMode0SprCall(call *luaparser.CallExpr, cols, rows int) (int, int, e
 	id := int(idValue)
 	cellX, cellY := id%cols, id/cols
 	lastID := id + (h-1)*cols + w - 1
-	if cellX+w > cols || cellY+h > rows || lastID >= 512 {
-		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() source rectangle must stay inside the sheet and OBJ tile IDs 0-511")
+	if cellX+w > cols || cellY+h > rows || lastID >= runtimeapi.Mode0ObjectTileLimit {
+		return 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 spr() source rectangle must stay inside the sheet and OBJ tile IDs 0-479 (480-511 are reserved for the system pause overlay)")
 	}
 	return w * h, lastID, nil
 }
@@ -1052,9 +1060,9 @@ func validateMode0SprCallWithEnv(call *luaparser.CallExpr, cols, rows int, analy
 				}
 				cellX, cellY := id%cols, id/cols
 				lastID := id + (h-1)*cols + w - 1
-				if cellX+w > cols || cellY+h > rows || lastID >= 512 {
+				if cellX+w > cols || cellY+h > rows || lastID >= runtimeapi.Mode0ObjectTileLimit {
 					return 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape,
-						fmt.Sprintf("Mode 0 spr() finite id %d has a source rectangle outside the sheet or OBJ tile IDs 0-511", id))
+						fmt.Sprintf("Mode 0 spr() finite id %d has a source rectangle outside the sheet or OBJ tile IDs 0-479 (480-511 are reserved for the system pause overlay)", id))
 				}
 				if lastID > maxLastID {
 					maxLastID = lastID
@@ -1140,8 +1148,8 @@ func validateMode0SSprCallWithEnv(call *luaparser.CallExpr, sheetW, sheetH, cols
 	w, h := sw/8, sh/8
 	id := (sy/8)*cols + sx/8
 	lastID := id + (h-1)*cols + w - 1
-	if lastID >= 512 {
-		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must stay within OBJ tile IDs 0-511")
+	if lastID >= runtimeapi.Mode0ObjectTileLimit {
+		return 0, 0, 0, 0, mode0CallError(call, reasonMode0SpriteShape, "Mode 0 sspr() source must stay within OBJ tile IDs 0-479 (480-511 are reserved for the system pause overlay)")
 	}
 	return w * h, lastID, w, h, nil
 }

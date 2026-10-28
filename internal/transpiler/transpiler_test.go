@@ -97,7 +97,7 @@ end
 	compileGenerated(t, got)
 }
 
-func TestGeneratedLoopElidesUnobservableInputAndTimeState(t *testing.T) {
+func TestGeneratedLoopRetainsSystemInputButElidesUnobservableGameTicks(t *testing.T) {
 	got, err := Transpile("idle.lua", `
 function _update() end
 function _draw() cls(0) end
@@ -105,7 +105,10 @@ function _draw() cls(0) end
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, unwanted := range []string{"ctx.PollInput()", "ctx.AdvanceTick()", "ctx.SetTickRate(30)"} {
+	if !strings.Contains(got, "ctx.PollInput()") || !strings.Contains(got, "ctx.PollPauseMenu()") {
+		t.Fatal("idle game must retain Start menu input")
+	}
+	for _, unwanted := range []string{"ctx.AdvanceTick()", "ctx.SetTickRate(30)"} {
 		if strings.Contains(got, unwanted) {
 			t.Errorf("idle generated loop unexpectedly contains %q", unwanted)
 		}
@@ -121,7 +124,7 @@ func TestGeneratedLoopRetainsObservableInputAndTimeState(t *testing.T) {
 		wantRate30 bool
 	}{
 		{name: "input", source: `function _update() pressed = btnp(0) end`, wantPoll: true, wantTick: true},
-		{name: "time", source: `function _update() elapsed = time() end`, wantTick: true, wantRate30: true},
+		{name: "time", source: `function _update() elapsed = time() end`, wantPoll: true, wantTick: true, wantRate30: true},
 		{name: "both", source: `function _update() pressed = btn(0) elapsed = t() end`, wantPoll: true, wantTick: true, wantRate30: true},
 	}
 	for _, test := range tests {

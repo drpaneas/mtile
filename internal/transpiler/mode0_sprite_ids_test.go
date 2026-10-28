@@ -286,7 +286,7 @@ end
 func TestMode0ChecksEveryFiniteSpriteIDAgainstTextReservation(t *testing.T) {
 	source := `
 PLAYER_SAFE = 1
-PLAYER_TEXT_TILE = 480
+PLAYER_TEXT_TILE = 448
 player_sprite = PLAYER_SAFE
 function _update()
   if btn(0) then player_sprite = PLAYER_TEXT_TILE end
@@ -302,7 +302,7 @@ end
 		SheetW:   240,
 		SheetH:   160,
 	})
-	if err == nil || !strings.Contains(err.Error(), "[M0_RESOURCE_LIMIT]") || !strings.Contains(err.Error(), "480-511") {
+	if err == nil || !strings.Contains(err.Error(), "[M0_RESOURCE_LIMIT]") || !strings.Contains(err.Error(), "448-479") {
 		t.Fatalf("error = %v, want finite-set text-reservation failure", err)
 	}
 }

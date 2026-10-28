@@ -103,3 +103,13 @@ func dmaCopyWords(src, dest uintptr, words int) {
 	for GetReg16(DMA3CNT+2)&0x8000 != 0 {
 	}
 }
+
+// ReadVideoWords32DMA captures VRAM/OAM during VBlank into aligned EWRAM.
+// It uses the same bounded DMA3 path as video writes, so a backup cannot turn
+// hundreds of volatile read calls into a transfer spanning active scanout.
+func ReadVideoWords32DMA(dst []uint32, source uintptr) {
+	if !videoReadRange(source, len(dst)) {
+		return
+	}
+	copyToVRAM32DMA(source, uintptr(unsafe.Pointer(&dst[0])), len(dst))
+}

@@ -38,7 +38,7 @@ func TestMode0SingleCellMatchesSourceGridBounds(t *testing.T) {
 					if !want {
 						continue
 					}
-					data := c.mode0OAM[127*8:]
+					data := c.mode0OAM[(mode0ObjectLimit-1)*8:]
 					get := func(i int) uint16 { return uint16(data[i]) | uint16(data[i+1])<<8 }
 					if get(0) != 0x20ff || get(2) != 0x31fe || get(4) != uint16(id*2) {
 						t.Fatalf("id=%d: camera/flips/tile attributes = %04x %04x %04x", id, get(0), get(2), get(4))

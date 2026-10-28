@@ -33,7 +33,7 @@ func SpriteIsReservedOn(id int, objectSheet bool) bool {
 	if id == ReservedSpriteID {
 		return true
 	}
-	return id >= runtimeapi.Mode0TextTileBase && id < runtimeapi.Mode0TextTileBase+runtimeapi.Mode0TextTileCount
+	return id >= runtimeapi.Mode0TextSheetBase && id < runtimeapi.Mode0TextSheetBase+runtimeapi.Mode0TextTileCount
 }
 
 func reservedSpriteEditError(id int) error {

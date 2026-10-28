@@ -1,0 +1,26 @@
+{
+  "capturedFrames": 120,
+  "differingPixels": 0,
+  "environment": {
+    "goVersion": "go1.27.1",
+    "goos": "darwin",
+    "goarch": "arm64",
+    "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+    "gitRevision": "cbb6d9284ca203bff8e414427ec3b08c1bd08ef5",
+    "gitDirty": true,
+    "projectSha256": "93af4cbe1754e1f371c605ba119e23c5e7c904b0135b9f114d4e2f756dea314d",
+    "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+  },
+  "mode0": {
+    "medianCycles": 8043,
+    "p95Cycles": 442104,
+    "romSha256": "ef8ad6f01eca917c2dc6232f964d5abbfce72298cac74470b04fd7a45e6cb670"
+  },
+  "mode4": {
+    "medianCycles": 31831,
+    "p95Cycles": 465898,
+    "romSha256": "bb1439dc19fcbc712bb1ace01b5498fd29f426177a525913150a1c41adbd5a99"
+  },
+  "schemaVersion": 1,
+  "zeroSaveErrors": true
+}

@@ -74,7 +74,7 @@ func (c *Context) renderMode0Glyph(ch byte, sx, sy int, value byte) bool {
 	}
 	tileIndex := low
 
-	slot := 127 - c.mode0ObjectCount
+	slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
 	mode0PutOAMEntry(&c.mode0OAM, slot, uint16(sy&0xff)|0x2000, uint16(sx&0x1ff), uint16((mode0TextTileBase+tileIndex)*2))
 	c.mode0ObjectCount++
 	c.mode0OAMDirty = true

@@ -77,7 +77,7 @@ func TestMode0AlignedSSprLowersToMetasprite(t *testing.T) {
 	}
 }
 
-func TestMode0ObjectAllocatorUsesAll128OAMEntriesAndStopsSafely(t *testing.T) {
+func TestMode0ObjectAllocatorUsesAll127GameOAMEntriesAndStopsSafely(t *testing.T) {
 	requireMode0LayerCount(t, 1)
 	hw.ResetForTest()
 	c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))
@@ -86,19 +86,19 @@ func TestMode0ObjectAllocatorUsesAll128OAMEntriesAndStopsSafely(t *testing.T) {
 	for index := 0; index < 128; index++ {
 		c.Spr(1, index, 0, 1, 1, false, false)
 	}
-	if c.mode0ObjectCount != 128 {
-		t.Fatalf("object count = %d, want all 128 OAM entries", c.mode0ObjectCount)
+	if c.mode0ObjectCount != 127 {
+		t.Fatalf("object count = %d, want all 127 game OAM entries", c.mode0ObjectCount)
 	}
 	c.Spr(1, 200, 0, 1, 1, false, false)
-	if c.mode0ObjectCount != 128 {
-		t.Fatalf("overflow object count = %d, want safe cap at 128", c.mode0ObjectCount)
+	if c.mode0ObjectCount != 127 {
+		t.Fatalf("overflow object count = %d, want safe cap at 127", c.mode0ObjectCount)
 	}
 	c.PresentRender()
 	if got := hw.GetReg16(hw.OAM + 4); got != 2 {
 		t.Fatalf("OAM entry 0 tile = %d, want source tile number 2", got)
 	}
-	if got := hw.GetReg16(hw.OAM + 2); got != 127 {
-		t.Fatalf("OAM entry 0 x = %d, want final draw x=127", got)
+	if got := hw.GetReg16(hw.OAM + 2); got != 126 {
+		t.Fatalf("OAM entry 0 x = %d, want final draw x=126", got)
 	}
 
 	c.BeginRenderFrame()

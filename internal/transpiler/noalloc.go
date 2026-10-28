@@ -126,7 +126,7 @@ func (g *generator) exprsNoAlloc(exprs []luaparser.Expr) bool {
 
 func (g *generator) exprNoAlloc(expr luaparser.Expr) bool {
 	switch x := expr.(type) {
-	case nil, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.NumberExpr,
+	case nil, *luaparser.AnalysisChoiceExpr, *luaparser.NilExpr, *luaparser.BoolExpr, *luaparser.NumberExpr,
 		*luaparser.StringExpr, *luaparser.VarExpr:
 		return true
 	case *luaparser.ParenExpr:
@@ -174,7 +174,7 @@ func (g *generator) exprNoAlloc(expr luaparser.Expr) bool {
 // effects. Calls omitted here simply retain root protection.
 func builtinNoAlloc(name string) bool {
 	switch name {
-	case "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",
+	case "pause_menu", "save_get", "save_set", "save_read", "save_write", "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",
 		"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr",
 		"btn", "btnp", "t", "time", "stat", "tonum", "ord", "printh",
 		"sfx", "music", "sample", "gba_note", "gba_stop",

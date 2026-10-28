@@ -1,0 +1,31 @@
+{
+  "capturedFrames": 120,
+  "differingPixels": 0,
+  "renderers": {
+    "auto": {
+      "ewramFree": 246928,
+      "medianMenuCycles": 724,
+      "p95MenuCycles": 724,
+      "romBytes": 44992,
+      "romSha256": "483b37c5ecd09fd5e996ae745d02292cca3842513de8281390803c1c9f9c32a3",
+      "samples": 120
+    },
+    "mode0": {
+      "ewramFree": 246928,
+      "medianMenuCycles": 724,
+      "p95MenuCycles": 724,
+      "romBytes": 44992,
+      "romSha256": "483b37c5ecd09fd5e996ae745d02292cca3842513de8281390803c1c9f9c32a3",
+      "samples": 120
+    },
+    "mode4": {
+      "ewramFree": 109468,
+      "medianMenuCycles": 642,
+      "p95MenuCycles": 642,
+      "romBytes": 48040,
+      "romSha256": "71db5f726dc1d3ffc63db1bf8ede0d77deeb4cd9d911b6e3dd16832d776c9833",
+      "samples": 120
+    }
+  },
+  "schemaVersion": 1
+}

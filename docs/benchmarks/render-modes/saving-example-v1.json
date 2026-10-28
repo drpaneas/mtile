@@ -1,0 +1,17 @@
+{
+  "differingPixels": 0,
+  "exitEndsSession": true,
+  "heldASavesOnce": true,
+  "loadRestores": true,
+  "pauseFreezesGame": true,
+  "physicalPowerCycleVerified": false,
+  "renderers": [
+    "mode4",
+    "mode0",
+    "auto"
+  ],
+  "resetRestores": true,
+  "resumeRestoresInput": true,
+  "schemaVersion": 1,
+  "waitMessageExpires": true
+}

@@ -597,7 +597,7 @@ func (g *generator) analyzeMonomorphicExpr(expr luaparser.Expr, env *monomorphic
 		// Lua Value: min/max/mid coerce with NumberOr(0), and mget always
 		// returns a tile id (0 for invalid layers/coordinates). Preserve
 		// argument observations above: only the result narrows.
-		if name == "min" || name == "max" || name == "mid" || name == "mget" {
+		if name == "min" || name == "max" || name == "mid" || name == "mget" || name == "save_get" || name == "save_read" || name == "save_write" {
 			return monoNumber
 		}
 		allNumber := true

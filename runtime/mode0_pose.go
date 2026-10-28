@@ -233,7 +233,7 @@ func (c *Context) emitMode0PoseObject(tile, x, y int, object PoseOBJ, flipX, fli
 		attr0 &^= 0x2000
 		attr2 = uint16(tile) | uint16(object.Palette-1)<<12 | c.mode0ObjectPriorityBits()
 	}
-	mode0PutOAMEntry(&c.mode0OAM, 127-c.mode0ObjectCount, attr0, attr1, attr2)
+	mode0PutOAMEntry(&c.mode0OAM, mode0ObjectLimit-1-c.mode0ObjectCount, attr0, attr1, attr2)
 	c.mode0ObjectCount++
 	c.mode0OAMDirty = true
 }

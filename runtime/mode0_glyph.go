@@ -2,10 +2,12 @@ package runtime
 
 const (
 	// Mode0TextTileBase is the first OBJ tile reserved for Mode 0 print glyphs.
-	// The bank occupies the last 32 8bpp OBJ tiles, independent of sheet size.
-	Mode0TextTileBase    = 480
+	// The bank occupies the 32 8bpp OBJ tiles before the system bank, independent of sheet size.
+	Mode0TextTileBase = 448
+	// Keep authored sheet metadata stable when physical OBJ reservations move.
+	Mode0TextSheetBase   = 480
 	Mode0TextTileCount   = 32
-	Mode0ObjectTileLimit = 512
+	Mode0ObjectTileLimit = 480
 )
 
 // Mode0TextGlyphKey is the stable build/runtime identity for one 8bpp OBJ
@@ -44,7 +46,7 @@ func OverlayMode0TextSheet(sheet []byte, sheetW, sheetH int, keys []uint16) {
 	rows := sheetH / 8
 	spriteN := cols * rows
 	for index := 0; index < Mode0TextTileCount; index++ {
-		id := Mode0TextTileBase + index
+		id := Mode0TextSheetBase + index
 		if id >= spriteN {
 			return
 		}

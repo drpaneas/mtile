@@ -109,16 +109,21 @@ end`, opts)
 	}
 }
 
-func TestMode0PoseReclaimsUnusedTextAndPackingTiles(t *testing.T) {
+func TestMode0PoseReservesSystemTilesEvenWithoutTextOrPacking(t *testing.T) {
 	opts := psprMode0Opts(densePoseParts(8, 8)...)
 	source := "function _draw() cls() for i=1,8 do pspr(0,0,0) end end"
-	_, report, err := TranspileWithReport("full_vram.lua", source, opts)
-	if err != nil || report.Mode0OAMEntries != 8 {
-		t.Fatalf("512 streamed tiles should fit without reservations: %+v %v", report, err)
+	_, _, err := TranspileWithReport("full_vram.lua", source, opts)
+	if err == nil || !strings.Contains(err.Error(), "480 available") {
+		t.Fatalf("missing system tile reservation: %v", err)
+	}
+	source = "function _draw() cls() for i=1,7 do pspr(0,0,0) end end"
+	_, report, err := TranspileWithReport("game_vram.lua", source, opts)
+	if err != nil || report.Mode0OAMEntries != 7 {
+		t.Fatalf("448 tiles should fit: %+v %v", report, err)
 	}
 	_, _, err = TranspileWithReport("with_text.lua", strings.Replace(source, "cls()", `cls() print("A",0,0,7)`, 1), opts)
-	if err == nil || !strings.Contains(err.Error(), "480 available") {
-		t.Fatalf("text reservation missing: %v", err)
+	if err != nil {
+		t.Fatalf("448 cells and private text should exactly fit: %v", err)
 	}
 }
 

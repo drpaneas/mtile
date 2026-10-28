@@ -38,6 +38,7 @@ and one visible checkpoint at a time. See [choose one small game](../docs/small-
 | Project | What to learn | What to try |
 | --- | --- | --- |
 | [hello](hello/README.md) | Input, sprite coordinates, and a background | Move with the arrows; change the speed |
+| [save-game](save-game/README.md) | Cartridge saves, explicit failure handling, and restoring progress | Save with A, wait five seconds on Omega, then power off/on |
 | [multi-file](multi-file/README.md) | Split a game into explicit `require` modules | Edit player behavior separately from the HUD |
 | [nerdo](nerdo/README.md) | Poses, animation clips, facing, and color variants | Hold left/right, then release; create a recolor in Sprite Lab |
 | [background-layers](background-layers/README.md) | Four map planes and independent parallax cameras | Hide individual planes in Map Lab |

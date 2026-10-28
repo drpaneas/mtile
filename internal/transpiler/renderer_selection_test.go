@@ -689,13 +689,10 @@ func TestMode0BudgetsPhysicalOAMEntriesInsteadOfConflatingScanlines(t *testing.T
 		t.Fatalf("100-sprite budget = %+v, want 100 OAM entries and 800 line cycles", report)
 	}
 
-	_, report, err = TranspileWithReport("two-64.lua", build(2, "spr(32,0,0,8,8)"),
+	_, _, err = TranspileWithReport("two-64.lua", build(2, "spr(32,0,0,8,8)"),
 		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if report.Mode0OAMEntries != 128 || report.Mode0OBJLineCycles != 128 {
-		t.Fatalf("two 64x64 metasprites budget = %+v, want 128 OAM entries and 128 line cycles", report)
+	if err == nil || !strings.Contains(err.Error(), "128 OAM entries") {
+		t.Fatalf("missing system-entry reservation: %v", err)
 	}
 
 	_, _, err = TranspileWithReport("oam-129.lua", build(129, "spr(1,0,0)"),
@@ -725,13 +722,13 @@ func TestMode0BudgetsNormalOBJRenderingCyclesPerScanline(t *testing.T) {
 		return source.String()
 	}
 
-	_, report, err := TranspileWithReport("packed-38.lua", buildPacked(38, func(int) string { return "64" }),
+	_, report, err := TranspileWithReport("packed-36.lua", buildPacked(36, func(int) string { return "64" }),
 		Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !report.Mode0ObjectPacking || report.Mode0OAMEntries != 38 || report.Mode0OBJLineCycles != 1216 {
-		t.Fatalf("38 packed sprites budget = %+v, want 38 OAM entries and 1216 line cycles", report)
+	if !report.Mode0ObjectPacking || report.Mode0OAMEntries != 36 || report.Mode0OBJLineCycles != 1152 {
+		t.Fatalf("36 packed sprites budget = %+v, want 36 OAM entries and 1152 line cycles", report)
 	}
 
 	_, _, err = TranspileWithReport("packed-39.lua", buildPacked(39, func(int) string { return "64" }),

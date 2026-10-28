@@ -123,7 +123,7 @@ func (g *generator) exprNumber(expr luaparser.Expr) bool {
 		if fn := g.calledFunction(x); fn != nil {
 			return fn.returnN > 0 && fn.returnKind(0) == monoNumber
 		}
-		if name == "min" || name == "max" || name == "mid" || name == "mget" {
+		if name == "min" || name == "max" || name == "mid" || name == "mget" || name == "save_get" || name == "save_read" || name == "save_write" {
 			return true
 		}
 		requireNumbers := func() bool {
@@ -249,6 +249,11 @@ func (g *generator) emitNumberExpr(expr luaparser.Expr) string {
 		name, _ := callKey(x)
 		if name == "mget" {
 			return "(" + g.emitBuiltin("mget", x.Args, true) + ").Num"
+		}
+		if name == "save_get" || name == "save_read" || name == "save_write" {
+			// emitCall sequences the operands. Do not sequence them here too:
+			// a dynamic field-index expression must execute exactly once.
+			return "(" + g.emitCall(x, true) + ").NumberOr(0)"
 		}
 		var arg func(int, string) string
 		if g.numberBuiltinArgs(x.Args) {

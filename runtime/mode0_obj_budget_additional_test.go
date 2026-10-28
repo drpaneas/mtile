@@ -11,7 +11,7 @@ import (
 
 func TestMode0OAMCompactionPreservesPriorityAcrossOverlapSizes(t *testing.T) {
 	requireMode0LayerCount(t, 1)
-	for _, count := range []int{1, 63, 64, 65, 100, 127, 128} {
+	for _, count := range []int{1, 63, 64, 65, 100, 126, 127} {
 		t.Run(fmt.Sprintf("count-%d", count), func(t *testing.T) {
 			hw.ResetForTest()
 			c := newMode0TestContext(t, 16, 8, 1, 1, make([]byte, 16*8), []uint16{0}, make([]byte, 2))

@@ -60,11 +60,11 @@ func TestMode0ResidentPosePixelsFlipsCameraAndNoUploads(t *testing.T) {
 func TestMode0ResidentPoseInitializationValidatesBankAndOffsets(t *testing.T) {
 	image := AssetImage{PoseIndex: []PoseRange{{Count: 1}}, PoseParts: []PosePart{{}},
 		PoseOBJIndex: []PoseOBJRange{{Count: 1, TileCount: 1}},
-		PoseOBJParts: []PoseOBJ{{Width: 8, Height: 8}}, PoseOBJResident: make([]uint32, 16), PoseOBJResidentBase: 511}
+		PoseOBJParts: []PoseOBJ{{Width: 8, Height: 8}}, PoseOBJResident: make([]uint32, 16), PoseOBJResidentBase: 479}
 	if !poseIndexValid(&image) {
 		t.Fatal("valid last resident tile rejected")
 	}
-	image.PoseOBJResidentBase = 512
+	image.PoseOBJResidentBase = 480
 	if poseIndexValid(&image) {
 		t.Fatal("resident OBJ bank past VRAM accepted")
 	}

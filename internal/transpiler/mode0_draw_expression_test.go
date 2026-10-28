@@ -81,7 +81,7 @@ func TestMode0ExpressionTraversalKeepsPureRecursiveHelpers(t *testing.T) {
 func TestMode0HiddenExpressionDrawsCannotBypassObjectBudget(t *testing.T) {
 	source := `function _draw() cls() for i=1,128 do local x=pspr(0,i,0) end pspr(0,0,0) end`
 	_, _, err := TranspileWithReport("expression-budget.lua", source, psprMode0Opts(runtimeapi.PosePart{Tile: 0}))
-	if err == nil || !strings.Contains(err.Error(), "128") {
+	if err == nil || !strings.Contains(err.Error(), "127") {
 		t.Fatalf("129 hidden/visible draws escaped physical limit: %v", err)
 	}
 }

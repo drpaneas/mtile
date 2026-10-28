@@ -82,6 +82,8 @@ type Context struct {
 	staticN     uint16
 
 	nativeAudio *audio.Controller
+	saveMemory  *SaveMemory
+	pause       pauseState
 }
 
 // drawCursor is the current draw cursor. One draw colour is shared by

@@ -35,7 +35,7 @@ btn(index)
 
 Check whether a button is held down.
 
-Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B.
+Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B. Start is reserved for the shared pause menu in generated games; game input and button-repeat ticks freeze while paused.
 
 ```lua
 if btn(0) then x -= 2 end
@@ -1005,6 +1005,88 @@ Indices start at 1. An index outside the string returns nil.
 
 ```lua
 code = ord("GBA", 1)
+```
+
+### save_set
+
+```text
+save_set(index, number)
+```
+
+Stage a numeric field for the next cartridge save.
+
+Fields are 0..63 and store exact signed 16:16 numbers. Returns true for a valid integer index and numeric value, false otherwise. This only changes RAM. Use save_write to commit. See the dedicated cartridge saving guide.
+
+```lua
+accepted = save_set(0, score)
+```
+
+### save_get
+
+```text
+save_get(index)
+```
+
+Read a numeric field from the save staging buffer.
+
+Fields start at zero. Invalid types, fractional indices, and indices outside 0..63 return 0. A successful save_read fills all 64 fields; an unsuccessful read leaves them unchanged. Renderer-independent.
+
+```lua
+score = save_get(0)
+```
+
+### save_read
+
+```text
+save_read("unique-game-v1")
+```
+
+Restore the newest valid cartridge save into the staging buffer.
+
+The key must be a literal string of 1..32 bytes. Returns 1 on success, 0 for blank records, -2 for corrupt/unsupported records, -3 for a different key, or -1 for missing runtime storage. Failed reads preserve the buffer. Test == 1 explicitly: zero and negative numbers are truthy in Lua. Uses SRAM-compatible cartridge memory; physical verification remains pending.
+
+```lua
+if save_read("my-game-v1") == 1 then score = save_get(0) end
+```
+
+### save_write
+
+```text
+save_write("unique-game-v1")
+```
+
+Write and verify all 64 staged fields in cartridge save memory.
+
+The key must be a literal string of 1..32 bytes. Returns 1 for verified cartridge-visible bytes or -1 on write verification failure. Alternates two checked recovery records and commits last. A failure keeps current progress in RAM. An explicit write can replace another key or damaged data; request player intent before replacement. On the original EZ-Flash Omega, wait five seconds after saving before power-off or reset; SD persistence is controlled by the cart firmware. Renderer-independent. A successful write also restarts the shared pause menu’s five-second resume/power-off reminder.
+
+```lua
+save_set(0, score)
+result = save_write("my-game-v1")
+```
+
+### pause_menu
+
+```text
+pause_menu("save_function", "load_function")
+```
+
+Connect game progress functions to the shared Start pause menu.
+
+Every game has the same fixed centered Load, Save, Exit overlay on Start; Start toggles pause/resume. The layout and items cannot be customized or disabled. Save/Load remain unavailable until one direct unconditional _init call binds two literal zero-argument function names. Each function returns one numeric save status. Callbacks run only on menu actions and participate in renderer proofs. A successful save blocks resuming for five seconds; Exit ends the session and shows power-off/reset instructions. Load restores one logical save; the two SRAM records are recovery copies, not slots. The private sprite overlay preserves the frozen game in both renderers; Mode 0 reserves system OBJ resources as documented in the renderer contract.
+
+```lua
+function store_progress()
+  save_set(0, score)
+  return save_write("my-game-v1")
+end
+function restore_progress()
+  local result = save_read("my-game-v1")
+  if result == 1 then score = save_get(0) end
+  return result
+end
+function _init()
+  pause_menu("store_progress", "restore_progress")
+end
 ```
 
 ## Time and diagnostics

@@ -47,7 +47,7 @@ func (c *Context) referenceMode0RenderSprite(id, x, y, w, h int, flipX, flipY bo
 			if !c.mode0ObjectIntersectsClip(baseX, baseY, w*8, h*8) {
 				return
 			}
-			slot := 127 - c.mode0ObjectCount
+			slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
 			offset := slot * 8
 			attr0 := uint16(baseY&0xff) | 0x2000 // 8bpp, square
 			attr1 := uint16(baseX&0x1ff) | uint16(packedCells/2)<<14
@@ -93,7 +93,7 @@ func (c *Context) referenceMode0RenderSprite(id, x, y, w, h int, flipX, flipY bo
 			if sourceID == 0 && !c.mode0ObjectZeroVisible {
 				continue
 			}
-			slot := 127 - c.mode0ObjectCount
+			slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
 			offset := slot * 8
 			attr0 := uint16(objectY&0xff) | 0x2000 // 8bpp, square 8x8
 			attr1 := uint16(objectX & 0x1ff)
@@ -123,7 +123,7 @@ func TestMode0PackedOAMEntryMatchesBytesAtEveryAlignment(t *testing.T) {
 			storage := bytes.Repeat([]byte{0xa5}, hw.OAMBytes+8)
 			got := (*[hw.OAMBytes]byte)(unsafe.Pointer(&storage[4+alignment]))
 			want := *got
-			if slot >= 0 && slot < 128 {
+			if slot >= 0 && slot < mode0ObjectLimit {
 				at := slot * 8
 				mode0PutOAM16(&want, at, 0xabcd)
 				mode0PutOAM16(&want, at+2, 0xfedc)
@@ -150,9 +150,9 @@ func TestMode0WordCompactionPreservesEveryCount(t *testing.T) {
 		}
 		c.mode0ObjectCount = count
 		want := c.mode0OAM
-		n := max(0, min(count, 128))
-		copy(want[:n*8], want[(128-n)*8:])
-		for i := max(n, 128-n); i < 128; i++ {
+		n := max(0, min(count, mode0ObjectLimit))
+		copy(want[:n*8], want[(mode0ObjectLimit-n)*8:mode0ObjectLimit*8])
+		for i := max(n, mode0ObjectLimit-n); i < mode0ObjectLimit; i++ {
 			mode0PutOAM16(&want, i*8, mode0ObjectDisable)
 		}
 		c.compactMode0OAM()

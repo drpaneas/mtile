@@ -35,6 +35,8 @@ are there when you want to understand the code.
 | Switch between rooms and choose the entry position | [Lantern Rooms](../examples/lantern-rooms/README.md) |
 | Place animated decorations by painting them in the map | [Tile links](tile-links.md) |
 | Make a sound or song | [Audio](audio/README.md) |
+| Save progress on a real GBA | [Cartridge saving](saving.md) and [Save Game example](../examples/save-game/README.md) |
+| Pause, resume, load, save or exit | [Shared pause menu](pause-menu.md) |
 
 ## Look up details when you need them
 

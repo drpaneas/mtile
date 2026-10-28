@@ -299,3 +299,12 @@ func SetVCountForTest(value uint16) {
 func SetKeyInputForTest(value uint16) {
 	hostKEYINPUT = value
 }
+
+func ReadVideoWords32DMA(dst []uint32, source uintptr) {
+	if !videoReadRange(source, len(dst)) {
+		return
+	}
+	for i := range dst {
+		dst[i] = GetReg32(source + uintptr(i*4))
+	}
+}

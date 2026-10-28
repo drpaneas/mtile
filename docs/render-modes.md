@@ -41,6 +41,64 @@ runtime API.
 
 ## Implemented Mode 0 subset
 
+### Cartridge saves
+
+`pause_menu` is **renderer-independent** configuration: it binds two literal
+zero-argument function names once in `_init` and does not draw or change the
+game's graphics state. The common Start menu is built into every generated
+game, including games without `btn` or save support. The fixed compact overlay
+preserves the frozen scene and restores borrowed VRAM/OAM/palette/register
+state on resume. Its layout, items and Start behavior are not configurable.
+Mode 0 reserves one OAM entry, 64 OBJ scanline cycles, the last 2 KiB of OBJ
+tiles, and physical OBJ palette indices 241..245 for this system UI. Game
+limits are therefore 127 OAM entries and 1,162 worst-line cycles. All these
+reservations apply even without save callbacks. Registration has no additional
+renderer-specific restrictions. Invalid registrations
+fail all renderers with source-positioned `PAUSE_MENU`. Both callbacks are
+included in all renderer/resource/mutation analyses as additional update
+roots: a Mode 4-only call there rejects forced Mode 0 or makes AUTO fall back
+with its usual source-positioned diagnostic. Registration never relaxes
+callback semantics or hides a graphics call from the proof. See
+[pause menu](pause-menu.md) and [paired ARM evidence](benchmarks/render-modes/pause-menu-v1.md).
+
+The default panel contains Load, Save and Exit with a centered PAUSED heading.
+Start toggles pause/resume; no Resume row or control-hint footer is drawn.
+A successful save temporarily blocks resuming for the Omega wait. Load restores
+one logical save; the alternating SRAM records are recovery copies, not slots.
+
+The system OBJ must not recolor frozen game objects. Mode 0 rejects an 8bpp
+sprite source sheet containing palette indices 241..245, a print color in
+that range, or an `sset` color that is nonliteral or in that range while
+sheet/pose objects are drawn. `M0_PAUSE_PALETTE` identifies this failure at
+the offending call; AUTO falls back to Mode 4. The current proof scans the
+whole relevant source sheet, including currently unused cells. Packed 4bpp
+pose variants instead reserve one of the sixteen palette banks for the UI,
+leaving fifteen game banks. BG colors and `pal`/`palset` mappings are unrestricted
+by this reservation: physical OBJ indices, rather than their mapped RGB
+values, determine conflicts. Mode 4 has no game hardware OBJs and has no
+corresponding source, palette, OAM or scanline restrictions.
+
+`btn` and `btnp` remain renderer-independent. Start is now reserved by the
+generated loop for the shared menu. Game updates, drawing, `t`/`time`, and
+button-repeat ticks stop while it is open. Resume suppresses held menu keys
+until released; new presses then reach the game normally. Background music
+continues during pause and stops on Exit. These rules are identical in both
+renderers and AUTO; they do not change manual Go Context input polling.
+
+`save_get`, `save_set`, `save_read`, and `save_write` are **renderer-independent**:
+they only access a numeric staging buffer and byte-addressed cartridge save
+memory. They never read or mutate graphics state. Both renderers preserve all
+64 signed 16:16 fields, error results, record ordering, and recovery behavior.
+There are no Mode 0-specific restrictions or fallback conditions. In every
+renderer, read/write keys must be literal strings of 1..32 bytes; invalid keys
+fail compilation with source-positioned `SAVE_KEY`. Field indices and values
+may be dynamic, including invalid types with the documented zero/false results.
+Saving does not relax the rest of a scene's AUTO proof. Calls are synchronous;
+write on explicit player actions rather than every update. See the dedicated
+[saving guide](saving.md) and [parity/cost evidence](benchmarks/render-modes/saving-v1.md).
+
+### Scene requirements
+
 `mtile build -renderer mode0 project-dir` succeeds only when the analyzer can
 prove all of these conditions:
 
@@ -83,14 +141,14 @@ prove all of these conditions:
   Nested helpers and branches follow the same rule. Ordinary sprite packing
   is discounted in a branched scene only when every possible packed source
   fits the shared cache; otherwise the proof charges its per-cell fallback.
-  Empty or out-of-range poses are no-ops. Up to 128 bounded pose invocations
+  Empty or out-of-range poses are no-ops. Up to 127 bounded pose invocations
   may share a frame, subject to the actual hardware budgets. Streamed windows
-  use up to 512 OBJ tiles, reduced to 480 when text is linked or 448 when the
+  use up to 480 OBJ tiles, reduced to 448 when text is linked or 416 when the
   ordinary-sprite packing cache is linked; identity-mapped `spr`/`sspr` source
   tiles are reserved before those windows. Background `sset` edits preserve
   separate-bank poses and update shared-sheet poses on the next draw. `print` remains after every map. After
-  the deterministic packing plan they use at most 128 OAM entries and at most
-  1,226 normal-OBJ rendering cycles on every scanline. Literal Y positions are
+  the deterministic packing plan they use at most 127 OAM entries and at most
+  1,162 game OBJ rendering cycles on every scanline. Literal Y positions are
   first quantized exactly like the runtime's signed 16:16 numbers, then compose
   as circular 8-bit hardware intervals; independently dynamic Y positions and
   object groups separated by a `_draw` camera change are conservatively assumed
@@ -134,20 +192,19 @@ prove all of these conditions:
   `chr`, `sub`, control codes, and non-number/non-string values are not eligible.
   x/y may be dynamic or non-numeric, in which case the
   shared cursor position and implicit-newline update exactly match Mode 4.
-  Text reserves OBJ tiles 480..511 and is limited to 32 unique `(glyph,color)`
+  Text reserves physical OBJ tiles 448..479 and is limited to 32 unique `(glyph,color)`
   pairs, not 32 character occurrences. Numeric prints intern the charset
   `-.0123456789` at that color and budget 12 OAM entries, covering the widest
   decimal `formatNumber` form. The transpiler sorts and rasterizes
   those unique pairs into a ROM atlas from every `_draw` helper the walk reaches,
   which is uploaded once while the LCD is
   force-blanked. Build also stamps those reserved sheet cells from the atlas so
-  leftover authored pixels cannot remain. The sprite editor locks IDs 480..511
+  leftover authored pixels cannot remain. Authored sheet metadata keeps IDs 480..511, independently of physical OBJ addresses. The sprite editor locks IDs 480..511
   whenever the sheet contains them. Every visible occurrence still consumes one OAM entry and its
-  true eight-cycle scanline cost, so the shared 128-entry/1,226-cycle proof
-  remains unchanged. Repeated characters may therefore exceed 32 occurrences
+  true eight-cycle scanline cost, so the shared 127-entry/1,162-cycle game proof includes the system reservation. Repeated characters may therefore exceed 32 occurrences
   when the occurrence budgets fit; 33 unique pairs fail forced Mode 0 or make
   AUTO fall back with `M0_OBJ_BUDGET`. Other object source IDs must remain below
-  480 when non-empty text is present. Empty static strings require no OBJ/text backend;
+  448 when non-empty text is present. Empty static strings require no OBJ/text backend;
 - `clip` is only `clip()` or `clip(0,0,240,160)`;
 - `pal`/`palt` run outside `_draw`, including through every helper reachable
   from `_draw`; palette reset, layer reset, draw/display remaps, and the default
@@ -202,7 +259,7 @@ build time. It preserves each hardware object's exact contiguous tile pixels,
 layout, authored flips, and painter order, sharing equal pixel runs across
 poses and draw sites. The resulting bank must fit after every reachable
 legacy sprite tile and below the text and ordinary-object packing reservations
-(at most 512 tiles in total). Unreachable poses do not consume this bank;
+(at most 480 8bpp-equivalent tiles in total). Unreachable poses do not consume this bank;
 unknown pose IDs or clip names still conservatively include every possible
 pose. The bank uploads once while the LCD is force-blanked, so animation and
 motion subsequently change OAM without visible pose uploads or EWRAM staging.
@@ -275,7 +332,7 @@ most linked cells that call can show at once: the largest count in any window
 of the call's cell size (or the screen widened by the objects' reach) over
 each drawn plane. Positions are treated as unknown and flips as absent, so the
 OAM and scanline proofs assume every object coincides. Those sites share the
-ordinary 128-entry, 1,226-cycle, and OBJ VRAM budgets.
+ordinary 127-entry, 1,162-cycle, and OBJ VRAM budgets.
 
 The count is sound only while linked cells stay where the map placed them, so
 Mode 0 rejects any `mset` whose value may be a linked tile. A value must be a
@@ -353,7 +410,7 @@ a finite integer range or equality set, user functions that only return those,
 and field increments that stop at a compared bound. Unbounded or
 unknown ids still fail. Forced Mode 0 rejects them with source-positioned
 `M0_SPR_SHAPE`; AUTO uses the same diagnostic and falls back to Mode 4. Every
-enumerated source rectangle must fit the sheet, OBJ IDs 0..511, the optional
+enumerated source rectangle must fit the sheet, OBJ IDs 0..479, the optional
 text reservation, and the existing OAM/scanline budgets. This is renderer
 eligibility only and does not change `spr()` semantics in either renderer.
 Named clip playback is provided separately by `anim()`.
@@ -411,26 +468,26 @@ Mode 4. Multiple objects in one lane retain their ordinary painter order.
 Within that existing proof, immutable `spr(...,2,2)`/`spr(...,4,4)` calls and
 exact, unscaled 16x16/32x32 `sspr` rectangles use one square hardware OBJ
 instead of four/sixteen 8x8 objects. The link-time optimization reserves OBJ
-tiles 448-479 as a 32-cell mixed cache: a unique 16x16 source consumes four
+tiles 416-447 as a 32-cell mixed cache: a unique 16x16 source consumes four
 contiguous cells and a unique 32x32 source consumes sixteen. First use uploads
 the rectangle in row-major hardware order and later frames reuse it. It is
 enabled only when there is no `sset` call and every statically referenced
-sprite cell is below 448. Any bounded runtime source variable currently
+sprite cell is below 416. Any bounded runtime source variable currently
 disables this whole-cart packing optimization and retains the ordinary
 metasprite path, whose allocation is independent of the selected frame. If the
 cache cannot fit another rectangle, that draw
 retains its ordinary four/sixteen-object metasprite path. OBJ text keeps tiles
-480-511. The analyzer simulates the same first-use/cache-capacity order as the
+448-479. The analyzer simulates the same first-use/cache-capacity order as the
 runtime: a packed rectangle costs one OAM entry, while a fallback costs all of
 its cells. Packing does not reduce scanline rendering time: normal OBJ cost is
 still its pixel width, so both a packed 32x32 and one visible row of its
 metasprite fallback cost 32 cycles.
 
-The 1,226-cycle ceiling follows the GBA's normal 308-dot line budget with the
-H-Blank Interval Free bit disabled: `308*4-6`. X position never discounts the
+The hardware has 1,226 cycles with H-Blank Interval Free disabled (`308*4-6`);
+the game ceiling is 1,162 after reserving 64 for the pause overlay. X position never discounts the
 proof because horizontally undisplayed OBJs can still consume evaluation work.
 The 8-bit Y model includes hardware wrapping and a shared dynamic camera shift.
-Any source that exceeds 128 OAM entries or the scanline-cycle ceiling fails
+Any source that exceeds 127 OAM entries or the scanline-cycle ceiling fails
 forced Mode 0 with `M0_OBJ_BUDGET`; AUTO falls back to Mode 4 with the same
 source-positioned diagnostic.
 
@@ -473,7 +530,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `palt` | Mode 0 conditional | Only default-transparency reset/no-op forms outside `_draw` are currently admitted. Arbitrary transparent source colors require Mode 4; asset conversion is not a current public fallback. |
 | `color` | Both | Changes logical default draw/text color and does not itself rasterize. |
 | `cursor` | Both | Changes logical text position/color and does not itself rasterize. |
-| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal ASCII strings and proven decimal numbers (the same `formatNumber` layout as `tostr`, without a Lua string) intern glyph tiles at build time and upload them once into OBJ 480-511; the sprite editor locks those IDs and build overwrites leftover sheet pixels. The number proof is assignment and expression based, not "any variable". Concat, `tostr`/`chr`/`sub`, booleans, unproven fields, and control codes are not eligible. Every visible occurrence still owns one OAM entry. Numeric prints budget 12 entries. Non-empty text requires color 1..255 because hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
+| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal ASCII strings and proven decimal numbers (the same `formatNumber` layout as `tostr`, without a Lua string) intern glyph tiles at build time and upload them once into physical OBJ 448-479; authored sheet metadata and editor locks remain at IDs 480-511. The number proof is assignment and expression based, not "any variable". Concat, `tostr`/`chr`/`sub`, booleans, unproven fields, and control codes are not eligible. Every visible occurrence still owns one OAM entry. Numeric prints budget 12 entries. Non-empty text requires color 1..255 except reserved OBJ indices 241..245; hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
 
 The classification is intentionally semantic, not merely based on whether a
 similar picture could be produced. A Mode 0 backend must not silently round
@@ -719,7 +776,7 @@ before global `pal`/`palt` processing in Mode 4.
 
 Classification: **Mode 0 conditional**. Mode 4 builds exact recolored pose
 pixels from the canonical source. Mode 0 requires immutable resident 4bpp poses,
-15 visible colors per hardware object, at most 16 compatible palette banks,
+15 visible colors per hardware object, at most 15 compatible palette banks,
 and sufficient OBJ VRAM. All declared variants of every reachable canonical
 pose are included in OAM, scanline and storage proofs, even when selected via
 helpers or dynamic names. `spr`, `sspr`, `print`, `pal`, `palt`, and `sset` cannot

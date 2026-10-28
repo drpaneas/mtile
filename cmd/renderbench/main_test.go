@@ -217,7 +217,7 @@ func TestPack32WorkloadEnablesMode0PackedObjectCache(t *testing.T) {
 	}
 }
 
-func TestFullOAMBudgetWorkloadsRemainAutoEligible(t *testing.T) {
+func TestFullOAMBudgetWorkloadsRespectSystemReservation(t *testing.T) {
 	tests := []struct {
 		name       string
 		oamEntries int
@@ -240,6 +240,12 @@ func TestFullOAMBudgetWorkloadsRemainAutoEligible(t *testing.T) {
 			})
 			if err != nil {
 				t.Fatal(err)
+			}
+			if test.name == "scanline38" {
+				if report.Selected != transpiler.RendererMode4 || !strings.Contains(report.Diagnostic, "M0_OBJ_BUDGET") || !strings.Contains(report.Diagnostic, "system pause overlay") {
+					t.Fatalf("missing system reservation fallback: %+v", report)
+				}
+				return
 			}
 			if report.Selected != transpiler.RendererMode0 || report.Mode0OAMEntries != test.oamEntries ||
 				report.Mode0OBJLineCycles != test.lineCycles || report.Mode0ObjectPacking != test.packing {

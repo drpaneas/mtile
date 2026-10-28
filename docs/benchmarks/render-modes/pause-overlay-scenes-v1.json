@@ -1,0 +1,40 @@
+{
+  "differingPixels": 0,
+  "physicalHardwareVerified": false,
+  "scenes": {
+    "127-objects": {
+      "backgroundUnchanged": true,
+      "differingPixels": 0,
+      "pausedSceneStable": true,
+      "romSha256": {
+        "auto": "5aae88bb29b86241f3def44d8c819ab0d0acb602749c8e71704c81a09effe28e",
+        "mode0": "5aae88bb29b86241f3def44d8c819ab0d0acb602749c8e71704c81a09effe28e",
+        "mode4": "c6cf50bdee6c0ded2af1d3798c5093273f76202725c04ce6343a4c4777e4e2ea"
+      },
+      "startRestoresPixels": true
+    },
+    "lantern-rooms": {
+      "backgroundUnchanged": true,
+      "differingPixels": 0,
+      "pausedSceneStable": true,
+      "romSha256": {
+        "auto": "bcd39a1224d3f8969a4a61b370ea6040147f8335b77241accc44ccdf554a741d",
+        "mode0": "bcd39a1224d3f8969a4a61b370ea6040147f8335b77241accc44ccdf554a741d",
+        "mode4": "5a8d189bfa87955df6faded739dd7137600f4972b6a7d55c81b2a0f02c593231"
+      },
+      "startRestoresPixels": true
+    },
+    "tidewalk": {
+      "backgroundUnchanged": true,
+      "differingPixels": 0,
+      "pausedSceneStable": true,
+      "romSha256": {
+        "auto": "e6883d022e40cbcdbfb545abc8303117d61353ee78de0b7281b5bd446278c181",
+        "mode0": "e6883d022e40cbcdbfb545abc8303117d61353ee78de0b7281b5bd446278c181",
+        "mode4": "5a8f0d602d23834b1297980824b404fcf53ebe5262c6bbab5cd4aa667ce821de"
+      },
+      "startRestoresPixels": true
+    }
+  },
+  "schemaVersion": 1
+}

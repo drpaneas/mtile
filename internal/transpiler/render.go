@@ -179,11 +179,17 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line("//go:section .ewram\nvar cartData rt.AssetMemory")
 	b.line("//go:section .ewram\nvar ctx rt.Context")
 	b.line("//go:section .ewram\nvar game Game")
+	if g.saveEnabled() {
+		b.line("//go:section .ewram\nvar saveMemory rt.SaveMemory")
+	}
 	if g.mapRasterEligible() {
 		// Use target sizes: host pointer widths and target capacity tags differ.
 		// Reserving both Lua semispaces plus 8 KiB makes the optimization fail
 		// closed to zero-length arrays when a small map belongs to a large cart.
 		budget := "256*1024 - 512 - 8192 - rt.MapRasterHeapReserve - int(unsafe.Sizeof(ctx)) - int(unsafe.Sizeof(cartData)) - int(unsafe.Sizeof(game)) - int(unsafe.Sizeof(sheetRAM)) - int(unsafe.Sizeof(sheetIndexRAM)) - int(unsafe.Sizeof(mapRAM)) - int(unsafe.Sizeof(flagRAM))"
+		if g.saveEnabled() {
+			budget += " - int(unsafe.Sizeof(saveMemory))"
+		}
 		if g.nativeAudioEnabled {
 			budget += " - int(unsafe.Sizeof(nativeAudioController))"
 		}
@@ -261,6 +267,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("}")
 		b.line("")
 	}
+	g.renderPauseCallbacks(b)
 	g.current = nil
 }
 
@@ -360,6 +367,9 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line("\tif !nativeAudioController.Bind(audio.Library{Sounds: nativeSoundROM[:], Clips: nativeClipROM[:], Parts: nativePartROM[:], Songs: nativeSongROM[:]}) { " + g.haltStatement("Sound assets were rejected. Check sounds.json and music.json, then rebuild.") + " }")
 		b.line("\tctx.AttachNativeAudio(&nativeAudioController)")
 	}
+	if g.saveEnabled() {
+		b.line("\tctx.AttachSaveMemory(&saveMemory)")
+	}
 	b.line("\tgame.Init(&ctx)")
 	if g.mapRasterEligible() {
 		b.line("\tctx.PrepareMapRaster()")
@@ -384,11 +394,15 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\t// the flip always lands in the second frame's VBlank - a fast")
 	b.line("\t\t// iteration can never flip one frame early and alternate cadence.")
 	b.line("\t\tctx.BeginFramePace()")
+	b.line("\t\tctx.PollInput()")
+	b.line("\t\tswitch ctx.PollPauseMenu() {")
+	b.line("\t\tcase rt.PauseSave: ctx.PauseSaveResult(game." + g.pauseCallbackMethod(0) + "(&ctx))")
+	b.line("\t\tcase rt.PauseLoad: ctx.PauseLoadResult(game." + g.pauseCallbackMethod(1) + "(&ctx))")
+	b.line("\t\t}")
+	b.line("\t\tpaused := ctx.PauseActive()")
+	b.line("\t\tif !paused {")
 
 	b.line("\t\tctx.BeginProfilePhase(rt.ProfileUpdate)")
-	if g.inputEnabled {
-		b.line("\t\tctx.PollInput()")
-	}
 	if g.inputEnabled || g.timeEnabled {
 		b.line("\t\tctx.AdvanceTick()")
 	}
@@ -408,9 +422,11 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	if g.heapEnabled {
 		b.line("\t\tctx.CollectIfNeeded()")
 	}
+	b.line("\t\t}")
+	b.line("\t\tif paused { ctx.PreparePauseMenu() }")
 	b.line("\t\tctx.PaceFrame30()")
 	b.line("\t\tctx.WaitForPresentWindow()")
-	b.line("\t\tctx.PresentRender()")
+	b.line("\t\tif paused { ctx.PresentPauseMenu() } else { ctx.PresentRender() }")
 	if g.opts.Debug {
 		if g.heapEnabled {
 			b.line("\t\tdebugMailbox.Begin(ctx.DebugSnapshot())")

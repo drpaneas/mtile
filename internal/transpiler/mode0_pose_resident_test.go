@@ -46,10 +46,10 @@ func residentFixturePlan(t *testing.T, opts Options, source string) *mode0Reside
 
 func TestMode0ResidentPoseCapacityAndImmutableFallback(t *testing.T) {
 	const source = "function _draw() cls() pspr(frame,0,0) end"
-	for _, cells := range []int{511, 512, 513} {
+	for _, cells := range []int{479, 480, 481} {
 		opts := residentFixtureOptions(cells)
 		plan := residentFixturePlan(t, opts, source)
-		if cells <= 512 {
+		if cells <= 480 {
 			if plan == nil || len(plan.words) != cells*16 || plan.base != 0 {
 				t.Fatalf("%d cells: plan=%+v", cells, plan)
 			}
@@ -110,7 +110,7 @@ func TestMode0ResidentPoseDeduplicatesPackedPixelsAndPreservesLayout(t *testing.
 }
 
 func TestMode0ResidentPoseHonorsLegacyTextAndPackingReservations(t *testing.T) {
-	opts := residentFixtureOptions(480)
+	opts := residentFixtureOptions(448)
 	opts.SheetW, opts.SheetH = 128, 32
 	for _, tc := range []struct {
 		source string

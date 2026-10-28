@@ -43,6 +43,9 @@ GUIDES = [
     ("sfx", "Make a sound effect", "audio", "docs/audio/sfx.md", "Create short clips for jumps, pickups, and collisions."),
     ("music", "Compose a song", "audio", "docs/audio/music.md", "Arrange clips into parts and a complete soundtrack."),
     ("foreach", "Working with foreach", "data", "docs/loops/foreach.md", "Callbacks, lists, and safe mutation patterns."),
+    ("pause-menu", "Shared pause menu", "data", "docs/pause-menu.md", "Resume, load, save and exit through one common menu."),
+    ("saving", "Saving on a real GBA", "data", "docs/saving.md", "Save progress to cartridge memory and test it on EZ-Flash Omega."),
+    ("save-game", "Save Game: cartridge example", "data", "examples/save-game/README.md", "Save a run, power off, and restore it on a real GBA."),
 ]
 DOC_ROUTES = {(ROOT / src).resolve(): f"guides/{slug}.html" for slug, _, _, src, _ in GUIDES}
 DOC_ROUTES[(ROOT / "docs/README.md").resolve()] = "guide.html"
@@ -51,7 +54,7 @@ DOC_ROUTES[(ROOT / "docs/first-game.md").resolve()] = "guides/first-game.html"
 CATEGORY_GUIDES = {
     "start": ["install", "first-game", "small-games"], "loop": ["game-loop", "reference", "lua-api"], "input": [],
     "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
-    "math": [], "data": ["foreach"], "debug": ["performance", "renderers"], "editor": ["editor"],
+    "math": [], "data": ["foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "renderers"], "editor": ["editor"],
 }
 ICON_PATHS = {
     "flag": '<path d="M5 21V3h13l-3 5 3 5H5"/>',

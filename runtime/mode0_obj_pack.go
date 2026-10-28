@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	mode0PackedObjectTileBase     = 448
+	mode0PackedObjectTileBase     = 416
 	mode0PackedObjectEntries      = 8
 	mode0PackedObjectTileCapacity = 32
 	mode0PackedObjectTileEnd      = mode0PackedObjectTileBase + mode0PackedObjectTileCapacity

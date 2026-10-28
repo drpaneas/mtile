@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	mode0OAMEntryLimit            = 128
-	mode0OBJLineCycleLimit        = 1226
+	mode0OAMEntryLimit            = 127
+	mode0OBJLineCycleLimit        = 1162
 	mode0TextTileLimit            = 32
 	mode0PackedObjectEntryLimit   = 8
 	mode0PackedObjectTileCapacity = 32
