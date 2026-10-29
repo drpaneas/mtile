@@ -1,0 +1,10 @@
+{
+  "canonicalVerifiedTicks": 16800,
+  "hashVerifiedTicks": 4800,
+  "totalVerifiedTicks": 21600,
+  "canonicalRendererCases": 14,
+  "canonicalRepeatsIdentical": true,
+  "canonicalControlCasesUnchanged": 6,
+  "knownTradeoff": "Hash-backed table with keys 1..64: 176270 to 183260 cycles (+3.97%), both at 29.864 Hz.",
+  "allPhysicsCasesMaintain30Hz": true
+}

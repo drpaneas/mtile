@@ -1,0 +1,17 @@
+{
+  "baselineRevision": "84c6d9a99514b0b02b3ccbfb2ef44b3ba95ae77b",
+  "tinygo": "0.42.0 / LLVM 22.1.4",
+  "go": "1.27.1",
+  "helperSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "enginePatchSHA256": "be8482f884f392d9bdb4bd0938208f98fc0272e8d0361c75cf9e56955d5dac75",
+  "warmup": 60,
+  "ticksPerCapture": 600,
+  "repetitions": 2,
+  "profileTicks": 120,
+  "budget": 561792,
+  "canonicalWorkloads": 7,
+  "canonicalRendererCases": 14,
+  "canonicalVerifiedTicks": 16800,
+  "hashProbeVerifiedTicks": 4800,
+  "totalNewVerifiedTicks": 21600
+}

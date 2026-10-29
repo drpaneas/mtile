@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "probe": "hash-overwrite",
+      "engine": "before",
+      "repetition": 0,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite",
+      "engine": "before",
+      "repetition": 1,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite",
+      "engine": "after",
+      "repetition": 0,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite",
+      "engine": "after",
+      "repetition": 1,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite-in-range",
+      "engine": "before",
+      "repetition": 0,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite-in-range",
+      "engine": "before",
+      "repetition": 1,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite-in-range",
+      "engine": "after",
+      "repetition": 0,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    },
+    {
+      "probe": "hash-overwrite-in-range",
+      "engine": "after",
+      "repetition": 1,
+      "ticks": 600,
+      "pixelMismatches": 0,
+      "stateChecksumMismatches": 0
+    }
+  ],
+  "totalTicks": 4800,
+  "passAll": true
+}

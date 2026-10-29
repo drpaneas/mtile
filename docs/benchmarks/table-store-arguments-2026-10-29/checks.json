@@ -1,0 +1,16 @@
+{
+  "requiredGates": {
+    "transpiler": "pass: 323.921 seconds",
+    "build": "pass: 70.064 seconds",
+    "cli": "pass: 13.579 seconds",
+    "runtime": "pass: cd runtime && go test ./... (unchanged runtime, cached)"
+  },
+  "regressionProof": {
+    "failsOnBaseline": "TestGeneratedIndexedStoreDefersRootArguments failed on commit 84c6d9a before the production edit",
+    "focused": "pass: TestGeneratedIndexed*, TestGeneratedArrayStore*, TestStableWritesAfterGrowingMultiAssignment"
+  },
+  "sourceOperands": "LHS and RHS evaluated once before the fast-path test; original root-budget checks retained",
+  "publicLuaAPI": "unchanged",
+  "rendererEligibility": "unchanged",
+  "knownPerformanceTradeoff": "Small integer keys stored in the hash part: +3.97% cycles; both versions meet 30 Hz"
+}

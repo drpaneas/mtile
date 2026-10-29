@@ -1,0 +1,18 @@
+{
+  "change": "Uncached string field stores call gluTableSetRooted directly; remove obsolete gluTableSet wrapper.",
+  "focusedRegression": "Fails before cleanup, passes afterward.",
+  "rootStackProof": "Generated indexed store succeeds with a full root stack; rooted fallback preserves failure cleanup and references across GC.",
+  "requiredGoGates": [
+    "ok  \tgithub.com/drpaneas/mtile/internal/transpiler\t332.911s",
+    "ok  \tgithub.com/drpaneas/mtile/internal/build\t73.372s",
+    "ok  \tgithub.com/drpaneas/mtile/cmd/mtile\t13.693s"
+  ],
+  "runtimeGate": "pass (unchanged runtime, cached)",
+  "recordedFixtureCallsToRemovedWrapper": 0,
+  "recordedFixturesInspected": 14,
+  "physics128Mode0ROM": {
+    "byteIdentical": true,
+    "sha256": "faee1198711544e129d3d461caa3c783c138f8e059104e119568d8f95a67e1de"
+  },
+  "measurementEvidence": "Original engine.patch, profiles and measurements remain the pre-cleanup snapshot."
+}

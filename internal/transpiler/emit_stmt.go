@@ -334,7 +334,15 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 				b.line(pad + slot.dest + " = " + adjustedLuaValue(values[i]))
 			}
 		case lhsIndex:
-			b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
+			// LHS and RHS have already been evaluated. An existing array slot
+			// cannot collect: test before constructing the fallback's variadic
+			// roots, while retaining every live operand if hash growth is needed.
+			args := slot.base + ", " + slot.key + ", " + adjustedLuaValue(values[i])
+			// Keys outside the runtime's possible array range are always hash
+			// stores. Skip the extra runtime call for those and nonnumeric keys.
+			b.line(pad + "if " + slot.key + ".Kind != rt.KindNumber || " + slot.key + ".Num < rt.One || " + slot.key + ".Num > rt.FromInt(rt.MaxTableArrayCapacity) || !c.TryTableSetArray(" + args + ") {")
+			b.line(pad + "\t_ = gluTableSetRooted(c, " + args + g.rootArgsFor(6, s.Pos()) + ")")
+			b.line(pad + "}")
 		case lhsNumberArray:
 			if slot.view != "" {
 				b.line(pad + "_ = " + slot.view + ".Set(" + slot.key + ".Int(), " + adjustedNumber(values[i]) + ")")
@@ -349,7 +357,7 @@ func (g *generator) emitAssign(b *sourceBuilder, s *luaparser.AssignStmt, indent
 			} else if slot.cache != "" {
 				g.emitStableWrite(b, indent, false, slot.base, g.staticExpr(slot.field), adjustedLuaValue(values[i]), slot.cache, g.rootArgsFor(6, s.Pos()))
 			} else {
-				b.line(pad + "_ = gluTableSet(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
+				b.line(pad + "_ = gluTableSetRooted(c, " + slot.base + ", " + g.staticExpr(slot.field) + ", " + adjustedLuaValue(values[i]) + g.rootArgsFor(6, s.Pos()) + ")")
 			}
 		}
 	}

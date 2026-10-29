@@ -2208,8 +2208,11 @@ end
 		strings.Contains(legacyUpdate, "gluTableSetStable(") {
 		t.Fatalf("legacy lowering retained stable field caches:\n%s", legacy)
 	}
-	if !strings.Contains(legacyUpdate, "c.TableGet(") || !strings.Contains(legacyUpdate, "gluTableSet(") {
+	if !strings.Contains(legacyUpdate, "c.TableGet(") || !strings.Contains(legacyUpdate, "gluTableSetRooted(") {
 		t.Fatalf("legacy lowering did not retain dynamic field operations:\n%s", legacy)
+	}
+	if strings.Contains(legacyUpdate, "TryTableSetArray(") || strings.Contains(legacy, "func gluTableSet(") {
+		t.Fatal("string field stores retained the array-store attempt or its obsolete wrapper")
 	}
 }
 

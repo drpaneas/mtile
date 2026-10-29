@@ -1,0 +1,60 @@
+{
+  "workload": "64 existing hash-slot overwrites and reads per update",
+  "sourceSHA256": "b80faf0572898e531574441417253ce4ef8a9a96da164a56b7a9f5b09222a3db",
+  "engines": {
+    "before": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 180449.0,
+      "p95": 180449,
+      "maximum": 180449,
+      "minimum": 180449,
+      "budgetPercent": 32.12025091136933,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 10,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "repeatMedians": [
+        180449.0,
+        180449.0
+      ],
+      "romSHA256": "e3e013565adf71f3519989405f7f8190965bec744d309ca58e5be79161b0e0d5",
+      "driverSHA256": "28880f248bb1664db919ecf581a14e4ff89baaa6159455229cf7a7804f7a74af",
+      "verifiedTicks": 1200
+    },
+    "after": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 165345.0,
+      "p95": 165345,
+      "maximum": 165345,
+      "minimum": 165345,
+      "budgetPercent": 29.43171138072454,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "repeatMedians": [
+        165345.0,
+        165345.0
+      ],
+      "romSHA256": "1c03d4f1417d6be49fa3eea7d59b77bdd4ca5d7f79739e5ff9d72136f98d9c50",
+      "driverSHA256": "4631c45977c17ec27843dea076d9cf38eae5c8299335faf1aa4b38ed691c09d1",
+      "verifiedTicks": 1200
+    }
+  },
+  "keyRange": [
+    257,
+    320
+  ]
+}

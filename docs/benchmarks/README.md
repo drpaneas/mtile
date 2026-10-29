@@ -12,6 +12,10 @@ The subsequent [physics and map-streaming investigation](../performance-improvem
 records instruction profiles, targeted fixes and unchanged-source before/after
 verification separately from that baseline.
 
+The next [indexed-store argument optimization](table-store-arguments-2026-10-29/README.md)
+brings the unchanged 128-entity simulation inside the 30 Hz budget and records
+the remaining hash-store tradeoff.
+
 Several engineering projects have since moved out of `examples/`. When a
 record names one of the old paths, use the current location below.
 

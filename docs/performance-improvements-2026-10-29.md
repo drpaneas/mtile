@@ -142,7 +142,7 @@ bytes of IWRAM and reduces ROM by 592–712 bytes across the four fixtures.
 Streamed map cases add 496 bytes of IWRAM and 808–888 bytes of ROM; row spans
 borrow existing map-cache storage and do not allocate a new screen/map buffer.
 
-**Remaining target:** 128 entities still exceed the 30 Hz budget. The next
+**Remaining target after the first round:** 128 entities still exceed the 30 Hz budget. The next
 physics investigation should distinguish caller-side variadic root-argument
 packing/temporary zeroing from checked table access, then consider conservative
 global-array specialization. The local-array control shows substantial remaining
@@ -160,3 +160,40 @@ pass. Focused forced-streaming pixel tests also pass. Running every generic
 fixture with forced-streaming tags has existing resident-fixture failures,
 reproduced from the unmodified baseline; these are recorded in the evidence
 rather than attributed to this patch. See the [saved records and raw evidence](benchmarks/performance-profiling-2026-10-29/README.md).
+
+## Follow-up: defer root-argument preparation
+
+The first round was committed as `84c6d9a`. The next change moves the checked
+array-slot fast path to the generated indexed-store callsite, before preparing
+variadic roots. All source operands are still evaluated once, in the original
+order. Failure enters a separate rooted helper. Keys outside the runtime's
+possible array range skip the extra runtime attempt entirely.
+
+| Mode 0 physics | First-round median | New median | New observed Hz |
+| --- | ---: | ---: | ---: |
+| 32 entities | 172,936 | 116,528 | 29.864 |
+| 64 entities | 347,989 | 232,304 | 29.864 |
+| 128 entities | 695,189 | 463,856 | 29.864 |
+| 64 entities with drag | 344,534 | 234,710 | 29.864 |
+
+**128 entities now meet the 30 Hz target in both renderers.** Mode 0 maximum
+is 463,924 cycles and Mode 4 maximum is 484,381, against a 561,792-cycle budget.
+This uses the original global-array source, without numeric-array specialization.
+The 128-entity Mode 0 median improves another 33.3% and leaves 17.4% CPU headroom.
+
+The targeted recheck covers all four physics workloads and three graphics
+controls in both renderers, with 16,800 independently verified ticks. A further
+4,800 verified ticks cover two hash-overwrite controls. One reveals a tradeoff:
+hash-backed tables with small integer keys are about 4.0% slower because the
+caller tries the array path before preparing the fallback. Both versions retain
+30 Hz in that probe. Large hash keys become 8.4% faster by skipping that attempt.
+
+Checked table metadata and generic value handling remain optimization targets;
+global-array specialization has not been expanded. The current stage achieves
+the 128-entity cadence target while preserving the tagged-table representation.
+See [profiles, exact results, limitations and proof](benchmarks/table-store-arguments-2026-10-29/README.md).
+
+Review cleanup routes uncached string-field stores directly to the rooted
+helper and removes the obsolete `gluTableSet` wrapper. This avoids an array-slot
+attempt that could never succeed. The 128-entity Mode 0 ROM is byte-identical
+afterward; the saved measurement snapshot remains unchanged.

@@ -1,0 +1,883 @@
+[
+  {
+    "workload": {
+      "kind": 0,
+      "objects": 0,
+      "size": 8,
+      "layers": 0,
+      "entities": 0,
+      "mutations": 0,
+      "spread": 0,
+      "width": 32,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "name": "baseline"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 589.0,
+        "p95": 589,
+        "maximum": 589,
+        "minimum": 589,
+        "budgetPercent": 0.1048430735930736,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          589.0,
+          589.0
+        ],
+        "romBytes": 33492,
+        "romSHA256": "1963e4f9cea26cdf9e0dbd5ec23360c7eb052f7ebf3239e03eed1c58bd1105eb",
+        "ewramUsed": 13772,
+        "iwramUsed": 9636
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 24063.0,
+        "p95": 24063,
+        "maximum": 24063,
+        "minimum": 24063,
+        "budgetPercent": 4.283257860560492,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          24063.0,
+          24063.0
+        ],
+        "romBytes": 33700,
+        "romSHA256": "50edb2e9189680655a1c8fcee31a0aa28950a541d376613b006ee00b5308e69a",
+        "ewramUsed": 13548,
+        "iwramUsed": 9732
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 589.0,
+        "p95": 589,
+        "maximum": 589,
+        "minimum": 589,
+        "budgetPercent": 0.1048430735930736,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          589.0,
+          589.0
+        ],
+        "romBytes": 33492,
+        "romSHA256": "1963e4f9cea26cdf9e0dbd5ec23360c7eb052f7ebf3239e03eed1c58bd1105eb",
+        "ewramUsed": 13772,
+        "iwramUsed": 9636
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 24063.0,
+        "p95": 24063,
+        "maximum": 24063,
+        "minimum": 24063,
+        "budgetPercent": 4.283257860560492,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          24063.0,
+          24063.0
+        ],
+        "romBytes": 33700,
+        "romSHA256": "50edb2e9189680655a1c8fcee31a0aa28950a541d376613b006ee00b5308e69a",
+        "ewramUsed": 13548,
+        "iwramUsed": 9732
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 14,
+      "objects": 32,
+      "size": 8,
+      "layers": 2,
+      "entities": 64,
+      "mutations": 0,
+      "spread": 0,
+      "width": 128,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "name": "mixed_scene"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 31265.0,
+        "p95": 92279,
+        "maximum": 93074,
+        "minimum": 30358,
+        "budgetPercent": 5.5652269879243565,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 14,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          31265.0,
+          31265.0
+        ],
+        "romBytes": 69484,
+        "romSHA256": "b5bc861756c633b2391012a7aec50767344697e0933b1aaed286bcedb1b32bcf",
+        "ewramUsed": 184800,
+        "iwramUsed": 12724
+      },
+      "mode4": {
+        "observedHz": 10.166744200396105,
+        "refreshGapHistogram": {
+          "6": 524,
+          "5": 75
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 1447329.5,
+        "p95": 1484905,
+        "maximum": 1486048,
+        "minimum": 1365096,
+        "budgetPercent": 257.62728910344043,
+        "missed": 600,
+        "videoRefreshes": 3519,
+        "firstPublicationVideoFrame": 13,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          1447329.5,
+          1447329.5
+        ],
+        "romBytes": 77220,
+        "romSHA256": "68fcc71a00e643343579231451c90af6c1fe7b711662bc85add5f5cc9758d1c1",
+        "ewramUsed": 170952,
+        "iwramUsed": 22648
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 31265.0,
+        "p95": 92279,
+        "maximum": 93074,
+        "minimum": 30358,
+        "budgetPercent": 5.5652269879243565,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 14,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          31265.0,
+          31265.0
+        ],
+        "romBytes": 69484,
+        "romSHA256": "b5bc861756c633b2391012a7aec50767344697e0933b1aaed286bcedb1b32bcf",
+        "ewramUsed": 184800,
+        "iwramUsed": 12724
+      },
+      "mode4": {
+        "observedHz": 10.166744200396105,
+        "refreshGapHistogram": {
+          "6": 524,
+          "5": 75
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 1447329.5,
+        "p95": 1484905,
+        "maximum": 1486048,
+        "minimum": 1365096,
+        "budgetPercent": 257.62728910344043,
+        "missed": 600,
+        "videoRefreshes": 3519,
+        "firstPublicationVideoFrame": 13,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          1447329.5,
+          1447329.5
+        ],
+        "romBytes": 77220,
+        "romSHA256": "68fcc71a00e643343579231451c90af6c1fe7b711662bc85add5f5cc9758d1c1",
+        "ewramUsed": 170952,
+        "iwramUsed": 22648
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 10,
+      "objects": 0,
+      "size": 8,
+      "layers": 0,
+      "entities": 128,
+      "mutations": 0,
+      "spread": 0,
+      "width": 32,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "name": "physics_128"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 19.90916685653528,
+        "refreshGapHistogram": {
+          "3": 599
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 695189.0,
+        "p95": 695189,
+        "maximum": 695189,
+        "minimum": 694981,
+        "budgetPercent": 123.74490914786966,
+        "missed": 600,
+        "videoRefreshes": 1797,
+        "firstPublicationVideoFrame": 12,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          695189.0,
+          695189.0
+        ],
+        "romBytes": 85072,
+        "romSHA256": "61e72fbe85bf3b3f9cd864db5a121942465b9c1dfd59291eb29d134a229ea25e",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 19.90916685653528,
+        "refreshGapHistogram": {
+          "3": 599
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 713971.0,
+        "p95": 713971,
+        "maximum": 713993,
+        "minimum": 713731,
+        "budgetPercent": 127.08813938254728,
+        "missed": 600,
+        "videoRefreshes": 1797,
+        "firstPublicationVideoFrame": 12,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          713971.0,
+          713971.0
+        ],
+        "romBytes": 85040,
+        "romSHA256": "031befe7375065ca6e2bd53cb5943e81632d30cd1c107d4c7d24175ecdb18232",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 463856.0,
+        "p95": 463884,
+        "maximum": 463924,
+        "minimum": 463648,
+        "budgetPercent": 82.56721348826612,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          463856.0,
+          463856.0
+        ],
+        "romBytes": 86588,
+        "romSHA256": "faee1198711544e129d3d461caa3c783c138f8e059104e119568d8f95a67e1de",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 484339.0,
+        "p95": 484349,
+        "maximum": 484381,
+        "minimum": 484163,
+        "budgetPercent": 86.2132248234222,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          484339.0,
+          484339.0
+        ],
+        "romBytes": 86500,
+        "romSHA256": "aed9d1fc5a7796b2c18f7820943985dd907f9912ba2300ab1edca3646153ca2f",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 10,
+      "objects": 0,
+      "size": 8,
+      "layers": 0,
+      "entities": 32,
+      "mutations": 0,
+      "spread": 0,
+      "width": 32,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "name": "physics_32"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 172936.0,
+        "p95": 172936,
+        "maximum": 172968,
+        "minimum": 172884,
+        "budgetPercent": 30.782923217133746,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          172936.0,
+          172936.0
+        ],
+        "romBytes": 58320,
+        "romSHA256": "b8564aeb37dbcc02690baabf7012d57486b1fb22129d5254d7d54038a2c6e6c5",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 198108.0,
+        "p95": 198108,
+        "maximum": 198140,
+        "minimum": 198040,
+        "budgetPercent": 35.26358509911142,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          198108.0,
+          198108.0
+        ],
+        "romBytes": 58272,
+        "romSHA256": "abe8a2a3f24291676873b5c953ee628e79f8a465f2fd285983c88720637198cf",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 116528.0,
+        "p95": 116528,
+        "maximum": 116568,
+        "minimum": 116476,
+        "budgetPercent": 20.742196400091135,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          116528.0,
+          116528.0
+        ],
+        "romBytes": 59716,
+        "romSHA256": "ac879169298dea29bc9207bc12b886df056d00f13647f553458ac9db0f0001f6",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 139219.0,
+        "p95": 139219,
+        "maximum": 139251,
+        "minimum": 139175,
+        "budgetPercent": 24.78123575985418,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          139219.0,
+          139219.0
+        ],
+        "romBytes": 59628,
+        "romSHA256": "0ce4627881f78bae0687aa5a74bcad73f15c04b75c3e18663a90970db66af93f",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 10,
+      "objects": 0,
+      "size": 8,
+      "layers": 0,
+      "entities": 64,
+      "mutations": 0,
+      "spread": 0,
+      "width": 32,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "name": "physics_64"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 347989.0,
+        "p95": 347989,
+        "maximum": 347989,
+        "minimum": 347871,
+        "budgetPercent": 61.94267629300524,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 10,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          347989.0,
+          347989.0
+        ],
+        "romBytes": 67248,
+        "romSHA256": "e07866864e5f34575eae12f1e82b2912e0bfb26f92764d29bc69390ba10eca01",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 369075.0,
+        "p95": 369075,
+        "maximum": 369097,
+        "minimum": 368945,
+        "budgetPercent": 65.69602272727273,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 10,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          369075.0,
+          369075.0
+        ],
+        "romBytes": 67216,
+        "romSHA256": "1c3497b32d5f8e5f8819833fbf1f8371bcc1494c0377bfbafff6348cc0164aad",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 232304.0,
+        "p95": 232304,
+        "maximum": 232344,
+        "minimum": 232200,
+        "budgetPercent": 41.3505354294828,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          232304.0,
+          232304.0
+        ],
+        "romBytes": 68668,
+        "romSHA256": "c4f51ce002725eaeb4594bd644bccb16b10a0be1e52cd17b3c69f48557174016",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 254259.0,
+        "p95": 254259,
+        "maximum": 254291,
+        "minimum": 254171,
+        "budgetPercent": 45.25856544771018,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          254259.0,
+          254259.0
+        ],
+        "romBytes": 68580,
+        "romSHA256": "b7b9558d06ec545cbaac25b50d4090fbe9782bf8b6bad3b62ddbebee26b2130a",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 10,
+      "objects": 0,
+      "size": 8,
+      "layers": 0,
+      "entities": 64,
+      "mutations": 0,
+      "spread": 0,
+      "width": 32,
+      "height": 32,
+      "hud": "",
+      "mode0": true,
+      "drag": true,
+      "name": "physics_drag_64"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 344534.0,
+        "p95": 344576,
+        "maximum": 344618,
+        "minimum": 344520,
+        "budgetPercent": 61.32767999544315,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 10,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          344534.0,
+          344534.0
+        ],
+        "romBytes": 67292,
+        "romSHA256": "b29694b0808dc979614f458e6120699bc9e52c3ad6c50b372f5edcf4120db2eb",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 367445.0,
+        "p95": 367505,
+        "maximum": 367565,
+        "minimum": 367419,
+        "budgetPercent": 65.4058797562087,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 10,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          367445.0,
+          367445.0
+        ],
+        "romBytes": 67192,
+        "romSHA256": "75d97c4181ab70bdfc70c25db1345a2a31d0b5312ae7c9e58d90f17083aa2ea3",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 234710.0,
+        "p95": 234776,
+        "maximum": 234842,
+        "minimum": 234688,
+        "budgetPercent": 41.77880781499203,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          234710.0,
+          234710.0
+        ],
+        "romBytes": 68732,
+        "romSHA256": "f24011743ae96c59323c6144e046e3ca983dae9877ff56423bbeaa138295b617",
+        "ewramUsed": 156892,
+        "iwramUsed": 12288
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 258123.0,
+        "p95": 258177,
+        "maximum": 258231,
+        "minimum": 258105,
+        "budgetPercent": 45.94636449077238,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          258123.0,
+          258123.0
+        ],
+        "romBytes": 68620,
+        "romSHA256": "8e8cec98b5e0ea24d396ef0fbf60b0cf3b1455545dc3210622ec25b0b6fe7f01",
+        "ewramUsed": 156664,
+        "iwramUsed": 12388
+      }
+    }
+  },
+  {
+    "workload": {
+      "kind": 4,
+      "objects": 0,
+      "size": 8,
+      "layers": 1,
+      "entities": 0,
+      "mutations": 0,
+      "spread": 0,
+      "width": 256,
+      "height": 128,
+      "hud": "",
+      "mode0": true,
+      "drag": false,
+      "speed": 9,
+      "verticalSpeed": 3,
+      "name": "scroll_chunk_cross"
+    },
+    "baseline": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 64272.0,
+        "p95": 88901,
+        "maximum": 117310,
+        "minimum": 40920,
+        "budgetPercent": 11.440533151059466,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          64272.0,
+          64272.0
+        ],
+        "romBytes": 107384,
+        "romSHA256": "aa5a2058d0b321881f0c39acb682fa7ea96585c37265e88484449cec02ba37a2",
+        "ewramUsed": 56836,
+        "iwramUsed": 12252
+      },
+      "mode4": {
+        "observedHz": 12.252319466162293,
+        "refreshGapHistogram": {
+          "5": 524,
+          "4": 75
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 1158754.0,
+        "p95": 1160842,
+        "maximum": 1208678,
+        "minimum": 1053879,
+        "budgetPercent": 206.26032410571887,
+        "missed": 600,
+        "videoRefreshes": 2920,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          1158754.0,
+          1158754.0
+        ],
+        "romBytes": 112272,
+        "romSHA256": "df5868c7aba3fcb5e9b4e24e26599577555bb2591171697d5c4debcf8399dca7",
+        "ewramUsed": 52524,
+        "iwramUsed": 20728
+      }
+    },
+    "engines": {
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 64272.0,
+        "p95": 88901,
+        "maximum": 117310,
+        "minimum": 40920,
+        "budgetPercent": 11.440533151059466,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 9,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          64272.0,
+          64272.0
+        ],
+        "romBytes": 107384,
+        "romSHA256": "aa5a2058d0b321881f0c39acb682fa7ea96585c37265e88484449cec02ba37a2",
+        "ewramUsed": 56836,
+        "iwramUsed": 12252
+      },
+      "mode4": {
+        "observedHz": 12.252319466162293,
+        "refreshGapHistogram": {
+          "5": 524,
+          "4": 75
+        },
+        "overBudgetTicks": 600,
+        "samples": 600,
+        "median": 1158754.0,
+        "p95": 1160842,
+        "maximum": 1208678,
+        "minimum": 1053879,
+        "budgetPercent": 206.26032410571887,
+        "missed": 600,
+        "videoRefreshes": 2920,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "repeatMedians": [
+          1158754.0,
+          1158754.0
+        ],
+        "romBytes": 112272,
+        "romSHA256": "df5868c7aba3fcb5e9b4e24e26599577555bb2591171697d5c4debcf8399dca7",
+        "ewramUsed": 52524,
+        "iwramUsed": 20728
+      }
+    }
+  }
+]
