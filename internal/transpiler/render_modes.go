@@ -44,6 +44,7 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 	case "cls", "spr", "sspr", "map", "clip", "pal", "palt":
 		return RendererMode0Conditional
 	case "print":
+		// Arcade ASCII is the default; optional language fonts use the same metrics.
 		// Selected-font 6x10 ASCII has exact pixel parity through 8x8/8x16 OBJs.
 		// Only proven blank rows 8/9 are omitted. The 32-tile bank packs one/two
 		// tiles per pair, and scanline proof uses the actual 8/16-row object span.

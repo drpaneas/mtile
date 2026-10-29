@@ -186,6 +186,13 @@ var builtinFont = Font{ASCII: [95][6]uint16{
 	{0, 0, 254, 0, 0, 0},
 	{0, 130, 170, 84, 16, 0},
 	{12, 2, 4, 8, 6, 0},
-}, Extra: builtinFontExtra[:]}
+}}
 
 func DefaultFont() *Font { return &builtinFont }
+
+// InternationalFont supplies the optional authoring repertoire on the host.
+// Project cartridges link only the selected, generated font; neither host
+// preset bank is included in a mtile_project_font build.
+var builtinInternationalFont = Font{ASCII: builtinFont.ASCII, Extra: builtinFontExtra[:]}
+
+func InternationalFont() *Font { return &builtinInternationalFont }

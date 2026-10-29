@@ -1,0 +1,54 @@
+Font preview / Arcade default regression evidence, 2026-10-29
+
+Tests committed before implementation: 3abe9db.
+
+Before fix:
+--- FAIL: TestDefaultFontIsOnlyArcade (0.00s)
+    font_default_test.go:16: default=international, 174 glyphs; want Arcade ASCII only
+FAIL
+FAIL	github.com/drpaneas/mtile/internal/assetsync	0.786s
+FAIL
+
+--- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale (0.84s)
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1024x768/1.25x (0.04s)
+        font_preview_render_test.go:66: "Hello" preview pixel (71,290)={16 15 28 255}, want {183 212 143 255}
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1024x768/1.5x (0.06s)
+        font_preview_render_test.go:66: "Hello" preview pixel (85,348)={16 15 28 255}, want {183 212 143 255}
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1024x768/2x (0.07s)
+        font_preview_render_test.go:66: "Hello" preview pixel (114,464)={16 15 28 255}, want {183 212 143 255}
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1600x1000/1.25x (0.07s)
+        font_preview_render_test.go:66: "Hello" preview pixel (421,415)={16 15 28 255}, want {183 212 143 255}
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1600x1000/1.5x (0.09s)
+        font_preview_render_test.go:66: "Hello" preview pixel (505,498)={16 15 28 255}, want {183 212 143 255}
+    --- FAIL: TestFontPreviewVisibleAndClippedAtDisplayScale/1600x1000/2x (0.14s)
+        font_preview_render_test.go:66: "Hello" preview pixel (674,664)={16 15 28 255}, want {183 212 143 255}
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/editor	1.889s
+FAIL
+
+After fix:
+ok  	github.com/drpaneas/mtile/internal/assetsync	8.253s
+ok  	github.com/drpaneas/mtile/internal/editor	2.450s
+ok  	github.com/drpaneas/mtile/cmd/editor	1.775s
+ok  	github.com/drpaneas/mtile/cmd/editor	1.952s
+
+GPU test: TestFontPreviewVisibleAndClippedAtDisplayScale.
+1024x768 and 1600x1000 logical windows; 1x, 1.25x, 1.5x, 2x physical scales.
+Samples actual font pixels for Hello, Hello\nGBA, and 160 wrapping characters,
+and checks that no third line escapes into the preview footer.
+Default compiler/runtime font: Arcade, 95 ASCII glyphs, no Unicode extension.
+Greek/German/international remain explicit selections.
+
+Required root gates:
+ok  	github.com/drpaneas/mtile/internal/transpiler	275.619s
+ok  	github.com/drpaneas/mtile/internal/build	59.677s
+ok  	github.com/drpaneas/mtile/cmd/mtile	11.074s
+
+Runtime gates:
+ok  	github.com/drpaneas/mtile/runtime	2.280s
+ok  	github.com/drpaneas/mtile/runtime/audio	(cached)
+ok  	github.com/drpaneas/mtile/runtime/hw	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	(cached)
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	(cached)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -63,7 +64,7 @@ func (g *Game) openFontEditor() {
 	g.fontEditor.menu = false
 	g.fontEditor.focus = 1
 	if g.fontEditor.preview == "" {
-		g.fontEditor.preview = "Hello GBA!  Ελλάδα  Grüße"
+		g.fontEditor.preview = "Hello GBA! 0123456789"
 	}
 	g.fontEditor.selected = 'A'
 	g.fontEditor.message = "Choose a font. COPY to edit, or BLANK to start your own."
@@ -347,7 +348,15 @@ func (g *Game) drawFontEditor(screen *ebiten.Image) {
 	fillRect(screen, l.Preview, colorBackground)
 	strokeRect(screen, l.Preview, colorBorder)
 	// Two rows at native 2x scale; clipping prevents long samples leaking into tools.
-	clip := screen.SubImage(image.Rect(l.Preview.X, l.Preview.Y, l.Preview.X+l.Preview.W, l.Preview.Y+52)).(*ebiten.Image)
+	// SubImage clips in physical pixels, while layout and fillRect use logical
+	// coordinates. Convert both clip edges at the current monitor density.
+	scale := editorDrawScale
+	clip := screen.SubImage(image.Rect(
+		int(math.Floor(float64(l.Preview.X)*scale)),
+		int(math.Floor(float64(l.Preview.Y)*scale)),
+		int(math.Ceil(float64(l.Preview.X+l.Preview.W)*scale)),
+		int(math.Ceil(float64(l.Preview.Y+52)*scale)),
+	)).(*ebiten.Image)
 	drawFontPixels(clip, font, s.preview, l.Preview.X+12, l.Preview.Y+12, 2, colorLCD, l.Preview.W-24)
 	missing := 0
 	for _, cp := range s.preview {

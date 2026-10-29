@@ -9,7 +9,7 @@ import (
 // artwork. The PICO-8 style preserves the original pixels with empty padding.
 func builtinFont(name string) *Font {
 	f := &Font{Version: 2, Name: name, CellWidth: FontCellWidth, CellHeight: FontCellHeight, Width: FontBitmapWidth, Height: FontBitmapHeight}
-	source := rt.DefaultFont()
+	source := rt.InternationalFont()
 	if name == "pico8" {
 		source = rt.Pico8Font()
 	}

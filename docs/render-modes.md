@@ -795,6 +795,9 @@ covers the accepted pose/animation variant shapes and resource savings.
 ### Project fonts and UTF-8 `print`
 
 `print` remains **Mode 0 conditional**; `cursor` remains **both renderers**.
+Arcade ASCII (95 glyphs) is the default when no font is selected. Greek,
+German and international repertoires require an explicit project selection;
+unsupported characters use `?` and only the selected font enters the ROM.
 All compiled fonts use a monochrome 6×10 bitmap and fixed 6×10 cell (40×16
 cells). The approved B migration changes line/newline/wrap advance from 8 to
 10 pixels in both backends. Explicit cursor positions and print's return x

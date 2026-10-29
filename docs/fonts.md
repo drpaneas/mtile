@@ -1,7 +1,8 @@
 # Cartridge fonts
 
 mTile renders text using a tiny monochrome bitmap font. The approved **B** design uses
-**Misc Fixed 6×10**, with complete Greek accents and descenders. Every project
+**Misc Fixed 6×10** artwork. The default **Arcade** preset contains ASCII only;
+Greek, German and international glyphs are optional selections. Every project
 font uses a fixed **6×10 cell**: 40 columns and 16 rows on the 240×160 screen.
 The editor's interface fonts are separate from the cartridge font.
 
@@ -9,16 +10,18 @@ The editor's interface fonts are separate from the cartridge font.
 
 Open **FONT** in the editor's top navigation. Choose from the **ROM font**
 dropdown and type or paste into **Preview text**. The preview uses the actual
-cartridge bitmaps, enlarged with integer pixels; it shows the first two lines.
+cartridge bitmaps, enlarged with integer pixels; it shows the first two lines
+and follows the monitor scale, including fractional DPI and Retina displays
+([regression evidence](benchmarks/fonts/preview-hidpi.txt)).
 Unsupported characters appear as `?` and are counted beneath the preview.
 
 | Preset | Character coverage and appearance |
 | --- | --- |
 | `pico8` | Original 4×5 PICO-8 wide ASCII artwork, padded to the current 6×10 cell |
-| `arcade` | Misc Fixed 6×10 ASCII |
+| `arcade` | Misc Fixed 6×10 ASCII; default (95 glyphs) |
 | `greek` | Misc Fixed Latin plus modern Greek capitals, lowercase, final sigma, tonos and dialytika |
 | `german` | Misc Fixed Latin plus ÄÖÜ, äöü, ß and ẞ |
-| `international` | Both Greek and German repertoires in one font; default |
+| `international` | Both Greek and German repertoires in one font; optional |
 
 Choose **SAVE PROJECT**, then build again. Only the selection is compiled into
 the cartridge. Changing fonts is a build-time operation; there is no Lua font
@@ -36,7 +39,7 @@ The selection lives in `project.json`, for example:
 }
 ```
 
-Omitting `font` now selects `international`. An explicit `pico8` selection
+Omitting `font` selects `arcade`, compiling only its 95 ASCII glyphs. An explicit `pico8` selection
 keeps its original small artwork, with the current 10-pixel line advance. Built-in presets do not
 need files in your project. Custom fonts are stored in
 `assets/fonts/<name>.json`. Share that file along with the project.
@@ -152,7 +155,8 @@ direct; additional codepoints use a bounded binary search. Rendering does not
 allocate. Neither the editor's font library nor a TrueType rasterizer ships in
 the cartridge, and font bitmaps are not copied into EWRAM. On ARM, font data
 uses 1,152 bytes for ASCII plus its descriptor and 16 bytes per extra glyph:
-**2,416 bytes** for the 174-glyph international preset, at most 3,200 bytes for
+**1,152 bytes** for the default Arcade preset, **2,416 bytes** for the optional
+174-glyph international preset, at most 3,200 bytes for
 223 glyphs. The old international bank used 1,024 bytes. A ROM pointer lookup
 avoids copying the six-column array on every character.
 

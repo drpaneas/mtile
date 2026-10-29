@@ -70,8 +70,8 @@ func TestFontBPresetsMatchApprovedArtwork(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if defaultFont.Name != "international" {
-		t.Fatal("new default is not the chosen B font")
+	if defaultFont.Name != "arcade" {
+		t.Fatal("default is not the ASCII-only Arcade B font")
 	}
 	for _, name := range BuiltinFontNames {
 		f, err := LoadFont("", name)

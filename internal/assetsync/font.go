@@ -13,7 +13,7 @@ const (
 	FontBitmapWidth    = rt.FontBitmapWidth
 	FontBitmapHeight   = rt.FontBitmapHeight
 	MaxFontExtraGlyphs = 128
-	DefaultFontName    = "international"
+	DefaultFontName    = "arcade"
 )
 
 // Font is a versioned 1bpp font document. Dimensions are explicit so a malformed
