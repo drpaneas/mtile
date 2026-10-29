@@ -46,6 +46,7 @@ func reservedSpriteEditError(id int) error {
 // Model is one editable native project. Sheet and map dimensions are project
 // data, not a fixed display or cartridge size.
 type Model struct {
+	Fonts     map[string]*assetsync.Font
 	Dir       string
 	Project   assetsync.Project
 	Sheet     assetsync.Spritesheet
@@ -139,6 +140,9 @@ func Open(dir string) (*Model, error) {
 		ActivePalette: *palette,
 		PaletteNames:  names,
 	}
+	if err := model.LoadFonts(); err != nil {
+		return nil, err
+	}
 	if err := model.validateTileLinks(); err != nil {
 		return nil, err
 	}
@@ -177,6 +181,9 @@ func (m *Model) Save() error {
 	if m == nil {
 		return fmt.Errorf("editor model is required")
 	}
+	if err := m.validateFonts(); err != nil {
+		return err
+	}
 	if m.AudioVersion != 0 && m.AudioVersion != assetsync.NativeAudioSchemaVersion {
 		return fmt.Errorf("audio version %d is superseded; convert explicitly to four-channel Game Boy audio v2", m.AudioVersion)
 	}
@@ -214,6 +221,9 @@ func (m *Model) Save() error {
 	}
 	m.ObjSheet, m.Poses, m.Animation = work.ObjSheet, work.Poses, animation
 	if err := assetsync.SavePalette(m.Dir, &m.ActivePalette); err != nil {
+		return err
+	}
+	if err := m.saveFonts(); err != nil {
 		return err
 	}
 	if err := assetsync.SaveProject(m.Dir, m.Project); err != nil {

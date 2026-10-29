@@ -51,6 +51,7 @@ type Game struct {
 	theme                  themeState
 	preferences            editorPreferences
 	preferencesOpen        bool
+	fontEditor             fontEditorState
 
 	mode                 editorMode
 	currentColor         int
@@ -537,6 +538,7 @@ func spriteSheetPixel(sheet assetsync.Spritesheet, x, y int) int {
 
 func (g *Game) snapshot() undoSnapshot {
 	return undoSnapshot{
+		Fonts:              g.model.Fonts,
 		Sheet:              g.model.Sheet,
 		ObjSheet:           g.model.ObjSheet,
 		Poses:              g.model.Poses,
@@ -604,6 +606,7 @@ func (g *Game) restore(s undoSnapshot) {
 	g.model.TileLinks = s.TileLinks
 	g.model.NativeAudio = s.NativeAudio
 	g.model.Project = s.Project
+	g.model.Fonts = s.Fonts
 	g.model.ActivePalette = s.Palette
 	g.currentSprite = s.CurrentSprite
 	g.selectedPose = s.SelectedPose
@@ -673,6 +676,17 @@ func (g *Game) Update() error {
 	g.pollProjectCheck(time.Now())
 	g.updateTheme()
 	g.advanceAnimationPreview(time.Now())
+	if g.fontEditor.open {
+		g.updateFontEditor()
+		return nil
+	}
+	if !g.preferencesOpen && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		mx, my := editorCursorPosition()
+		if rectContains(fontButtonRect(), mx, my) {
+			g.openFontEditor()
+			return nil
+		}
+	}
 	if g.preferencesOpen {
 		g.updatePreferences()
 		return nil
@@ -765,6 +779,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawThemeOverlay(screen)
 	g.drawEditorTabs(screen)
 	g.drawStatusBar(screen)
+	if g.fontEditor.open {
+		g.drawFontEditor(screen)
+	}
 	if g.preferencesOpen {
 		g.drawPreferences(screen)
 	}

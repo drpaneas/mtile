@@ -17,6 +17,7 @@ const (
 // diffs and are the right trade-off for a tool that is not performance
 // sensitive and where undo depth is capped at 50 anyway.
 type undoSnapshot struct {
+	Fonts     map[string]*assetsync.Font   `json:"fonts,omitempty"`
 	Sheet     assetsync.Spritesheet        `json:"sheet"`
 	ObjSheet  *assetsync.Spritesheet       `json:"objSheet,omitempty"`
 	Poses     assetsync.PoseFile           `json:"poses"`
