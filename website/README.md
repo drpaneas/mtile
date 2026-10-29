@@ -48,6 +48,15 @@ The build fails if the API index drifts from the public builtin registry.
 `sample` is deliberately excluded because native Audio v2 projects reject it;
 the API landing page explains that limitation.
 
+The memory and GC feature comes from `docs/garbage-collection.md`, rendered by
+`build.py` at `guides/garbage-collection.html` and styled only there by
+`assets/gc.css`. It extends the existing design with a magazine-style article
+and an actual Coin Quest capture. Keep diagram labels as live, selectable HTML
+and preserve their schematic meaning: object boxes do not represent equal
+allocation sizes, reusable memory need not be erased, and timing stages are
+not measured durations. Keep the reuse sequence clear that it shows one table
+at different times.
+
 `docs/lua-api.md` is generated from the same `api.json`, so the repository and
 website share API explanations. After editing API text, run:
 

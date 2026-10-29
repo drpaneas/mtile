@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 from html.parser import HTMLParser
 import json
@@ -35,6 +36,7 @@ GUIDES = [
     ("tile-links", "Tile links: objects from the map", "maps", "docs/tile-links.md", "Link a shared tile to a pose or clip, then place objects by painting Map Lab."),
     ("renderers", "Renderer compatibility", "debug", "docs/render-modes.md", "Understand hardware tiles, bitmap drawing, and AUTO selection."),
     ("performance", "Frame budgets", "debug", "docs/performance.md", "Measure your cartridge and keep it within its frame budget."),
+    ("garbage-collection", "Making room for the next enemy", "data", "docs/garbage-collection.md", "A picture guide to memory, garbage collection, and keeping your GBA game running smoothly."),
     ("lua-api", "Lua API walkthrough", "loop", "docs/lua-api.md", "Common signatures, examples, and behavior notes for every supported builtin."),
     ("audio-editor", "Music Lab walkthrough", "audio", "docs/audio/editor.md", "Compose, arrange, perform, record, and create gameplay effects."),
     ("editor", "Using the editor", "editor", "docs/ide.md", "Sprites, maps, sound, and code in one workspace."),
@@ -47,6 +49,12 @@ GUIDES = [
     ("saving", "Saving on a real GBA", "data", "docs/saving.md", "Save progress to cartridge memory and test it on EZ-Flash Omega."),
     ("save-game", "Save Game: cartridge example", "data", "examples/save-game/README.md", "Save a run, power off, and restore it on a real GBA."),
 ]
+# A newly published guide must be discoverable even when the browser has an
+# earlier search index cached. Keep this stable until indexed content changes.
+SEARCH_VERSION = hashlib.sha256(
+    json.dumps([CATEGORIES, APIS, GUIDES], sort_keys=True).encode()
+    + b''.join((ROOT / source).read_bytes() for _, _, _, source, _ in GUIDES)
+).hexdigest()[:12]
 DOC_ROUTES = {(ROOT / src).resolve(): f"guides/{slug}.html" for slug, _, _, src, _ in GUIDES}
 DOC_ROUTES[(ROOT / "docs/README.md").resolve()] = "guide.html"
 DOC_ROUTES[(ROOT / "examples/README.md").resolve()] = "examples.html"
@@ -54,7 +62,7 @@ DOC_ROUTES[(ROOT / "docs/first-game.md").resolve()] = "guides/first-game.html"
 CATEGORY_GUIDES = {
     "start": ["install", "first-game", "small-games"], "loop": ["game-loop", "reference", "lua-api"], "input": [],
     "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
-    "math": [], "data": ["foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "renderers"], "editor": ["editor"],
+    "math": [], "data": ["garbage-collection", "foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "garbage-collection", "renderers"], "editor": ["editor"],
 }
 ICON_PATHS = {
     "flag": '<path d="M5 21V3h13l-3 5 3 5H5"/>',
@@ -171,13 +179,22 @@ def layout(page, title, description, body, active="", toc="", section="guide"):
     top = "".join(f'<a href="{url(route)}"' + (' aria-current="page"' if name == section else '') + f'>{label}</a>'
                   for name, route, label in [("guide", "guide.html", "Guide"), ("learn", "learn.html", "Learn"), ("api", "api.html", "API"), ("examples", "examples.html", "Examples")])
     rail = f'<aside class="on-this-page" aria-label="On this page"><p>On this page</p>{toc}</aside>' if toc and '<li>' in toc else ''
+    article_styles = f'<link rel="stylesheet" href="{url("assets/gc.css")}">' if page == 'guides/garbage-collection.html' else ''
+    contract = '''<!--
+THESIS: Follow one disappearing enemy to explain references and copying GC through the article itself.
+OWN-WORLD: Inherit the mTile booklet's indigo, cream paper, Rubik headings, body type and code face.
+STORY: A beginner understands limited RAM, reachability, collection costs, and reuse, then finds the inspector.
+FIRST VIEWPORT: Existing guide navigation and title, a short opening beside a real ROM capture; diagrams join the prose below.
+FORM: A scoped editorial extension of the existing guide. Selectable HTML labels and responsive memory diagrams; no slide images or new visual identity.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->''' if page == 'guides/garbage-collection.html' else ''
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)} · mTile Guide</title><meta name="description" content="{esc(description)}">
 <meta name="theme-color" content="#71609b"><meta property="og:title" content="{esc(title)} · mTile Guide"><meta property="og:description" content="{esc(description)}"><meta property="og:type" content="website">
-<link rel="icon" href="{url('assets/mtile-logo.png')}" type="image/png"><link rel="stylesheet" href="{url('assets/site.css')}">
-<script src="{url('search-index.js')}" defer></script><script src="{url('assets/site.js')}" defer></script></head>
-<body data-root="{url('index.html')[:-10]}"><a class="skip-link" href="#main">Skip to content</a>
+<link rel="icon" href="{url('assets/mtile-logo.png')}" type="image/png"><link rel="stylesheet" href="{url('assets/site.css')}">{article_styles}
+<script src="{url('search-index.js')}?v={SEARCH_VERSION}" defer></script><script src="{url('assets/site.js')}" defer></script></head>
+<body data-root="{url('index.html')[:-10]}">{contract}<a class="skip-link" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{url('index.html')}" aria-label="mTile title screen"><img class="brand-logo" src="{url('assets/mtile-logo.png')}" width="220" height="48" alt="mTile"></a>
 <button class="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false">Topics</button>
 <nav class="topnav" aria-label="Main navigation">{top}</nav><a class="title-return" href="{url('index.html')}">Back to title</a><a class="github" href="{REPO}">GitHub <span aria-hidden="true">↗</span></a></header>
@@ -272,7 +289,8 @@ def build(output):
         text = (ROOT / source).read_text()
         text = re.sub(r'^# .+\n', '', text, count=1)
         article, toc = render_markdown(text, ROOT / source, page, output)
-        body = page_heading(title, description) + f'<article class="prose">{article}</article><a class="source-link" href="{REPO}/blob/main/{source}">View this guide on GitHub</a>'
+        article_class = 'prose gc-feature' if slug == 'garbage-collection' else 'prose'
+        body = page_heading(title, description) + f'<article class="{article_class}">{article}</article><a class="source-link" href="{REPO}/blob/main/{source}">View this guide on GitHub</a>'
         write(page, title, description, body, group, toc, 'learn')
     for api in APIS:
         page = f'api/{api["name"]}.html'

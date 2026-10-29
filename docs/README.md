@@ -38,6 +38,7 @@ are there when you want to understand the code.
 | Make a sound or song | [Audio](audio/README.md) |
 | Save progress on a real GBA | [Cartridge saving](saving.md) and [Save Game example](../examples/save-game/README.md) |
 | Enable Start pause/resume during gameplay | [System pause](pause-menu.md) |
+| Understand memory and garbage collection with pictures | [Making room for the next enemy](garbage-collection.md) |
 
 ## Look up details when you need them
 
