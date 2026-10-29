@@ -2428,7 +2428,7 @@ func TestLiteralPrintDrawsWithoutHeap(t *testing.T) {
 	var c rt.Context
 	g.Init(&c)
 	g.Draw(&c)
-	if got := c.Pget(10, 8); got != 7 {
+	if got := c.Pget(10, 9); got != 7 {
 		t.Fatalf("literal print pixel = %d, want 7", got)
 	}
 }

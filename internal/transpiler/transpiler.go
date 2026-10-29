@@ -56,7 +56,7 @@ func (e *GlobalLimitError) Error() string {
 // valid 8x8 empty sheet is emitted. The build pipeline supplies the same
 // fields with real ROM data.
 type Options struct {
-	// Font is immutable build-selected 4x5 artwork; nil preserves PICO-8 wide.
+	// Font is immutable build-selected 6x10 artwork; nil uses the international B preset.
 	Font        *runtimeapi.Font
 	PackageName string
 	// IWRAMFunctions selects plain top-level Lua helpers for fast internal RAM.
@@ -243,7 +243,8 @@ var Builtins = map[string]BuiltinSpec{
 	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
-	// UTF-8 print uses the project font; cell advance and control bytes stay fixed.
+	// UTF-8 print uses one selected 6x10 font: x advances 6, newline/wrap 10.
+	// Cursor/return values remain pixel coordinates; off-screen ink is clipped.
 	"print": {"PrintV", 1, 4, 1},
 	"sget":  {"Sget", 2, 2, 1}, "sset": {"Sset", 3, 3, 0}, "fget": {"Fget", 1, 2, 1},
 	"fset": {"Fset", 2, 3, 0}, "mget": {"Mget", 2, 3, 1},

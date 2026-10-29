@@ -175,7 +175,7 @@ func TestTextInternWorkloadUses32OAMEntriesAndOneStaticTile(t *testing.T) {
 	}
 	if !strings.Contains(generated, "var mode0TextKeysROM = [1]uint16") ||
 		!strings.Contains(generated, "var mode0TextTilesROM = [16]uint32") {
-		t.Fatalf("generated workload did not intern 32 occurrences into one static glyph tile")
+		t.Fatalf("generated workload did not intern 32 occurrences into one static glyph tile pair")
 	}
 }
 

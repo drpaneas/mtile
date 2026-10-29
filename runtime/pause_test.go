@@ -229,26 +229,24 @@ func TestPauseOverlayPreservesFrozenLayersAndObjectOrder(t *testing.T) {
 	}
 }
 
-func TestPauseOverlayHasCompactCenteredPanel(t *testing.T) {
+func TestPauseOverlayHasCentered64PixelPanel(t *testing.T) {
 	var c Context
 	c.ConfigurePauseMenu()
 	c.PreparePauseMenu()
 	pixel := func(x, y int) uint32 { return c.pause.video.pixels[(y/8*8+x/8)*8+y%8] >> uint(x%8*4) & 15 }
-	// The common 64x48 panel is centered at (120,80); all other pixels of
-	// its 64x64 OBJ stay transparent. Heading PAUSED occupies centered x=17..45.
-	for y := 0; y < 64; y++ {
+	// B uses the complete existing 64x64 system OBJ. Its rounded corners stay
+	// transparent, and the heading occupies a centered six-cell box at x=14.
+	if pixel(0, 0) != 0 || pixel(63, 63) != 0 || pixel(2, 0) != 1 {
+		t.Fatal("panel bounds")
+	}
+	for y := 1; y < 11; y++ {
 		for x := 0; x < 64; x++ {
-			if y < 8 || y >= 56 {
-				if pixel(x, y) != 0 {
-					t.Fatal("panel exceeds compact bounds")
-				}
-			}
-			if y >= 14 && y < 19 && pixel(x, y) == 5 && (x < 17 || x > 45) {
+			if pixel(x, y) == 5 && (x < 14 || x >= 50) {
 				t.Fatal("heading is not centered")
 			}
 		}
 	}
-	if pixel(4, 24) != 3 || pixel(59, 24) != 2 {
-		t.Fatal("missing thin selection bar or row highlight")
+	if pixel(4, 14) != 3 || pixel(59, 14) != 2 {
+		t.Fatal("missing selection bar or row highlight")
 	}
 }

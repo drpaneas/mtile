@@ -18,5 +18,5 @@ function _draw()
   spr(1, x, 98, 2, 4, left)
   camera(0, 0)
   print("TIDEWALK", 8, 5, 31)
-  print("LEFT / RIGHT  -  FIND THE LIGHTHOUSE", 8, 154, 31)
+  print("LEFT / RIGHT  -  FIND THE LIGHTHOUSE", 8,150, 31)
 end

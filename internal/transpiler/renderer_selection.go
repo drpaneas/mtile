@@ -832,7 +832,7 @@ func validateMode0Compatible(chunk *luaparser.Chunk, opts Options, plan mapContr
 	}
 	budget := mode0ObjectBudgetFromOps(chunk, draw, ops, unbounded, opts)
 	if budget.TextTiles > mode0TextTileLimit {
-		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text needs %d unique glyph/color tiles; the reserved text-tile capacity is %d", draw.Pos(), reasonMode0ObjectBudget, budget.TextTiles, mode0TextTileLimit)
+		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 text needs %d physical tiles; the reserved capacity is %d (up to 32 compact or 16 tall glyph/color pairs)", draw.Pos(), reasonMode0ObjectBudget, budget.TextTiles, mode0TextTileLimit)
 	}
 	if budget.OAMEntries > mode0OAMEntryLimit {
 		return 0, false, false, fmt.Errorf("transpiler: %s: [%s] Mode 0 draw needs %d OAM entries after packing; the game limit is %d (one OAM entry is reserved for the system pause overlay)", draw.Pos(), reasonMode0ObjectBudget, budget.OAMEntries, mode0OAMEntryLimit)

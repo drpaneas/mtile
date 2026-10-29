@@ -13,5 +13,5 @@ function _draw()
   map(1)
   spr(1, x, 98, 2, 4, left)
   print("TIDEWALK", 8, 5, 31)
-  print("LEFT / RIGHT  -  ONE MAP", 8, 154, 31)
+  print("LEFT / RIGHT  -  ONE MAP", 8,150, 31)
 end

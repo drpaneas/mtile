@@ -20,10 +20,13 @@ func TestSelectedFontMode0PixelParity(t *testing.T) {
 				var c rt.Context
 				c.SetFont(font)
 				c.Print(string(cp), 0, 0, int(color))
-				for y := 0; y < 8; y++ {
+				for y := 0; y < 16; y++ {
 					for x := 0; x < 8; x++ {
 						off := y*8 + x
-						got := byte(atlas.tiles[off/4] >> uint(off%4*8))
+						got := byte(0)
+						if off/4 < len(atlas.tiles) {
+							got = byte(atlas.tiles[off/4] >> uint(off%4*8))
+						}
 						want := byte(c.Pget(x, y))
 						if got != want {
 							t.Fatalf("%s U+%04X color %d pixel %d,%d=%d want=%d", name, cp, color, x, y, got, want)
@@ -79,7 +82,7 @@ func TestGeneratedUnicodeFontExecutes(t *testing.T) {
 	}
 	runGeneratedHarness(t, generated, `package main
 import("testing";rt "github.com/drpaneas/mtile/runtime")
-func TestFontRun(t *testing.T){var c rt.Context;var g Game;g.Init(&c);g.Draw(&c);if g.result!=rt.IntVal(12){t.Fatal("UTF8 advance")};if c.Pget(1,0)!=7{t.Fatal("selected Ω missing")}}`, "TestFontRun")
+func TestFontRun(t *testing.T){var c rt.Context;var g Game;g.Init(&c);g.Draw(&c);if g.result!=rt.IntVal(12){t.Fatal("UTF8 advance")};if c.Pget(0,2)!=7{t.Fatal("selected Ω missing")}}`, "TestFontRun")
 }
 func BenchmarkSelectedFontAtlas(b *testing.B) {
 	f, _ := assetsync.LoadFont("", "arcade")

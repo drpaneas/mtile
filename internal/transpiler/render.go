@@ -357,6 +357,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	}
 	b.line("\tctx.InitHardware()")
 	if len(g.mode0TextKeys) != 0 {
+		b.line("\tif !ctx.SetFont(&projectFontROM) { panic(\"invalid project font\") }")
 		b.line("\tif !ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:]) { " + g.haltStatement("Text tiles could not be initialized. Rebuild the project or select Mode 4.") + " }")
 	}
 	if g.timeEnabled {

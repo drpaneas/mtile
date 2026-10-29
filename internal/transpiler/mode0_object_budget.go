@@ -15,7 +15,7 @@ const (
 	mode0PackedObjectTileCapacity = 32
 	mode0OBJCoordinatePeriod      = 256
 	mode0TextGlyphWidth           = 6
-	mode0TextGlyphHeight          = 8
+	mode0TextLineHeight           = runtimeapi.FontCellHeight
 	mode0ScreenWidth              = 240
 )
 
@@ -214,7 +214,7 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 			budget.OAMEntries += entries * copies
 			budget.TextEntries += entries * copies
 			for i := 0; i < copies; i++ {
-				addMode0TextLineProfile(&staticCycles, &dynamicCycles, call.Args[1], call.Args[2], entries, textXDynamic || cameraRebase)
+				addMode0TextLineProfile(&staticCycles, &dynamicCycles, call.Args[1], call.Args[2], entries, textXDynamic || cameraRebase, opts.Font, call.Args[0])
 			}
 		}
 	}
@@ -225,9 +225,12 @@ func mode0ObjectBudgetFromOps(chunk *luaparser.Chunk, draw *luaparser.FunctionDe
 			budget.MaxLineCycles = total
 		}
 	}
-	budget.TextTiles = len(mode0TextAtlasKeysForOps(ops))
-	if budget.TextTiles == 0 {
-		budget.TextTiles = len(mode0TextAtlasKeysForDraw(draw))
+	keys := mode0TextAtlasKeysForOps(ops)
+	if len(keys) == 0 {
+		keys = mode0TextAtlasKeysForDraw(draw)
+	}
+	for _, key := range keys {
+		budget.TextTiles += runtimeapi.Mode0GlyphTileCount(opts.Font, byte(key>>8))
 	}
 	return budget
 }
@@ -350,7 +353,7 @@ func mode0DrawOpsRebaseCameraBetweenObjects(ops []mode0DrawOp) bool {
 }
 
 func addMode0TextLineProfile(staticCycles *[mode0OBJCoordinatePeriod]int, dynamicCycles *int,
-	xExpr, yExpr luaparser.Expr, entries int, dynamicX bool,
+	xExpr, yExpr luaparser.Expr, entries int, dynamicX bool, font *runtimeapi.Font, textExpr luaparser.Expr,
 ) {
 	if entries <= 0 {
 		return
@@ -361,6 +364,13 @@ func addMode0TextLineProfile(staticCycles *[mode0OBJCoordinatePeriod]int, dynami
 		*dynamicCycles += entries * 8
 		return
 	}
+	text, _ := unparenExpr(textExpr).(*luaparser.StringExpr)
+	numberHeight := 8
+	if text == nil {
+		for i := range mode0PrintNumberCharset {
+			numberHeight = max(numberHeight, 8*runtimeapi.Mode0GlyphTileCount(font, mode0PrintNumberCharset[i]))
+		}
+	}
 	var profile [mode0OBJCoordinatePeriod]int
 	sx, sy := x, 0
 	left := sx
@@ -370,9 +380,13 @@ func addMode0TextLineProfile(staticCycles *[mode0OBJCoordinatePeriod]int, dynami
 	for index := 0; index < entries; index++ {
 		if sx+mode0TextGlyphWidth > mode0ScreenWidth && sx > left {
 			sx = left
-			sy += mode0TextGlyphHeight
+			sy += mode0TextLineHeight
 		}
-		addMode0ProfileRun(&profile, sy, mode0TextGlyphHeight, 8)
+		height := numberHeight
+		if text != nil && index < len(text.Value) {
+			height = 8 * runtimeapi.Mode0GlyphTileCount(font, text.Value[index])
+		}
+		addMode0ProfileRun(&profile, sy, height, 8)
 		sx += mode0TextGlyphWidth
 	}
 	mergeMode0LineProfile(staticCycles, dynamicCycles, yExpr, &profile)

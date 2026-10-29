@@ -68,20 +68,22 @@ func (m *Model) CreateFont(name string, blank bool) error {
 	if source == nil {
 		return fmt.Errorf("select a source font first")
 	}
-	f := *source
-	f.Name = name
-	f.Glyphs = make([]assetsync.FontGlyph, len(source.Glyphs))
-	for i, g := range source.Glyphs {
-		f.Glyphs[i] = g
-		f.Glyphs[i].Columns = append([]int(nil), g.Columns...)
-		if blank && g.Codepoint != '?' {
-			clear(f.Glyphs[i].Columns)
-		}
-	}
-	if err := assetsync.ValidateFont(&f); err != nil {
+	f, err := assetsync.UpgradeFont(source)
+	if err != nil {
 		return err
 	}
-	m.Fonts[name] = &f
+	f.Name = name
+	if blank {
+		for i, g := range f.Glyphs {
+			if g.Codepoint != '?' {
+				clear(f.Glyphs[i].Columns)
+			}
+		}
+	}
+	if err := assetsync.ValidateFont(f); err != nil {
+		return err
+	}
+	m.Fonts[name] = f
 	m.Project.Font = name
 	return nil
 }
@@ -93,9 +95,14 @@ func (m *Model) SetFontPixel(cp, x, y int, on bool) error {
 	if assetsync.IsBuiltinFont(f.Name) {
 		return fmt.Errorf("built-in font is read-only; choose COPY first")
 	}
-	if x < 0 || x >= 4 || y < 0 || y >= 5 {
-		return fmt.Errorf("font pixels must stay inside 4x5; the 6x8 cell is fixed")
+	if x < 0 || x >= assetsync.FontBitmapWidth || y < 0 || y >= assetsync.FontBitmapHeight {
+		return fmt.Errorf("font pixels must stay inside the fixed 6x10 cell")
 	}
+	upgraded, err := assetsync.UpgradeFont(f)
+	if err != nil {
+		return err
+	}
+	f = upgraded
 	for i, g := range f.Glyphs {
 		if g.Codepoint == cp {
 			changed := g
@@ -129,8 +136,13 @@ func (m *Model) AddFontGlyph(cp int) error {
 			return nil
 		}
 	}
+	upgraded, err := assetsync.UpgradeFont(f)
+	if err != nil {
+		return err
+	}
+	f = upgraded
 	candidate := *f
-	candidate.Glyphs = append(append([]assetsync.FontGlyph(nil), f.Glyphs...), assetsync.FontGlyph{Codepoint: cp, Columns: []int{0, 0, 0, 0}})
+	candidate.Glyphs = append(append([]assetsync.FontGlyph(nil), f.Glyphs...), assetsync.FontGlyph{Codepoint: cp, Columns: make([]int, assetsync.FontBitmapWidth)})
 	if err := assetsync.ValidateFont(&candidate); err != nil {
 		return err
 	}

@@ -136,61 +136,54 @@ func (c *Context) PreparePauseMenu() {
 		return
 	}
 	v.key, v.prepared, v.dirty = key, true, true
-	tall := p.ended || p.result != 0 || p.wait > 0
 	v.font = c.font
-	v.panel(tall)
+	v.panel(true)
 	if p.ended {
-		v.centered("SESSION", 18, 4)
-		v.centered("ENDED", 26, 4)
+		v.centered("SESSION", 5, 4)
+		v.centered("ENDED", 18, 4)
 		if p.wait > 0 {
-			v.centered("PLEASE WAIT", 44, 3)
+			v.centered("Please", 38, 3)
+			v.centered("wait", 50, 3)
 		} else {
-			v.centered("Power off", 42, 5)
+			v.centered("Power off", 38, 5)
 			v.centered("or reset", 50, 5)
 		}
 		return
 	}
-	top := 8
-	if tall {
-		top = 0
+	heading := "PAUSED"
+	switch p.result {
+	case 1:
+		heading = "Saved"
+	case 2:
+		heading = "Loaded"
+	case 3:
+		heading = "No save"
+	case 4:
+		heading = "Wrong save"
+	case 5:
+		heading = "Bad save"
+	case -1:
+		heading = "Save error"
+	case -2:
+		heading = "Load error"
+	case 10:
+		heading = "Disabled"
 	}
-	v.centered("PAUSED", top+6, 5)
+	v.centered(heading, 1, 5)
 	for i, label := range [3]string{"Load", "Save", "Exit"} {
-		y := top + 18 + i*10
+		y := 16 + i*13
 		color := uint32(4)
 		if i < 2 && !p.saving {
 			color = 5
 		}
 		if uint8(i) == p.selected {
-			v.rect(4, y-2, 56, 9, 2)
-			v.rect(4, y-2, 1, 9, 3)
+			v.rect(4, y-2, 56, 13, 2)
+			v.rect(4, y-2, 1, 13, 3)
 		}
 		v.text(label, 10, y, color)
 	}
-	message := ""
-	switch p.result {
-	case 1:
-		message = "Saved"
-	case 2:
-		message = "Loaded"
-	case 3:
-		message = "No save yet"
-	case 4:
-		message = "Wrong save"
-	case 5:
-		message = "Bad save"
-	case -1:
-		message = "Save failed"
-	case -2:
-		message = "Load failed"
-	case 10:
-		message = "Unavailable"
-	}
-	if message != "" {
-		v.centered(message, 49, 4)
-	}
 	if p.wait > 0 {
-		v.centered("Please wait", 57, 3)
+		v.centered("WAIT", 54, 3)
 	}
 }
 

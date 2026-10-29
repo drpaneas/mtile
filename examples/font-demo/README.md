@@ -16,10 +16,11 @@ In the editor:
 2. Enter `demo-font` in New font name and choose **COPY**. Select a character,
    change its pixels and watch the preview update. **BLANK** instead starts
    an empty international repertoire with a visible fallback question mark.
-3. Try painting the spacing outside the 4×5 highlighted box: it is locked.
+3. Paint any of the 6×10 pixels. Width, height and advance are fixed for every
+   font; custom files cannot exceed this box.
 4. Choose **SAVE PROJECT**, close FONT, then Build + Reload in Develop. The
-   next cartridge contains only the selected font. Existing text coordinates
-   and its 6×8 grid are unchanged.
+   next cartridge contains only the selected font. The screen grid is
+   40×16 cells; the final complete row starts at y=150.
 
 Use `international` to display the complete sample. Other selections deliberately
 show fallback question marks for languages outside their repertoire. Missing

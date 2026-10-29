@@ -20,5 +20,5 @@ function _draw()
     pspr(0, 96, 56)
   end
   print("MOON DOOR", 98, 5, 10)
-  print("A  OPEN / START AGAIN", 65, 151, 9)
+  print("A  OPEN / START AGAIN", 65,150, 9)
 end

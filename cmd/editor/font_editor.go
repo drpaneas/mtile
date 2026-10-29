@@ -44,9 +44,9 @@ func newFontEditorLayout() fontEditorLayout {
 	l.Copy = editor.Rect{X: right - 196, Y: top, W: 92, H: 36}
 	l.Blank = editor.Rect{X: right - 96, Y: top, W: 96, H: 36}
 	l.PreviewText = editor.Rect{X: left, Y: top + 58, W: p.W - 48, H: 36}
-	l.Preview = editor.Rect{X: left, Y: top + 106, W: p.W - 48, H: 72}
-	l.Pixel = min(28, max(16, (p.H-450)/8))
-	l.Canvas = editor.Rect{X: left, Y: top + 226, W: 6 * l.Pixel, H: 8 * l.Pixel}
+	l.Preview = editor.Rect{X: left, Y: top + 106, W: p.W - 48, H: 84}
+	l.Pixel = min(28, max(16, (p.H-466)/10))
+	l.Canvas = editor.Rect{X: left, Y: top + 226, W: 6 * l.Pixel, H: 10 * l.Pixel}
 	l.GlyphInput = editor.Rect{X: left, Y: l.Canvas.Y + l.Canvas.H + 14, W: 60, H: 34}
 	l.Add = editor.Rect{X: left + 68, Y: l.GlyphInput.Y, W: 100, H: 34}
 	l.Glyphs = editor.Rect{X: left + 196, Y: top + 218, W: p.W - 244, H: p.H - 394}
@@ -254,7 +254,7 @@ func (g *Game) updateFontEditor() {
 	down := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	if down && rectContains(l.Canvas, mx, my) {
 		x, y := (mx-l.Canvas.X)/l.Pixel, (my-l.Canvas.Y)/l.Pixel
-		if x < 4 && y < 5 {
+		if x < 6 && y < 10 {
 			f := g.model.ActiveFont()
 			font, _ := assetsync.CompileFont(f)
 			cols := font.Columns(rune(s.selected))
@@ -274,7 +274,7 @@ func (g *Game) updateFontEditor() {
 				}
 			}
 		} else if pressed {
-			s.message = "Spacing is locked: draw only inside the 4 x 5 bitmap."
+			s.message = "Spacing is locked: draw only inside the 6 x 10 bitmap."
 		}
 	}
 	if !down && s.stroke {
@@ -289,14 +289,14 @@ func drawFontPixels(screen *ebiten.Image, font *rt.Font, text string, x, y, scal
 	for _, cp := range text {
 		if cp == '\n' || x+6*scale > start+maxWidth {
 			x = start
-			y += 8 * scale
+			y += 10 * scale
 			if cp == '\n' {
 				continue
 			}
 		}
 		columns := font.Columns(cp)
 		for col, bits := range columns {
-			for row := 0; row < 5; row++ {
+			for row := 0; row < 10; row++ {
 				if bits&(1<<uint(row)) != 0 {
 					fillRect(screen, editor.Rect{X: x + col*scale, Y: y + row*scale, W: scale, H: scale}, clr)
 				}
@@ -347,7 +347,7 @@ func (g *Game) drawFontEditor(screen *ebiten.Image) {
 	fillRect(screen, l.Preview, colorBackground)
 	strokeRect(screen, l.Preview, colorBorder)
 	// Two rows at native 2x scale; clipping prevents long samples leaking into tools.
-	clip := screen.SubImage(image.Rect(l.Preview.X, l.Preview.Y, l.Preview.X+l.Preview.W, l.Preview.Y+44)).(*ebiten.Image)
+	clip := screen.SubImage(image.Rect(l.Preview.X, l.Preview.Y, l.Preview.X+l.Preview.W, l.Preview.Y+52)).(*ebiten.Image)
 	drawFontPixels(clip, font, s.preview, l.Preview.X+12, l.Preview.Y+12, 2, colorLCD, l.Preview.W-24)
 	missing := 0
 	for _, cp := range s.preview {
@@ -371,20 +371,20 @@ func (g *Game) drawFontEditor(screen *ebiten.Image) {
 	}
 	drawSmallText(screen, glyphLabel, l.Canvas.X, l.Canvas.Y-24, colorText)
 	columns := font.Columns(rune(s.selected))
-	for y := 0; y < 8; y++ {
+	for y := 0; y < 10; y++ {
 		for x := 0; x < 6; x++ {
 			r := editor.Rect{X: l.Canvas.X + x*l.Pixel, Y: l.Canvas.Y + y*l.Pixel, W: l.Pixel - 1, H: l.Pixel - 1}
 			clr := colorBackground
-			if x >= 4 || y >= 5 {
+			if x >= 6 || y >= 10 {
 				clr = colorButtonFace
 			}
-			if x < 4 && y < 5 && columns[x]&(1<<uint(y)) != 0 {
+			if x < 6 && y < 10 && columns[x]&(1<<uint(y)) != 0 {
 				clr = colorLCD
 			}
 			fillRect(screen, r, clr)
 		}
 	}
-	strokeRect(screen, editor.Rect{X: l.Canvas.X, Y: l.Canvas.Y, W: 4 * l.Pixel, H: 5 * l.Pixel}, colorHighlight)
+	strokeRect(screen, editor.Rect{X: l.Canvas.X, Y: l.Canvas.Y, W: 6 * l.Pixel, H: 10 * l.Pixel}, colorHighlight)
 	fontField(screen, l.GlyphInput, s.glyphInput, s.focus == 3)
 	drawFontButton(screen, l.Add, "SELECT / ADD", false, colorSprite)
 	fillRect(screen, l.Glyphs, colorBackground)
@@ -403,7 +403,7 @@ func (g *Game) drawFontEditor(screen *ebiten.Image) {
 				fillRect(screen, r, colorButtonFace)
 				strokeRect(screen, r, colorHighlight)
 			}
-			if font.Columns(rune(glyph.Codepoint)) == [4]byte{} {
+			if *font.Columns(rune(glyph.Codepoint)) == [6]uint16{} {
 				label := string(rune(glyph.Codepoint))
 				if glyph.Codepoint == 32 {
 					label = "SP"
@@ -414,8 +414,8 @@ func (g *Game) drawFontEditor(screen *ebiten.Image) {
 			}
 		}
 	}
-	drawSmallText(screen, "4 x 5 bitmap / 6 x 8 cell / 1-bit / 40 x 20 screen grid", p.X+24, p.Y+p.H-98, colorText)
-	drawSmallText(screen, fmt.Sprintf("%d glyphs / bitmap %d bytes / one font per ROM", len(f.Glyphs), len(f.Glyphs)*4), p.X+24, p.Y+p.H-76, colorDim)
+	drawSmallText(screen, "6 x 10 bitmap / 6 x 10 cell / 1-bit / 40 x 16 screen grid", p.X+24, p.Y+p.H-98, colorText)
+	drawSmallText(screen, fmt.Sprintf("%d glyphs / bitmap %d bytes / one font per ROM", len(f.Glyphs), len(f.Glyphs)*12), p.X+24, p.Y+p.H-76, colorDim)
 	drawSmallText(screen, truncateUIText(s.message, p.W-206), p.X+24, p.Y+p.H-42, colorLCD)
 	drawFontButton(screen, l.Save, "SAVE PROJECT", false, colorSprite)
 	if s.menu {

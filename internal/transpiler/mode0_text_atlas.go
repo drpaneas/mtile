@@ -302,10 +302,10 @@ func atlasFromMode0TextKeys(keys []uint16, fonts ...*runtimeapi.Font) mode0TextA
 	if len(fonts) > 0 && fonts[0] != nil {
 		font = fonts[0]
 	}
-	atlas := mode0TextAtlas{keys: keys, tiles: make([]uint32, 0, len(keys)*16)}
+	atlas := mode0TextAtlas{keys: keys, tiles: make([]uint32, 0, len(keys)*32)}
 	for _, key := range keys {
 		tile := runtimeapi.BuildMode0GlyphTileWithFont(font, byte(key>>8), byte(key))
-		for offset := 0; offset < len(tile); offset += 4 {
+		for offset := 0; offset < runtimeapi.Mode0GlyphTileCount(font, byte(key>>8))*64; offset += 4 {
 			atlas.tiles = append(atlas.tiles,
 				uint32(tile[offset])|uint32(tile[offset+1])<<8|uint32(tile[offset+2])<<16|uint32(tile[offset+3])<<24)
 		}

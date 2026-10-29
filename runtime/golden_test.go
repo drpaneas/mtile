@@ -9,7 +9,7 @@ import "testing"
 // pixels with an independent reference renderer. Keeping the reference here
 // deliberately avoids calling Context drawing helpers, so a regression in
 // Rectfill's word-aligned fill loop, sprite transparency/blitting, the map
-// blit's cell walk, or Print's 6x8 PICO-8 glyph walk cannot make both sides of the
+// blit's cell walk, or Print's 6x10 glyph walk cannot make both sides of the
 // comparison change together.
 // goldenLine renders the scene's diagonal line with a differently coded
 // Bresenham variant rather than Line's own accumulator (see
@@ -168,8 +168,8 @@ func goldenSprite(frame *[FramebufferSize]byte, sheet []byte, sheetW, id, dx, dy
 	}
 }
 
-// goldenPrint walks the 4x5 PICO-8 wide column font in a different order
-// from Print's nested loops. Both read font4x5, but a swapped row/column in
+// goldenPrint walks the 6x10 column font in a different order
+// from Print's nested loops. Both read the default ROM font, but a swapped row/column in
 // drawGlyph cannot reproduce itself here.
 func goldenPrint(frame *[FramebufferSize]byte, s string, x, y int, color byte) {
 	for i := 0; i < len(s); i++ {

@@ -26,7 +26,7 @@ func TestCommonSceneKeepsIdenticalTextAndCoordinates(t *testing.T) {
 }
 func TestMode0FixturesKeepExistingAcceptedCallShapes(t *testing.T) {
 	for _, name := range []string{"empty", "hud", "edges"} {
-		_, report, err := transpiler.TranspileWithReport("probe.lua", workload(name, 6, 8), transpiler.Options{Renderer: transpiler.RendererMode0, SheetW: 8, SheetH: 8})
+		_, report, err := transpiler.TranspileWithReport("probe.lua", productionWorkload(name), transpiler.Options{Renderer: transpiler.RendererMode0, SheetW: 8, SheetH: 8})
 		if err != nil {
 			t.Fatal(err)
 		}

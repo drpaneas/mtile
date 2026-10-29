@@ -118,7 +118,7 @@ func TestFontPresetsAndRoundTrip(t *testing.T) {
 			for _, g := range compiled.Extra {
 				if g.Codepoint == cp {
 					found = true
-					if g.Columns == [4]byte{} {
+					if g.Columns == [6]uint16{} {
 						t.Errorf("blank %c", cp)
 					}
 				}

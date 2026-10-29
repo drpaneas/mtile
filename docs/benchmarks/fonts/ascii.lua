@@ -4,7 +4,7 @@ score=0
 function _update() score=(score+1)%1000 end
 function _draw()
   cls(1)
-  print("SCORE",0,0,7)
+  print("HP",0,0,7)
   print(score,36,0,7)
-  print("ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD",0,16,7)
+  print("HP12HP12HP12HP12HP12HP12HP12HP12HP12HP12",0,16,7)
 end

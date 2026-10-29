@@ -192,8 +192,10 @@ prove all of these conditions:
   `chr`, `sub`, control codes, and non-number/non-string values are not eligible.
   x/y may be dynamic or non-numeric, in which case the
   shared cursor position and implicit-newline update exactly match Mode 4.
-  Text reserves physical OBJ tiles 448..479 and is limited to 32 unique `(glyph,color)`
-  pairs, not 32 character occurrences. Numeric prints intern the charset
+  Text reserves physical OBJ tiles 448..479. A unique `(glyph,color)` pair
+  uses one 8×8 tile if bitmap rows 8–9 are blank, otherwise two tiles in one
+  8×16 OBJ. The bank holds 32 compact pairs, 16 tall pairs, or a fitting mixture;
+  this is separate from the character occurrence budget. Numeric prints intern the charset
   `-.0123456789` at that color and budget 12 OAM entries, covering the widest
   decimal `formatNumber` form. The transpiler sorts and rasterizes
   those unique pairs into a ROM atlas from every `_draw` helper the walk reaches,
@@ -530,7 +532,7 @@ or another intended plane: `map(mx,my,...)` becomes `map(0,mx,my,...)`.
 | `palt` | Mode 0 conditional | Only default-transparency reset/no-op forms outside `_draw` are currently admitted. Arbitrary transparent source colors require Mode 4; asset conversion is not a current public fallback. |
 | `color` | Both | Changes logical default draw/text color and does not itself rasterize. |
 | `cursor` | Both | Changes logical text position/color and does not itself rasterize. |
-| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-unique-`(glyph,color)` atlas fit. Literal ASCII strings and proven decimal numbers (the same `formatNumber` layout as `tostr`, without a Lua string) intern glyph tiles at build time and upload them once into physical OBJ 448-479; authored sheet metadata and editor locks remain at IDs 480-511. The number proof is assignment and expression based, not "any variable". Concat, `tostr`/`chr`/`sub`, booleans, unproven fields, and control codes are not eligible. Every visible occurrence still owns one OAM entry. Numeric prints budget 12 entries. Non-empty text requires color 1..255 except reserved OBJ indices 241..245; hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
+| `print` | Mode 0 conditional | Can use OBJ glyphs when position, clipping, palette, ordering, occurrence OAM/scanline budgets, and the 32-physical-tile atlas (one or two tiles per unique `(glyph,color)` pair) fit. Literal ASCII strings and proven decimal numbers (the same `formatNumber` layout as `tostr`, without a Lua string) intern glyph tiles at build time and upload them once into physical OBJ 448-479; authored sheet metadata and editor locks remain at IDs 480-511. The number proof is assignment and expression based, not "any variable". Concat, `tostr`/`chr`/`sub`, booleans, unproven fields, and control codes are not eligible. Every visible occurrence still owns one OAM entry. Compact glyphs use 8×8 objects; glyphs with ink in bitmap rows 8/9 use 8×16. Ten-pixel text lines can overlap in hardware; the scanline proof counts each object's actual 8 or 16 rows. Numeric prints budget 12 entries. Non-empty text requires color 1..255 except reserved OBJ indices 241..245; hardware OBJ palette index 0 is transparent while Mode 4 color 0 is opaque; an empty string may use color 0. The current proof keeps text after every map in the front OBJ lane; interleaved/background-relative text or arbitrary pixel placement requires Mode 4. |
 
 The classification is intentionally semantic, not merely based on whether a
 similar picture could be produced. A Mode 0 backend must not silently round
@@ -792,19 +794,45 @@ covers the accepted pose/animation variant shapes and resource savings.
 
 ### Project fonts and UTF-8 `print`
 
-`print` remains **Mode 0 conditional**. Every font has a monochrome 4×5 bitmap
-and fixed 6×8 advance: changing the project font never changes cursor, tab,
-background, clip, wrap, or return-coordinate metrics. Mode 4 decodes printable
-UTF-8 codepoints and uses the selected font, replacing unsupported codepoints
-and malformed bytes with its visible `?`. Control codes and their parameters
-remain byte based. Lua `#`, `sub`, `ord`, and `chr` remain byte based too.
-Use precomposed Unicode (NFC); combining marks are not font glyphs.
+`print` remains **Mode 0 conditional**; `cursor` remains **both renderers**.
+All compiled fonts use a monochrome 6×10 bitmap and fixed 6×10 cell (40×16
+cells). The approved B migration changes line/newline/wrap advance from 8 to
+10 pixels in both backends. Explicit cursor positions and print's return x
+remain pixel coordinates; six-pixel horizontal advance and four-cell tabs
+remain shared. Partial glyphs clip without changing logical positions.
+Legacy version-1 4×5 documents are padded during compilation; see
+[font migration](fonts.md#existing-projects-and-version-1-fonts).
 
-Mode 0 still admits only the existing static printable ASCII / decimal-number
-call shapes. The host compiles the selected font's exact pixels into its
-existing bounded `(glyph,color)` OBJ atlas and reserved sheet cells. All
-existing color, OAM, ordering, clipping, palette, and 32-tile limits still apply.
-Non-ASCII strings, including Greek and German diacritics, fail forced Mode 0
-with the stable source-positioned `M0_PRINT_SHAPE` diagnostic; AUTO selects
-Mode 4. Merely selecting a Greek/German/custom font does not disqualify ASCII
-calls. No Unicode call shapes have been admitted to AUTO's Mode 0 subset.
+Mode 4 decodes printable UTF-8 codepoints from the selected project font.
+Unsupported codepoints and malformed UTF-8 use `?`. Repeat controls consume a
+whole UTF-8 character; other control parameters and Lua string APIs remain
+byte based. No runtime normalization, shaping or combining-mark composition
+is performed.
+
+Mode 0 admits the documented static ASCII/decimal-number subset. It compiles
+the **selected** font into exactly matching OBJ glyphs. When rows 8/9 are
+blank it uses one 8×8 tile; otherwise it uses two consecutive tiles in a vertical
+8×16 OBJ. The omitted rows are proven transparent, never cropped ink. The cell
+and logical line advance remain 6×10 for every glyph. Physical OBJ tiles
+**448–479** and authored sheet IDs **480–511** remain reserved. Sorted pairs
+are packed consecutively; the second tile of a tall pair immediately follows
+its top tile in both OBJ VRAM and the authored aliases. Unused reserved cells
+are cleared. Capacity is **32 compact or 16 tall glyph/color pairs**, or a
+mixture costing at most 32 physical tiles. Each occurrence uses one OAM entry.
+The resource proof counts its complete 8/16-row hardware span, including overlap
+between adjacent ten-pixel lines. Numeric calls intern `-.0123456789` at their
+admitted color and budget the selected font's maximum decimal glyph height.
+Exceeding 32 tiles fails forced Mode 0 or falls back from AUTO with stable,
+source-positioned `M0_OBJ_BUDGET`. Other color, OAM, ordering, clipping and
+palette restrictions above remain mandatory. Unicode and controls fail/fall
+back with `M0_PRINT_SHAPE`; a Greek/German font printing only admitted ASCII
+is eligible. No merely similar glyph rasterization is accepted.
+
+The one selected 1bpp font remains in cartridge ROM for software/system text.
+The Mode 0 atlas is a derived cache, uploaded once during blanked startup;
+there is no second selectable font and no steady-state glyph upload.
+Every ASCII glyph in every preset is compared across the full 8×16 extent
+with Mode 4 at colors 1, 7 and 255. [Production B evidence](../research/font-typography/production-b.md)
+records 360 synchronized real-ROM parity frames across empty/HUD/edge scenes,
+including negative origins, wrapping, bottom/right clipping and descenders,
+with ARM cycle and ROM/RAM measurements.

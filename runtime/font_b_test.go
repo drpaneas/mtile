@@ -124,10 +124,29 @@ func assertPauseBText(t *testing.T, v *pauseVideo, s string, x, y int) {
 					t.Fatal("pause ink outside system OBJ")
 				}
 				got := pauseBPixel(v, px, py)
-				if got != 4 && got != 5 {
+				if got != 3 && got != 4 && got != 5 {
 					t.Fatalf("pause %q lost ink at %d,%d", s, px, py)
 				}
 			}
+		}
+	}
+}
+
+func TestFontBPauseEndedStatesFitOriginalOBJ(t *testing.T) {
+	for _, wait := range []uint8{0, 1} {
+		var c Context
+		c.SetFont(DefaultFont())
+		c.pause.ended = true
+		c.pause.wait = wait
+		c.PreparePauseMenu()
+		assertPauseBText(t, &c.pause.video, "SESSION", 11, 5)
+		assertPauseBText(t, &c.pause.video, "ENDED", 17, 18)
+		if wait > 0 {
+			assertPauseBText(t, &c.pause.video, "Please", 14, 38)
+			assertPauseBText(t, &c.pause.video, "wait", 20, 50)
+		} else {
+			assertPauseBText(t, &c.pause.video, "Power off", 5, 38)
+			assertPauseBText(t, &c.pause.video, "or reset", 8, 50)
 		}
 	}
 }

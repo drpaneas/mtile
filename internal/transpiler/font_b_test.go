@@ -36,7 +36,7 @@ func TestFontBMode0AtlasStoresBothTileRows(t *testing.T) {
 }
 func TestFontBMode0PairCapacityAndScanlineOverlap(t *testing.T) {
 	for _, count := range []int{16, 17} {
-		source := "function _draw()\n cls()\n print(\"" + "ABCDEFGHIJKLMNOPQ"[:count] + "\",0,0,7)\nend"
+		source := strings.ReplaceAll(mode0TextColorCalls(count), `"A"`, `"g"`)
 		_, report, err := TranspileWithReport("font-b.lua", source, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8})
 		if count == 16 {
 			if err != nil || !report.Mode0Text {
@@ -48,12 +48,45 @@ func TestFontBMode0PairCapacityAndScanlineOverlap(t *testing.T) {
 	}
 }
 func TestFontBMode0ScanlineOverlap(t *testing.T) {
-	source := "function _draw() cls() print(\"" + strings.Repeat("A", 40) + "\",0,0,7) print(\"" + strings.Repeat("A", 40) + "\",0,10,7) end"
+	source := "function _draw() cls() print(\"" + strings.Repeat("g", 40) + "\",0,0,7) print(\"" + strings.Repeat("g", 40) + "\",0,10,7) end"
 	_, report, err := TranspileWithReport("font-b.lua", source, Options{Renderer: RendererMode0, SheetW: 8, SheetH: 8})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if report.Mode0OBJLineCycles != 640 {
 		t.Fatalf("overlapping 8x16 objects budgeted %d cycles, want 640", report.Mode0OBJLineCycles)
+	}
+}
+
+func TestFontBReservedSheetAliasesIncludeBothHalves(t *testing.T) {
+	f := *rt.DefaultFont()
+	f.ASCII['A'-32] = [6]uint16{1, 2, 4, 8, 256, 512}
+	const w, h = 240, 160
+	sheet := make([]byte, w*h)
+	for i := range sheet {
+		sheet[i] = 9
+	}
+	key := rt.Mode0TextGlyphKey('A', 7)
+	rt.OverlayMode0TextSheetWithFont(sheet, w, h, []uint16{key}, &f)
+	pair := rt.BuildMode0GlyphTileWithFont(&f, 'A', 7)
+	for i := 0; i < 32; i++ {
+		id := rt.Mode0TextSheetBase + i
+		origin := (id/(w/8))*8*w + (id%(w/8))*8
+		for y := 0; y < 8; y++ {
+			for x := 0; x < 8; x++ {
+				want := byte(0)
+				if i < 2 {
+					want = pair[i*64+y*8+x]
+				}
+				if sheet[origin+y*w+x] != want {
+					t.Fatalf("alias %d pixel%d,%d", id, x, y)
+				}
+			}
+		}
+	}
+	id := rt.Mode0TextTileBase + 31
+	origin := (id/(w/8))*8*w + (id%(w/8))*8
+	if sheet[origin] != 9 {
+		t.Fatal("overlay touched cells outside authored reservation")
 	}
 }

@@ -19,7 +19,7 @@ func TestFontEditingCannotBypassContract(t *testing.T) {
 	if len(m.ActiveFont().Glyphs) <= 95 {
 		t.Fatal("blank lacks international repertoire")
 	}
-	for _, point := range [][2]int{{4, 0}, {0, 5}, {-1, 0}, {0, -1}, {100, 100}} {
+	for _, point := range [][2]int{{6, 0}, {0, 10}, {-1, 0}, {0, -1}, {100, 100}} {
 		if err := m.SetFontPixel('A', point[0], point[1], true); err == nil {
 			t.Fatal("painted outside bitmap")
 		}
@@ -50,7 +50,7 @@ func TestFontEditingCannotBypassContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	compiled, _ := assetsync.CompileFont(saved)
-	if compiled.Columns('Ω') != [4]byte{0, 0, 0, 16} {
+	if *compiled.Columns('Ω') != [6]uint16{0, 0, 0, 16} {
 		t.Fatal("glyph persistence")
 	}
 	if err := m.SelectFont("german"); err != nil {

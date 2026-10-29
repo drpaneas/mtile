@@ -1,5 +1,9 @@
 # Selected-font evidence (2026-10-29)
 
+**Current geometry is B, 6×10. See [production B evidence](../../../research/font-typography/production-b.md)
+and [measurements](b/measurements.json). The results below are historical 4×5
+evidence from before the size migration; run those commands at commit `a1e0fad`.**
+
 The `international` preset changes ASCII artwork and adds Greek/German glyphs.
 The fixed geometry stays 4×5 in a 6×8 cell. `ascii.lua` exercises a static HUD,
 a changing decimal score, and a full 40-column row. The existing Mode 0 call

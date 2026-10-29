@@ -1,17 +1,14 @@
 package runtime
 
-// Print renders a selected 4x5 monochrome glyph in a 6x8 cell. The cell size
-// deliberately divides the native 240x160 display into exactly 40 columns
-// and 20 rows, leaving the final row of each cell as spacing. Glyphs cover
-// printable Unicode supplied by the project font. Basic print() control codes are handled without allocating;
-// unsupported controls are ignored. Wrap uses the current clip width.
-
+// Print renders the selected 6x10 monochrome font. Its fixed cell divides the
+// native 240x160 display into 40 columns and 16 rows. Unicode comes from the
+// selected project font; controls retain their byte parameters and wrap uses
+// the current clip rectangle. Pixels outside the screen/clip are discarded.
 const (
-	glyphW = 6
-	glyphH = 8
-
-	glyphBitmapW = 4
-	glyphBitmapH = 5
+	glyphW       = FontCellWidth
+	glyphH       = FontCellHeight
+	glyphBitmapW = FontBitmapWidth
+	glyphBitmapH = FontBitmapHeight
 )
 
 func gluTextParam(ch byte) int {
@@ -274,7 +271,7 @@ func (c *Context) printGlyph(ch rune, sx, sy *int, left int, value, background b
 //go:section .iwram
 func (c *Context) drawGlyph(ch rune, sx, sy int, value byte) {
 	columns := c.font.Columns(ch)
-	// Fast path: when the whole 4x5 glyph box is inside the clip rectangle
+	// Fast path: when the whole 6x10 glyph box is inside the clip rectangle
 	// (the overwhelmingly common case for HUD text), skip the per-pixel clip
 	// test and write straight into the framebuffer. The bits loop also exits
 	// as soon as a column has no remaining set pixels.
@@ -282,8 +279,8 @@ func (c *Context) drawGlyph(ch rune, sx, sy int, value byte) {
 		fb := c.writableFramebuffer()
 		base := sy*ScreenWidth + sx
 		for col := 0; col < glyphBitmapW; col++ {
-			// Mask to the 5 bitmap rows.
-			bits := columns[col] & 0x1F
+			// Mask to the 10 bitmap rows.
+			bits := columns[col] & 0x3ff
 			dst := base + col
 			for row := 0; bits != 0; row, bits = row+1, bits>>1 {
 				if bits&1 != 0 {

@@ -29,7 +29,7 @@ func TestMode0ZeroLayersPresentsBackdropAndText(t *testing.T) {
 	if got := hw.ReadPaletteRAM16(0); got != palette[5] {
 		t.Fatalf("backdrop palette = %#04x, want %#04x", got, palette[5])
 	}
-	if got := byte(hw.ReadVRAM32(hw.OBJVRAM + uintptr(mode0TextTileBase*64))); got != 12 {
+	if got := byte(hw.ReadVRAM32(hw.OBJVRAM + uintptr(mode0TextTileBase*64+24))); got != 12 {
 		t.Fatalf("glyph first pixel = %d, want 12", got)
 	}
 }

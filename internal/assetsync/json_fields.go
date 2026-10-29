@@ -217,3 +217,21 @@ func (v *TileLinkFile) UnmarshalJSON(raw []byte) error {
 	type plain TileLinkFile
 	return unmarshalJSONRecord(raw, (*plain)(v), &v.UnknownFields)
 }
+
+func (v Font) MarshalJSON() ([]byte, error) {
+	type plain Font
+	return marshalJSONRecord(plain(v), v.UnknownFields)
+}
+func (v *Font) UnmarshalJSON(raw []byte) error {
+	type plain Font
+	return unmarshalJSONRecord(raw, (*plain)(v), &v.UnknownFields)
+}
+
+func (v FontGlyph) MarshalJSON() ([]byte, error) {
+	type plain FontGlyph
+	return marshalJSONRecord(plain(v), v.UnknownFields)
+}
+func (v *FontGlyph) UnmarshalJSON(raw []byte) error {
+	type plain FontGlyph
+	return unmarshalJSONRecord(raw, (*plain)(v), &v.UnknownFields)
+}

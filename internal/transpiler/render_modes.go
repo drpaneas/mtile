@@ -44,10 +44,16 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 	case "cls", "spr", "sspr", "map", "clip", "pal", "palt":
 		return RendererMode0Conditional
 	case "print":
-		// Selected-font ASCII has pixel parity through the compiled OBJ atlas.
+		// Selected-font 6x10 ASCII has exact pixel parity through 8x8/8x16 OBJs.
+		// Only proven blank rows 8/9 are omitted. The 32-tile bank packs one/two
+		// tiles per pair, and scanline proof uses the actual 8/16-row object span.
 		// UTF-8 text and control sequences require Mode 4 (M0_PRINT_SHAPE).
 		return RendererMode0Conditional
-	case "camera", "color", "cursor", "sget", "sset", "fget", "fset":
+	case "cursor":
+		// Pixel coordinates and six-pixel tabs are shared; implicit print lines
+		// advance ten pixels in both renderers. No renderer-specific conversion.
+		return RendererBoth
+	case "camera", "color", "sget", "sset", "fget", "fset":
 		return RendererBoth
 	case "mset":
 		// Linked maps size Mode 0 objects from authored cells. Writes must

@@ -71,10 +71,12 @@ func TestBuildLinksExactlyOneSelectedFontInROM(t *testing.T) {
 			font, _ := assetsync.CompileFont(selected)
 			var want []byte
 			for _, col := range font.ASCII {
-				want = append(want, col[:]...)
+				for _, bits := range col {
+					want = append(want, byte(bits), byte(bits>>8))
+				}
 			}
 			for _, symbol := range symbols {
-				if strings.Contains(symbol.Name, "builtinFont") || strings.Contains(symbol.Name, "font4x5") {
+				if strings.Contains(symbol.Name, "builtinFont") || strings.Contains(symbol.Name, "pico8Font") {
 					t.Fatalf("fallback font linked: %s", symbol.Name)
 				}
 				if symbol.Name != "main.projectFontROM" {
@@ -90,7 +92,7 @@ func TestBuildLinksExactlyOneSelectedFontInROM(t *testing.T) {
 					t.Fatal(err)
 				}
 				offset := symbol.Value - section.Addr
-				if !bytes.Equal(data[offset:offset+380], want) {
+				if !bytes.Equal(data[offset:offset+uint64(len(want))], want) {
 					t.Fatal("linked font pixels differ from selected font")
 				}
 			}
@@ -121,7 +123,7 @@ func TestFontDemoUsesSupportedGlyphsAndMode4(t *testing.T) {
 		for _, g := range font.Extra {
 			if g.Codepoint == cp {
 				found = true
-				if g.Columns == [4]byte{} {
+				if g.Columns == [6]uint16{} {
 					t.Fatalf("blank demo glyph %c", cp)
 				}
 			}

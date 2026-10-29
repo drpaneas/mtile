@@ -80,9 +80,9 @@ func CompileFont(f *Font) (*rt.Font, error) {
 	}
 	out := &rt.Font{}
 	for _, g := range f.Glyphs {
-		var cols [4]byte
+		var cols [6]uint16
 		for i, v := range g.Columns {
-			cols[i] = byte(v)
+			cols[i] = uint16(v)
 		}
 		if g.Codepoint <= 126 {
 			out.ASCII[g.Codepoint-32] = cols
@@ -94,17 +94,17 @@ func CompileFont(f *Font) (*rt.Font, error) {
 	return out, nil
 }
 
-// FontGoDeclaration emits only the selected font. Every bitmap is four packed
-// column bytes; no alternative font, name, JSON, rasterizer or width table ships.
+// FontGoDeclaration emits only the selected font. Every bitmap is six little-endian
+// uint16 columns; no alternative font, name, JSON, rasterizer or width table ships.
 func FontGoDeclaration(f *rt.Font) string {
 	var b strings.Builder
 	b.WriteString("//go:section .rodata\nvar projectFontExtraROM = [...]rt.FontGlyph{\n")
 	for _, g := range f.Extra {
-		fmt.Fprintf(&b, "{Codepoint:%d,Columns:[4]byte{%d,%d,%d,%d}},\n", g.Codepoint, g.Columns[0], g.Columns[1], g.Columns[2], g.Columns[3])
+		fmt.Fprintf(&b, "{Codepoint:%d,Columns:[6]uint16{%d,%d,%d,%d,%d,%d}},\n", g.Codepoint, g.Columns[0], g.Columns[1], g.Columns[2], g.Columns[3], g.Columns[4], g.Columns[5])
 	}
-	b.WriteString("}\n//go:section .rodata\nvar projectFontROM = rt.Font{ASCII:[95][4]byte{\n")
+	b.WriteString("}\n//go:section .rodata\nvar projectFontROM = rt.Font{ASCII:[95][6]uint16{\n")
 	for _, c := range f.ASCII {
-		fmt.Fprintf(&b, "{%d,%d,%d,%d},\n", c[0], c[1], c[2], c[3])
+		fmt.Fprintf(&b, "{%d,%d,%d,%d,%d,%d},\n", c[0], c[1], c[2], c[3], c[4], c[5])
 	}
 	b.WriteString("},Extra:projectFontExtraROM[:]}\n")
 	return b.String()

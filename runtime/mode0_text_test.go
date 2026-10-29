@@ -16,20 +16,20 @@ type mode0TextTestGlyph struct {
 func loadMode0TextTestAtlas(t *testing.T, c *Context, glyphs ...mode0TextTestGlyph) {
 	t.Helper()
 	keys := make([]uint16, 0, len(glyphs))
-	byKey := make(map[uint16][64]byte, len(glyphs))
+	byKey := make(map[uint16][128]byte, len(glyphs))
 	for _, glyph := range glyphs {
 		key := Mode0TextGlyphKey(glyph.ch, glyph.color)
 		if _, exists := byKey[key]; exists {
 			continue
 		}
 		keys = append(keys, key)
-		byKey[key] = BuildMode0GlyphTile(glyph.ch, glyph.color)
+		byKey[key] = BuildMode0GlyphTileWithFont(c.font, glyph.ch, glyph.color)
 	}
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-	tiles := make([]uint32, 0, len(keys)*16)
+	tiles := make([]uint32, 0, len(keys)*32)
 	for _, key := range keys {
 		tile := byKey[key]
-		for offset := 0; offset < len(tile); offset += 4 {
+		for offset := 0; offset < Mode0GlyphTileCount(c.font, byte(key>>8))*64; offset += 4 {
 			tiles = append(tiles,
 				uint32(tile[offset])|uint32(tile[offset+1])<<8|uint32(tile[offset+2])<<16|uint32(tile[offset+3])<<24)
 		}
@@ -54,7 +54,7 @@ func TestMode0StaticTextStagesGlyphTileAndObject(t *testing.T) {
 	c.PresentRender()
 
 	tileBase := hw.OBJVRAM + uintptr(mode0TextTileBase*64)
-	if got := byte(hw.ReadVRAM32(tileBase)); got != 12 {
+	if got := byte(hw.ReadVRAM32(tileBase + 24)); got != 12 {
 		t.Fatalf("glyph first pixel = %d, want color 12", got)
 	}
 	oam := hw.OAM
@@ -69,7 +69,7 @@ func TestMode0StaticTextStagesGlyphTileAndObject(t *testing.T) {
 	}
 	stats := c.RendererUploadStats()
 	if stats.ColdTileBytes != coldBeforeAtlas+64 || stats.LastOBJTileBytes != 0 || stats.LastOAMBytes != hw.OAMBytes {
-		t.Fatalf("text uploads = %+v, want one cold 64-byte tile, no frame tile upload, OAM=%d", stats, hw.OAMBytes)
+		t.Fatalf("text uploads = %+v, want one cold 64-byte compact tile, no frame tile upload, OAM=%d", stats, hw.OAMBytes)
 	}
 }
 
@@ -135,8 +135,8 @@ func TestMode0TextUsesCursorForNonNumericPosition(t *testing.T) {
 	if got := c.PrintV(c.InternStatic("A"), NilVal(), IntVal(0), IntVal(7)); got != 10 {
 		t.Fatalf("implicit print return = %d, want 10", got)
 	}
-	if c.cursor.x != 4 || c.cursor.y != 13 {
-		t.Fatalf("implicit print cursor = (%d,%d), want (4,13)", c.cursor.x, c.cursor.y)
+	if c.cursor.x != 4 || c.cursor.y != 15 {
+		t.Fatalf("implicit print cursor = (%d,%d), want (4,15)", c.cursor.x, c.cursor.y)
 	}
 	if c.mode0ObjectCount != 1 || c.mode0TextTileCount != 1 {
 		t.Fatalf("implicit print allocated objects=%d atlas tiles=%d, want one each", c.mode0ObjectCount, c.mode0TextTileCount)
@@ -216,7 +216,7 @@ func TestMode0TextAtlasRejectsMalformedStaticData(t *testing.T) {
 		{name: "unsorted", keys: []uint16{Mode0TextGlyphKey('B', 7), Mode0TextGlyphKey('A', 7)}, tiles: make([]uint32, 32)},
 		{name: "transparent", keys: []uint16{Mode0TextGlyphKey('A', 0)}, tiles: validTile},
 		{name: "control", keys: []uint16{Mode0TextGlyphKey('\n', 7)}, tiles: validTile},
-		{name: "capacity", keys: make([]uint16, mode0TextLimit+1), tiles: make([]uint32, (mode0TextLimit+1)*16)},
+		{name: "capacity", keys: make([]uint16, mode0TextLimit+1), tiles: make([]uint32, (mode0TextLimit+1)*32)},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

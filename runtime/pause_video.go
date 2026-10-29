@@ -80,17 +80,17 @@ func (v *pauseVideo) text(s string, x, y int, color uint32) {
 	for i := 0; i < len(s); i++ {
 		columns := v.font.Columns(rune(s[i]))
 		for col, bits := range columns {
-			for row := 0; row < 5; row++ {
+			for row := 0; row < glyphBitmapH; row++ {
 				if bits&(1<<uint(row)) != 0 {
 					v.pixel(x+col, y+row, color)
 				}
 			}
 		}
-		x += 5
+		x += glyphW
 	}
 }
 func (v *pauseVideo) centered(s string, y int, color uint32) {
-	v.text(s, (64-(len(s)*5-1))/2, y, color)
+	v.text(s, (64-len(s)*glyphW)/2, y, color)
 }
 func (v *pauseVideo) panel(tall bool) {
 	for i := range v.pixels {

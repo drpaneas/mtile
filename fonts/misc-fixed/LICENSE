@@ -1,0 +1,9 @@
+Misc Fixed 6x10
+
+Source: https://raw.githubusercontent.com/olikraus/u8g2/master/tools/font/bdf/6x10.bdf
+SHA-256: d61fc0a144077b59599d128f31de5c01a7a8a426cf2456d581ba4421af092e19
+BDF COPYRIGHT property: "Public domain terminal emulator font.  Share and enjoy."
+
+The selected 174-glyph subset is recorded in research/font-typography/6x10.json
+and runtime/font_default.go. Capital sharp S (U+1E9E), absent from the source,
+is original mTile artwork distributed under the repository LICENSE.

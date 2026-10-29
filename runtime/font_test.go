@@ -6,7 +6,7 @@ import "testing"
 
 func testUnicodeFont() *Font {
 	f := *DefaultFont()
-	f.Extra = []FontGlyph{{'ä', [4]byte{1, 2, 4, 8}}, {'Ω', [4]byte{31, 1, 1, 31}}}
+	f.Extra = []FontGlyph{{'ä', [6]uint16{1, 2, 4, 8}}, {'Ω', [6]uint16{31, 1, 1, 31}}}
 	return &f
 }
 func TestFontUTF8RenderingAndMetrics(t *testing.T) {
@@ -28,10 +28,10 @@ func TestFontUTF8RenderingAndMetrics(t *testing.T) {
 	c.Print("Ωä", 0, 0, 7)
 	for i, ch := range []rune("Ωä") {
 		cols := f.Columns(ch)
-		for y := 0; y < 8; y++ {
+		for y := 0; y < 10; y++ {
 			for x := 0; x < 6; x++ {
 				want := byte(0)
-				if x < 4 && y < 5 && cols[x]&(1<<uint(y)) != 0 {
+				if x < 6 && y < 10 && cols[x]&(1<<uint(y)) != 0 {
 					want = 7
 				}
 				if got := c.Pget(i*6+x, y); got != want {
@@ -43,7 +43,7 @@ func TestFontUTF8RenderingAndMetrics(t *testing.T) {
 	c.Cls(0)
 	c.Clip(0, 0, 6, 16)
 	c.Print("Ωä", 0, 0, 7)
-	if c.Pget(3, 11) != 7 {
+	if c.Pget(3, 13) != 7 {
 		t.Fatal("UTF8 wrap lost glyph")
 	}
 	c.Clip(0, 0, 240, 160)
@@ -70,12 +70,12 @@ func TestSetFontRejectsInvalidAndPreservesPrevious(t *testing.T) {
 	var c Context
 	c.SetFont(f)
 	bad := *f
-	bad.ASCII[1][0] = 32
+	bad.ASCII[1][0] = 1024
 	if c.SetFont(&bad) || c.font != f {
 		t.Fatal("invalid bitmap accepted")
 	}
 	bad = *f
-	bad.Extra = []FontGlyph{{'Ω', [4]byte{}}, {'ä', [4]byte{}}}
+	bad.Extra = []FontGlyph{{'Ω', [6]uint16{}}, {'ä', [6]uint16{}}}
 	if c.SetFont(&bad) {
 		t.Fatal("unsorted extras accepted")
 	}

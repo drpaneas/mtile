@@ -7,9 +7,12 @@ import (
 	"testing"
 )
 
+// These control/API tests explicitly retain the legacy PICO-8 artwork.
+// B artwork and all ten rows have independent full-frame oracles in font_b_test.
 func TestPrintDrawsLiteralGlyphsAndOpaqueZero(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(3)
 	c.Print("A", 0, 0, 0)
 	if c.Pget(2, 0) == 3 {
@@ -24,6 +27,7 @@ func TestPrintDrawsLiteralGlyphsAndOpaqueZero(t *testing.T) {
 func TestPrintOneUsesPico8WideGlyph(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	c.Print("1", 0, 0, 7)
 	want := [5]string{
@@ -46,6 +50,7 @@ func TestPrintOneUsesPico8WideGlyph(t *testing.T) {
 func TestPrintLowercaseGUsesPico8WideGlyph(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	c.Print("g", 0, 0, 7)
 	want := [5]string{
@@ -68,6 +73,7 @@ func TestPrintLowercaseGUsesPico8WideGlyph(t *testing.T) {
 func TestPrintWrapsAtClipWidth(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Clip(0, 0, 12, 16)
 	c.Print("AAA", 0, 0, 7)
 	if c.Pget(2, 0) != 7 {
@@ -76,7 +82,7 @@ func TestPrintWrapsAtClipWidth(t *testing.T) {
 	if c.Pget(8, 0) != 7 {
 		t.Fatal("second glyph missing on the first row")
 	}
-	if c.Pget(2, 8) != 7 {
+	if c.Pget(2, 10) != 7 {
 		t.Fatal("third glyph did not wrap")
 	}
 }
@@ -84,6 +90,7 @@ func TestPrintWrapsAtClipWidth(t *testing.T) {
 func TestPrintAppliesCamera(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Camera(4, 0)
 	c.Print("A", 4, 0, 7)
 	if c.Pget(6, 0) != 7 {
@@ -94,6 +101,7 @@ func TestPrintAppliesCamera(t *testing.T) {
 func TestPrintHandlesTextControls(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(3)
 	if got := c.Print("A\x00A", 0, 0, 7); got != 6 {
 		t.Fatalf("NUL did not terminate print at x=6: got %d", got)
@@ -115,6 +123,7 @@ func TestPrintHandlesTextControls(t *testing.T) {
 func TestPrintBackgroundControlFillsCell(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(3)
 	c.Print("\x02aA", 0, 0, 7)
 	if c.Pget(4, 0) != 10 || c.Pget(5, 7) != 10 {
@@ -128,13 +137,14 @@ func TestPrintBackgroundControlFillsCell(t *testing.T) {
 func TestPrintNativeGridFitsExactly(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	for row := 0; row < ScreenHeight/glyphH; row++ {
 		c.Print("A", 0, row*glyphH, 7)
 	}
 
-	// The twentieth row occupies y=152..158. Its one-pixel cell spacing row
-	// is y=159, so a full-height screen never clips the final glyph.
+	// The sixteenth cell starts at y=150. Legacy PICO-8 artwork is padded
+	// inside the same 6x10 cell; the native B bitmap has separate bounds tests.
 	if c.Pget(2, ScreenHeight-glyphH) != 7 {
 		t.Fatal("last text row was not rendered")
 	}
@@ -146,6 +156,7 @@ func TestPrintNativeGridFitsExactly(t *testing.T) {
 func TestPrintVUsesPersistentCursorAndImplicitNewline(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	text := c.InternStatic("A")
 
@@ -166,6 +177,7 @@ func TestPrintVUsesPersistentCursorAndImplicitNewline(t *testing.T) {
 func TestPrintVCursorColorAndExplicitPosition(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	text := c.InternStatic("A")
 	c.Cursor(12, 10, 9)
@@ -216,6 +228,7 @@ func TestPrintStaticVMatchesLiteralPrintV(t *testing.T) {
 func TestPrintVTwoArgumentFormUsesColor(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	text := c.InternStatic("A")
 	c.PrintV(text, IntVal(13), NilVal(), NilVal())
@@ -230,6 +243,7 @@ func TestPrintVTwoArgumentFormUsesColor(t *testing.T) {
 func TestDrawColorIsUsedByOptionalPrintAndPrimitives(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cls(0)
 	c.Color(12)
 	c.PsetV(IntVal(20), IntVal(20), NilVal())
@@ -250,6 +264,7 @@ func TestDrawColorIsUsedByOptionalPrintAndPrimitives(t *testing.T) {
 func TestColorVWithoutArgumentResetsToDefault(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Color(9)
 	c.ColorV(NilVal())
 	c.PrintV(c.InternStatic("A"), NilVal(), NilVal(), NilVal())
@@ -261,6 +276,7 @@ func TestColorVWithoutArgumentResetsToDefault(t *testing.T) {
 func TestClsResetsCursorButPreservesDrawColor(t *testing.T) {
 	t.Parallel()
 	var c Context
+	c.SetFont(Pico8Font())
 	c.Cursor(20, 30, 12)
 	c.Cls(0)
 	c.PrintV(c.InternStatic("A"), NilVal(), NilVal(), NilVal())

@@ -1,0 +1,27 @@
+Production B verification, 2026-10-29
+
+Tests were committed before implementation: cbf9427.
+The initial TestFontB run failed on the old geometry, asset format, editor,
+Mode 0 tile count, bounds, and pause layout, as expected.
+
+Required root gates:
+ok  	github.com/drpaneas/mtile/internal/transpiler	282.128s
+ok  	github.com/drpaneas/mtile/internal/build	(cached)
+ok  	github.com/drpaneas/mtile/cmd/mtile	(cached)
+
+Additional host/parser/assets/editor/evidence gates:
+ok  	github.com/drpaneas/mtile/internal/luaparser	(cached)
+ok  	github.com/drpaneas/mtile/internal/assetsync	10.651s
+ok  	github.com/drpaneas/mtile/internal/editor	2.615s
+ok  	github.com/drpaneas/mtile/research/font-typography	0.536s
+ok  	github.com/drpaneas/mtile/cmd/renderbench	1.203s
+
+Native editor tests and render captures:
+ok  	github.com/drpaneas/mtile/cmd/editor	1.594s
+
+Runtime: go test ./... passed.
+Runtime Mode 0: layers0 + OBJ + text passed.
+Runtime Mode 0: default layers + OBJ + text passed.
+Real TinyGo ELF selected-font tests passed for pico8, arcade Mode 0,
+and international Mode 4, including exact 1140 ASCII ROM bytes.
+Real mGBA captures: 360 exact-runtime-frame Mode 0/4 pairs, 0 differing pixels.

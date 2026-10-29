@@ -49,6 +49,7 @@ func TestPrintVDispatchesStringKinds(t *testing.T) {
 	requireSoftwareFramebuffer(t)
 	t.Parallel()
 	c := new(Context)
+	c.SetFont(Pico8Font())
 	c.Cls(3)
 	hello := c.InternStatic("A")
 	c.PrintV(hello, IntVal(0), IntVal(0), IntVal(7))

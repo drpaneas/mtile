@@ -21,7 +21,7 @@ func TestFontEditorCreatePreviewSaveUndo(t *testing.T) {
 	if g.model.Project.Font != "test-font" {
 		t.Fatal(g.fontEditor.message)
 	}
-	if err := g.model.SetFontPixel('A', 0, 4, true); err != nil {
+	if err := g.model.SetFontPixel('A', 5, 9, true); err != nil {
 		t.Fatal(err)
 	}
 	g.fontChanged()
@@ -38,7 +38,7 @@ func TestFontEditorCreatePreviewSaveUndo(t *testing.T) {
 		t.Fatal("font selection not undoable")
 	}
 	f, _ := assetsync.CompileFont(g.model.ActiveFont())
-	if f.Columns('A')[0] != 16 {
+	if f.Columns('A')[5] != 512 {
 		t.Fatal("undo lost artwork")
 	}
 	g.fontAction("save")
@@ -54,7 +54,7 @@ func TestFontEditorCreatePreviewSaveUndo(t *testing.T) {
 		t.Fatal(err)
 	}
 	f, _ = assetsync.CompileFont(saved)
-	if f.Columns('A')[0] != 16 {
+	if f.Columns('A')[5] != 512 {
 		t.Fatal("art not saved")
 	}
 }

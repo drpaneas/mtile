@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-29",
+  "kind": "Production B, no runtime patches",
+  "testFirstCommit": "cbf9427",
+  "go": "go version go1.27.1 darwin/arm64",
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "runtimeSourcesSha256": "bf1caf11eb9849fd151330e902b10edc30c7e7573b80ed45d95c91f6e177fc5a",
+  "fontSubsetSha256": "75a8370fee07dbb760a052a5806e3f177af683102272608fa4c29fa0576a813e",
+  "warmupRuntimeFrames": 20,
+  "capturedRuntimeFramesPerRun": 120,
+  "pairedScenes": [
+    "empty",
+    "hud",
+    "edges"
+  ],
+  "pairedFrames": 360,
+  "targetFrameBudget": 561792,
+  "glyphRepertoire": 174,
+  "runtimePatches": false
+}

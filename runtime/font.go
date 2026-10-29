@@ -2,26 +2,36 @@ package runtime
 
 import "unicode/utf8"
 
+const (
+	FontBitmapWidth  = 6
+	FontBitmapHeight = 10
+	FontCellWidth    = 6
+	FontCellHeight   = 10
+)
+
+//go:section .rodata
+var emptyFontGlyph [6]uint16
+
 // Font keeps 1bpp columns in ROM. ASCII lookup is constant-time; the bounded,
 // sorted Unicode extension is searched without allocations or RAM copies.
 type Font struct {
-	ASCII [95][4]byte
+	ASCII [95][6]uint16
 	Extra []FontGlyph
 }
 type FontGlyph struct {
 	Codepoint rune
-	Columns   [4]byte
+	Columns   [6]uint16
 }
 
-func (f *Font) Columns(ch rune) [4]byte {
+func (f *Font) Columns(ch rune) *[6]uint16 {
 	if f == nil {
 		f = DefaultFont()
 		if f == nil {
-			return [4]byte{}
+			return &emptyFontGlyph
 		}
 	}
 	if ch >= 32 && ch <= 126 {
-		return f.ASCII[ch-32]
+		return &f.ASCII[ch-32]
 	}
 	lo, hi := 0, len(f.Extra)
 	for lo < hi {
@@ -33,27 +43,27 @@ func (f *Font) Columns(ch rune) [4]byte {
 		}
 	}
 	if lo < len(f.Extra) && f.Extra[lo].Codepoint == ch {
-		return f.Extra[lo].Columns
+		return &f.Extra[lo].Columns
 	}
-	return f.ASCII['?'-32]
+	return &f.ASCII['?'-32]
 }
 
-func glyphColumns(ch byte) [4]byte { return DefaultFont().Columns(rune(ch)) }
+func glyphColumns(ch byte) *[6]uint16 { return DefaultFont().Columns(rune(ch)) }
 
 // SetFont borrows trusted, immutable build data. Invalid input leaves the
-// previous font untouched. Dimensions are structural; bits above row 4 fail.
+// previous font untouched. Dimensions are structural; bits above row 9 fail.
 func (c *Context) SetFont(f *Font) bool {
 	if c == nil || f == nil || len(f.Extra) > 128 {
 		return false
 	}
 	for _, cols := range f.ASCII {
 		for _, col := range cols {
-			if col > 31 {
+			if col >= 1<<FontBitmapHeight {
 				return false
 			}
 		}
 	}
-	if f.ASCII[0] != [4]byte{} || f.ASCII['?'-32] == [4]byte{} {
+	if f.ASCII[0] != [6]uint16{} || f.ASCII['?'-32] == [6]uint16{} {
 		return false
 	}
 	previous := rune(126)
@@ -63,7 +73,7 @@ func (c *Context) SetFont(f *Font) bool {
 		}
 		previous = g.Codepoint
 		for _, col := range g.Columns {
-			if col > 31 {
+			if col >= 1<<FontBitmapHeight {
 				return false
 			}
 		}

@@ -1,5 +1,5 @@
-// Font geometry experiment. Production code and project font requirements are
-// deliberately unchanged; candidate runtimes exist only in a temp directory.
+// Font typography evidence runner. Production mode measures the shipped runtime;
+// historical patched-runtime probes are reproduced from their recorded commit.
 package main
 
 import (
@@ -16,12 +16,20 @@ func main() {
 	out := flag.String("out", "/tmp/mtile-font-geometry", "artifact directory")
 	variants := flag.String("variants", "", "comma-separated research variant names")
 	export := flag.Bool("export", false, "export baseline and candidate subsets only")
+	production := flag.Bool("production", false, "measure the shipped B renderer without runtime patches")
 	flag.Parse()
 	root, err := os.Getwd()
 	must(err)
 	must(os.MkdirAll(*out, 0755))
+	if *production {
+		must(runProduction(root, *out))
+		return
+	}
 	font, err := assetsync.LoadFont("", "international")
 	must(err)
+	if font.Version != 1 {
+		must(fmt.Errorf("historical experiment requires commit a1e0fad; use -production for current B"))
+	}
 	raw, err := json.MarshalIndent(font, "", "  ")
 	must(err)
 	must(os.WriteFile(filepath.Join(*out, "baseline.json"), raw, 0644))

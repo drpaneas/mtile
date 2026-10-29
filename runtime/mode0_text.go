@@ -6,20 +6,21 @@ import "github.com/drpaneas/mtile/runtime/hw"
 
 const (
 	mode0TextTileBase = Mode0TextTileBase
-	mode0TextLimit    = Mode0TextTileCount
+	mode0TextLimit    = Mode0TextGlyphLimit
 )
 
 type mode0TextState struct {
 	mode0TextKeys      [mode0TextLimit]uint16
+	mode0TextLayout    [mode0TextLimit]uint8 // low five bits: physical tile, bit 7: 8x16
 	mode0TextTileCount int
 }
 
 func mode0TextObjectTileReserved(id int) bool {
-	return id >= mode0TextTileBase && id < mode0TextTileBase+mode0TextLimit
+	return id >= mode0TextTileBase && id < mode0TextTileBase+Mode0TextTileCount
 }
 
 func mode0TextObjectWindowReserved(base, count int) bool {
-	return count > 0 && base < mode0TextTileBase+mode0TextLimit && base+count > mode0TextTileBase
+	return count > 0 && base < mode0TextTileBase+Mode0TextTileCount && base+count > mode0TextTileBase
 }
 
 func (c *Context) beginMode0Text() {}
@@ -31,20 +32,32 @@ func (c *Context) presentMode0Text() uint32 { return 0 }
 // visible character; only immutable tile pixels are shared across occurrences
 // and frames.
 func (c *Context) LoadMode0TextAtlas(keys []uint16, tiles []uint32) bool {
-	if c == nil || len(keys) > mode0TextLimit || len(tiles) != len(keys)*16 {
+	if c == nil || len(keys) > mode0TextLimit || len(tiles) > Mode0TextTileCount*16 {
 		return false
 	}
+	var layout [mode0TextLimit]uint8
+	tileCount := 0
 	for index, key := range keys {
 		ch, color := byte(key>>8), byte(key)
 		if ch < 32 || ch > 126 || color == 0 || index > 0 && key <= keys[index-1] {
 			return false
 		}
+		n := Mode0GlyphTileCount(c.font, ch)
+		layout[index] = uint8(tileCount)
+		if n == 2 {
+			layout[index] |= 0x80
+		}
+		tileCount += n
+	}
+	if tileCount > Mode0TextTileCount || len(tiles) != tileCount*16 {
+		return false
 	}
 	start := hw.ReadFrameCycleCounter()
 	for index := range c.mode0TextKeys {
 		c.mode0TextKeys[index] = 0
 	}
 	copy(c.mode0TextKeys[:], keys)
+	c.mode0TextLayout = layout
 	c.mode0TextTileCount = len(keys)
 	hw.CopyWordsToVRAM32DMA(tiles, hw.OBJVRAM+uintptr(mode0TextTileBase*64), len(tiles))
 	c.mode0ColdCycles += hw.ReadFrameCycleCounter() - start
@@ -53,12 +66,6 @@ func (c *Context) LoadMode0TextAtlas(keys []uint16, tiles []uint32) bool {
 }
 
 func (c *Context) renderMode0Glyph(ch byte, sx, sy int, value byte) bool {
-	if !c.mode0ObjectIntersectsClip(sx, sy, 8, 8) {
-		return true
-	}
-	if c.mode0ObjectCount >= mode0ObjectLimit {
-		return false
-	}
 	key := Mode0TextGlyphKey(ch, value)
 	low, high := 0, c.mode0TextTileCount
 	for low < high {
@@ -72,10 +79,23 @@ func (c *Context) renderMode0Glyph(ch byte, sx, sy int, value byte) bool {
 	if low >= c.mode0TextTileCount || c.mode0TextKeys[low] != key {
 		return false
 	}
-	tileIndex := low
+	layout := c.mode0TextLayout[low]
+	tileIndex := int(layout & 0x1f)
+	height := 8
+	attr0 := uint16(sy&0xff) | 0x2000
+	if layout&0x80 != 0 {
+		height = 16
+		attr0 |= 0x8000
+	}
+	if !c.mode0ObjectIntersectsClip(sx, sy, 8, height) {
+		return true
+	}
+	if c.mode0ObjectCount >= mode0ObjectLimit {
+		return false
+	}
 
 	slot := mode0ObjectLimit - 1 - c.mode0ObjectCount
-	mode0PutOAMEntry(&c.mode0OAM, slot, uint16(sy&0xff)|0x2000, uint16(sx&0x1ff), uint16((mode0TextTileBase+tileIndex)*2))
+	mode0PutOAMEntry(&c.mode0OAM, slot, attr0, uint16(sx&0x1ff), uint16((mode0TextTileBase+tileIndex)*2))
 	c.mode0ObjectCount++
 	c.mode0OAMDirty = true
 	return true

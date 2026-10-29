@@ -25,8 +25,8 @@ function _draw()
   end
   print("MOON DOOR", 98, 5, 10)
   if paused then
-    print("PAUSED  -  START TO RESUME", 52, 151, 21)
+    print("PAUSED  -  START TO RESUME", 52,150, 21)
   else
-    print("A  OPEN    START  PAUSE", 60, 151, 9)
+    print("A  OPEN    START  PAUSE", 60,150, 9)
   end
 end

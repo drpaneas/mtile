@@ -89,7 +89,7 @@ func TestGeneratedMode0EmbedsAndLoadsStaticTextAtlas(t *testing.T) {
 	if !report.Mode0Text || !strings.Contains(generated, "var mode0TextKeysROM = [1]uint16{0x4107}") ||
 		!strings.Contains(generated, "var mode0TextTilesROM = [16]uint32{") ||
 		!strings.Contains(generated, "ctx.LoadMode0TextAtlas(mode0TextKeysROM[:], mode0TextTilesROM[:])") {
-		t.Fatalf("generated Mode 0 source omitted the one-tile static atlas:\n%s", generated)
+		t.Fatalf("generated Mode 0 source omitted the one-tile compact atlas:\n%s", generated)
 	}
 }
 
@@ -116,24 +116,24 @@ func TestMode0TextAtlasAccepts127RepeatedOccurrences(t *testing.T) {
 	}
 }
 
-func TestMode0TextAtlasRejects33UniqueGlyphColorTiles(t *testing.T) {
-	_, _, err := TranspileWithReport("text-colors-33.lua", mode0TextColorCalls(33), Options{
+func TestMode0TextAtlasRejects17UniqueGlyphColorPairs(t *testing.T) {
+	_, _, err := TranspileWithReport("text-colors-17.lua", strings.ReplaceAll(mode0TextColorCalls(17), `"A"`, `"g"`), Options{
 		Renderer: RendererMode0, SheetW: 8, SheetH: 8,
 	})
-	if err == nil || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), "33 unique glyph/color tiles") {
+	if err == nil || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), "34 physical tiles") {
 		t.Fatalf("error = %v, want stable unique-tile capacity rejection", err)
 	}
 }
 
-func TestAutoFallsBackFor33UniqueGlyphColorTiles(t *testing.T) {
-	_, report, err := TranspileWithReport("text-colors-33-auto.lua", mode0TextColorCalls(33), Options{
+func TestAutoFallsBackFor17UniqueGlyphColorPairs(t *testing.T) {
+	_, report, err := TranspileWithReport("text-colors-17-auto.lua", strings.ReplaceAll(mode0TextColorCalls(17), `"A"`, `"g"`), Options{
 		Renderer: RendererAuto, SheetW: 8, SheetH: 8,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if report.Selected != RendererMode4 || report.Reason != reasonAutoMode0Ineligible ||
-		!strings.Contains(report.Diagnostic, "[M0_OBJ_BUDGET]") || !strings.Contains(report.Diagnostic, "33 unique glyph/color tiles") {
+		!strings.Contains(report.Diagnostic, "[M0_OBJ_BUDGET]") || !strings.Contains(report.Diagnostic, "34 physical tiles") {
 		t.Fatalf("AUTO report = %+v, want stable unique-tile fallback", report)
 	}
 }

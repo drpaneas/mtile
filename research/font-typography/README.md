@@ -1,6 +1,7 @@
 # Font typography: size and cost study
 
-**Research only; no production font requirements or Lua API were changed.**
+**Historical pre-selection study at commit `a1e0fad`. B has since been approved
+and implemented; current results are in [production-b.md](production-b.md).**
 The user requested visual and performance evidence before choosing a new size.
 All candidate runtime edits are generated in an artifact directory, outside the
 working runtime. The normal font editor still enforces 4×5 / 6×8.
@@ -195,7 +196,12 @@ bitmap remains under its existing CC0 notice.
 
 ## Reproduce
 
-From the repository root, with TinyGo, the built headless player, Python 3 and
+For these historical experiments, first check out `a1e0fad` in a separate
+directory. The patch scripts deliberately target that older 4×5 runtime.
+For current production use `go run ./research/font-typography -production
+-out /tmp/mtile-font-b-production`.
+
+From the historical repository root, with TinyGo, the built headless player, Python 3 and
 Pillow available:
 
 ```sh
