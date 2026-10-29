@@ -1,0 +1,7 @@
+=== RUN   TestTypographyBoundsAndAPI
+--- PASS: TestTypographyBoundsAndAPI (0.66s)
+=== RUN   TestTypographyPause
+    typography_probe_test.go:223: 6x10 needs a new pause layout; research does not claim compatibility
+--- SKIP: TestTypographyPause (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.354s

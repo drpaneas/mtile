@@ -1,0 +1,6 @@
+=== RUN   TestTypographyBoundsAndAPI
+--- PASS: TestTypographyBoundsAndAPI (0.69s)
+=== RUN   TestTypographyPause
+--- PASS: TestTypographyPause (0.00s)
+PASS
+ok  	github.com/drpaneas/mtile/runtime	0.900s

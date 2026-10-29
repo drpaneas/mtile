@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-29",
+  "kind": "Research prototypes; production renderer/font requirements unchanged",
+  "baselineRevision": "c377aae972df3ef9e3fb92a07d2fe80892fadc9a",
+  "go": "go version go1.27.1 darwin/arm64",
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "helperSha256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "runtimeSourceSha256": "343ce1a4301ab52f81ed95273c9541c51043e1033a629932ebb4be55a3e1740c",
+  "productionSourceDiffEmpty": true,
+  "warmupRuntimeFrames": 20,
+  "capturedRuntimeFramesPerRun": 120,
+  "targetFrameBudget": 561792,
+  "commonScene": "Eight identical static UTF-8 lines at identical coordinates; whole frame includes cls",
+  "glyphRepertoire": 174,
+  "sourceFonts": {
+    "5x7": {
+      "url": "https://raw.githubusercontent.com/olikraus/u8g2/master/tools/font/bdf/5x7.bdf",
+      "sha256": "6cdcaa87c2b22517a8265e3f5ea103a36d64642a9a727a7aeb6e1e9bc3961bdf",
+      "license": "Public domain (BDF COPYRIGHT)",
+      "originalGlyphs": [
+        "U+1E9E"
+      ]
+    },
+    "6x10": {
+      "url": "https://raw.githubusercontent.com/olikraus/u8g2/master/tools/font/bdf/6x10.bdf",
+      "sha256": "d61fc0a144077b59599d128f31de5c01a7a8a426cf2456d581ba4421af092e19",
+      "license": "Public domain (BDF COPYRIGHT)",
+      "originalGlyphs": [
+        "U+1E9E"
+      ]
+    }
+  },
+  "limitations": [
+    "mGBA ARM7TDMI cycle measurements, not physical GBA hardware",
+    "B uses Mode4 only; Mode0 resource proof and pause-layout support are not implemented",
+    "Dense capacity scene contains 520 glyphs for before/A, 416 for compact B, 338 for roomier B; not an equal-text comparison"
+  ]
+}

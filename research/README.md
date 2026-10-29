@@ -6,6 +6,7 @@ The optional local `examples/celeste` checkout remains separate and untracked.
 
 | Project | Status |
 | --- | --- |
+| [font-typography](font-typography/README.md) | Isolated size/typography proposals, real ROM previews, before/after cycle/memory evidence; production font contract unchanged |
 | [celeste-mode0](celeste-mode0/README.md) | Dedicated public Mode 0 adaptation and benchmark input |
 | [celeste-parallax](celeste-parallax/README.md) | Private tile-canvas comparison port; read its opt-in requirements |
 | loop | Historical puzzle-game port and authored-pixel import fixture; not a supported runnable example |
