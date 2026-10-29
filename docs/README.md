@@ -34,6 +34,7 @@ are there when you want to understand the code.
 | Add a map, following camera, or parallax | [Tidewalk](../examples/tidewalk/README.md) |
 | Switch between rooms and choose the entry position | [Lantern Rooms](../examples/lantern-rooms/README.md) |
 | Place animated decorations by painting them in the map | [Tile links](tile-links.md) |
+| Choose, preview or draw a cartridge font; print Greek/German | [Fonts](fonts.md) and [Font demo](../examples/font-demo/README.md) |
 | Make a sound or song | [Audio](audio/README.md) |
 | Save progress on a real GBA | [Cartridge saving](saving.md) and [Save Game example](../examples/save-game/README.md) |
 | Pause, resume, load, save or exit | [Shared pause menu](pause-menu.md) |

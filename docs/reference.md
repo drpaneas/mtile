@@ -339,7 +339,9 @@ The compatibility renderer draws into a 240x160 Mode 4 software framebuffer:
 
 - Color 0 is transparent for `spr` / `sspr` / `map` until `palt` changes it
 - `cls` does not change the current draw color
-- `print` uses a 6x8 cell font (40 columns by 20 rows)
+- `print` uses a fixed 6x8 cell / 4x5 bitmap font (40 columns by 20 rows).
+  [Choose or draw the project font](fonts.md) in FONT; only one font is linked.
+  Mode 4 decodes precomposed UTF-8; Mode 0 retains its proven ASCII subset.
 - `print(str, color)` vs `print(str, x, y [, color])`
 
 The exhaustive [render-mode compatibility matrix](render-modes.md)

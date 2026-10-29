@@ -280,7 +280,7 @@ print(text, x, y, color)
 
 Draw text or a number on the screen.
 
-This explicit four-argument form is the easiest to start with. Separate labels and numeric values to keep them eligible for hardware rendering. Text uses a 6×8 cell font; Mode 0 has additional glyph and object limits.
+This explicit four-argument form is the easiest to start with. Separate labels and numeric values to keep them eligible for hardware rendering. Text uses a fixed 6×8 cell with a 4×5 bitmap. Choose or draw the project font in **FONT**; [the font guide](fonts.md) covers Greek/German UTF-8 text and memory. Mode 0 retains its static ASCII/decimal subset and glyph/object limits; Unicode text selects Mode 4.
 
 ```lua
 print("COINS", 8, 8, 15)

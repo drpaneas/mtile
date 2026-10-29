@@ -37,6 +37,7 @@ and one visible checkpoint at a time. See [choose one small game](../docs/small-
 
 | Project | What to learn | What to try |
 | --- | --- | --- |
+| [font-demo](font-demo/README.md) | Select/draw one fixed-size font, preview text, and print Greek/German | Open FONT, copy a preset, paint a character and rebuild |
 | [hello](hello/README.md) | Input, sprite coordinates, and a background | Move with the arrows; change the speed |
 | [save-game](save-game/README.md) | Cartridge saves, explicit failure handling, and restoring progress | Save with A, wait five seconds on Omega, then power off/on |
 | [multi-file](multi-file/README.md) | Split a game into explicit `require` modules | Edit player behavior separately from the HUD |

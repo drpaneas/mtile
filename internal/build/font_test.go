@@ -100,3 +100,38 @@ func TestBuildLinksExactlyOneSelectedFontInROM(t *testing.T) {
 		})
 	}
 }
+
+func TestFontDemoUsesSupportedGlyphsAndMode4(t *testing.T) {
+	dir := filepath.Join("..", "..", "examples", "font-demo")
+	assets, err := assetsync.Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	font := assets.CompiledFont()
+	source, err := os.ReadFile(filepath.Join(dir, GameFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Every non-ASCII character in this teaching sample must have actual artwork.
+	for _, cp := range string(source) {
+		if cp < 128 {
+			continue
+		}
+		found := false
+		for _, g := range font.Extra {
+			if g.Codepoint == cp {
+				found = true
+				if g.Columns == [4]byte{} {
+					t.Fatalf("blank demo glyph %c", cp)
+				}
+			}
+		}
+		if !found {
+			t.Fatalf("unsupported demo glyph %c", cp)
+		}
+	}
+	analysis := (Service{Renderer: transpiler.RendererAuto}).CheckProject(dir, nil)
+	if !analysis.RendererReady || analysis.Renderer.Selected != transpiler.RendererMode4 || !strings.Contains(analysis.Renderer.Diagnostic, "M0_PRINT_SHAPE") {
+		t.Fatalf("demo selection=%+v", analysis)
+	}
+}

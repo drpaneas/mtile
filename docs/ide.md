@@ -582,3 +582,10 @@ implementation details of the bundle, not separate end-user prerequisites;
 the operating system still provides its normal desktop graphics and audio
 libraries. Maintainers create platform bundles with
 [`scripts/release/build-bundle.sh`](../scripts/release/build-bundle.sh).
+
+## Cartridge font
+
+Open **FONT** in the top bar to choose a project font, type a live preview,
+copy a preset, or create a blank fixed-size bitmap font. Greek, German and
+combined presets are included. **SAVE PROJECT** persists the selection and
+artwork; rebuild to use it in the game. See the illustrated [font guide](fonts.md).
