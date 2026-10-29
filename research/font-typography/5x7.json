@@ -1,0 +1,1758 @@
+{
+  "version": 1,
+  "name": "misc-fixed-5x7",
+  "cellWidth": 6,
+  "cellHeight": 8,
+  "width": 5,
+  "height": 7,
+  "glyphs": [
+    {
+      "codepoint": 32,
+      "columns": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 33,
+      "columns": [
+        0,
+        0,
+        47,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 34,
+      "columns": [
+        0,
+        7,
+        0,
+        7,
+        0
+      ]
+    },
+    {
+      "codepoint": 35,
+      "columns": [
+        20,
+        62,
+        20,
+        62,
+        20
+      ]
+    },
+    {
+      "codepoint": 36,
+      "columns": [
+        4,
+        42,
+        62,
+        42,
+        16
+      ]
+    },
+    {
+      "codepoint": 37,
+      "columns": [
+        19,
+        8,
+        4,
+        50,
+        0
+      ]
+    },
+    {
+      "codepoint": 38,
+      "columns": [
+        20,
+        42,
+        20,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 39,
+      "columns": [
+        0,
+        0,
+        7,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 40,
+      "columns": [
+        0,
+        30,
+        33,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 41,
+      "columns": [
+        0,
+        33,
+        30,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 42,
+      "columns": [
+        0,
+        42,
+        28,
+        42,
+        0
+      ]
+    },
+    {
+      "codepoint": 43,
+      "columns": [
+        8,
+        8,
+        62,
+        8,
+        8
+      ]
+    },
+    {
+      "codepoint": 44,
+      "columns": [
+        0,
+        64,
+        48,
+        16,
+        0
+      ]
+    },
+    {
+      "codepoint": 45,
+      "columns": [
+        8,
+        8,
+        8,
+        8,
+        0
+      ]
+    },
+    {
+      "codepoint": 46,
+      "columns": [
+        0,
+        48,
+        48,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 47,
+      "columns": [
+        16,
+        8,
+        4,
+        2,
+        0
+      ]
+    },
+    {
+      "codepoint": 48,
+      "columns": [
+        0,
+        30,
+        33,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 49,
+      "columns": [
+        0,
+        34,
+        63,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 50,
+      "columns": [
+        34,
+        49,
+        41,
+        38,
+        0
+      ]
+    },
+    {
+      "codepoint": 51,
+      "columns": [
+        17,
+        37,
+        37,
+        27,
+        0
+      ]
+    },
+    {
+      "codepoint": 52,
+      "columns": [
+        12,
+        10,
+        63,
+        8,
+        0
+      ]
+    },
+    {
+      "codepoint": 53,
+      "columns": [
+        23,
+        37,
+        37,
+        25,
+        0
+      ]
+    },
+    {
+      "codepoint": 54,
+      "columns": [
+        30,
+        37,
+        37,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 55,
+      "columns": [
+        1,
+        49,
+        13,
+        3,
+        0
+      ]
+    },
+    {
+      "codepoint": 56,
+      "columns": [
+        26,
+        37,
+        37,
+        26,
+        0
+      ]
+    },
+    {
+      "codepoint": 57,
+      "columns": [
+        6,
+        41,
+        41,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 58,
+      "columns": [
+        0,
+        54,
+        54,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 59,
+      "columns": [
+        64,
+        54,
+        22,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 60,
+      "columns": [
+        0,
+        8,
+        20,
+        34,
+        0
+      ]
+    },
+    {
+      "codepoint": 61,
+      "columns": [
+        20,
+        20,
+        20,
+        20,
+        0
+      ]
+    },
+    {
+      "codepoint": 62,
+      "columns": [
+        0,
+        34,
+        20,
+        8,
+        0
+      ]
+    },
+    {
+      "codepoint": 63,
+      "columns": [
+        0,
+        2,
+        41,
+        6,
+        0
+      ]
+    },
+    {
+      "codepoint": 64,
+      "columns": [
+        30,
+        33,
+        45,
+        14,
+        0
+      ]
+    },
+    {
+      "codepoint": 65,
+      "columns": [
+        62,
+        9,
+        9,
+        62,
+        0
+      ]
+    },
+    {
+      "codepoint": 66,
+      "columns": [
+        63,
+        37,
+        37,
+        26,
+        0
+      ]
+    },
+    {
+      "codepoint": 67,
+      "columns": [
+        30,
+        33,
+        33,
+        18,
+        0
+      ]
+    },
+    {
+      "codepoint": 68,
+      "columns": [
+        63,
+        33,
+        33,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 69,
+      "columns": [
+        63,
+        37,
+        37,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 70,
+      "columns": [
+        63,
+        5,
+        5,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 71,
+      "columns": [
+        30,
+        33,
+        41,
+        58,
+        0
+      ]
+    },
+    {
+      "codepoint": 72,
+      "columns": [
+        63,
+        4,
+        4,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 73,
+      "columns": [
+        0,
+        33,
+        63,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 74,
+      "columns": [
+        16,
+        32,
+        32,
+        31,
+        0
+      ]
+    },
+    {
+      "codepoint": 75,
+      "columns": [
+        63,
+        12,
+        18,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 76,
+      "columns": [
+        63,
+        32,
+        32,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 77,
+      "columns": [
+        63,
+        6,
+        6,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 78,
+      "columns": [
+        63,
+        6,
+        24,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 79,
+      "columns": [
+        30,
+        33,
+        33,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 80,
+      "columns": [
+        63,
+        9,
+        9,
+        6,
+        0
+      ]
+    },
+    {
+      "codepoint": 81,
+      "columns": [
+        30,
+        49,
+        33,
+        94,
+        0
+      ]
+    },
+    {
+      "codepoint": 82,
+      "columns": [
+        63,
+        9,
+        25,
+        38,
+        0
+      ]
+    },
+    {
+      "codepoint": 83,
+      "columns": [
+        18,
+        37,
+        41,
+        18,
+        0
+      ]
+    },
+    {
+      "codepoint": 84,
+      "columns": [
+        0,
+        1,
+        63,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 85,
+      "columns": [
+        31,
+        32,
+        32,
+        31,
+        0
+      ]
+    },
+    {
+      "codepoint": 86,
+      "columns": [
+        15,
+        48,
+        48,
+        15,
+        0
+      ]
+    },
+    {
+      "codepoint": 87,
+      "columns": [
+        63,
+        24,
+        24,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 88,
+      "columns": [
+        51,
+        12,
+        12,
+        51,
+        0
+      ]
+    },
+    {
+      "codepoint": 89,
+      "columns": [
+        0,
+        7,
+        56,
+        7,
+        0
+      ]
+    },
+    {
+      "codepoint": 90,
+      "columns": [
+        49,
+        41,
+        37,
+        35,
+        0
+      ]
+    },
+    {
+      "codepoint": 91,
+      "columns": [
+        0,
+        63,
+        33,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 92,
+      "columns": [
+        2,
+        4,
+        8,
+        16,
+        0
+      ]
+    },
+    {
+      "codepoint": 93,
+      "columns": [
+        0,
+        33,
+        33,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 94,
+      "columns": [
+        0,
+        2,
+        1,
+        2,
+        0
+      ]
+    },
+    {
+      "codepoint": 95,
+      "columns": [
+        32,
+        32,
+        32,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 96,
+      "columns": [
+        0,
+        1,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 97,
+      "columns": [
+        24,
+        36,
+        20,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 98,
+      "columns": [
+        63,
+        36,
+        36,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 99,
+      "columns": [
+        24,
+        36,
+        36,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 100,
+      "columns": [
+        24,
+        36,
+        36,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 101,
+      "columns": [
+        24,
+        52,
+        44,
+        8,
+        0
+      ]
+    },
+    {
+      "codepoint": 102,
+      "columns": [
+        8,
+        62,
+        9,
+        2,
+        0
+      ]
+    },
+    {
+      "codepoint": 103,
+      "columns": [
+        40,
+        84,
+        84,
+        76,
+        0
+      ]
+    },
+    {
+      "codepoint": 104,
+      "columns": [
+        63,
+        4,
+        4,
+        56,
+        0
+      ]
+    },
+    {
+      "codepoint": 105,
+      "columns": [
+        0,
+        36,
+        61,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 106,
+      "columns": [
+        0,
+        32,
+        64,
+        61,
+        0
+      ]
+    },
+    {
+      "codepoint": 107,
+      "columns": [
+        63,
+        8,
+        20,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 108,
+      "columns": [
+        0,
+        33,
+        63,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 109,
+      "columns": [
+        60,
+        8,
+        12,
+        56,
+        0
+      ]
+    },
+    {
+      "codepoint": 110,
+      "columns": [
+        60,
+        4,
+        4,
+        56,
+        0
+      ]
+    },
+    {
+      "codepoint": 111,
+      "columns": [
+        24,
+        36,
+        36,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 112,
+      "columns": [
+        124,
+        36,
+        36,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 113,
+      "columns": [
+        24,
+        36,
+        36,
+        124,
+        0
+      ]
+    },
+    {
+      "codepoint": 114,
+      "columns": [
+        60,
+        4,
+        4,
+        8,
+        0
+      ]
+    },
+    {
+      "codepoint": 115,
+      "columns": [
+        40,
+        44,
+        52,
+        20,
+        0
+      ]
+    },
+    {
+      "codepoint": 116,
+      "columns": [
+        4,
+        31,
+        36,
+        32,
+        0
+      ]
+    },
+    {
+      "codepoint": 117,
+      "columns": [
+        28,
+        32,
+        32,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 118,
+      "columns": [
+        0,
+        28,
+        32,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 119,
+      "columns": [
+        60,
+        48,
+        48,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 120,
+      "columns": [
+        36,
+        24,
+        24,
+        36,
+        0
+      ]
+    },
+    {
+      "codepoint": 121,
+      "columns": [
+        12,
+        80,
+        32,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 122,
+      "columns": [
+        36,
+        52,
+        44,
+        36,
+        0
+      ]
+    },
+    {
+      "codepoint": 123,
+      "columns": [
+        0,
+        4,
+        30,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 124,
+      "columns": [
+        0,
+        0,
+        63,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 125,
+      "columns": [
+        0,
+        33,
+        30,
+        4,
+        0
+      ]
+    },
+    {
+      "codepoint": 126,
+      "columns": [
+        2,
+        1,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 196,
+      "columns": [
+        61,
+        10,
+        10,
+        61,
+        0
+      ]
+    },
+    {
+      "codepoint": 214,
+      "columns": [
+        29,
+        34,
+        34,
+        29,
+        0
+      ]
+    },
+    {
+      "codepoint": 220,
+      "columns": [
+        29,
+        32,
+        32,
+        29,
+        0
+      ]
+    },
+    {
+      "codepoint": 223,
+      "columns": [
+        62,
+        1,
+        37,
+        26,
+        0
+      ]
+    },
+    {
+      "codepoint": 228,
+      "columns": [
+        24,
+        37,
+        20,
+        61,
+        0
+      ]
+    },
+    {
+      "codepoint": 246,
+      "columns": [
+        24,
+        37,
+        36,
+        25,
+        0
+      ]
+    },
+    {
+      "codepoint": 252,
+      "columns": [
+        28,
+        33,
+        32,
+        61,
+        0
+      ]
+    },
+    {
+      "codepoint": 894,
+      "columns": [
+        64,
+        54,
+        22,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 902,
+      "columns": [
+        3,
+        62,
+        9,
+        62,
+        0
+      ]
+    },
+    {
+      "codepoint": 903,
+      "columns": [
+        0,
+        12,
+        12,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 904,
+      "columns": [
+        3,
+        63,
+        37,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 905,
+      "columns": [
+        3,
+        63,
+        4,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 906,
+      "columns": [
+        3,
+        33,
+        63,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 908,
+      "columns": [
+        3,
+        30,
+        33,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 910,
+      "columns": [
+        3,
+        7,
+        56,
+        7,
+        0
+      ]
+    },
+    {
+      "codepoint": 911,
+      "columns": [
+        3,
+        46,
+        17,
+        46,
+        0
+      ]
+    },
+    {
+      "codepoint": 912,
+      "columns": [
+        1,
+        26,
+        33,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 913,
+      "columns": [
+        62,
+        9,
+        9,
+        62,
+        0
+      ]
+    },
+    {
+      "codepoint": 914,
+      "columns": [
+        63,
+        37,
+        37,
+        26,
+        0
+      ]
+    },
+    {
+      "codepoint": 915,
+      "columns": [
+        63,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 916,
+      "columns": [
+        60,
+        35,
+        35,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 917,
+      "columns": [
+        63,
+        37,
+        37,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 918,
+      "columns": [
+        49,
+        41,
+        37,
+        35,
+        0
+      ]
+    },
+    {
+      "codepoint": 919,
+      "columns": [
+        63,
+        4,
+        4,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 920,
+      "columns": [
+        30,
+        37,
+        37,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 921,
+      "columns": [
+        0,
+        33,
+        63,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 922,
+      "columns": [
+        63,
+        12,
+        18,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 923,
+      "columns": [
+        56,
+        7,
+        7,
+        56,
+        0
+      ]
+    },
+    {
+      "codepoint": 924,
+      "columns": [
+        63,
+        6,
+        6,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 925,
+      "columns": [
+        63,
+        6,
+        24,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 926,
+      "columns": [
+        33,
+        37,
+        37,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 927,
+      "columns": [
+        30,
+        33,
+        33,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 928,
+      "columns": [
+        63,
+        1,
+        1,
+        63,
+        0
+      ]
+    },
+    {
+      "codepoint": 929,
+      "columns": [
+        63,
+        9,
+        9,
+        6,
+        0
+      ]
+    },
+    {
+      "codepoint": 931,
+      "columns": [
+        51,
+        45,
+        33,
+        33,
+        0
+      ]
+    },
+    {
+      "codepoint": 932,
+      "columns": [
+        0,
+        1,
+        63,
+        1,
+        0
+      ]
+    },
+    {
+      "codepoint": 933,
+      "columns": [
+        0,
+        7,
+        56,
+        7,
+        0
+      ]
+    },
+    {
+      "codepoint": 934,
+      "columns": [
+        0,
+        30,
+        51,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 935,
+      "columns": [
+        51,
+        12,
+        12,
+        51,
+        0
+      ]
+    },
+    {
+      "codepoint": 936,
+      "columns": [
+        0,
+        15,
+        62,
+        15,
+        0
+      ]
+    },
+    {
+      "codepoint": 937,
+      "columns": [
+        0,
+        46,
+        17,
+        46,
+        0
+      ]
+    },
+    {
+      "codepoint": 938,
+      "columns": [
+        0,
+        37,
+        60,
+        37,
+        0
+      ]
+    },
+    {
+      "codepoint": 939,
+      "columns": [
+        13,
+        48,
+        13,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 940,
+      "columns": [
+        24,
+        36,
+        22,
+        61,
+        0
+      ]
+    },
+    {
+      "codepoint": 941,
+      "columns": [
+        0,
+        20,
+        46,
+        37,
+        0
+      ]
+    },
+    {
+      "codepoint": 942,
+      "columns": [
+        60,
+        6,
+        5,
+        120,
+        0
+      ]
+    },
+    {
+      "codepoint": 943,
+      "columns": [
+        0,
+        26,
+        33,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 944,
+      "columns": [
+        29,
+        34,
+        33,
+        29,
+        0
+      ]
+    },
+    {
+      "codepoint": 945,
+      "columns": [
+        24,
+        36,
+        20,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 946,
+      "columns": [
+        126,
+        37,
+        37,
+        26,
+        0
+      ]
+    },
+    {
+      "codepoint": 947,
+      "columns": [
+        0,
+        12,
+        112,
+        12,
+        0
+      ]
+    },
+    {
+      "codepoint": 948,
+      "columns": [
+        26,
+        37,
+        37,
+        25,
+        0
+      ]
+    },
+    {
+      "codepoint": 949,
+      "columns": [
+        0,
+        20,
+        44,
+        36,
+        0
+      ]
+    },
+    {
+      "codepoint": 950,
+      "columns": [
+        29,
+        35,
+        33,
+        97,
+        0
+      ]
+    },
+    {
+      "codepoint": 951,
+      "columns": [
+        60,
+        4,
+        4,
+        120,
+        0
+      ]
+    },
+    {
+      "codepoint": 952,
+      "columns": [
+        0,
+        30,
+        37,
+        30,
+        0
+      ]
+    },
+    {
+      "codepoint": 953,
+      "columns": [
+        0,
+        28,
+        32,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 954,
+      "columns": [
+        60,
+        16,
+        24,
+        36,
+        0
+      ]
+    },
+    {
+      "codepoint": 955,
+      "columns": [
+        57,
+        5,
+        9,
+        62,
+        0
+      ]
+    },
+    {
+      "codepoint": 956,
+      "columns": [
+        124,
+        32,
+        32,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 957,
+      "columns": [
+        0,
+        28,
+        32,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 958,
+      "columns": [
+        21,
+        43,
+        41,
+        97,
+        0
+      ]
+    },
+    {
+      "codepoint": 959,
+      "columns": [
+        24,
+        36,
+        36,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 960,
+      "columns": [
+        0,
+        60,
+        4,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 961,
+      "columns": [
+        120,
+        36,
+        36,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 962,
+      "columns": [
+        8,
+        44,
+        52,
+        20,
+        0
+      ]
+    },
+    {
+      "codepoint": 963,
+      "columns": [
+        24,
+        36,
+        44,
+        20,
+        0
+      ]
+    },
+    {
+      "codepoint": 964,
+      "columns": [
+        4,
+        28,
+        36,
+        4,
+        0
+      ]
+    },
+    {
+      "codepoint": 965,
+      "columns": [
+        28,
+        32,
+        32,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 966,
+      "columns": [
+        0,
+        56,
+        108,
+        56,
+        0
+      ]
+    },
+    {
+      "codepoint": 967,
+      "columns": [
+        100,
+        24,
+        24,
+        100,
+        0
+      ]
+    },
+    {
+      "codepoint": 968,
+      "columns": [
+        0,
+        28,
+        120,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 969,
+      "columns": [
+        60,
+        48,
+        48,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 970,
+      "columns": [
+        1,
+        28,
+        33,
+        0,
+        0
+      ]
+    },
+    {
+      "codepoint": 971,
+      "columns": [
+        29,
+        32,
+        32,
+        29,
+        0
+      ]
+    },
+    {
+      "codepoint": 972,
+      "columns": [
+        24,
+        38,
+        37,
+        24,
+        0
+      ]
+    },
+    {
+      "codepoint": 973,
+      "columns": [
+        28,
+        34,
+        33,
+        28,
+        0
+      ]
+    },
+    {
+      "codepoint": 974,
+      "columns": [
+        60,
+        50,
+        49,
+        60,
+        0
+      ]
+    },
+    {
+      "codepoint": 7838,
+      "columns": [
+        126,
+        1,
+        73,
+        77,
+        50
+      ]
+    }
+  ],
+  "researchSource": {
+    "url": "https://raw.githubusercontent.com/olikraus/u8g2/master/tools/font/bdf/5x7.bdf",
+    "sha256": "6cdcaa87c2b22517a8265e3f5ea103a36d64642a9a727a7aeb6e1e9bc3961bdf",
+    "license": "Public domain (BDF COPYRIGHT)",
+    "originalGlyphs": [
+      "U+1E9E"
+    ]
+  }
+}
