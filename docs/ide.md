@@ -454,6 +454,16 @@ split UTF-8 characters. Parser diagnostics use the same Lua parser as the
 build, so a reported syntax error is not a separate linter's approximation.
 
 Problems, Output, Build, Runtime, Watches, Memory, and Generated Go are real bounded views.
+Text panels wrap long messages without discarding their tails. Use the mouse
+wheel, scrollbar, Page Up/Down or arrow keys to read every wrapped row. Drag to
+select text; Cmd/Ctrl+A selects the entire panel, and Cmd/Ctrl+C copies the
+selection (or the entire panel when there is no selection). **COPY ALL** copies
+the full original text, including off-screen lines, without inserting visual
+wrap breaks. Selection uses Unicode rune offsets and survives window resizing.
+Panel focus is read-only: typing, cut and paste cannot change Lua source. Escape
+returns keyboard focus to code; Cmd/Ctrl+S still saves the active document.
+Click a Problems message or press Enter there to open its diagnostic source.
+
 Generated Go is the exact build artifact and receives Go syntax color rather
 than pretending to be editable Lua.
 

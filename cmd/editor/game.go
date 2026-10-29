@@ -276,6 +276,10 @@ type Game struct {
 	runRuntimeLog              []string
 	developPanel               developPanel
 	developScroll              [developPanelCount]int
+	developText                [developPanelCount]developTextView
+	developTextFocused         bool
+	developTextDragging        bool
+	developTextScrollDragging  bool
 	runReady                   chan playLaunch
 	playFrames                 chan emulator.Frame
 	playErrors                 chan error

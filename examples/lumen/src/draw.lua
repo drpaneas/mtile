@@ -103,7 +103,8 @@ end
 
 function draw_world(scroll)
   draw_water(scroll)
-  for i = 1, 5 do
+  -- Three ambient motes keep 64 scanline cycles free for the system pause OBJ.
+  for i = 1, 3 do
     local x = (i*79+age/20-scroll)%240
     local y = 32+(i*37)%80+sin(age/150+i/6)*3
     pspr(MOTE_MINT, x-3, y-3)

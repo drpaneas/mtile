@@ -44,7 +44,7 @@ emulator or compatible cartridge.
 | B | X | Light a nearby lantern with three embers |
 | Start | Enter | Pause or resume |
 
-Press A or Start on the title screen to begin. The bottom bar shows three
+Press A on the title screen to begin. Start opens the shared system menu. The bottom bar shows three
 ember slots and dash recharge. Full hands leave other embers in the garden
 until you have room. Approach an unlit lantern with three embers and press B
 when its prompt appears.
@@ -182,14 +182,22 @@ go run ./examples/lumen/tests/verify.go \
 It also builds a temporary clock-rollover fixture and checks that eight frames
 after the wrap match a fresh cartridge at the same animation phases.
 
-The harness requires zero pixel differences, zero missed deadlines after
+The harness requires zero pixel differences, zero missed gameplay deadlines after
 startup, no Lua heap, and at least 140 KiB of free EWRAM. Every flight update
 must fit the 561,792-cycle budget. The hardware proof uses four BGs,
-105/128 OBJ entries, and 1,176/1,226 scanline cycles.
+103/127 game OBJ entries, and 1,160/1,162 game scanline cycles. One OAM
+entry and 64 scanline cycles remain reserved for the shared 64×64 pause overlay.
+Three ambient motes (previously five) keep the authored scene inside that limit;
+the engine still rejects the old, over-budget scene.
 
-The native reference journey compared 7,114 frames (273,177,600 pixels) with
-zero differences and zero missed deadlines. Its maximum flight update took
-269,572 cycles; the release cartridge leaves 157,984 bytes of EWRAM free.
+The current native reference journey compares 7,114 frames (273,177,600 pixels)
+with zero pixel differences and zero missed gameplay deadlines. Its maximum
+flight update takes 278,659 cycles; the debug cartridge leaves 152,832 bytes of
+EWRAM free. The harness checks the shared system menu's frozen game state and
+pixel parity separately: its opening/closing presentation incurs two UI-only
+deadline misses, recorded explicitly as `systemPauseMissedFrames` rather than
+being counted as flight updates. Raw telemetry retains those misses. Clock
+rollover and an out-of-order final lantern also have paired reference fixtures.
 
 Mode 4 is a verification reference, not the project's renderer policy.
 All game code, artwork, and music were created for this example and use the

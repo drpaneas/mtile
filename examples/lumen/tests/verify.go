@@ -62,13 +62,14 @@ type snapshot struct {
 }
 
 type sample struct {
-	Frame  uint32 `json:"frame"`
-	State  int    `json:"state"`
-	Cycles uint32 `json:"cycles"`
-	Update uint32 `json:"updateCycles"`
-	Draw   uint32 `json:"drawCycles"`
-	Commit uint32 `json:"commitCycles"`
-	Missed uint32 `json:"missedFrames"`
+	SystemPause bool   `json:"systemPause,omitempty"`
+	Frame       uint32 `json:"frame"`
+	State       int    `json:"state"`
+	Cycles      uint32 `json:"cycles"`
+	Update      uint32 `json:"updateCycles"`
+	Draw        uint32 `json:"drawCycles"`
+	Commit      uint32 `json:"commitCycles"`
+	Missed      uint32 `json:"missedFrames"`
 }
 
 type checkpoint struct {
@@ -144,35 +145,36 @@ type dawnOrderReport struct {
 }
 
 type report struct {
-	Success             bool                 `json:"success"`
-	Failure             string               `json:"failure,omitempty"`
-	Environment         string               `json:"environment"`
-	ROM                 string               `json:"rom"`
-	ROMSHA256           string               `json:"romSha256"`
-	ROMBytes            int                  `json:"romBytes"`
-	Renderer            string               `json:"renderer"`
-	EWRAMFree           uint64               `json:"ewramFreeBytes"`
-	EWRAMFreeMinimum    uint64               `json:"ewramFreeMinimumBytes"`
-	HeapLinked          bool                 `json:"heapLinked"`
-	LCDFrames           int                  `json:"lcdFrames"`
-	StartupMissedFrames uint32               `json:"startupMissedFrames"`
-	SteadyMissedFrames  uint32               `json:"steadyMissedFrames"`
-	FlightMissedFrames  uint32               `json:"flightMissedFrames"`
-	AudioNonSilent      bool                 `json:"audioNonSilent"`
-	Checks              []string             `json:"checks"`
-	Route               []checkpoint         `json:"route"`
-	FlightCycles        cycleSummary         `json:"flightCycles"`
-	FlightCycleBudget   uint32               `json:"flightCycleBudget"`
-	LastStats           emulator.DebugStats  `json:"lastStats"`
-	Samples             []sample             `json:"samples"`
-	Mode0               rendererEvidence     `json:"mode0"`
-	Mode4               rendererEvidence     `json:"mode4"`
-	Parity              parityReport         `json:"parity"`
-	Parallax            []backgroundEvidence `json:"parallax"`
-	ParallaxGIF         string               `json:"parallaxGif,omitempty"`
-	Rollover            *rolloverReport      `json:"rollover,omitempty"`
-	OutOfOrderDawn      *dawnOrderReport     `json:"outOfOrderDawn,omitempty"`
-	SourceSHA256        map[string]string    `json:"sourceSha256"`
+	Success                 bool                 `json:"success"`
+	Failure                 string               `json:"failure,omitempty"`
+	Environment             string               `json:"environment"`
+	ROM                     string               `json:"rom"`
+	ROMSHA256               string               `json:"romSha256"`
+	ROMBytes                int                  `json:"romBytes"`
+	Renderer                string               `json:"renderer"`
+	EWRAMFree               uint64               `json:"ewramFreeBytes"`
+	EWRAMFreeMinimum        uint64               `json:"ewramFreeMinimumBytes"`
+	HeapLinked              bool                 `json:"heapLinked"`
+	LCDFrames               int                  `json:"lcdFrames"`
+	SystemPauseMissedFrames uint32               `json:"systemPauseMissedFrames"`
+	StartupMissedFrames     uint32               `json:"startupMissedFrames"`
+	SteadyMissedFrames      uint32               `json:"steadyMissedFrames"`
+	FlightMissedFrames      uint32               `json:"flightMissedFrames"`
+	AudioNonSilent          bool                 `json:"audioNonSilent"`
+	Checks                  []string             `json:"checks"`
+	Route                   []checkpoint         `json:"route"`
+	FlightCycles            cycleSummary         `json:"flightCycles"`
+	FlightCycleBudget       uint32               `json:"flightCycleBudget"`
+	LastStats               emulator.DebugStats  `json:"lastStats"`
+	Samples                 []sample             `json:"samples"`
+	Mode0                   rendererEvidence     `json:"mode0"`
+	Mode4                   rendererEvidence     `json:"mode4"`
+	Parity                  parityReport         `json:"parity"`
+	Parallax                []backgroundEvidence `json:"parallax"`
+	ParallaxGIF             string               `json:"parallaxGif,omitempty"`
+	Rollover                *rolloverReport      `json:"rollover,omitempty"`
+	OutOfOrderDawn          *dawnOrderReport     `json:"outOfOrderDawn,omitempty"`
+	SourceSHA256            map[string]string    `json:"sourceSha256"`
 }
 
 type player struct {
@@ -187,6 +189,7 @@ type player struct {
 	clip            [][]byte
 	clipLimit       int
 	strictDeadlines bool
+	systemPause     bool
 	previousRoom    int
 }
 
@@ -259,7 +262,7 @@ func run(project, helper, output string) (runErr error) {
 		}
 		var cycles []uint32
 		for _, value := range r.Samples {
-			if value.State == 1 {
+			if value.State == 1 && !value.SystemPause {
 				cycles = append(cycles, value.Cycles)
 			}
 		}
@@ -267,14 +270,14 @@ func run(project, helper, output string) (runErr error) {
 		r.Mode0.FlightCycles = r.FlightCycles
 		cycles = cycles[:0]
 		for _, value := range referenceReport.Samples {
-			if value.State == 1 {
+			if value.State == 1 && !value.SystemPause {
 				cycles = append(cycles, value.Cycles)
 			}
 		}
 		r.Mode4.FlightCycles = summarize(cycles)
-		r.Mode0.MissedFrames = r.LastStats.MissedFrames - r.StartupMissedFrames
-		r.Mode4.MissedFrames = referenceReport.LastStats.MissedFrames - referenceReport.StartupMissedFrames
-		r.SteadyMissedFrames = r.LastStats.MissedFrames - r.StartupMissedFrames
+		r.Mode0.MissedFrames = r.LastStats.MissedFrames - r.StartupMissedFrames - r.SystemPauseMissedFrames
+		r.Mode4.MissedFrames = referenceReport.LastStats.MissedFrames - referenceReport.StartupMissedFrames - referenceReport.SystemPauseMissedFrames
+		r.SteadyMissedFrames = r.LastStats.MissedFrames - r.StartupMissedFrames - r.SystemPauseMissedFrames
 		data, err := json.MarshalIndent(r, "", "  ")
 		if err == nil {
 			err = os.WriteFile(filepath.Join(out, "report.json"), append(data, '\n'), 0o644)
@@ -352,19 +355,21 @@ func run(project, helper, output string) (runErr error) {
 		return err
 	}
 
-	// Pausing must freeze gameplay even while directional and action keys are held.
+	// The shared system menu freezes Lua updates without changing game state.
+	// Report its presentation/restore work separately from flight deadlines.
+	p.systemPause, p.reference.systemPause = true, true
 	if err := p.tap(emulator.KeyStart); err != nil {
 		return err
 	}
-	if err := p.expect(p.current.State == 2, "Start pauses"); err != nil {
+	if err := p.expect(p.current.State == 1, "Start opens the system pause menu without changing Lua state"); err != nil {
 		return err
 	}
 	frozen := p.current
 	for range 30 {
-		if err := p.advance(emulator.KeyRight | emulator.KeyDown | emulator.KeyB); err != nil {
+		if err := p.advance(emulator.KeyRight | emulator.KeyDown | emulator.KeyA); err != nil {
 			return err
 		}
-		if p.current.State != 2 || p.current.PlayTicks != frozen.PlayTicks || p.current.X != frozen.X || p.current.Y != frozen.Y {
+		if p.current.State != 1 || p.current.Age != frozen.Age || p.current.PlayTicks != frozen.PlayTicks || p.current.X != frozen.X || p.current.Y != frozen.Y {
 			return fmt.Errorf("pause changed game time or position: before %+v; after %+v", frozen, p.current)
 		}
 	}
@@ -375,6 +380,7 @@ func run(project, helper, output string) (runErr error) {
 	if err := p.expect(p.current.State == 1, "Start resumes"); err != nil {
 		return err
 	}
+	p.systemPause, p.reference.systemPause = false, false
 	p.mark("pause verified")
 
 	embers := [6][3][2]float64{
@@ -560,7 +566,7 @@ func run(project, helper, output string) (runErr error) {
 		return err
 	}
 	p.mark("full dawn")
-	if err := p.tap(emulator.KeyStart); err != nil {
+	if err := p.tap(emulator.KeyA); err != nil {
 		return err
 	}
 	// The authored restart first presents the night sky, then selects the
@@ -572,7 +578,7 @@ func run(project, helper, output string) (runErr error) {
 	if err := p.expect(p.current.State == 1 && p.current.Lit == 0 && p.current.Carried == 0 &&
 		p.current.Health == 3 && p.current.Hits == 0 && p.current.Checkpoint == 0 &&
 		p.current.PlayTicks <= 2 && math.Abs(p.current.X-32) < 1 && math.Abs(p.current.Y-88) < 1,
-		"Start after dawn resets position, time, health, embers and lanterns"); err != nil {
+		"A after dawn resets position, time, health, embers and lanterns"); err != nil {
 		return err
 	}
 	// The same first ember being collectible proves its taken flag was reset.
@@ -588,7 +594,7 @@ func run(project, helper, output string) (runErr error) {
 	}
 	var flightCycles []uint32
 	for _, value := range r.Samples {
-		if value.State == 1 {
+		if value.State == 1 && !value.SystemPause {
 			flightCycles = append(flightCycles, value.Cycles)
 		}
 	}
@@ -600,8 +606,8 @@ func run(project, helper, output string) (runErr error) {
 	if err := p.expect(r.FlightMissedFrames == 0, "flight misses no frame deadlines"); err != nil {
 		return err
 	}
-	if err := p.expect(r.LastStats.MissedFrames == r.StartupMissedFrames,
-		"the complete journey, including dawn and restart, misses no frame deadlines after startup"); err != nil {
+	if err := p.expect(r.LastStats.MissedFrames == r.StartupMissedFrames+r.SystemPauseMissedFrames,
+		"the complete journey, including dawn and restart, misses no gameplay deadlines after startup; system UI cost is reported separately"); err != nil {
 		return err
 	}
 	if err := p.expect(r.Parity.DifferingPixels == 0 && r.Parity.MatchedGameFrames > 500,
@@ -678,7 +684,9 @@ func (p *player) advance(keys uint16) error {
 		p.current = snapshot{Frame: stats.Frames, State: int(values["state"]), Age: values["age"], PlayTicks: values["play_ticks"],
 			X: values["px"], Y: values["py"], VX: values["vx"], VY: values["vy"], CameraX: values["view_x"], Facing: int(values["facing"]), Carried: int(values["carried"]),
 			Lit: int(values["lit_count"]), Health: int(values["health"]), Hits: int(values["hits"]), Checkpoint: int(values["checkpoint"]), DashTicks: int(values["dash_ticks"])}
-		if p.current.State == 1 {
+		if p.systemPause {
+			p.report.SystemPauseMissedFrames += stats.MissedFrames - p.report.LastStats.MissedFrames
+		} else if p.current.State == 1 {
 			p.report.FlightMissedFrames += stats.MissedFrames - p.report.LastStats.MissedFrames
 		}
 		p.frame, p.report.LastStats = frame, stats
@@ -688,7 +696,7 @@ func (p *player) advance(keys uint16) error {
 			}
 			p.clipTicks++
 		}
-		p.report.Samples = append(p.report.Samples, sample{stats.Frames, p.current.State, stats.LastFrame, stats.LastUpdate, stats.LastDraw, stats.LastBlit, stats.MissedFrames})
+		p.report.Samples = append(p.report.Samples, sample{p.systemPause, stats.Frames, p.current.State, stats.LastFrame, stats.LastUpdate, stats.LastDraw, stats.LastBlit, stats.MissedFrames})
 		if p.reference != nil {
 			if err := p.reference.advance(keys); err != nil {
 				return fmt.Errorf("Mode 4 reference: %w", err)
@@ -697,7 +705,7 @@ func (p *player) advance(keys uint16) error {
 				return err
 			}
 		}
-		if p.strictDeadlines && stats.MissedFrames != p.report.StartupMissedFrames {
+		if p.strictDeadlines && stats.MissedFrames != p.report.StartupMissedFrames+p.report.SystemPauseMissedFrames {
 			return fmt.Errorf("Mode 0 missed a poststartup deadline at game frame %d: total %d, startup %d; state %+v, cycles %d", stats.Frames, stats.MissedFrames, p.report.StartupMissedFrames, p.current, stats.LastFrame)
 		}
 		return nil
@@ -1028,7 +1036,7 @@ func verifyOutOfOrderDawn(service build.Service, project, helper, out string) (*
 	}
 	return &dawnOrderReport{FixtureROM: result.ROMPath, ReferenceROM: referenceResult.ROMPath,
 		Final: p.current, MatchedFrames: r.Parity.MatchedGameFrames, ComparedPixels: r.Parity.ComparedPixels,
-		DifferingPixels: r.Parity.DifferingPixels, MissedFrames: r.LastStats.MissedFrames - r.StartupMissedFrames,
+		DifferingPixels: r.Parity.DifferingPixels, MissedFrames: r.LastStats.MissedFrames - r.StartupMissedFrames - r.SystemPauseMissedFrames,
 		Cycles: summarize(cycles)}, nil
 }
 

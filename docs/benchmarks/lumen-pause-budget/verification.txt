@@ -1,0 +1,82 @@
+Lumen / diagnostic-panel regression verification, 2026-10-29
+
+Tests committed before implementation: 899312c.
+
+Before: Lumen rejected at 1176 cycles with the 1162 game limit.
+Before: error continuation pixels absent at both window sizes and all GPU scales.
+
+Required compiler/build/CLI gates:
+ok  	github.com/drpaneas/mtile/internal/transpiler	(cached)
+ok  	github.com/drpaneas/mtile/internal/build	56.513s
+ok  	github.com/drpaneas/mtile/cmd/mtile	10.272s
+
+Runtime:
+ok  	github.com/drpaneas/mtile/runtime	(cached)
+ok  	github.com/drpaneas/mtile/runtime/audio	(cached)
+ok  	github.com/drpaneas/mtile/runtime/hw	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	(cached)
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	(cached)
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	(cached)
+
+Native GPU panels/selection/clipboard model verification:
+ok  	github.com/drpaneas/mtile/cmd/editor	3.029s
+
+Lumen actual-ROM playthrough:
+Building forced Mode 0 and Mode 4 cartridges with read-only debug telemetry...
+  verified: forced Mode 0 proves four hardware backgrounds and objects
+  verified: authored poses and named animation clips are linked into the cartridge
+  verified: the linked cartridge allocates hardware pose graphics
+  verified: four ordered map passes use distinct authored camera formulas recorded in the report
+  verified: title screen is available
+  verified: allocation analysis marks the cartridge heap-free
+  verified: the linked Mode 0 cartridge leaves at least 140 KiB of EWRAM free
+  verified: A begins a healthy journey
+  verified: Start opens the system pause menu without changing Lua state
+  verified: Start resumes
+  verified: ember 1 gathered (carried 1)
+  verified: ember 2 gathered (carried 2)
+  verified: ember 3 gathered (carried 3)
+  verified: B restores lantern 1, spends three embers and heals
+  verified: three shadow collisions enter the resting screen
+  verified: A recovers at the restored lantern and preserves progress
+  verified: ember 4 gathered (carried 1)
+  verified: ember 5 gathered (carried 2)
+  verified: ember 6 gathered (carried 3)
+  verified: B restores lantern 2, spends three embers and heals
+  verified: ember 7 gathered (carried 1)
+  verified: ember 8 gathered (carried 2)
+  verified: ember 9 gathered (carried 3)
+  verified: B restores lantern 3, spends three embers and heals
+  verified: ember 10 gathered (carried 1)
+  verified: ember 11 gathered (carried 2)
+  verified: ember 12 gathered (carried 3)
+  verified: B restores lantern 4, spends three embers and heals
+  verified: ember 13 gathered (carried 1)
+  verified: ember 14 gathered (carried 2)
+  verified: ember 15 gathered (carried 3)
+  verified: B restores lantern 5, spends three embers and heals
+  verified: three further shadow collisions enter rest after traversing the garden in reverse
+  verified: A recovers at lantern five and preserves all five restored lanterns
+  verified: the long checkpoint return reaches its camera target without moving the moth or missing deadlines
+  verified: ember 16 gathered (carried 1)
+  verified: ember 17 gathered (carried 2)
+  verified: ember 18 gathered (carried 3)
+  verified: B restores lantern 6, spends three embers and heals
+  verified: eighteen gathered embers restore all six lanterns and trigger dawn
+  verified: dawn remains on screen through its palette transition
+  verified: Start after dawn resets position, time, health, embers and lanterns
+  verified: ember 1 gathered (carried 1)
+  verified: the actual ROM produces audible PSG samples
+  verified: the complete journey performs no garbage collections
+  verified: all 6876 flight updates fit the 561792-cycle 30 Hz budget (maximum 278659)
+  verified: flight misses no frame deadlines
+  verified: the complete journey, including dawn and restart, misses no gameplay deadlines after startup; system UI cost is reported separately
+  verified: Mode 0 and Mode 4 match every pixel through 7114 game frames
+  verified: parity covers all twelve rooms, the full 2640-pixel camera range, all eight sub-tile camera phases, both moth facings, dash and dawn
+  verified: a copied cartridge wraps age from 28799 to 0, then matches the original title at ages 1 through 8
+  verified: a copied out-of-order cartridge restores lantern one last and celebrates its local dawn with exact pixels and no missed deadlines
+PASS: twelve rooms, eighteen embers, six lanterns, pause, six hits, long checkpoint recovery, both dawn orders and restart; artifacts /tmp/mtile-lumen-verified
+
+Full editor suite:
+ok  	github.com/drpaneas/mtile/cmd/editor	2.101s

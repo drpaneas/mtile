@@ -86,7 +86,8 @@ Linker memory usage and measured runtime performance still require a build.
 The native Develop workspace consumes the same project checker. Its Problems
 panel shows live renderer selection, informational fallbacks, and compiler
 errors after a short editing pause. Clicking Problems opens the first
-diagnostic's source.
+diagnostic's source. Long messages wrap and scroll; drag to select and use
+Cmd/Ctrl+C, or **COPY ALL**, to copy the complete original diagnostic.
 Asset checks use the last saved assets, refreshed when the editor saves them.
 
 This first version supplies builtin help and compiler diagnostics. Local-symbol

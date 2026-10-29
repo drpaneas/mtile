@@ -11,6 +11,7 @@ import (
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
 	"github.com/drpaneas/mtile/internal/emulator"
+	"github.com/drpaneas/mtile/internal/hostclipboard"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -153,6 +154,11 @@ func (g *Game) updateDevelopMode() {
 	mx, my := editorCursorPosition()
 	clicked := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	if clicked {
+		if !rectContains(layout.Code.Diagnostics, mx, my) {
+			g.developTextFocused = false
+			g.developTextDragging = false
+			g.developTextScrollDragging = false
+		}
 		switch {
 		case g.updateDevelopPanelClick(layout, mx, my):
 			g.releaseDevelopGameInput()
@@ -178,9 +184,7 @@ func (g *Game) updateDevelopMode() {
 			if g.developPanel == developMemory {
 				g.scrollDevelopMemory(layout, -int(wheelY*3))
 			} else {
-				lines := g.developPanelLines(g.developPanel)
-				visible := max(1, (layout.Code.Diagnostics.H-45)/codeLineHeight)
-				g.developScroll[g.developPanel] = min(max(0, g.developScroll[g.developPanel]-int(wheelY*3)), max(0, len(lines)-visible))
+				g.scrollDevelopText(layout, -int(wheelY*3))
 			}
 		}
 	}
@@ -209,6 +213,9 @@ func (g *Game) updateDevelopMode() {
 			g.playPendingTicks = 2
 		}
 		g.runMu.Unlock()
+		return
+	}
+	if g.updateDevelopTextInput(layout) {
 		return
 	}
 	g.updateCodeWorkspace(layout.Code)
@@ -824,33 +831,7 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 		g.drawDevelopMemory(screen, layout)
 		return
 	}
-	lines := g.developPanelLines(g.developPanel)
-	visible := max(1, (r.H-45)/codeLineHeight)
-	start := min(g.developScroll[g.developPanel], max(0, len(lines)-visible))
-	g.developScroll[g.developPanel] = start
-	for row := 0; row < visible && start+row < len(lines); row++ {
-		line := lines[start+row]
-		y := r.Y + 40 + row*codeLineHeight
-		clr := colorText
-		lower := strings.ToLower(line)
-		if strings.Contains(lower, "error") || strings.Contains(lower, "failed") {
-			clr = colorDanger
-		} else if strings.HasPrefix(line, "OK") || strings.Contains(lower, "completed successfully") {
-			clr = colorRun
-		} else if strings.HasPrefix(line, "[") {
-			clr = colorLCD
-		}
-		if g.developPanel == developGenerated {
-			x := r.X + 56
-			drawCodeText(screen, fmt.Sprintf("%4d", start+row+1), r.X+12, y, colorDim)
-			for _, segment := range highlightGoLine(truncateMusicEditText(line, max(1, (r.W-70)/codeCharWidth))) {
-				drawCodeText(screen, segment.text, x, y, segment.color)
-				x += len([]rune(segment.text)) * codeCharWidth
-			}
-		} else {
-			drawCodeText(screen, truncateCodeText(line, r.W-30), r.X+14, y, clr)
-		}
-	}
+	g.drawDevelopPanelText(screen, layout)
 }
 
 func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
@@ -858,7 +839,19 @@ func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
 	widths := [...]int{112, 96, 92, 106, 112, 104, 150}
 	tabs := make([]editor.Rect, 0, len(widths))
 	x := r.X + 1
+	available := r.W - 2
+	if g.developPanel != developMemory {
+		available -= 108
+	}
+	total := 0
 	for _, width := range widths {
+		total += width
+	}
+	for _, preferred := range widths {
+		width := preferred
+		if total > available {
+			width = max(1, preferred*available/total)
+		}
 		tabs = append(tabs, editor.Rect{X: x, Y: r.Y + 1, W: width, H: 33})
 		x += width
 	}
@@ -870,14 +863,34 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 	if !rectContains(r, x, y) {
 		return false
 	}
+	if g.developPanel != developMemory && rectContains(g.developCopyRect(layout), x, y) {
+		g.developTextFocused = true
+		g.developTextDragging = false
+		g.developTextScrollDragging = false
+		g.developTextView(layout)
+		g.copyDevelopText(true, hostclipboard.Write)
+		return true
+	}
 	for panel, tab := range g.developPanelTabRects(layout) {
 		if rectContains(tab, x, y) {
 			g.developPanel = developPanel(panel)
+			g.developTextFocused = g.developPanel != developMemory
+			g.developTextDragging = false
+			g.developTextScrollDragging = false
 			return true
 		}
 	}
-	if g.developPanel == developProblems && y >= r.Y+34 {
-		g.openDevelopDiagnostic()
+	if g.developPanel != developMemory && y >= r.Y+35 {
+		body := developTextBody(layout, g.developPanel)
+		g.developTextFocused = true
+		if x >= r.X+r.W-18 {
+			g.developTextScrollDragging = true
+		} else {
+			g.beginDevelopTextSelection(layout, x, max(body.Y, y), ebiten.IsKeyPressed(ebiten.KeyShift))
+			if g.developPanel == developProblems {
+				g.openDevelopDiagnostic()
+			}
+		}
 	}
 	return true
 }
