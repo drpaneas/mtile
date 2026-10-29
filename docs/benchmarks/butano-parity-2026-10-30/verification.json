@@ -1,0 +1,340 @@
+{
+  "groups": {
+    "mtileAuthoring": {
+      "checks": [
+        {
+          "case": "physics_64-local",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_64-local",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_64-local_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_64-local_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_64-global_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_64-global_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-local_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-local_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_drag_64-local_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_drag_64-local_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_32-local_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_32-local_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-packed_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-packed_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-interleaved_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-interleaved_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-blocked_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-blocked_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "scroll_chunk_cross-windowed",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "scroll_chunk_cross-windowed",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        }
+      ],
+      "totalTicks": 12000,
+      "passAll": true
+    },
+    "butanoIWRAM": {
+      "checks": [
+        {
+          "workload": "physics_32",
+          "variant": "thumb_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_32",
+          "variant": "thumb_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_32",
+          "variant": "arm_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_32",
+          "variant": "arm_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_64",
+          "variant": "thumb_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_64",
+          "variant": "thumb_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_64",
+          "variant": "arm_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_64",
+          "variant": "arm_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_128",
+          "variant": "thumb_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_128",
+          "variant": "thumb_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_128",
+          "variant": "arm_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_128",
+          "variant": "arm_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_drag_64",
+          "variant": "thumb_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_drag_64",
+          "variant": "thumb_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_drag_64",
+          "variant": "arm_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "workload": "physics_drag_64",
+          "variant": "arm_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        }
+      ],
+      "totalTicks": 9600,
+      "passAll": true
+    },
+    "nativeGoDiagnostic": {
+      "checks": [
+        {
+          "placement": "ewram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "placement": "ewram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "placement": "iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "placement": "iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        }
+      ],
+      "totalTicks": 2400,
+      "passAll": true
+    },
+    "cleanReproduction": {
+      "checks": [
+        {
+          "case": "physics_128-blocked_iwram",
+          "repetition": 0,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        },
+        {
+          "case": "physics_128-blocked_iwram",
+          "repetition": 1,
+          "ticks": 600,
+          "pixelMismatches": 0,
+          "stateChecksumMismatches": 0
+        }
+      ],
+      "totalTicks": 1200,
+      "passAll": true
+    }
+  },
+  "totalTicks": 25200,
+  "passAll": true
+}

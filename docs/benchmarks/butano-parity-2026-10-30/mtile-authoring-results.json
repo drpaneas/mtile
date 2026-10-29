@@ -1,0 +1,320 @@
+{
+  "physics_64-local": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 40677.0,
+      "p95": 40683,
+      "maximum": 40685,
+      "minimum": 40675,
+      "budgetPercent": 7.2405801435406705,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 40678.34
+    },
+    "repeatMedians": [
+      40677.0,
+      40677.0
+    ],
+    "iwramUsed": 11388,
+    "ewramUsed": 156892,
+    "romBytes": 49620,
+    "romSHA256": "797bf811429138af6e14b987b0986032e51caa823b754e8fcc018e02b14610fd",
+    "sourceSHA256": "e19b8995bf89ccfdafced482c38bc6f69b248345d69fc37c0f8413c62dac8438",
+    "verifiedTicks": 1200
+  },
+  "physics_64-local_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 17747.0,
+      "p95": 17750,
+      "maximum": 17751,
+      "minimum": 17747,
+      "budgetPercent": 3.158998348143085,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 17747.698333333334
+    },
+    "repeatMedians": [
+      17747.0,
+      17747.0
+    ],
+    "iwramUsed": 13004,
+    "ewramUsed": 156892,
+    "romBytes": 49360,
+    "romSHA256": "c89eae0042efc5ba27da9fe86f2504e6621e67c3c7e6d219204096f851281fd1",
+    "sourceSHA256": "b3ebb537df9482df75555dff731435f13d548f311da41f27818622019346a49a",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c6c"
+  },
+  "physics_64-global_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 188587.0,
+      "p95": 188602,
+      "maximum": 188615,
+      "minimum": 188587,
+      "budgetPercent": 33.56882974481658,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 10,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 188590.94
+    },
+    "repeatMedians": [
+      188587.0,
+      188587.0
+    ],
+    "iwramUsed": 15040,
+    "ewramUsed": 156892,
+    "romBytes": 68660,
+    "romSHA256": "e0451d7f355250eabf7f958fbeebb2eb38ef333c0f2d94fae1a7c5218cfecb65",
+    "sourceSHA256": "1550793a0c20499ecd2fa55e0266e014b69494615da4b7c92d01171118d06fd8",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002ff0"
+  },
+  "physics_128-local_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 32787.0,
+      "p95": 32793,
+      "maximum": 32795,
+      "minimum": 32787,
+      "budgetPercent": 5.836145762132604,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 32788.395
+    },
+    "repeatMedians": [
+      32787.0,
+      32787.0
+    ],
+    "iwramUsed": 13004,
+    "ewramUsed": 156892,
+    "romBytes": 56528,
+    "romSHA256": "82ab58ee703662a8b66e177c21574afbf8b4c75aff03cb77a9ce037aa8753347",
+    "sourceSHA256": "2bf7e0e1b5882551f49203e8c21eb611006c58b37772fd197675e964edd64c6c",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c6c"
+  },
+  "physics_drag_64-local_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 19925.0,
+      "p95": 19928,
+      "maximum": 19931,
+      "minimum": 19924,
+      "budgetPercent": 3.546686318067897,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 19925.253333333334
+    },
+    "repeatMedians": [
+      19925.0,
+      19925.0
+    ],
+    "iwramUsed": 13076,
+    "ewramUsed": 156892,
+    "romBytes": 49432,
+    "romSHA256": "48635ff94aa80a0fdd86cb19ad7ed8a391975a31abdcd81490b40d421a7e8d10",
+    "sourceSHA256": "a63c2623da6ed41890e668d979d91bf90736f0d6964aee11982f7593b1e44710",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c6c"
+  },
+  "physics_32-local_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 10239.0,
+      "p95": 10240,
+      "maximum": 10241,
+      "minimum": 10239,
+      "budgetPercent": 1.8225606630211895,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 10239.346666666666
+    },
+    "repeatMedians": [
+      10239.0,
+      10239.0
+    ],
+    "iwramUsed": 13004,
+    "ewramUsed": 156892,
+    "romBytes": 45924,
+    "romSHA256": "82d9092ddd7fc66f5d68b8ba28047a3fbac71582e71892b9d688e47bf3a85ef9",
+    "sourceSHA256": "868a934c8a32043eb891fe52c41838148135a296052a86278203b88bd1efe0f2",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c6c"
+  },
+  "physics_128-packed_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 30288.0,
+      "p95": 30294,
+      "maximum": 30296,
+      "minimum": 30288,
+      "budgetPercent": 5.391319207108681,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 30289.395
+    },
+    "repeatMedians": [
+      30288.0,
+      30288.0
+    ],
+    "iwramUsed": 12932,
+    "ewramUsed": 156868,
+    "romBytes": 55600,
+    "romSHA256": "82d61595b02b7ee65df5565db952737babad963e343e4048a67341971ca94722",
+    "sourceSHA256": "81ba16cc8fda0e33a8e57c6f1ae6eaec445d3a34617eef73c149cc26db7db38f",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c78"
+  },
+  "physics_128-interleaved_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 29519.0,
+      "p95": 29525,
+      "maximum": 29527,
+      "minimum": 29519,
+      "budgetPercent": 5.254435805422648,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 29520.395
+    },
+    "repeatMedians": [
+      29519.0,
+      29519.0
+    ],
+    "iwramUsed": 12928,
+    "ewramUsed": 156868,
+    "romBytes": 55528,
+    "romSHA256": "54bd278ac5bcf879d60796b18c38773dad3e4cc4f33c8657fd51d5fe0a70a084",
+    "sourceSHA256": "f652663d1336e4251c774be55edb30d4336dc6aceff4a77ce4c2476b9c712b25",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c78"
+  },
+  "physics_128-blocked_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 22540.0,
+      "p95": 22546,
+      "maximum": 22548,
+      "minimum": 22540,
+      "budgetPercent": 4.012161084529506,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 22541.395
+    },
+    "repeatMedians": [
+      22540.0,
+      22540.0
+    ],
+    "iwramUsed": 13856,
+    "ewramUsed": 156868,
+    "romBytes": 57176,
+    "romSHA256": "713b05bca750d2fa7071651fa7d0c63c70e980717e25c25200e7f13a3c9fab20",
+    "sourceSHA256": "e07e496908b349a7dc3700d116e1e9631771a636335441042bf43bb234f409a6",
+    "verifiedTicks": 1200,
+    "helperAddress": "03002c78"
+  },
+  "scroll_chunk_cross-windowed": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 1446.0,
+      "p95": 132324,
+      "maximum": 158775,
+      "minimum": 1446,
+      "budgetPercent": 0.2573906356801094,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 12086.173333333334
+    },
+    "repeatMedians": [
+      1446.0,
+      1446.0
+    ],
+    "iwramUsed": 12252,
+    "ewramUsed": 56836,
+    "romBytes": 107348,
+    "romSHA256": "d75af3a4d9336c69538daf5dfa462f37a29fd398dec24cc4f085c3da5a6c856e",
+    "sourceSHA256": "22aa0378e749949def01fa708f5664e42496c5939c6a1dc2538fdc6a48ea6040",
+    "verifiedTicks": 1200
+  }
+}

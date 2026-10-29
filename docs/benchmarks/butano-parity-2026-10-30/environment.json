@@ -1,0 +1,21 @@
+{
+  "mtileRevision": "660c8d562f34ba7f1da0fe66ed462c4c727f5e12",
+  "measuredDate": "2026-10-30",
+  "butanoRevision": "04374b034c76b82bfdc3aa6c38d652e5e7778a68",
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "gcc": "arm-none-eabi-g++ (devkitARM release 65) 14.2.0",
+  "helperSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "driverSHA256": "e43d21040d1c65eb9e251cc5c2623f3a949f4277fee72ddee9128942db5fbf7f",
+  "productSourceChanged": false,
+  "budget": 561792,
+  "warmup": 60,
+  "ticksPerCapture": 600,
+  "repetitions": 2,
+  "primaryAuthoringTicks": 12000,
+  "butanoPlacementTicks": 9600,
+  "nativeDiagnosticTicks": 2400,
+  "cleanReproductionTicks": 1200,
+  "totalVerifiedTicks": 25200,
+  "classification": "Source/project tuning experiment; native Go control is not a shipping Lua compiler feature.",
+  "baselineStopwatchControlCycles": 489
+}

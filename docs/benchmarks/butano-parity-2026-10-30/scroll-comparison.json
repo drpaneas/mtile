@@ -1,0 +1,62 @@
+{
+  "butanoBaseline": {
+    "observedHz": 29.863750284802915,
+    "refreshGapHistogram": {
+      "2": 599
+    },
+    "overBudgetTicks": 0,
+    "samples": 600,
+    "median": 8855.0,
+    "p95": 11061,
+    "maximum": 25827,
+    "minimum": 8813,
+    "budgetPercent": 1.5762061403508771,
+    "missed": 0,
+    "videoRefreshes": 1198,
+    "firstPublicationVideoFrame": 11,
+    "gcCollections": 0,
+    "heapPeak": 0,
+    "mean": 9476.978333333333,
+    "captureSHA256": "0a7281088a5cb0f3c2ef68beceac72df99ef654eb6f2a46fce44c3acc6ca65f3"
+  },
+  "previousOriginalCall": {
+    "observedHz": 29.863750284802915,
+    "refreshGapHistogram": {
+      "2": 599
+    },
+    "overBudgetTicks": 0,
+    "samples": 600,
+    "median": 64272.0,
+    "p95": 88901,
+    "maximum": 117310,
+    "minimum": 40920,
+    "budgetPercent": 11.440533151059466,
+    "missed": 0,
+    "videoRefreshes": 1198,
+    "firstPublicationVideoFrame": 9,
+    "gcCollections": 0,
+    "heapPeak": 0,
+    "mean": 64771.14166666667,
+    "captureSHA256": "982fc5e1c8e19f0b5a95c3bd4b605e4063e52fad919b15ff2f4333c192416dc4"
+  },
+  "windowed": {
+    "observedHz": 29.863750284802915,
+    "refreshGapHistogram": {
+      "2": 599
+    },
+    "overBudgetTicks": 0,
+    "samples": 600,
+    "median": 1446.0,
+    "p95": 132324,
+    "maximum": 158775,
+    "minimum": 1446,
+    "budgetPercent": 0.2573906356801094,
+    "missed": 0,
+    "videoRefreshes": 1198,
+    "firstPublicationVideoFrame": 9,
+    "gcCollections": 0,
+    "heapPeak": 0,
+    "mean": 12086.173333333334,
+    "captureSHA256": "84e6190730c187e36f71966061a2479e123c7bfab008acfdbd32d1cbb0eec7be"
+  }
+}

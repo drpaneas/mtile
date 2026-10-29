@@ -1,0 +1,46 @@
+[
+  {
+    "workload": "physics_32",
+    "shippingOriginalLua": 116528.0,
+    "butanoBaseline": 11896.0,
+    "mtileTuned": 10239.0,
+    "mtileVariant": "physics_32-local_iwram",
+    "butanoThumbIWRAM": 9649.0,
+    "butanoArmIWRAM": 8343.0,
+    "ratioVsBaseline": 0.8607094821788837,
+    "ratioVsTunedButano": 1.2272563825961884
+  },
+  {
+    "workload": "physics_64",
+    "shippingOriginalLua": 232304.0,
+    "butanoBaseline": 17758.0,
+    "mtileTuned": 17747.0,
+    "mtileVariant": "physics_64-local_iwram",
+    "butanoThumbIWRAM": 12785.0,
+    "butanoArmIWRAM": 10071.0,
+    "ratioVsBaseline": 0.9993805608739723,
+    "ratioVsTunedButano": 1.7621884619203654
+  },
+  {
+    "workload": "physics_128",
+    "shippingOriginalLua": 463856.0,
+    "butanoBaseline": 28985.0,
+    "mtileTuned": 22540.0,
+    "mtileVariant": "physics_128-blocked_iwram",
+    "butanoThumbIWRAM": 18956.0,
+    "butanoArmIWRAM": 13527.0,
+    "ratioVsBaseline": 0.7776436087631533,
+    "ratioVsTunedButano": 1.6662970355585125
+  },
+  {
+    "workload": "physics_drag_64",
+    "shippingOriginalLua": 234710.0,
+    "butanoBaseline": 24832.0,
+    "mtileTuned": 19925.0,
+    "mtileVariant": "physics_drag_64-local_iwram",
+    "butanoThumbIWRAM": 18120.0,
+    "butanoArmIWRAM": 10848.0,
+    "ratioVsBaseline": 0.802392074742268,
+    "ratioVsTunedButano": 1.8367441002949854
+  }
+]

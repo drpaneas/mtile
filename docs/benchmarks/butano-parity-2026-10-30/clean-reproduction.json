@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "observedHz": 29.863750284802915,
+    "refreshGapHistogram": {
+      "2": 599
+    },
+    "overBudgetTicks": 0,
+    "samples": 600,
+    "median": 22540.0,
+    "p95": 22546,
+    "maximum": 22548,
+    "minimum": 22540,
+    "budgetPercent": 4.012161084529506,
+    "missed": 0,
+    "videoRefreshes": 1198,
+    "firstPublicationVideoFrame": 9,
+    "gcCollections": 0,
+    "heapPeak": 0,
+    "mean": 22541.395
+  },
+  "repeatMedians": [
+    22540.0,
+    22540.0
+  ],
+  "iwramUsed": 13856,
+  "ewramUsed": 156868,
+  "romBytes": 57176,
+  "romSHA256": "713b05bca750d2fa7071651fa7d0c63c70e980717e25c25200e7f13a3c9fab20",
+  "sourceSHA256": "e07e496908b349a7dc3700d116e1e9631771a636335441042bf43bb234f409a6",
+  "verifiedTicks": 1200,
+  "helperAddress": "03002c78"
+}

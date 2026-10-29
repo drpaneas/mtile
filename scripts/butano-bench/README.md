@@ -43,6 +43,15 @@ the expected pixels and simulates signed Q16.16 state for every measured tick
 in both repetitions. A cross-engine screenshot match alone is insufficient.
 `recapture.py` can remeasure existing ROMs without rebuilding them.
 
+`parity.py` explores explicit source/project tuning with the shipping compiler,
+including private numeric arrays, IWRAM helpers, layouts and larger map windows.
+It independently checks all images/checksums; these are distinct from the
+unchanged-source engine results. Run `python3 scripts/butano-bench/parity.py`,
+then `--verify-only` to recheck captures, source hashes and placement. Use
+`--work` for a different directory or `--only REGEX` for a subset. See the
+[feasibility report](../../docs/benchmarks/butano-parity-2026-10-30/README.md),
+including its separately classified Butano and native-Go controls.
+
 For instruction attribution and unchanged-source performance fixes:
 
 ```sh

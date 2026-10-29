@@ -197,3 +197,25 @@ Review cleanup routes uncached string-field stores directly to the rooted
 helper and removes the obsolete `gluTableSet` wrapper. This avoids an array-slot
 attempt that could never succeed. The 128-entity Mode 0 ROM is byte-identical
 afterward; the saved measurement snapshot remains unchanged.
+
+## Feasibility investigation: reaching Butano's baseline
+
+The [2026-10-30 investigation](benchmarks/butano-parity-2026-10-30/README.md)
+keeps engine source unchanged at `660c8d5` and tests explicit Lua/project
+tuning. Private compact numeric arrays and an IWRAM physics helper reach
+10,239 / 17,747 / 19,925 cycles for 32 entities / 64 entities / 64 with drag.
+At 128 entities, two contiguous blocks of 64 records reach 22,540 cycles.
+These match or beat the original Butano baseline, with the 64-entity difference
+treated as a practical tie. They do not replace the original-source results.
+
+Applying ARM/IWRAM tuning to Butano lowers its medians to 8,343 / 10,071 /
+13,527 / 10,848 cycles for 32 / 64 / 128 / 64-with-drag entities. That still
+leads the supported tuned-Lua paths by factors of 1.23–1.84. A separate
+hand-edited native-Go control reaches 7,839 cycles for 128 entities with static
+buffers/code in IWRAM. This demonstrates backend headroom; safe automatic
+lowering of generic Lua tables to that representation remains unimplemented.
+
+A larger scrolling cache window reduces mean cost from 64,771 to 12,086 cycles,
+but increases p95 to 132,324 versus Butano's 11,061. Incremental map updates
+remain necessary to approach its tail latency. All variants and limits are
+recorded separately, with 25,200 verified ticks and no production engine edits.

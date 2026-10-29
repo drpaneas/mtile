@@ -1,0 +1,7 @@
+{
+  "assets/map.json": "d7d70ed72d141d097084f3eb73020408eb9b8b39e0f66baabf0b0dc8099f7a99",
+  "assets/palettes/bench.json": "97cccbf55148240bad7094a6e114412c91724645f69df0fb7f974b5b57fe3105",
+  "assets/spritesheet.json": "d22256fbfa9f5dd475ebdb2c4d35e27fa52f859921b588ecfb1fff4b505e5ed6",
+  "game.lua": "22aa0378e749949def01fa708f5664e42496c5939c6a1dc2538fdc6a48ea6040",
+  "project.json": "96c627348174c5ea2e2582d44858f899cb46394c9a3a15cd668d45e6974dcf14"
+}

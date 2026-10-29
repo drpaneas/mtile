@@ -1,0 +1,64 @@
+{
+  "ewram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 12959.0,
+      "p95": 12983,
+      "maximum": 12991,
+      "minimum": 12959,
+      "budgetPercent": 2.3067256208703575,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 12964.395
+    },
+    "repeatMedians": [
+      12959.0,
+      12959.0
+    ],
+    "romSHA256": "ac2ceac28349733b5435f2a65257eb41494a44c4e39ac14bc637e532aa211295",
+    "elfSHA256": "71cd9dbaa2288a0993c3dddde233443abe37081c1d8ce7b9d8c7a10ec8573454",
+    "mainSHA256": "ca409adca65448c2b09068215c20fb901092b39a24cea58c8d1460cec7a7261c",
+    "nativeSHA256": "0bd093b2acdd1dc5257081da760a0d2747d4c3de70bd010bfbcc2f2a819c8c2e",
+    "verifiedTicks": 1200,
+    "note": "Hand-edited native Go diagnostic, not output of the Lua compiler; private arrays are not mirrored back to Lua heap objects."
+  },
+  "iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 7839.0,
+      "p95": 7863,
+      "maximum": 7871,
+      "minimum": 7839,
+      "budgetPercent": 1.3953562884483937,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 9,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 7844.395
+    },
+    "repeatMedians": [
+      7839.0,
+      7839.0
+    ],
+    "romSHA256": "540684189ca0b77c7ba94608b98f640088270847da654f9cc51e0aab3e01ace1",
+    "elfSHA256": "682a8ed092d9bdfd46348b15faf347253282a148efbaae2d4d194f2600aa6a68",
+    "mainSHA256": "ca409adca65448c2b09068215c20fb901092b39a24cea58c8d1460cec7a7261c",
+    "nativeSHA256": "d048d8fb8c6ee451990b71560cb28e7bc5df5d3bc758d07c03b5b5211dcf3d7f",
+    "verifiedTicks": 1200,
+    "note": "Hand-edited native Go diagnostic, not output of the Lua compiler; private arrays are not mirrored back to Lua heap objects."
+  }
+}

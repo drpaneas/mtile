@@ -1,0 +1,234 @@
+{
+  "physics_32-thumb_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 9649.0,
+      "p95": 9656,
+      "maximum": 9671,
+      "minimum": 9649,
+      "budgetPercent": 1.7175395876053772,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 9651.081666666667
+    },
+    "repeatMedians": [
+      9649.0,
+      9649.0
+    ],
+    "romSHA256": "8c2050548d22b5f77dfdd722952e32d4fa6905c9ece0b498af21eebe4ac9f88a",
+    "elfSHA256": "4465eb879252eb0146459e8644018e2881dfe5c0ccee030c2a66b958f91cbfb1",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_32-arm_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 8343.0,
+      "p95": 8349,
+      "maximum": 8355,
+      "minimum": 8341,
+      "budgetPercent": 1.4850692071086808,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 8344.53
+    },
+    "repeatMedians": [
+      8343.0,
+      8343.0
+    ],
+    "romSHA256": "ed898b50a7e0d63764033816bdbf0ae6864ded727d267c8d8883c5bbc7f2b973",
+    "elfSHA256": "b6953a85b060650e4d1ca24435e1bc0237a2986fa18335277275aad940870ea5",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_64-thumb_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 12785.0,
+      "p95": 12803,
+      "maximum": 12810,
+      "minimum": 12785,
+      "budgetPercent": 2.27575330371383,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 12789.123333333333
+    },
+    "repeatMedians": [
+      12785.0,
+      12785.0
+    ],
+    "romSHA256": "03bc73f5c034f3290df08b1965aa67f4b98fd360139e64a6941c40608d1ab98d",
+    "elfSHA256": "a4f387636370e658e3cd3626715e3b8cec7a2420c535ce230a9a3aeadc658a76",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_64-arm_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 10071.0,
+      "p95": 10085,
+      "maximum": 10093,
+      "minimum": 10069,
+      "budgetPercent": 1.7926563568010936,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 10074.21
+    },
+    "repeatMedians": [
+      10071.0,
+      10071.0
+    ],
+    "romSHA256": "5476d371def72b4916810c9dc38617280897fdff5f496aec7364bfe5b0c97185",
+    "elfSHA256": "a8f315335e5088689e879caa85c75dbf3367bd9d819eea74fe1f34585916a853",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_128-thumb_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 18956.0,
+      "p95": 18992,
+      "maximum": 19006,
+      "minimum": 18953,
+      "budgetPercent": 3.3742025518341308,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 18964.308333333334
+    },
+    "repeatMedians": [
+      18956.0,
+      18956.0
+    ],
+    "romSHA256": "9786b2116ef561bafb63e7fca7dea4af08290b4e77ae78569435fef62e625bea",
+    "elfSHA256": "c67427cf7e918b0d5e9b4ae5a96bd9ddf00d9eae718ba5b051793e95a5e7fb28",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_128-arm_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 13527.0,
+      "p95": 13556,
+      "maximum": 13568,
+      "minimum": 13522,
+      "budgetPercent": 2.407830656185919,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 13533.31
+    },
+    "repeatMedians": [
+      13527.0,
+      13527.0
+    ],
+    "romSHA256": "33652575b83b4714bcb7dc6c9d7f8ac05fa89fe4817fd875940aa559f7b08940",
+    "elfSHA256": "a8f2c6fc668abf5f7ef4a4ccf33d4d0b5d1a415f05fda4ed0e5095c30fa3ed2f",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_drag_64-thumb_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 18120.0,
+      "p95": 18161,
+      "maximum": 18182,
+      "minimum": 18106,
+      "budgetPercent": 3.225393028024607,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 18123.958333333332
+    },
+    "repeatMedians": [
+      18120.0,
+      18120.0
+    ],
+    "romSHA256": "604c9822d2f02a16e45bce227f3db9c6834c5a554857503c619e81dfac9d4fe8",
+    "elfSHA256": "b73b70a10403c06216bca6456d1c3239688c8bff6414ef312248ad2927f6576f",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  },
+  "physics_drag_64-arm_iwram": {
+    "summary": {
+      "observedHz": 29.863750284802915,
+      "refreshGapHistogram": {
+        "2": 599
+      },
+      "overBudgetTicks": 0,
+      "samples": 600,
+      "median": 10848.0,
+      "p95": 10863,
+      "maximum": 10878,
+      "minimum": 10842,
+      "budgetPercent": 1.9309637730690363,
+      "missed": 0,
+      "videoRefreshes": 1198,
+      "firstPublicationVideoFrame": 11,
+      "gcCollections": 0,
+      "heapPeak": 0,
+      "mean": 10849.058333333332
+    },
+    "repeatMedians": [
+      10848.0,
+      10848.0
+    ],
+    "romSHA256": "3baa4072cdcb2818ad2951788e80324ae28ffdca4149d16e6289812d2c5a5907",
+    "elfSHA256": "bf48f27ae298a68a145a4ecd488166d988b075b039372e4ba6f70a351381a302",
+    "helperAddress": "03000000",
+    "verifiedTicks": 1200
+  }
+}

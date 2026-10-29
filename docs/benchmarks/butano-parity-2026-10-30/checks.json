@@ -1,0 +1,13 @@
+{
+  "productSourceChanged": false,
+  "requiredGoGates": [
+    "ok  \tgithub.com/drpaneas/mtile/internal/transpiler\t327.477s",
+    "ok  \tgithub.com/drpaneas/mtile/internal/build\t(cached)",
+    "ok  \tgithub.com/drpaneas/mtile/cmd/mtile\t(cached)"
+  ],
+  "runtimeGate": "pass (cached)",
+  "reproducer": "All 10 source transformations reproduce the measured Lua byte-for-byte; clean-directory blocked-128 build reproduces the exact ROM and medians.",
+  "nativePreflight": "Unedited generated Go reproduces its baseline ROM byte-for-byte before manual changes.",
+  "iwramVerification": "ELF symbols place every requested Lua/Butano helper in IWRAM; native buffers match requested EWRAM/IWRAM regions.",
+  "comparisonBoundary": "Shipping Lua authoring, tuned Butano and hand-edited native Go are separate classes; original-source engine results are unchanged."
+}

@@ -16,6 +16,11 @@ The next [indexed-store argument optimization](table-store-arguments-2026-10-29/
 brings the unchanged 128-entity simulation inside the 30 Hz budget and records
 the remaining hash-store tradeoff.
 
+The [Butano-parity feasibility investigation](butano-parity-2026-10-30/README.md)
+separates existing Lua/IWRAM authoring changes, comparable Butano placement
+tuning and native-Go diagnostics. Its results do not replace the unchanged-source
+engine benchmarks.
+
 Several engineering projects have since moved out of `examples/`. When a
 record names one of the old paths, use the current location below.
 
