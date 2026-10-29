@@ -66,3 +66,66 @@ func TestFontContract(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestFontPresetsAndRoundTrip(t *testing.T) {
+	for _, name := range BuiltinFontNames {
+		t.Run(name, func(t *testing.T) {
+			f, err := LoadFont(t.TempDir(), name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = ValidateFont(f); err != nil {
+				t.Fatal(err)
+			}
+			compiled, err := CompileFont(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(compiled.Extra) > 128 {
+				t.Fatal("capacity")
+			}
+		})
+	}
+	f, _ := LoadFont("", "international")
+	f.Name = "my-font"
+	dir := t.TempDir()
+	if err := SaveFont(dir, f); err != nil {
+		t.Fatal(err)
+	}
+	got, err := LoadFont(dir, f.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Glyphs) != len(f.Glyphs) {
+		t.Fatal("lost glyphs")
+	}
+	names, err := ListFonts(dir)
+	if err != nil || len(names) != len(BuiltinFontNames)+1 {
+		t.Fatalf("names=%v: %v", names, err)
+	}
+	if _, err := LoadFont(dir, "../font"); err == nil {
+		t.Fatal("traversal accepted")
+	}
+	f.Name = "pico8"
+	if err := SaveFont(dir, f); err == nil {
+		t.Fatal("overwrote builtin")
+	}
+	for _, entry := range []struct{ name, text string }{{"greek", "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρςστυφχψωΆΈΉΊΌΎΏάέήίόύώΪΫϊϋΐΰ"}, {"german", "ÄÖÜäöüßẞ"}} {
+		f, _ := LoadFont("", entry.name)
+		compiled, _ := CompileFont(f)
+		for _, cp := range entry.text {
+			found := false
+			for _, g := range compiled.Extra {
+				if g.Codepoint == cp {
+					found = true
+					if g.Columns == [4]byte{} {
+						t.Errorf("blank %c", cp)
+					}
+				}
+			}
+			if !found {
+				t.Errorf("missing %c", cp)
+			}
+		}
+	}
+}

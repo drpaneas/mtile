@@ -35,6 +35,11 @@ func (g *generator) render() string {
 	}
 	b.line(")")
 	b.line("")
+	font := g.opts.Font
+	if font == nil {
+		font = runtimeapi.DefaultFont()
+	}
+	b.line(assetsync.FontGoDeclaration(font))
 	g.renderHelpers(&b)
 	b.line("")
 	g.renderGame(&b)
@@ -236,6 +241,7 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	b.line("var _ Runnable = (*Game)(nil)")
 	b.line("")
 	b.line("func (g *Game) Init(c *rt.Context) {")
+	b.line("\tif !c.SetFont(&projectFontROM) { panic(\"invalid project font\") }")
 	for _, s := range g.statics {
 		b.line("\tg." + g.staticGo[s] + " = c.InternStatic(" + strconv.Quote(s) + ")")
 	}

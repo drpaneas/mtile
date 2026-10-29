@@ -789,3 +789,22 @@ attributes and never recolors or uploads sprite pixels during a frame.
 
 [Palette sharing and native parity evidence](benchmarks/render-modes/pose-color-variants-v1.md)
 covers the accepted pose/animation variant shapes and resource savings.
+
+### Project fonts and UTF-8 `print`
+
+`print` remains **Mode 0 conditional**. Every font has a monochrome 4×5 bitmap
+and fixed 6×8 advance: changing the project font never changes cursor, tab,
+background, clip, wrap, or return-coordinate metrics. Mode 4 decodes printable
+UTF-8 codepoints and uses the selected font, replacing unsupported codepoints
+and malformed bytes with its visible `?`. Control codes and their parameters
+remain byte based. Lua `#`, `sub`, `ord`, and `chr` remain byte based too.
+Use precomposed Unicode (NFC); combining marks are not font glyphs.
+
+Mode 0 still admits only the existing static printable ASCII / decimal-number
+call shapes. The host compiles the selected font's exact pixels into its
+existing bounded `(glyph,color)` OBJ atlas and reserved sheet cells. All
+existing color, OAM, ordering, clipping, palette, and 32-tile limits still apply.
+Non-ASCII strings, including Greek and German diacritics, fail forced Mode 0
+with the stable source-positioned `M0_PRINT_SHAPE` diagnostic; AUTO selects
+Mode 4. Merely selecting a Greek/German/custom font does not disqualify ASCII
+calls. No Unicode call shapes have been admitted to AUTO's Mode 0 subset.

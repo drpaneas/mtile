@@ -397,6 +397,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 func (s Service) transpilerOptions(project assetsync.Project, assets *assetsync.Assets, renderer transpiler.Renderer) transpiler.Options {
 	poseIndex, poseParts := flattenAssetPoses(assets)
 	return transpiler.Options{
+		Font:                               assets.CompiledFont(),
 		PackageName:                        "main",
 		IWRAMFunctions:                     project.IWRAMFunctions,
 		Renderer:                           renderer,
@@ -690,7 +691,7 @@ func runtimeBuildTags(report transpiler.RendererReport) string {
 		}
 		tags += staticTag
 	}
-	return tags
+	return tags + ",mtile_project_font"
 }
 
 func mode0BuildTags(report transpiler.RendererReport) string {

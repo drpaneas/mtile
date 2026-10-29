@@ -73,6 +73,8 @@ func GenerateGo(projectDir, packageName string) ([]byte, error) {
 		writeNativeAudioArrays(&b, assets.NativeAudio.Library)
 	}
 
+	b.WriteString(FontGoDeclaration(assets.CompiledFont()))
+
 	// Standalone assetsync output has no Lua AST from which to prove that
 	// sset is unused, so preserve the fully mutable sheet contract. The main
 	// transpiler can select ROM-backed immutable art automatically.
@@ -136,7 +138,7 @@ func InitAssets(ctx *rt.Context) bool {
 		return false
 	}
 	ctx.LoadPalette(&paletteROM)
-	return true
+	return ctx.SetFont(&projectFontROM)
 }
 `)
 

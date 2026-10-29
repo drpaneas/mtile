@@ -16,6 +16,7 @@ const (
 // renderState is build-tag selected so each renderer links only its own
 // graphics state.
 type Context struct {
+	font        *Font
 	poseVariant int
 	// tileLinkScanLayers marks logical layers whose linked objects are found
 	// by scanning visible cells (see tileLinkMutated). tileLinkSite and its

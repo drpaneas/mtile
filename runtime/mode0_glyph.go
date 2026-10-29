@@ -21,8 +21,12 @@ func Mode0TextGlyphKey(ch, color byte) uint16 {
 // 8x8 OBJ tile layout used by the hardware renderer. It is called by the host
 // transpiler while generating ROM data; TinyGo removes it from cartridges.
 func BuildMode0GlyphTile(ch, color byte) [64]byte {
+	return BuildMode0GlyphTileWithFont(DefaultFont(), ch, color)
+}
+
+func BuildMode0GlyphTileWithFont(font *Font, ch, color byte) [64]byte {
 	var tile [64]byte
-	columns := glyphColumns(ch)
+	columns := font.Columns(rune(ch))
 	for col := 0; col < glyphBitmapW; col++ {
 		bits := columns[col] & 0x1f
 		for row := 0; row < glyphBitmapH; row++ {
@@ -39,6 +43,10 @@ func BuildMode0GlyphTile(ch, color byte) [64]byte {
 // pixels cannot survive into sget/map of those IDs; OBJ VRAM still loads from
 // the ROM atlas.
 func OverlayMode0TextSheet(sheet []byte, sheetW, sheetH int, keys []uint16) {
+	OverlayMode0TextSheetWithFont(sheet, sheetW, sheetH, keys, DefaultFont())
+}
+
+func OverlayMode0TextSheetWithFont(sheet []byte, sheetW, sheetH int, keys []uint16, font *Font) {
 	if sheetW < 8 || sheetH < 8 || len(sheet) < sheetW*sheetH {
 		return
 	}
@@ -55,7 +63,7 @@ func OverlayMode0TextSheet(sheet []byte, sheetW, sheetH int, keys []uint16) {
 		var tile [64]byte
 		if index < len(keys) {
 			key := keys[index]
-			tile = BuildMode0GlyphTile(byte(key>>8), byte(key))
+			tile = BuildMode0GlyphTileWithFont(font, byte(key>>8), byte(key))
 		}
 		for y := 0; y < 8; y++ {
 			copy(sheet[origin+y*sheetW:origin+y*sheetW+8], tile[y*8:y*8+8])

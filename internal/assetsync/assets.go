@@ -18,6 +18,10 @@ func Load(projectDir string) (*Assets, error) {
 	if err != nil {
 		return nil, err
 	}
+	font, err := LoadFont(projectDir, project.Font)
+	if err != nil {
+		return nil, err
+	}
 	sheet, err := LoadSpritesheet(projectDir)
 	if err != nil {
 		return nil, err
@@ -34,6 +38,7 @@ func Load(projectDir string) (*Assets, error) {
 	if err != nil {
 		return nil, err
 	}
+	assets.Font = font
 	objSheet, err := LoadObjSheet(projectDir)
 	if err != nil {
 		return nil, err
@@ -111,6 +116,11 @@ func LoadProject(projectDir string) (Project, error) {
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return Project{}, fmt.Errorf("project renderer: %w", err)
 	}
+	if project.Font != "" {
+		if err := validatePaletteName(project.Font); err != nil {
+			return Project{}, fmt.Errorf("project font: %w", err)
+		}
+	}
 	if err := ValidateIWRAMFunctions(project.IWRAMFunctions); err != nil {
 		return Project{}, fmt.Errorf("project iwramFunctions: %w", err)
 	}
@@ -132,6 +142,11 @@ func SaveProject(projectDir string, project Project) error {
 	}
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return fmt.Errorf("project renderer: %w", err)
+	}
+	if project.Font != "" {
+		if err := validatePaletteName(project.Font); err != nil {
+			return fmt.Errorf("project font: %w", err)
+		}
 	}
 	if err := ValidateIWRAMFunctions(project.IWRAMFunctions); err != nil {
 		return fmt.Errorf("project iwramFunctions: %w", err)

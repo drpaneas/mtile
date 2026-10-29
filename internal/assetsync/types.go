@@ -36,6 +36,7 @@ const (
 type Project struct {
 	UnknownFields UnknownFields `json:"-"`
 	ActivePalette string        `json:"activePalette"`
+	Font          string        `json:"font,omitempty"`
 	// Entry is an optional project-relative Lua entry point. Empty preserves
 	// the original root game.lua convention.
 	Entry string `json:"entry,omitempty"`
@@ -180,6 +181,7 @@ type Map struct {
 
 // Assets is the validated, flattened representation used by code generation.
 type Assets struct {
+	Font         *Font
 	Project      Project
 	AudioVersion int
 	NativeAudio  *NativeAudioAssets

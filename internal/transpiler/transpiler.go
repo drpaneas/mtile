@@ -56,6 +56,8 @@ func (e *GlobalLimitError) Error() string {
 // valid 8x8 empty sheet is emitted. The build pipeline supplies the same
 // fields with real ROM data.
 type Options struct {
+	// Font is immutable build-selected 4x5 artwork; nil preserves PICO-8 wide.
+	Font        *runtimeapi.Font
 	PackageName string
 	// IWRAMFunctions selects plain top-level Lua helpers for fast internal RAM.
 	// Empty preserves normal code placement. The target linker enforces capacity.
@@ -241,6 +243,7 @@ var Builtins = map[string]BuiltinSpec{
 	"map":    {"MapBGAtV", 0, 8, 0},
 	"camera": {"CameraV", 0, 2, 0}, "clip": {"ClipV", 0, 4, 0}, "pal": {"PalV", 0, 3, 0},
 	"palt": {"PaltV", 0, 2, 0}, "color": {"ColorV", 0, 1, 0}, "cursor": {"CursorV", 0, 3, 0},
+	// UTF-8 print uses the project font; cell advance and control bytes stay fixed.
 	"print": {"PrintV", 1, 4, 1},
 	"sget":  {"Sget", 2, 2, 1}, "sset": {"Sset", 3, 3, 0}, "fget": {"Fget", 1, 2, 1},
 	"fset": {"Fset", 2, 3, 0}, "mget": {"Mget", 2, 3, 1},
@@ -360,6 +363,12 @@ type generationMetadata struct {
 }
 
 func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
+	if opts.Font != nil {
+		var c runtimeapi.Context
+		if !c.SetFont(opts.Font) {
+			return "", generationMetadata{}, errors.New("transpiler: invalid project font")
+		}
+	}
 	if chunk == nil {
 		return "", generationMetadata{}, errors.New("transpiler: nil chunk")
 	}
@@ -742,7 +751,7 @@ func (g *generator) prepare() error {
 		}
 		atlas := buildMode0TextAtlasForSource(g.chunk, draw.decl, g.opts)
 		g.mode0TextKeys, g.mode0TextTiles = atlas.keys, atlas.tiles
-		runtimeapi.OverlayMode0TextSheet(g.opts.Sheet, g.opts.SheetW, g.opts.SheetH, atlas.keys)
+		runtimeapi.OverlayMode0TextSheetWithFont(g.opts.Sheet, g.opts.SheetW, g.opts.SheetH, atlas.keys, g.opts.Font)
 	}
 	if !g.sheetMutable {
 		g.compactSheet()

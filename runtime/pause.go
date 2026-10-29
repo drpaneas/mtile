@@ -137,6 +137,7 @@ func (c *Context) PreparePauseMenu() {
 	}
 	v.key, v.prepared, v.dirty = key, true, true
 	tall := p.ended || p.result != 0 || p.wait > 0
+	v.font = c.font
 	v.panel(tall)
 	if p.ended {
 		v.centered("SESSION", 18, 4)

@@ -15,6 +15,7 @@ const (
 )
 
 type pauseVideo struct {
+	font                          *Font
 	tiles, pixels                 [512]uint32
 	oam                           [256]uint32
 	palettes                      [PauseOBJPaletteColors]uint16
@@ -77,7 +78,7 @@ func (v *pauseVideo) rect(x, y, w, h int, color uint32) {
 }
 func (v *pauseVideo) text(s string, x, y int, color uint32) {
 	for i := 0; i < len(s); i++ {
-		columns := glyphColumns(s[i])
+		columns := v.font.Columns(rune(s[i]))
 		for col, bits := range columns {
 			for row := 0; row < 5; row++ {
 				if bits&(1<<uint(row)) != 0 {

@@ -41,7 +41,11 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		// (a pose's bounds or a whole clip's union). Mode 0 still requires the
 		// documented bounded draw sites, OAM budget, and tile streaming proof.
 		return RendererMode0Conditional
-	case "cls", "spr", "sspr", "map", "clip", "pal", "palt", "print":
+	case "cls", "spr", "sspr", "map", "clip", "pal", "palt":
+		return RendererMode0Conditional
+	case "print":
+		// Selected-font ASCII has pixel parity through the compiled OBJ atlas.
+		// UTF-8 text and control sequences require Mode 4 (M0_PRINT_SHAPE).
 		return RendererMode0Conditional
 	case "camera", "color", "cursor", "sget", "sset", "fget", "fset":
 		return RendererBoth

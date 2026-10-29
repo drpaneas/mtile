@@ -297,10 +297,14 @@ func sortedMode0TextKeys(seen map[uint16]bool) []uint16 {
 	return keys
 }
 
-func atlasFromMode0TextKeys(keys []uint16) mode0TextAtlas {
+func atlasFromMode0TextKeys(keys []uint16, fonts ...*runtimeapi.Font) mode0TextAtlas {
+	font := runtimeapi.DefaultFont()
+	if len(fonts) > 0 && fonts[0] != nil {
+		font = fonts[0]
+	}
 	atlas := mode0TextAtlas{keys: keys, tiles: make([]uint32, 0, len(keys)*16)}
 	for _, key := range keys {
-		tile := runtimeapi.BuildMode0GlyphTile(byte(key>>8), byte(key))
+		tile := runtimeapi.BuildMode0GlyphTileWithFont(font, byte(key>>8), byte(key))
 		for offset := 0; offset < len(tile); offset += 4 {
 			atlas.tiles = append(atlas.tiles,
 				uint32(tile[offset])|uint32(tile[offset+1])<<8|uint32(tile[offset+2])<<16|uint32(tile[offset+3])<<24)
@@ -349,8 +353,8 @@ func buildMode0TextAtlas(draw *luaparser.FunctionDeclStmt) mode0TextAtlas {
 func buildMode0TextAtlasForSource(chunk *luaparser.Chunk, draw *luaparser.FunctionDeclStmt, opts Options) mode0TextAtlas {
 	if chunk != nil && draw != nil {
 		if ops, _, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), opts); err == nil {
-			return atlasFromMode0TextKeys(mode0TextAtlasKeysForOps(ops))
+			return atlasFromMode0TextKeys(mode0TextAtlasKeysForOps(ops), opts.Font)
 		}
 	}
-	return buildMode0TextAtlas(draw)
+	return atlasFromMode0TextKeys(mode0TextAtlasKeysForDraw(draw), opts.Font)
 }

@@ -1,0 +1,15 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/internal/transpiler
+cpu: Apple M2 Pro
+BenchmarkSelectedFontAtlas-12    	 3593877	       102.6 ns/op	     128 B/op	       1 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/internal/transpiler	0.855s
+goos: darwin
+goarch: arm64
+pkg: github.com/drpaneas/mtile/runtime
+cpu: Apple M2 Pro
+BenchmarkSelectedFontPrint/SCORE_12345-12         	 1284343	       271.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSelectedFontPrint/ΩäΩäΩäΩäΩä-12                   	 1289860	       283.3 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/drpaneas/mtile/runtime	1.615s

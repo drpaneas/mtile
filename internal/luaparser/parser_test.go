@@ -1,6 +1,7 @@
 package luaparser
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -984,5 +985,18 @@ func TestParseMsetKeepsExpandedArgumentCall(t *testing.T) {
 	}
 	if arg, ok := stmt.Call.Args[0].(*CallExpr); !ok || len(arg.Args) != 0 {
 		t.Fatalf("argument = %#v, want the expandable values() call", stmt.Call.Args[0])
+	}
+}
+
+func TestPrintPreservesUTF8AndControlBytes(t *testing.T) {
+	for _, text := range []string{"Ελλάδα", "Grüße", "Ω\x012ä"} {
+		chunk, err := ParseString("font.lua", "print("+strings.ReplaceAll(strconv.Quote(text), `\x01`, `\001`)+",0,0,7)")
+		if err != nil {
+			t.Fatal(err)
+		}
+		literal := chunk.Body[0].(*CallStmt).Call.Args[0].(*StringExpr)
+		if literal.Value != text || literal.Pos().Source != "font.lua" {
+			t.Fatalf("text=%q", literal.Value)
+		}
 	}
 }
