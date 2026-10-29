@@ -1,0 +1,111 @@
+diff --git a/internal/transpiler/render.go b/internal/transpiler/render.go
+index 36b07b4..03d0053 100644
+--- a/internal/transpiler/render.go
++++ b/internal/transpiler/render.go
+@@ -87,7 +87,7 @@ func (g *generator) renderHelpers(b *sourceBuilder) {
+ 	b.line("func gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }")
+ 	b.line("func gluTableAppendKnown(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }")
+ 	b.line("func gluTableAppendKnownHeld(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }")
+-	b.line("func gluTableSet(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }")
++	b.line("func gluTableSet(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { if c.TryTableSetArray(t,k,v) { return rt.HeapOK }; n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }")
+ 	// A cached field write resolves its handle and stores without allocating.
+ 	// RHS evaluation has already rooted allocations; only the cold lookup/
+ 	// insertion path can collect and needs the temporary root scopes below.
+diff --git a/runtime/map_visible.go b/runtime/map_visible.go
+index 2079385..2c99e0d 100644
+--- a/runtime/map_visible.go
++++ b/runtime/map_visible.go
+@@ -51,6 +51,16 @@ func (c *Context) mapCursorCell(cur *mapCursor, x, y int) uint16 {
+ 	if !mapStorageStreaming && (mapStorageFixed || !c.cart.MapStreaming) {
+ 		return 0
+ 	}
++	slot := c.mapCursorChunkSlot(cur, x, y)
++	if slot < 0 {
++		return 0
++	}
++	// Loaded chunks include sparse edits, and Mset updates resident chunks.
++	return c.cart.Map[slot*MapChunkCells+(y%MapChunkHeight)*MapChunkWidth+x%MapChunkWidth]
++}
++
++// mapCursorChunkSlot resolves a streamed chunk once per cursor transition.
++func (c *Context) mapCursorChunkSlot(cur *mapCursor, x, y int) int {
+ 	chunkX, chunkY := x/MapChunkWidth, y/MapChunkHeight
+ 	if chunkX != cur.chunkX || chunkY != cur.chunkY {
+ 		cur.chunkX, cur.chunkY = chunkX, chunkY
+@@ -61,9 +71,5 @@ func (c *Context) mapCursorCell(cur *mapCursor, x, y int) uint16 {
+ 			c.touchMapChunk(cur.slot)
+ 		}
+ 	}
+-	if cur.slot < 0 {
+-		return 0
+-	}
+-	// Loaded chunks include sparse edits, and Mset updates resident chunks.
+-	return c.cart.Map[cur.slot*MapChunkCells+(y%MapChunkHeight)*MapChunkWidth+x%MapChunkWidth]
++	return cur.slot
+ }
+diff --git a/runtime/table.go b/runtime/table.go
+index da55784..45fd4bc 100644
+--- a/runtime/table.go
++++ b/runtime/table.go
+@@ -272,6 +272,27 @@ func (c *Context) TableGetInt(t Value, i int) Value {
+ 	return c.TableGet(t, IntVal(i))
+ }
+ 
++// TryTableSetArray is a compiler-internal, non-allocating store into an
++// existing array slot. A false result leaves the table untouched and requires
++// the normal rooted TableSet path: hash insertion and capacity growth can
++// collect, but an already allocated array slot cannot. Values retain their
++// complete tagged representation, including nil and reference values.
++//
++//go:noinline
++//go:section .iwram
++func (c *Context) TryTableSetArray(t, key, value Value) bool {
++	n, ok := integerKey(key)
++	if !ok || n < 1 {
++		return false
++	}
++	data, err := c.tableData(t)
++	if err != HeapOK || n > int(readU16(data, 2)) {
++		return false
++	}
++	writeValue(data, arraySlotOff(n-1), value)
++	return true
++}
++
+ func (c *Context) TableGet(t, key Value) Value {
+ 	data, err := c.tableData(t)
+ 	if err != HeapOK {
+diff --git a/runtime/tiled_map_full.go b/runtime/tiled_map_full.go
+index 9e06c75..a40c2ad 100644
+--- a/runtime/tiled_map_full.go
++++ b/runtime/tiled_map_full.go
+@@ -62,14 +62,23 @@ func (c *Context) tryMode0FullMap(slot, bg, cx, cy, x, y, w, h, flags int) bool
+ 		}
+ 	} else if present {
+ 		cur := c.newMapCursor(bg)
++		left, right := max(0, -cx), min(w, c.cart.MapW-cx)
++		limit := min(c.cart.SpriteN, mode0TileLimit)
+ 		for my := max(0, -cy); my < min(h, c.cart.MapH-cy); my++ {
+-			for mx := max(0, -cx); mx < min(w, c.cart.MapW-cx); mx++ {
+-				id := c.mapCursorCell(&cur, cx+mx, cy+my)
+-				if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask || c.tileLinkOf(id) != 0 {
+-					continue
++			for mx := left; mx < right; {
++				// Source chunks and destination screen blocks can have different
++				// alignments. Split at both boundaries before copying a row span.
++				x, y := cx+mx, cy+my
++				n := min(right-mx, MapChunkWidth-x%MapChunkWidth, 32-mx%32)
++				if chunk := c.mapCursorChunkSlot(&cur, x, y); chunk >= 0 {
++					start := chunk*MapChunkCells + y%MapChunkHeight*MapChunkWidth + x%MapChunkWidth
++					cells := c.cart.Map[start : start+n]
++					entry := mode0ScreenEntry(mx, my) * 2
++					dst := screen[entry : entry+n*2]
++					mode0CopyMapSpan(dst, cells, c.cart.Flags, limit, mask)
++					c.hideMode0LinkedSpan(dst, cells)
+ 				}
+-				entry := mode0ScreenEntry(mx, my) * 2
+-				screen[entry], screen[entry+1] = byte(id), byte(id>>8)
++				mx += n
+ 			}
+ 		}
+ 	}

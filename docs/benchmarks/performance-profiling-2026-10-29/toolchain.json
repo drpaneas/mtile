@@ -1,0 +1,11 @@
+{
+  "mtileBaseRevision": "bb849262279142eee99e970828880de57b0c94da",
+  "tinygo": "0.42.0 / LLVM 22.1.4",
+  "go": "1.27.1",
+  "budget": 561792,
+  "warmup": 60,
+  "samplesPerRepetition": 600,
+  "repetitions": 2,
+  "profileTicks": 120,
+  "helperSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544"
+}

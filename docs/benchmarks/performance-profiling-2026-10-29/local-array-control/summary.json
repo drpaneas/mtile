@@ -1,0 +1,23 @@
+{
+  "observedHz": 29.863750284802915,
+  "refreshGapHistogram": {
+    "2": 599
+  },
+  "overBudgetTicks": 0,
+  "samples": 600,
+  "median": 40677.0,
+  "p95": 40683,
+  "maximum": 40685,
+  "minimum": 40675,
+  "budgetPercent": 7.2405801435406705,
+  "missed": 0,
+  "videoRefreshes": 1198,
+  "firstPublicationVideoFrame": 9,
+  "gcCollections": 0,
+  "heapPeak": 0,
+  "romSHA256": "797bf811429138af6e14b987b0986032e51caa823b754e8fcc018e02b14610fd",
+  "sourceSHA256": "e19b8995bf89ccfdafced482c38bc6f69b248345d69fc37c0f8413c62dac8438",
+  "note": "Diagnostic source-only variant: px/py/vx/vy have chunk-scope local bindings; not the unchanged-source engine fix.",
+  "pixelMismatches": 0,
+  "stateChecksumMismatches": 0
+}

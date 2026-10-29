@@ -1,0 +1,4 @@
+{
+  "stopwatchControlCycles": 489,
+  "description": "Zero useful work; two pause/resume boundaries and two empty interrupt hooks. No subtraction applied to engine results."
+}

@@ -62,14 +62,23 @@ func (c *Context) tryMode0FullMap(slot, bg, cx, cy, x, y, w, h, flags int) bool 
 		}
 	} else if present {
 		cur := c.newMapCursor(bg)
+		left, right := max(0, -cx), min(w, c.cart.MapW-cx)
+		limit := min(c.cart.SpriteN, mode0TileLimit)
 		for my := max(0, -cy); my < min(h, c.cart.MapH-cy); my++ {
-			for mx := max(0, -cx); mx < min(w, c.cart.MapW-cx); mx++ {
-				id := c.mapCursorCell(&cur, cx+mx, cy+my)
-				if id == 0 || int(id) >= c.cart.SpriteN || id >= mode0TileLimit || mask != 0 && c.cart.Flags[id]&mask != mask || c.tileLinkOf(id) != 0 {
-					continue
+			for mx := left; mx < right; {
+				// Source chunks and destination screen blocks can have different
+				// alignments. Split at both boundaries before copying a row span.
+				x, y := cx+mx, cy+my
+				n := min(right-mx, MapChunkWidth-x%MapChunkWidth, 32-mx%32)
+				if chunk := c.mapCursorChunkSlot(&cur, x, y); chunk >= 0 {
+					start := chunk*MapChunkCells + y%MapChunkHeight*MapChunkWidth + x%MapChunkWidth
+					cells := c.cart.Map[start : start+n]
+					entry := mode0ScreenEntry(mx, my) * 2
+					dst := screen[entry : entry+n*2]
+					mode0CopyMapSpan(dst, cells, c.cart.Flags, limit, mask)
+					c.hideMode0LinkedSpan(dst, cells)
 				}
-				entry := mode0ScreenEntry(mx, my) * 2
-				screen[entry], screen[entry+1] = byte(id), byte(id>>8)
+				mx += n
 			}
 		}
 	}

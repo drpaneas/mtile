@@ -1,0 +1,46 @@
+--- FAIL: TestReadOnlySheetValidatesSolidMetadata (0.00s)
+    --- FAIL: TestReadOnlySheetValidatesSolidMetadata/absent (0.00s)
+        cartmem_test.go:251: metadata accepted=false want=true
+    --- FAIL: TestReadOnlySheetValidatesSolidMetadata/unknown (0.00s)
+        cartmem_test.go:251: metadata accepted=false want=true
+    --- FAIL: TestReadOnlySheetValidatesSolidMetadata/solid-255 (0.00s)
+        cartmem_test.go:251: metadata accepted=false want=true
+--- FAIL: TestSpriteN65536Boundary (0.00s)
+    cartmem_test.go:311: SpriteN 65536 was rejected
+--- FAIL: Test128x64MapUsesCompleteMutableRAM (0.00s)
+    cartmem_test.go:350: 128x64 map Init returned false
+--- FAIL: TestLayeredMgetMsetCompactSparsePlanes (0.00s)
+    map_layers_api_test.go:47: Init rejected compact layered map
+--- FAIL: TestMode0FourLayersUseIndependentBackgroundsAndScroll (0.00s)
+    mode0_layers4_test.go:16: Init rejected valid mutable Mode 0 fixture
+--- FAIL: TestMode0MapBGAtReadsSparseLogicalPlanesIntoDenseSlots (0.00s)
+    mode0_layers4_test.go:75: Init rejected valid mutable Mode 0 fixture
+--- FAIL: TestMode0PrepareStagesMutableTilesWithoutChangingVisibleVRAM (0.00s)
+    mode0_sheet_prepare_test.go:14: Init rejected valid mutable Mode 0 fixture
+--- FAIL: TestMode0PreparedTilesPreserveLateMutationAndOverflowFallback (0.00s)
+    mode0_sheet_prepare_test.go:72: Init rejected valid mutable Mode 0 fixture
+--- FAIL: TestMode0PreparedTilesDoNotAllocate (0.00s)
+    mode0_sheet_prepare_test.go:107: Init rejected valid mutable Mode 0 fixture
+--- FAIL: TestContext_Init_successCopiesROM (0.00s)
+    cartmem_test.go:53: Init returned false
+--- FAIL: TestReadOnlySheetUsesROMWithoutRAMCopy (0.00s)
+    cartmem_test.go:195: read-only sheet Init returned false
+--- FAIL: TestSsetDoesNotAliasMap (0.00s)
+    cartmem_test.go:173: Init returned false
+--- FAIL: TestSsetEightBitGoldenAnd255 (0.00s)
+    cartmem_test.go:262: Init returned false
+--- FAIL: TestContext_FsetByte (0.00s)
+    cartmem_test.go:89: Init returned false
+--- FAIL: TestContext_Init_failedReinitClearsCart (0.00s)
+    cartmem_test.go:137: first Init returned false
+--- FAIL: TestContext_FgetByte (0.00s)
+    cartmem_test.go:74: Init returned false
+FAIL
+FAIL	github.com/drpaneas/mtile/runtime	2.343s
+ok  	github.com/drpaneas/mtile/runtime/audio	1.216s
+ok  	github.com/drpaneas/mtile/runtime/hw	1.313s
+ok  	github.com/drpaneas/mtile/runtime/internal/audioref	0.854s
+?   	github.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest	[no test files]
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/checkallocs	1.616s
+ok  	github.com/drpaneas/mtile/runtime/internal/cmd/gentarget	1.958s
+FAIL

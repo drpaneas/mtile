@@ -1,0 +1,236 @@
+[
+  {
+    "name": "psg_events_every_8_ticks",
+    "strictAudioParity": false,
+    "reason": "mTile schedules at 256 Hz; Butano advgm executes at VBlank. Trigger/sample phase equality is not established.",
+    "engines": {
+      "butano": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 7394.0,
+        "p95": 8002,
+        "maximum": 8095,
+        "minimum": 7394,
+        "budgetPercent": 1.316145477329688,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1650,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1253,
+          "CH3Control": 192,
+          "CH3Length": 16384,
+          "CH3Frequency": 1253,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      },
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 935.0,
+        "p95": 1586,
+        "maximum": 8853,
+        "minimum": 872,
+        "budgetPercent": 0.16643170426065163,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "serviceCpuPercentEstimate": 0.5269109514946875,
+        "serviceMeanCycles": 346.0,
+        "measuredServices": 5647.0,
+        "registerMismatchTicks": 75,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1650,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1253,
+          "CH3Control": 128,
+          "CH3Length": 16384,
+          "CH3Frequency": 1253,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 24442.0,
+        "p95": 25093,
+        "maximum": 33822,
+        "minimum": 24379,
+        "budgetPercent": 4.350720551378446,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "serviceCpuPercentEstimate": 0.52680813241177,
+        "serviceMeanCycles": 346.0,
+        "measuredServices": 5646.0,
+        "registerMismatchTicks": 75,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1650,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1253,
+          "CH3Control": 128,
+          "CH3Length": 16384,
+          "CH3Frequency": 1253,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      }
+    }
+  },
+  {
+    "name": "psg_events_every_1_ticks",
+    "strictAudioParity": false,
+    "reason": "mTile schedules at 256 Hz; Butano advgm executes at VBlank. Trigger/sample phase equality is not established.",
+    "engines": {
+      "butano": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 8002.0,
+        "p95": 8095,
+        "maximum": 8095,
+        "minimum": 8002,
+        "budgetPercent": 1.4243705855547961,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 11,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1694,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1339,
+          "CH3Control": 192,
+          "CH3Length": 16384,
+          "CH3Frequency": 1339,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      },
+      "mode0": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 1589.0,
+        "p95": 1589,
+        "maximum": 10368,
+        "minimum": 1510,
+        "budgetPercent": 0.2828448963317384,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "serviceCpuPercentEstimate": 1.7923734557405808,
+        "serviceMeanCycles": 1175.0,
+        "measuredServices": 5647.0,
+        "registerMismatchTicks": 600,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1546,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1046,
+          "CH3Control": 128,
+          "CH3Length": 16384,
+          "CH3Frequency": 1046,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      },
+      "mode4": {
+        "observedHz": 29.863750284802915,
+        "refreshGapHistogram": {
+          "2": 599
+        },
+        "overBudgetTicks": 0,
+        "samples": 600,
+        "median": 25054.0,
+        "p95": 33825,
+        "maximum": 33833,
+        "minimum": 24975,
+        "budgetPercent": 4.459657666894509,
+        "missed": 0,
+        "videoRefreshes": 1198,
+        "firstPublicationVideoFrame": 5,
+        "gcCollections": 0,
+        "heapPeak": 0,
+        "serviceCpuPercentEstimate": 1.7920242868896326,
+        "serviceMeanCycles": 1175.0,
+        "measuredServices": 5646.0,
+        "registerMismatchTicks": 600,
+        "finalPSG": {
+          "CH1Sweep": 8,
+          "CH1Duty": 32896,
+          "CH1Frequency": 1546,
+          "CH2Duty": 32832,
+          "CH2Frequency": 1046,
+          "CH3Control": 128,
+          "CH3Length": 16384,
+          "CH3Frequency": 1046,
+          "CH4Envelope": 32768,
+          "CH4Frequency": 119,
+          "MixPSG": 65399,
+          "MixDMA": 2,
+          "Status": 143,
+          "Bias": 512
+        }
+      }
+    }
+  }
+]

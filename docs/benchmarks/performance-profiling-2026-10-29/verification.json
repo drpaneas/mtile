@@ -1,0 +1,1487 @@
+{
+  "checks": [
+    {
+      "workload": "animation16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "animation16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "animation16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "animation16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "baseline",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "baseline",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "baseline",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "baseline",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "bitmap_rects_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "bitmap_rects_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "bitmap_rects_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "bitmap_rects_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_1024",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_1024",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_1024",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_1024",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_256",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_256",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_256",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_256",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "collision_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_1",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_1",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_1",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_1",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_4",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_4",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_4",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "map_write_4",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "mixed_scene",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "mixed_scene",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "mixed_scene",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "mixed_scene",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_1",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_1",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_1",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_1",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "palette_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax2",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax2",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax2",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax2",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax4",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax4",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax4",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "parallax4",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_128",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_128",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_128",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_128",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_drag_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_drag_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_drag_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "physics_drag_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_chunk_cross",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_chunk_cross",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_chunk_cross",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_chunk_cross",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_small",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_small",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_small",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_small",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_streamed",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_streamed",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_streamed",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "scroll_streamed",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites16_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_8",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_8",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_8",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites32_8",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_64",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_64",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_96",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_96",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_96",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "sprites8_96",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map_cached",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map_cached",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map_cached",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "static_map_cached",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_numeric",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_numeric",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_numeric",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_numeric",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_16",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_16",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_32",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_32",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_8",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_8",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_8",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "text_static_8",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_clustered",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_clustered",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_clustered",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_clustered",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_spread",
+      "engine": "mode0",
+      "capture": "mode0-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_spread",
+      "engine": "mode0",
+      "capture": "mode0-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_spread",
+      "engine": "mode4",
+      "capture": "mode4-samples-0.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    },
+    {
+      "workload": "tile_edits_spread",
+      "engine": "mode4",
+      "capture": "mode4-samples-1.json",
+      "samples": 600,
+      "goldenPixelMismatches": 0,
+      "goldenStateMismatches": 0,
+      "firstPixelMismatches": [],
+      "firstStateMismatches": []
+    }
+  ],
+  "failures": [],
+  "passAll": true,
+  "totalTicks": 88800
+}

@@ -1,0 +1,41 @@
+diff --git a/butano/src/bn_core.cpp b/butano/src/bn_core.cpp
+index 729a51a..20db69e 100644
+--- a/butano/src/bn_core.cpp
++++ b/butano/src/bn_core.cpp
+@@ -4,6 +4,10 @@
+  */
+ 
+ #include "bn_core.h"
++extern "C" void bench_pause();
++extern "C" void bench_resume();
++extern "C" void bench_irq_start();
++extern "C" void bench_irq_end();
+ #include "bn_core_lock.h"
+ 
+ #include "bn_color.h"
+@@ -237,7 +241,9 @@ namespace
+         BN_BARRIER;
+         result.cpu_usage_ticks = data.cpu_usage_timer.elapsed_ticks();
+ 
++        bench_pause();
+         hw::core::wait_for_vblank(data.waiting_for_vblank);
++        bench_resume();
+ 
+         BN_BARRIER;
+         data.cpu_usage_timer.restart();
+@@ -326,6 +332,7 @@ namespace
+ 
+     void _vblank_intr()
+     {
++        bench_irq_start();
+         static_data& data = data_ref();
+         hw::audio::on_vblank();
+ 
+@@ -351,6 +358,7 @@ namespace
+ 
+         link_manager::commit();
+         data.vblank_intr_active = false;
++        bench_irq_end();
+     }
+ }
+ 

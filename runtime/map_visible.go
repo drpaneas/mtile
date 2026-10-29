@@ -51,6 +51,16 @@ func (c *Context) mapCursorCell(cur *mapCursor, x, y int) uint16 {
 	if !mapStorageStreaming && (mapStorageFixed || !c.cart.MapStreaming) {
 		return 0
 	}
+	slot := c.mapCursorChunkSlot(cur, x, y)
+	if slot < 0 {
+		return 0
+	}
+	// Loaded chunks include sparse edits, and Mset updates resident chunks.
+	return c.cart.Map[slot*MapChunkCells+(y%MapChunkHeight)*MapChunkWidth+x%MapChunkWidth]
+}
+
+// mapCursorChunkSlot resolves a streamed chunk once per cursor transition.
+func (c *Context) mapCursorChunkSlot(cur *mapCursor, x, y int) int {
 	chunkX, chunkY := x/MapChunkWidth, y/MapChunkHeight
 	if chunkX != cur.chunkX || chunkY != cur.chunkY {
 		cur.chunkX, cur.chunkY = chunkX, chunkY
@@ -61,9 +71,5 @@ func (c *Context) mapCursorCell(cur *mapCursor, x, y int) uint16 {
 			c.touchMapChunk(cur.slot)
 		}
 	}
-	if cur.slot < 0 {
-		return 0
-	}
-	// Loaded chunks include sparse edits, and Mset updates resident chunks.
-	return c.cart.Map[cur.slot*MapChunkCells+(y%MapChunkHeight)*MapChunkWidth+x%MapChunkWidth]
+	return cur.slot
 }

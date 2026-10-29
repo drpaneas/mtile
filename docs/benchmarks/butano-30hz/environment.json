@@ -1,0 +1,12 @@
+{
+  "mtileRevision": "bb849262279142eee99e970828880de57b0c94da",
+  "butanoRevision": "04374b034c76b82bfdc3aa6c38d652e5e7778a68",
+  "helperSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "gcc": "arm-none-eabi-g++ (devkitARM release 65) 14.2.0",
+  "samples": 600,
+  "warmup": 60,
+  "budget": 561792,
+  "butanoFlags": "stock -O2 Thumb; asserts/log off; F/1 timer; null unused audio backends",
+  "mtileFlags": "stock -opt=2 ARM; -gc=none; debug telemetry enabled"
+}

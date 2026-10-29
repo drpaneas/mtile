@@ -1,0 +1,62 @@
+{
+  "workloads": 38,
+  "rendererCases": 74,
+  "capturedTicks": 88800,
+  "repetitionMediansIdentical": true,
+  "changedCases": [
+    {
+      "workload": "physics_128",
+      "renderer": "mode0"
+    },
+    {
+      "workload": "physics_128",
+      "renderer": "mode4"
+    },
+    {
+      "workload": "physics_32",
+      "renderer": "mode0"
+    },
+    {
+      "workload": "physics_32",
+      "renderer": "mode4"
+    },
+    {
+      "workload": "physics_64",
+      "renderer": "mode0"
+    },
+    {
+      "workload": "physics_64",
+      "renderer": "mode4"
+    },
+    {
+      "workload": "physics_drag_64",
+      "renderer": "mode0"
+    },
+    {
+      "workload": "physics_drag_64",
+      "renderer": "mode4"
+    },
+    {
+      "workload": "scroll_chunk_cross",
+      "renderer": "mode0"
+    },
+    {
+      "workload": "scroll_streamed",
+      "renderer": "mode0"
+    }
+  ],
+  "unchangedMedianP95MaximumCases": 64,
+  "regressions": [],
+  "cadence": {
+    "mode0": {
+      "before": 33,
+      "after": 35,
+      "total": 36
+    },
+    "mode4": {
+      "before": 20,
+      "after": 22,
+      "total": 38
+    }
+  }
+}

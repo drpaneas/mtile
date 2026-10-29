@@ -1,0 +1,2007 @@
+{
+  "romSHA256": "aa5a2058d0b321881f0c39acb682fa7ea96585c37265e88484449cec02ba37a2",
+  "elfSHA256": "a83d8ce83a91ed23a2297f33e0a2f2d1c98792b1fffd401079cc652871a18511",
+  "warmup": 60,
+  "ticks": 120,
+  "metadata": {
+    "firstPublishedTick": 60,
+    "lastPublishedTick": 180,
+    "instructions": 11161472,
+    "elapsedCycles": 67146283,
+    "eventCycles": 983280,
+    "otherAddressCycles": 0
+  },
+  "categories": {
+    "useful/other instructions": 6872205,
+    "intentional wait": 58966938,
+    "debug publication": 323860
+  },
+  "usefulInstructionCycles": 6872205,
+  "usefulCyclesPerTick": 57268.375,
+  "linkedSymbols": [
+    {
+      "name": "main.main",
+      "cycles": 61682513,
+      "cyclesPerTick": 514020.94166666665,
+      "percentOfAttributedInstructions": 93.22810362764218
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "cycles": 2086430,
+      "cyclesPerTick": 17386.916666666668,
+      "percentOfAttributedInstructions": 3.153469318797395
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "cycles": 1382283,
+      "cyclesPerTick": 11519.025,
+      "percentOfAttributedInstructions": 2.089208375260718
+    },
+    {
+      "name": "mtile_fill_words",
+      "cycles": 789089,
+      "cyclesPerTick": 6575.741666666667,
+      "percentOfAttributedInstructions": 1.1926438707747289
+    },
+    {
+      "name": "memmove",
+      "cycles": 79552,
+      "cyclesPerTick": 662.9333333333333,
+      "percentOfAttributedInstructions": 0.12023638044361439
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "cycles": 71820,
+      "cyclesPerTick": 598.5,
+      "percentOfAttributedInstructions": 0.10855009105315246
+    },
+    {
+      "name": "memset",
+      "cycles": 32176,
+      "cyclesPerTick": 268.1333333333333,
+      "percentOfAttributedInstructions": 0.048631408099780477
+    },
+    {
+      "name": "__aeabi_memclr8",
+      "cycles": 15664,
+      "cyclesPerTick": 130.53333333333333,
+      "percentOfAttributedInstructions": 0.02367486252097717
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memset",
+      "cycles": 10680,
+      "cyclesPerTick": 89.0,
+      "percentOfAttributedInstructions": 0.01614195171884807
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memmove",
+      "cycles": 5280,
+      "cyclesPerTick": 44.0,
+      "percentOfAttributedInstructions": 0.007980290737408035
+    },
+    {
+      "name": "__aeabi_memmove8",
+      "cycles": 4928,
+      "cyclesPerTick": 41.06666666666667,
+      "percentOfAttributedInstructions": 0.007448271354914166
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_mtile_fill_words",
+      "cycles": 1785,
+      "cyclesPerTick": 14.875,
+      "percentOfAttributedInstructions": 0.0026978823799760116
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).nextMapStamp",
+      "cycles": 803,
+      "cyclesPerTick": 6.691666666666666,
+      "percentOfAttributedInstructions": 0.0012136692163141386
+    }
+  ],
+  "inlineLeaves": [
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "cycles": 1896069,
+      "cyclesPerTick": 15800.575,
+      "percentOfUseful": 27.590402207151854
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "cycles": 1382283,
+      "cyclesPerTick": 11519.025,
+      "percentOfUseful": 20.114111846197837
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerChunkSlot",
+      "cycles": 964054,
+      "cyclesPerTick": 8033.783333333334,
+      "percentOfUseful": 14.028306780720307
+    },
+    {
+      "name": "mtile_fill_words",
+      "cycles": 789089,
+      "cyclesPerTick": 6575.741666666667,
+      "percentOfUseful": 11.482326269370603
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "cycles": 531046,
+      "cyclesPerTick": 4425.383333333333,
+      "percentOfUseful": 7.727447013003832
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).touchMapChunk",
+      "cycles": 247266,
+      "cyclesPerTick": 2060.55,
+      "percentOfUseful": 3.5980591382241944
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).hideMode0LinkedSpan",
+      "cycles": 181944,
+      "cyclesPerTick": 1516.2,
+      "percentOfUseful": 2.6475345249450504
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).nextMapStamp",
+      "cycles": 161068,
+      "cyclesPerTick": 1342.2333333333333,
+      "percentOfUseful": 2.3437601177496887
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "cycles": 122848,
+      "cyclesPerTick": 1023.7333333333333,
+      "percentOfUseful": 1.7876067433960425
+    },
+    {
+      "name": "memcpy",
+      "cycles": 79552,
+      "cyclesPerTick": 662.9333333333333,
+      "percentOfUseful": 1.1575906132020217
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0ScreenEntry",
+      "cycles": 76608,
+      "cyclesPerTick": 638.4,
+      "percentOfUseful": 1.1147513789242316
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "cycles": 71820,
+      "cyclesPerTick": 598.5,
+      "percentOfUseful": 1.0450794177414673
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "cycles": 43200,
+      "cyclesPerTick": 360.0,
+      "percentOfUseful": 0.6286191986414841
+    },
+    {
+      "name": "memset",
+      "cycles": 32176,
+      "cyclesPerTick": 268.1333333333333,
+      "percentOfUseful": 0.4682048920251943
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mapLayerCellIndex",
+      "cycles": 29568,
+      "cyclesPerTick": 246.4,
+      "percentOfUseful": 0.4302549181812825
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mapCellIndex",
+      "cycles": 29568,
+      "cyclesPerTick": 246.4,
+      "percentOfUseful": 0.4302549181812825
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "cycles": 18720,
+      "cyclesPerTick": 156.0,
+      "percentOfUseful": 0.27240165274464306
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "cycles": 16660,
+      "cyclesPerTick": 138.83333333333334,
+      "percentOfUseful": 0.24242582984646122
+    },
+    {
+      "name": "__aeabi_memclr",
+      "cycles": 15664,
+      "cyclesPerTick": 130.53333333333333,
+      "percentOfUseful": 0.2279326649888937
+    },
+    {
+      "name": "runtime/volatile.LoadUint16",
+      "cycles": 13376,
+      "cyclesPerTick": 111.46666666666667,
+      "percentOfUseful": 0.19463912965343727
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "cycles": 13328,
+      "cyclesPerTick": 111.06666666666666,
+      "percentOfUseful": 0.19394066387716896
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "cycles": 12000,
+      "cyclesPerTick": 100.0,
+      "percentOfUseful": 0.1746164440670789
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "cycles": 11087,
+      "cyclesPerTick": 92.39166666666667,
+      "percentOfUseful": 0.161331042947642
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memset",
+      "cycles": 10680,
+      "cyclesPerTick": 89.0,
+      "percentOfUseful": 0.15540863521970025
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "cycles": 9758,
+      "cyclesPerTick": 81.31666666666666,
+      "percentOfUseful": 0.141992271767213
+    },
+    {
+      "name": "runtime/volatile.StoreUint16",
+      "cycles": 8608,
+      "cyclesPerTick": 71.73333333333333,
+      "percentOfUseful": 0.12525819587745127
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).Camera",
+      "cycles": 8211,
+      "cyclesPerTick": 68.425,
+      "percentOfUseful": 0.11948130185289875
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).clearRender",
+      "cycles": 7140,
+      "cyclesPerTick": 59.5,
+      "percentOfUseful": 0.10389678421991194
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "cycles": 6902,
+      "cyclesPerTick": 57.516666666666666,
+      "percentOfUseful": 0.10043355807924821
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ClipReset",
+      "cycles": 6664,
+      "cyclesPerTick": 55.53333333333333,
+      "percentOfUseful": 0.09697033193858448
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ApplyDisplayPalette",
+      "cycles": 6480,
+      "cyclesPerTick": 54.0,
+      "percentOfUseful": 0.09429287979622261
+    },
+    {
+      "name": "main.gluNumberModLit",
+      "cycles": 5355,
+      "cyclesPerTick": 44.625,
+      "percentOfUseful": 0.07792258816493396
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memmove",
+      "cycles": 5280,
+      "cyclesPerTick": 44.0,
+      "percentOfUseful": 0.07683123538951472
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).MapBGAt",
+      "cycles": 5117,
+      "cyclesPerTick": 42.641666666666666,
+      "percentOfUseful": 0.07445936202427024
+    },
+    {
+      "name": "__aeabi_memmove",
+      "cycles": 4928,
+      "cyclesPerTick": 41.06666666666667,
+      "percentOfUseful": 0.07170915303021373
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).BeginRenderFrame",
+      "cycles": 4760,
+      "cyclesPerTick": 39.666666666666664,
+      "percentOfUseful": 0.06926452281327462
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+      "cycles": 4058,
+      "cyclesPerTick": 33.81666666666667,
+      "percentOfUseful": 0.059049460835350516
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ensureDrawState",
+      "cycles": 3570,
+      "cyclesPerTick": 29.75,
+      "percentOfUseful": 0.05194839210995597
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.Fill32",
+      "cycles": 3570,
+      "cyclesPerTick": 29.75,
+      "percentOfUseful": 0.05194839210995597
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0PresentWindowFits",
+      "cycles": 3360,
+      "cyclesPerTick": 28.0,
+      "percentOfUseful": 0.0488926043387821
+    },
+    {
+      "name": "runtime/volatile.StoreUint32",
+      "cycles": 3360,
+      "cyclesPerTick": 28.0,
+      "percentOfUseful": 0.0488926043387821
+    },
+    {
+      "name": "main.gluNumberDivPow2",
+      "cycles": 3332,
+      "cyclesPerTick": 27.766666666666666,
+      "percentOfUseful": 0.04848516596929224
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerAt",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8,
+      "percentOfUseful": 0.04155871368796478
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mapPlaneSlot",
+      "cycles": 2674,
+      "cyclesPerTick": 22.283333333333335,
+      "percentOfUseful": 0.03891036428628075
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).drawTileLinks",
+      "cycles": 2618,
+      "cyclesPerTick": 21.816666666666666,
+      "percentOfUseful": 0.03809548754730105
+    },
+    {
+      "name": "main.main",
+      "cycles": 2520,
+      "cyclesPerTick": 21.0,
+      "percentOfUseful": 0.03666945325408657
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_mtile_fill_words",
+      "cycles": 1785,
+      "cyclesPerTick": 14.875,
+      "percentOfUseful": 0.025974196054977985
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PollInput",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9,
+      "percentOfUseful": 0.02077935684398239
+    },
+    {
+      "name": "(*main.Game).gluUpdate",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9,
+      "percentOfUseful": 0.02077935684398239
+    },
+    {
+      "name": "(*main.Game).gluDraw",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9,
+      "percentOfUseful": 0.02077935684398239
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mapMaskPopulation",
+      "cycles": 1045,
+      "cyclesPerTick": 8.708333333333334,
+      "percentOfUseful": 0.015206182004174788
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.dmaCopyWords",
+      "cycles": 960,
+      "cyclesPerTick": 8.0,
+      "percentOfUseful": 0.013969315525366312
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.stopShortCycleMeasurement",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334,
+      "percentOfUseful": 0.013852904562654929
+    },
+    {
+      "name": "(github.com/drpaneas/mtile/runtime.Number).Mul",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334,
+      "percentOfUseful": 0.013852904562654929
+    },
+    {
+      "name": "(github.com/drpaneas/mtile/runtime.Number).Int",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334,
+      "percentOfUseful": 0.013852904562654929
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0LayerDisplay",
+      "cycles": 480,
+      "cyclesPerTick": 4.0,
+      "percentOfUseful": 0.006984657762683156
+    }
+  ],
+  "sourceLines": [
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span.go:?",
+      "cycles": 1053255,
+      "cyclesPerTick": 8777.125
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 771268,
+      "cyclesPerTick": 6427.233333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:?",
+      "cycles": 664258,
+      "cyclesPerTick": 5535.483333333334
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1086",
+      "cycles": 373184,
+      "cyclesPerTick": 3109.866666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1087",
+      "cycles": 373184,
+      "cyclesPerTick": 3109.866666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span.go:32",
+      "cycles": 309876,
+      "cyclesPerTick": 2582.3
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:72",
+      "cycles": 287280,
+      "cyclesPerTick": 2394.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:67",
+      "cycles": 242641,
+      "cyclesPerTick": 2022.0083333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:75",
+      "cycles": 215460,
+      "cyclesPerTick": 1795.5
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:?",
+      "cycles": 175770,
+      "cyclesPerTick": 1464.75
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:77",
+      "cycles": 172368,
+      "cyclesPerTick": 1436.4
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).touchMapChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 137370,
+      "cyclesPerTick": 1144.75
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:74",
+      "cycles": 129276,
+      "cyclesPerTick": 1077.3
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:78",
+      "cycles": 124488,
+      "cyclesPerTick": 1037.4
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:?",
+      "cycles": 100986,
+      "cyclesPerTick": 841.55
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).nextMapStamp",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:481",
+      "cycles": 96478,
+      "cyclesPerTick": 803.9833333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:64",
+      "cycles": 95760,
+      "cyclesPerTick": 798.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).hideMode0LinkedSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:97",
+      "cycles": 95760,
+      "cyclesPerTick": 798.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:73",
+      "cycles": 86184,
+      "cyclesPerTick": 718.2
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).hideMode0LinkedSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:?",
+      "cycles": 86184,
+      "cyclesPerTick": 718.2
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0ScreenEntry",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map.go:68",
+      "cycles": 76608,
+      "cyclesPerTick": 638.4
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:389",
+      "cycles": 73440,
+      "cyclesPerTick": 612.0
+    },
+    {
+      "function": "__ARMv5LongLdrPcThunk_github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "location": "main:?",
+      "cycles": 71820,
+      "cyclesPerTick": 598.5
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).nextMapStamp",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 64392,
+      "cyclesPerTick": 536.6
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 56584,
+      "cyclesPerTick": 471.53333333333336
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).touchMapChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:398",
+      "cycles": 54948,
+      "cyclesPerTick": 457.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).touchMapChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:401",
+      "cycles": 54948,
+      "cyclesPerTick": 457.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:65",
+      "cycles": 38304,
+      "cyclesPerTick": 319.2
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:67",
+      "cycles": 36764,
+      "cyclesPerTick": 306.3666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:66",
+      "cycles": 36720,
+      "cyclesPerTick": 306.0
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:419",
+      "cycles": 35200,
+      "cyclesPerTick": 293.3333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:451",
+      "cycles": 27456,
+      "cyclesPerTick": 228.8
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1090",
+      "cycles": 22610,
+      "cyclesPerTick": 188.41666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:475",
+      "cycles": 22528,
+      "cyclesPerTick": 187.73333333333332
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapCellIndex",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 22528,
+      "cyclesPerTick": 187.73333333333332
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:418",
+      "cycles": 22528,
+      "cyclesPerTick": 187.73333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:81",
+      "cycles": 19152,
+      "cyclesPerTick": 159.6
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:71",
+      "cycles": 19152,
+      "cyclesPerTick": 159.6
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:76",
+      "cycles": 19152,
+      "cyclesPerTick": 159.6
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:386",
+      "cycles": 18360,
+      "cyclesPerTick": 153.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:?",
+      "cycles": 18320,
+      "cyclesPerTick": 152.66666666666666
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapLayerCellIndex",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 18304,
+      "cyclesPerTick": 152.53333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:?",
+      "cycles": 14400,
+      "cyclesPerTick": 120.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget.go:?",
+      "cycles": 13920,
+      "cyclesPerTick": 116.0
+    },
+    {
+      "function": "runtime/volatile.LoadUint16",
+      "location": "/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/volatile/volatile.go:22",
+      "cycles": 13376,
+      "cyclesPerTick": 111.46666666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapLayerCellIndex",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:262",
+      "cycles": 11264,
+      "cyclesPerTick": 93.86666666666666
+    },
+    {
+      "function": "__ARMv5LongLdrPcThunk_memset",
+      "location": "main:?",
+      "cycles": 10680,
+      "cyclesPerTick": 89.0
+    },
+    {
+      "function": "__aeabi_memclr",
+      "location": "/opt/homebrew/Cellar/tinygo/0.41.1/lib/compiler-rt-builtins/arm/aeabi_memset.S:41",
+      "cycles": 9968,
+      "cyclesPerTick": 83.06666666666666
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span.go:25",
+      "cycles": 9576,
+      "cyclesPerTick": 79.8
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0CopyMapSpan",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_span.go:26",
+      "cycles": 9576,
+      "cyclesPerTick": 79.8
+    },
+    {
+      "function": "runtime/volatile.StoreUint16",
+      "location": "/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/volatile/volatile.go:34",
+      "cycles": 8608,
+      "cyclesPerTick": 71.73333333333333
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/pace_tinygo.go:?",
+      "cycles": 8227,
+      "cyclesPerTick": 68.55833333333334
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1088",
+      "cycles": 7616,
+      "cyclesPerTick": 63.46666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1089",
+      "cycles": 7616,
+      "cyclesPerTick": 63.46666666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapCellIndex",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:246",
+      "cycles": 7040,
+      "cyclesPerTick": 58.666666666666664
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:367",
+      "cycles": 6720,
+      "cyclesPerTick": 56.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:452",
+      "cycles": 5632,
+      "cyclesPerTick": 46.93333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).Camera",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:18",
+      "cycles": 5355,
+      "cyclesPerTick": 44.625
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:40",
+      "cycles": 5355,
+      "cyclesPerTick": 44.625
+    },
+    {
+      "function": "__ARMv5LongLdrPcThunk_memmove",
+      "location": "main:?",
+      "cycles": 5280,
+      "cyclesPerTick": 44.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:168",
+      "cycles": 5280,
+      "cyclesPerTick": 44.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:?",
+      "cycles": 5160,
+      "cyclesPerTick": 43.0
+    },
+    {
+      "function": "__aeabi_memmove",
+      "location": "/opt/homebrew/Cellar/tinygo/0.41.1/lib/compiler-rt-builtins/arm/aeabi_memmove.S:20",
+      "cycles": 4928,
+      "cyclesPerTick": 41.06666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:?",
+      "cycles": 4760,
+      "cyclesPerTick": 39.666666666666664
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:28",
+      "cycles": 4760,
+      "cyclesPerTick": 39.666666666666664
+    },
+    {
+      "function": "main.gluNumberModLit",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:151",
+      "cycles": 4403,
+      "cyclesPerTick": 36.69166666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:33",
+      "cycles": 4284,
+      "cyclesPerTick": 35.7
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:343",
+      "cycles": 4232,
+      "cyclesPerTick": 35.266666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:444",
+      "cycles": 4224,
+      "cyclesPerTick": 35.2
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:?",
+      "cycles": 4165,
+      "cyclesPerTick": 34.708333333333336
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).MapBGAt",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilelink.go:?",
+      "cycles": 4165,
+      "cyclesPerTick": 34.708333333333336
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:171",
+      "cycles": 4080,
+      "cyclesPerTick": 34.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:372",
+      "cycles": 3960,
+      "cyclesPerTick": 33.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:?",
+      "cycles": 3927,
+      "cyclesPerTick": 32.725
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:433",
+      "cycles": 3872,
+      "cyclesPerTick": 32.266666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ApplyDisplayPalette",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/palette.go:117",
+      "cycles": 3840,
+      "cyclesPerTick": 32.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ClipReset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:66",
+      "cycles": 3808,
+      "cyclesPerTick": 31.733333333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:65",
+      "cycles": 3808,
+      "cyclesPerTick": 31.733333333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:90",
+      "cycles": 3808,
+      "cyclesPerTick": 31.733333333333334
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime/hw.Fill32",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/fill_tinygo.go:17",
+      "cycles": 3570,
+      "cyclesPerTick": 29.75
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:422",
+      "cycles": 3520,
+      "cyclesPerTick": 29.333333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget.go:17",
+      "cycles": 3360,
+      "cyclesPerTick": 28.0
+    },
+    {
+      "function": "main.gluNumberDivPow2",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:?",
+      "cycles": 3332,
+      "cyclesPerTick": 27.766666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:88",
+      "cycles": 3332,
+      "cyclesPerTick": 27.766666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:87",
+      "cycles": 3332,
+      "cyclesPerTick": 27.766666666666666
+    },
+    {
+      "function": "runtime/volatile.StoreUint32",
+      "location": "/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/volatile/volatile.go:37",
+      "cycles": 2880,
+      "cyclesPerTick": 24.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:182",
+      "cycles": 2880,
+      "cyclesPerTick": 24.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:369",
+      "cycles": 2880,
+      "cyclesPerTick": 24.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/pace_tinygo.go:17",
+      "cycles": 2860,
+      "cyclesPerTick": 23.833333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:39",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:44",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:271",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).Camera",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:17",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ClipReset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:65",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).clearRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:110",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:86",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:151",
+      "cycles": 2856,
+      "cyclesPerTick": 23.8
+    },
+    {
+      "function": "__aeabi_memclr",
+      "location": "/opt/homebrew/Cellar/tinygo/0.41.1/lib/compiler-rt-builtins/arm/aeabi_memset.S:34",
+      "cycles": 2848,
+      "cyclesPerTick": 23.733333333333334
+    },
+    {
+      "function": "__aeabi_memclr",
+      "location": "/opt/homebrew/Cellar/tinygo/0.41.1/lib/compiler-rt-builtins/arm/aeabi_memset.S:35",
+      "cycles": 2848,
+      "cyclesPerTick": 23.733333333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ApplyDisplayPalette",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/palette.go:?",
+      "cycles": 2640,
+      "cyclesPerTick": 22.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:?",
+      "cycles": 2618,
+      "cyclesPerTick": 21.816666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:164",
+      "cycles": 2400,
+      "cyclesPerTick": 20.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).clearRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:109",
+      "cycles": 2380,
+      "cyclesPerTick": 19.833333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:64",
+      "cycles": 2380,
+      "cyclesPerTick": 19.833333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/runtime_arm7tdmi.go:?",
+      "cycles": 2200,
+      "cyclesPerTick": 18.333333333333332
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:?",
+      "cycles": 2142,
+      "cyclesPerTick": 17.85
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ensureDrawState",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:?",
+      "cycles": 2142,
+      "cyclesPerTick": 17.85
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).drawTileLinks",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilelink.go:?",
+      "cycles": 2142,
+      "cyclesPerTick": 17.85
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:423",
+      "cycles": 2112,
+      "cyclesPerTick": 17.6
+    },
+    {
+      "function": "main.main",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:429",
+      "cycles": 2040,
+      "cyclesPerTick": 17.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:178",
+      "cycles": 2040,
+      "cyclesPerTick": 17.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:366",
+      "cycles": 2040,
+      "cyclesPerTick": 17.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapPlaneSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:?",
+      "cycles": 1992,
+      "cyclesPerTick": 16.6
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:178",
+      "cycles": 1920,
+      "cyclesPerTick": 16.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:173",
+      "cycles": 1920,
+      "cyclesPerTick": 16.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:40",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:42",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:?",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginRenderFrame",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:115",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).clearRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:111",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerAt",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:?",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:27",
+      "cycles": 1904,
+      "cyclesPerTick": 15.866666666666667
+    },
+    {
+      "function": "__ARMv5LongLdrPcThunk_mtile_fill_words",
+      "location": "main:?",
+      "cycles": 1785,
+      "cyclesPerTick": 14.875
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:416",
+      "cycles": 1760,
+      "cyclesPerTick": 14.666666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:134",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:135",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0_present_budget.go:27",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0PresentWindowFits",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:?",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0PresentWindowFits",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:39",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:155",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:165",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:185",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:187",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:180",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:347",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:348",
+      "cycles": 1440,
+      "cyclesPerTick": 12.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollInput",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/input.go:38",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:41",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:270",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:282",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:283",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:284",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginRenderFrame",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:118",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).BeginRenderFrame",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:117",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ensureDrawState",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/camera.go:5",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:26",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:66",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:89",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:85",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:276",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:279",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:287",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:288",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:289",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:154",
+      "cycles": 1428,
+      "cyclesPerTick": 11.9
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:442",
+      "cycles": 1408,
+      "cyclesPerTick": 11.733333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:420",
+      "cycles": 1408,
+      "cyclesPerTick": 11.733333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:421",
+      "cycles": 1408,
+      "cyclesPerTick": 11.733333333333333
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:365",
+      "cycles": 1320,
+      "cyclesPerTick": 11.0
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1100",
+      "cycles": 1309,
+      "cyclesPerTick": 10.908333333333333
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:351",
+      "cycles": 1080,
+      "cyclesPerTick": 9.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:357",
+      "cycles": 1080,
+      "cyclesPerTick": 9.0
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:407",
+      "cycles": 1056,
+      "cyclesPerTick": 8.8
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:426",
+      "cycles": 1056,
+      "cyclesPerTick": 8.8
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw.go:?",
+      "cycles": 960,
+      "cyclesPerTick": 8.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime/hw.dmaCopyWords",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/hw/mmio_tinygo.go:?",
+      "cycles": 960,
+      "cyclesPerTick": 8.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:190",
+      "cycles": 960,
+      "cyclesPerTick": 8.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:174",
+      "cycles": 960,
+      "cyclesPerTick": 8.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:368",
+      "cycles": 960,
+      "cyclesPerTick": 8.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/draw.go:13",
+      "cycles": 956,
+      "cyclesPerTick": 7.966666666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.stopShortCycleMeasurement",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/short_cycles_tinygo.go:10",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "main.gluNumberModLit",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:?",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "(github.com/drpaneas/mtile/runtime.Number).Mul",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/fixedpoint.go:20",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "(github.com/drpaneas/mtile/runtime.Number).Int",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/fixedpoint.go:16",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "(*main.Game).gluDraw",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:355",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).MapBGAt",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:?",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1099",
+      "cycles": 952,
+      "cyclesPerTick": 7.933333333333334
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:153",
+      "cycles": 833,
+      "cyclesPerTick": 6.941666666666666
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1075",
+      "cycles": 833,
+      "cyclesPerTick": 6.941666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:170",
+      "cycles": 720,
+      "cyclesPerTick": 6.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:346",
+      "cycles": 720,
+      "cyclesPerTick": 6.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:341",
+      "cycles": 712,
+      "cyclesPerTick": 5.933333333333334
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:342",
+      "cycles": 712,
+      "cyclesPerTick": 5.933333333333334
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapMaskPopulation",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:446",
+      "cycles": 605,
+      "cyclesPerTick": 5.041666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:441",
+      "cycles": 572,
+      "cyclesPerTick": 4.766666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:425",
+      "cycles": 539,
+      "cyclesPerTick": 4.491666666666666
+    },
+    {
+      "function": "main.main",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:?",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0PresentWindowFits",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:38",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:169",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "runtime/volatile.StoreUint32",
+      "location": "/opt/homebrew/Cellar/tinygo/0.42.0/src/runtime/volatile/volatile.go:?",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:183",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:186",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mode0LayerDisplay",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:31",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mode0.go:189",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:179",
+      "cycles": 480,
+      "cyclesPerTick": 4.0
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:37",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/pause.go:38",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*main.Game).gluUpdate",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:309",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*main.Game).gluUpdate",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:311",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*main.Game).gluUpdate",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:312",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerAt",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map.go:115",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapLayerAt",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map.go:121",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*main.Game).gluDraw",
+      "location": "/private/var/folders/7h/dfyhndl16qv5chzdj54x_xph0000gn/T/mtile-build-4243673566/main.go:?",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).tryMode0FullMap",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tiled_map_full.go:17",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).drawTileLinks",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/tilelink.go:57",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/profile.go:152",
+      "cycles": 476,
+      "cyclesPerTick": 3.966666666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapMaskPopulation",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:?",
+      "cycles": 440,
+      "cyclesPerTick": 3.6666666666666665
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:344",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:349",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:350",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:353",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:354",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:355",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:356",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "memset",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:371",
+      "cycles": 360,
+      "cyclesPerTick": 3.0
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1093",
+      "cycles": 357,
+      "cyclesPerTick": 2.975
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapPlaneSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:453",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:432",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:394",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:395",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:396",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:397",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:398",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:399",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:400",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:401",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:402",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:403",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:404",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:406",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:414",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:415",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:425",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "memcpy",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:432",
+      "cycles": 352,
+      "cyclesPerTick": 2.933333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:431",
+      "cycles": 308,
+      "cyclesPerTick": 2.566666666666667
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapPlaneSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/cartmem.go:454",
+      "cycles": 242,
+      "cyclesPerTick": 2.0166666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:405",
+      "cycles": 220,
+      "cyclesPerTick": 1.8333333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).nextMapStamp",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:490",
+      "cycles": 198,
+      "cyclesPerTick": 1.65
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:437",
+      "cycles": 187,
+      "cyclesPerTick": 1.5583333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:440",
+      "cycles": 176,
+      "cyclesPerTick": 1.4666666666666666
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:430",
+      "cycles": 154,
+      "cyclesPerTick": 1.2833333333333334
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1073",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1074",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1076",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1077",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1078",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1079",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1080",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1081",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1082",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1083",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1084",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "mtile_fill_words",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/crt0/gba.s:1092",
+      "cycles": 119,
+      "cyclesPerTick": 0.9916666666666667
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 88,
+      "cyclesPerTick": 0.7333333333333333
+    },
+    {
+      "function": "github.com/drpaneas/mtile/runtime.mapPlaneSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:?",
+      "cycles": 88,
+      "cyclesPerTick": 0.7333333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:411",
+      "cycles": 88,
+      "cyclesPerTick": 0.7333333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:416",
+      "cycles": 88,
+      "cyclesPerTick": 0.7333333333333333
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:406",
+      "cycles": 44,
+      "cyclesPerTick": 0.36666666666666664
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).mapCursorChunkSlot",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/map_visible.go:69",
+      "cycles": 44,
+      "cyclesPerTick": 0.36666666666666664
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:407",
+      "cycles": 44,
+      "cyclesPerTick": 0.36666666666666664
+    },
+    {
+      "function": "(*github.com/drpaneas/mtile/runtime.Context).loadMapLayerChunk",
+      "location": "/Users/pgeorgia/gocode/src/github.com/drpaneas/mtile/runtime/mapcache.go:438",
+      "cycles": 44,
+      "cyclesPerTick": 0.36666666666666664
+    }
+  ]
+}

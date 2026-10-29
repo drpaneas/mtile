@@ -240,6 +240,33 @@ func TestMode0FiniteStreamedMapCacheRetainsOffscreenEdits(t *testing.T) {
 	}
 }
 
+func TestMode0StreamedFullMapMisalignedChunkAndScreenBoundaries(t *testing.T) {
+	requireMode0LayerCount(t, 4)
+	if mapStorageFixed && !mapStorageStreaming {
+		t.Skip("build links resident maps")
+	}
+	hw.ResetForTest()
+	c := mode0MaterialFixture(t, 10, true)
+	// These source origins put the 32-cell chunk boundary at a different
+	// position from the destination screen-block boundary. The last chunk
+	// is partial, and the requested rectangle extends beyond finite edges.
+	for _, cx := range []int{-3, 1, 17, 31, 32} {
+		for _, cy := range []int{-2, 1, 29, 31, 32} {
+			for _, mask := range []int{0, 1, 3} {
+				call := mode0FiniteMapCall{bg: 1, cx: cx, cy: cy, w: 48, h: 24,
+					camX: cx * 8, camY: cy * 8, flags: mask}
+				calls := []mode0FiniteMapCall{call}
+				c.MsetLayer(1, 32, 32, 4)
+				mode0FiniteDrawMaps(c, calls, 9)
+				if !c.mode0MapFullCache[call.bg] {
+					t.Fatal("fixture missed streamed full-map path")
+				}
+				assertMode0FiniteMapsPresented(t, c, mode0FiniteMapOracle(c, calls, 9), 9)
+			}
+		}
+	}
+}
+
 func BenchmarkMode0FiniteMapScroll(b *testing.B) {
 	if mode0LayerCount < 1 {
 		b.Skip("requires a hardware BG")

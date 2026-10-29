@@ -1,0 +1,20 @@
+{
+  "requiredGates": {
+    "transpiler": "pass: go test ./internal/transpiler (327.277 s)",
+    "build": "pass: go test ./internal/build (72.541 s)",
+    "cli": "pass: go test ./cmd/mtile (14.098 s)",
+    "runtime": "pass: cd runtime && go test ./..."
+  },
+  "additional": {
+    "mode0": "pass: go test ./... -tags=mtile_mode0",
+    "mode0FourLayers": "pass: go test ./... -tags=mtile_mode0,mtile_mode0_layers4",
+    "forcedStreamingFocused": "pass: go test ./... -tags=mtile_mode0,mtile_mode0_layers4,mtile_map_streaming -run TestMode0.*(Finite|StreamedFull) -count=1",
+    "forcedStreamingWholeSuite": "pre-existing failures: generic resident-map fixtures are incompatible with forced streaming. Same failure names reproduced from git archive HEAD runtime; no product/test changes made for them."
+  },
+  "newTests": [
+    "TestTryTableSetArrayPreservesTaggedValuesAndTableLength",
+    "TestTryTableSetArrayFallbackDoesNotMutateOrAllocate",
+    "TestGeneratedArrayStorePreservesRootsAndFallback",
+    "TestMode0StreamedFullMapMisalignedChunkAndScreenBoundaries"
+  ]
+}

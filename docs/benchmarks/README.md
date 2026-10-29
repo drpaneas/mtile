@@ -4,6 +4,14 @@ Files under this directory are recorded measurements. Their project paths,
 absolute host paths, and SHA-256 snapshots describe the tree at the time of
 each run and are intentionally left unchanged.
 
+The [Butano and mTile comparison at 30 Hz](butano-30hz/README.md) includes
+38 workloads, independent pixel/state verification, cycle and memory records,
+and a reusable benchmark runner.
+
+The subsequent [physics and map-streaming investigation](../performance-improvements-2026-10-29.md)
+records instruction profiles, targeted fixes and unchanged-source before/after
+verification separately from that baseline.
+
 Several engineering projects have since moved out of `examples/`. When a
 record names one of the old paths, use the current location below.
 

@@ -272,6 +272,27 @@ func (c *Context) TableGetInt(t Value, i int) Value {
 	return c.TableGet(t, IntVal(i))
 }
 
+// TryTableSetArray is a compiler-internal, non-allocating store into an
+// existing array slot. A false result leaves the table untouched and requires
+// the normal rooted TableSet path: hash insertion and capacity growth can
+// collect, but an already allocated array slot cannot. Values retain their
+// complete tagged representation, including nil and reference values.
+//
+//go:noinline
+//go:section .iwram
+func (c *Context) TryTableSetArray(t, key, value Value) bool {
+	n, ok := integerKey(key)
+	if !ok || n < 1 {
+		return false
+	}
+	data, err := c.tableData(t)
+	if err != HeapOK || n > int(readU16(data, 2)) {
+		return false
+	}
+	writeValue(data, arraySlotOff(n-1), value)
+	return true
+}
+
 func (c *Context) TableGet(t, key Value) Value {
 	data, err := c.tableData(t)
 	if err != HeapOK {

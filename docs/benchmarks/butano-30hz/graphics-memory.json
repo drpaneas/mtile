@@ -1,0 +1,1422 @@
+{
+  "animation16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 220
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3456
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "baseline": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "bitmap_rects_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "bitmap_rects_64": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "collision_1024": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "collision_256": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "collision_64": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "map_write_1": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "map_write_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "map_write_4": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "mixed_scene": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 12,
+      "activeOAMEntries": 34,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 192,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4828
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1332,
+      "displayMode": 0,
+      "enabledBackgrounds": 3,
+      "activeOAMEntries": 34,
+      "bgMapBytes": 8192,
+      "bgReferencedBytes": 10240,
+      "objReferencedBytes": 192,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 7886
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3885,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "palette_1": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "palette_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "parallax2": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 12,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4736
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 0,
+      "enabledBackgrounds": 3,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 8192,
+      "bgReferencedBytes": 10240,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4275
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3304,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "parallax4": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 15,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 8192,
+      "bgReferencedBytes": 10240,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 5248
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 0,
+      "enabledBackgrounds": 15,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 16384,
+      "bgReferencedBytes": 18432,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4600
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 4828,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "physics_128": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 3311,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3311,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "physics_32": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1328,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1328,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "physics_64": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1989,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1989,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "physics_drag_64": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1989,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 0
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1989,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "scroll_chunk_cross": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1327,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3224,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "scroll_small": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "scroll_streamed": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1327,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3140,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites16_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 256,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 220
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 256,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3676
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites16_32": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 256,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 220
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 256,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3676
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites32_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 1024,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 879
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 1024,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4335
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1983,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites32_8": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 8,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 1024,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 879
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 8,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 1024,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4335
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites8_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 55
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3456
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites8_32": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 55
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3456
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites8_64": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 64,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 55
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 64,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3456
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "sprites8_96": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 96,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 55
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1324,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 96,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 64,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3456
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "static_map": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4480
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4107
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 2644,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "static_map_cached": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 5056
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4632
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1334,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "text_numeric": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 2,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 128,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 37
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1330,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 2,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 128,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3611
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "text_static_16": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 98
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 16,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3577
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "text_static_32": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 98
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 32,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3577
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "text_static_8": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 8,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 98
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1326,
+      "displayMode": 0,
+      "enabledBackgrounds": 0,
+      "activeOAMEntries": 8,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 512,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 3577
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 1323,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "tile_edits_clustered": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4482
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4109
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3303,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  },
+  "tile_edits_spread": {
+    "butano": {
+      "tick": 660,
+      "videoRefresh": 1329,
+      "displayMode": 0,
+      "enabledBackgrounds": 8,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 2048,
+      "bgReferencedBytes": 4032,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4482
+    },
+    "mode0": {
+      "tick": 660,
+      "videoRefresh": 1325,
+      "displayMode": 0,
+      "enabledBackgrounds": 1,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 4096,
+      "bgReferencedBytes": 6144,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 0,
+      "nonzeroVRAMBytes": 4109
+    },
+    "mode4": {
+      "tick": 660,
+      "videoRefresh": 3303,
+      "displayMode": 4,
+      "enabledBackgrounds": 4,
+      "activeOAMEntries": 0,
+      "bgMapBytes": 0,
+      "bgReferencedBytes": 0,
+      "objReferencedBytes": 0,
+      "bitmapReservedBytes": 81920,
+      "nonzeroVRAMBytes": 76800
+    }
+  }
+}
