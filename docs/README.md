@@ -37,7 +37,7 @@ are there when you want to understand the code.
 | Choose, preview or draw a cartridge font; print Greek/German | [Fonts](fonts.md) and [Font demo](../examples/font-demo/README.md) |
 | Make a sound or song | [Audio](audio/README.md) |
 | Save progress on a real GBA | [Cartridge saving](saving.md) and [Save Game example](../examples/save-game/README.md) |
-| Pause, resume, load, save or exit | [Shared pause menu](pause-menu.md) |
+| Enable Start pause/resume during gameplay | [System pause](pause-menu.md) |
 
 ## Look up details when you need them
 

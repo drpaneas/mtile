@@ -146,11 +146,6 @@ func SelectRenderer(chunk *luaparser.Chunk, opts Options) (RendererReport, error
 	if chunk == nil {
 		return report, errors.New("transpiler: nil chunk")
 	}
-	restorePause, _, pauseErr := lowerPauseAnalysisRoots(chunk)
-	defer restorePause()
-	if pauseErr != nil {
-		return report, pauseErr
-	}
 	warnings, restore, err := lowerPoseNames(chunk, opts)
 	defer restore()
 	report.Warnings = warnings

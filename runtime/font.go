@@ -78,7 +78,6 @@ func (c *Context) SetFont(f *Font) bool {
 			}
 		}
 	}
-	c.pause.video.prepared = false
 	c.font = f
 	return true
 }

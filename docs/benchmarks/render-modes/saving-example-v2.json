@@ -1,0 +1,25 @@
+{
+  "differingPixels": 0,
+  "heldASavesOnce": true,
+  "heldStartDoesNotPause": true,
+  "independentSlots": true,
+  "loadRestores": true,
+  "menuStartWorks": true,
+  "namedFiles": 3,
+  "pauseFreezesGame": true,
+  "pauseHasNoActions": true,
+  "pauseOnlyInGameplay": true,
+  "physicalPowerCycleVerified": false,
+  "renderers": [
+    "mode4",
+    "auto"
+  ],
+  "resetRestoresAllSlots": true,
+  "romSha256": {
+    "auto": "90b95bb4715da6bfebc67412b5e27f01080db471e871e554943072595df8a6d0",
+    "mode4": "90b95bb4715da6bfebc67412b5e27f01080db471e871e554943072595df8a6d0"
+  },
+  "saveAndQuit": true,
+  "schemaVersion": 2,
+  "waitMessageExpires": true
+}

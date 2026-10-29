@@ -483,11 +483,12 @@ Math: `flr`, `ceil`, `abs`, `sgn`, `min`, `max`, `mid`, `sin`, `cos`,
 
 Tables: `add`, `del`, `deli`, `count`, `all`, `pairs`, `foreach`
 
-Cartridge saving: `save_set`, `save_get`, `save_write`, `save_read` — see the
+Cartridge saving: `save_set`, `save_get`, `save_write`, `save_read`, `save_pending` — see the
 dedicated [saving guide](saving.md) and [Save Game example](../examples/save-game/README.md).
 
-Shared pause menu: Start opens Resume / Load / Save / Exit in every game.
-`pause_menu` connects the game's save/load callbacks; see [pause menu](pause-menu.md).
+System pause: `pause(true)` enables Start pause/resume, showing only
+**P A U S E D** over the frozen game. It starts disabled; `pause(false)`
+returns Start to normal game input. Save/Load belong to game-defined menus. See [pausing](pause-menu.md).
 
 Strings: `sub`, `tostr`, `tonum`, `chr`, `ord`
 

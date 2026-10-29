@@ -84,6 +84,7 @@ type Context struct {
 
 	nativeAudio *audio.Controller
 	saveMemory  *SaveMemory
+	saveWait    uint8
 	pause       pauseState
 }
 

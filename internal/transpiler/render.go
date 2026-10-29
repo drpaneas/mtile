@@ -273,7 +273,6 @@ func (g *generator) renderGame(b *sourceBuilder) {
 		b.line("}")
 		b.line("")
 	}
-	g.renderPauseCallbacks(b)
 	g.current = nil
 }
 
@@ -402,10 +401,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\t// iteration can never flip one frame early and alternate cadence.")
 	b.line("\t\tctx.BeginFramePace()")
 	b.line("\t\tctx.PollInput()")
-	b.line("\t\tswitch ctx.PollPauseMenu() {")
-	b.line("\t\tcase rt.PauseSave: ctx.PauseSaveResult(game." + g.pauseCallbackMethod(0) + "(&ctx))")
-	b.line("\t\tcase rt.PauseLoad: ctx.PauseLoadResult(game." + g.pauseCallbackMethod(1) + "(&ctx))")
-	b.line("\t\t}")
+	b.line("\t\tctx.PollPauseMenu()")
 	b.line("\t\tpaused := ctx.PauseActive()")
 	b.line("\t\tif !paused {")
 

@@ -43,28 +43,27 @@ runtime API.
 
 ### Cartridge saves
 
-`pause_menu` is **renderer-independent** configuration: it binds two literal
-zero-argument function names once in `_init` and does not draw or change the
-game's graphics state. The common Start menu is built into every generated
-game, including games without `btn` or save support. The fixed compact overlay
-preserves the frozen scene and restores borrowed VRAM/OAM/palette/register
-state on resume. Its layout, items and Start behavior are not configurable.
-Mode 0 reserves one OAM entry, 64 OBJ scanline cycles, the last 2 KiB of OBJ
-tiles, and physical OBJ palette indices 241..245 for this system UI. Game
-limits are therefore 127 OAM entries and 1,162 worst-line cycles. All these
-reservations apply even without save callbacks. Registration has no additional
-renderer-specific restrictions. Invalid registrations
-fail all renderers with source-positioned `PAUSE_MENU`. Both callbacks are
-included in all renderer/resource/mutation analyses as additional update
-roots: a Mode 4-only call there rejects forced Mode 0 or makes AUTO fall back
-with its usual source-positioned diagnostic. Registration never relaxes
-callback semantics or hides a graphics call from the proof. See
-[pause menu](pause-menu.md) and [paired ARM evidence](benchmarks/render-modes/pause-menu-v1.md).
+`pause` is **renderer-independent** configuration. It takes one boolean
+and returns no values; non-booleans are ignored. It changes input routing at
+the next engine poll without drawing, mutating game graphics or allocating.
+Pause starts **disabled**. While disabled, Start reaches `btn(6)`/`btnp(6)`
+normally. While enabled, a new Start press freezes the game beneath the fixed
+**P A U S E D** message; another resumes. Start held across enabling must be
+released first. Disabling an active pause schedules exact restoration in the
+normal presentation window before updates resume. There are no Mode 0-specific
+API restrictions or fallback conditions; literal and dynamic booleans have
+identical semantics in both renderers and AUTO.
 
-The default panel contains Load, Save and Exit with a centered PAUSED heading.
-Start toggles pause/resume; no Resume row or control-hint footer is drawn.
-A successful save temporarily blocks resuming for the Omega wait. Load restores
-one logical save; the alternating SRAM records are recovery copies, not slots.
+There are no system menu actions or progress callbacks. The former `pause_menu`
+API has been removed. Game-defined menus call the save API directly.
+
+The system sprite preserves frozen BG/framebuffer pixels and restores borrowed
+VRAM/OAM/palette/register state on resume. Its font, spacing and behavior are
+fixed. Mode 0 reserves one OAM entry, 64 OBJ scanline cycles, the last 2 KiB of
+OBJ tiles and physical OBJ palette indices 241..245. Game limits remain 127
+OAM entries and 1,162 worst-line cycles, including games with no save support
+or with pause disabled. Resources stay reserved so enabling at runtime is safe.
+See [pausing](pause-menu.md) and [paired ARM evidence](benchmarks/render-modes/pause-only-v2.md).
 
 The system OBJ must not recolor frozen game objects. Mode 0 rejects an 8bpp
 sprite source sheet containing palette indices 241..245, a print color in
@@ -78,24 +77,30 @@ by this reservation: physical OBJ indices, rather than their mapped RGB
 values, determine conflicts. Mode 4 has no game hardware OBJs and has no
 corresponding source, palette, OAM or scanline restrictions.
 
-`btn` and `btnp` remain renderer-independent. Start is now reserved by the
-generated loop for the shared menu. Game updates, drawing, `t`/`time`, and
-button-repeat ticks stop while it is open. Resume suppresses held menu keys
-until released; new presses then reach the game normally. Background music
-continues during pause and stops on Exit. These rules are identical in both
-renderers and AUTO; they do not change manual Go Context input polling.
+`btn` and `btnp` remain renderer-independent. Start is reserved by the generated
+loop only while system pause is enabled or closing. While disabled it is normal
+game input, allowing file selection or naming menus to own it. Game updates,
+drawing, `t`/`time`, and button-repeat ticks stop only during an active pause.
+Resume suppresses held menu keys until release. Background music continues.
+These rules are identical in both renderers and AUTO; manual Go Context input
+polling without `PollPauseMenu` is unaffected.
 
-`save_get`, `save_set`, `save_read`, and `save_write` are **renderer-independent**:
+`save_get`, `save_set`, `save_read`, `save_write`, and `save_pending` are **renderer-independent**:
 they only access a numeric staging buffer and byte-addressed cartridge save
 memory. They never read or mutate graphics state. Both renderers preserve all
 64 signed 16:16 fields, error results, record ordering, and recovery behavior.
+Slots 0..31 each have independent recovery copies; omitted slots retain the
+original slot-zero layout. Dynamic slot expressions run once; invalid types,
+fractions or ranges return -5 without changing staging or SRAM. `save_pending`
+is a boolean five-second power-off reminder advanced by engine polls, including
+while paused; it never blocks resume and does not acknowledge SD completion.
 There are no Mode 0-specific restrictions or fallback conditions. In every
 renderer, read/write keys must be literal strings of 1..32 bytes; invalid keys
 fail compilation with source-positioned `SAVE_KEY`. Field indices and values
 may be dynamic, including invalid types with the documented zero/false results.
 Saving does not relax the rest of a scene's AUTO proof. Calls are synchronous;
 write on explicit player actions rather than every update. See the dedicated
-[saving guide](saving.md) and [parity/cost evidence](benchmarks/render-modes/saving-v1.md).
+[saving guide](saving.md) and [parity/cost evidence](benchmarks/render-modes/saving-slots-v2.md).
 
 ### Scene requirements
 

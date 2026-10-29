@@ -24,16 +24,18 @@ func TestParseSaveCallsPreservesKeyAndPosition(t *testing.T) {
 	}
 }
 
-func TestParsePauseMenuCallbackNames(t *testing.T) {
-	chunk, err := ParseString("pause.lua", `pause_menu("store_progress", "restore_progress")`)
+func TestParseSaveSlotAndPending(t *testing.T) {
+	chunk, err := ParseString("slots.lua", `save_write("profiles-v1", selected)
+save_read("profiles-v1", 2)
+ready = not save_pending()`)
 	if err != nil {
 		t.Fatal(err)
 	}
 	call := chunk.Body[0].(*CallStmt).Call
-	for i, want := range []string{"store_progress", "restore_progress"} {
-		literal, ok := call.Args[i].(*StringExpr)
-		if !ok || literal.Value != want || literal.Pos().Source != "pause.lua" {
-			t.Fatalf("callback %d: %#v", i, call.Args[i])
-		}
+	if len(call.Args) != 2 || call.Args[1].(*VarExpr).Name != "selected" || call.Args[1].Pos().Line != 1 {
+		t.Fatal("lost dynamic slot")
+	}
+	if chunk.Body[1].(*CallStmt).Call.Args[1].(*NumberExpr).Value != 2 {
+		t.Fatal("lost literal slot")
 	}
 }

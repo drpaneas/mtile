@@ -15,13 +15,11 @@ const (
 )
 
 type pauseVideo struct {
-	font                          *Font
 	tiles, pixels                 [512]uint32
 	oam                           [256]uint32
 	palettes                      [PauseOBJPaletteColors]uint16
 	display, blend                uint16
 	saved, shown, dirty, prepared bool
-	key                           uint32
 }
 
 func (v *pauseVideo) capture() {
@@ -69,39 +67,37 @@ func (v *pauseVideo) pixel(x, y int, color uint32) {
 	shift := uint(x % 8 * 4)
 	v.pixels[word] = v.pixels[word]&^(15<<shift) | color<<shift
 }
-func (v *pauseVideo) rect(x, y, w, h int, color uint32) {
-	for row := y; row < y+h; row++ {
-		for col := x; col < x+w; col++ {
-			v.pixel(col, row, color)
-		}
-	}
-}
-func (v *pauseVideo) text(s string, x, y int, color uint32) {
-	for i := 0; i < len(s); i++ {
-		columns := v.font.Columns(rune(s[i]))
-		for col, bits := range columns {
-			for row := 0; row < glyphBitmapH; row++ {
-				if bits&(1<<uint(row)) != 0 {
-					v.pixel(x+col, y+row, color)
-				}
-			}
-		}
-		x += glyphW
-	}
-}
-func (v *pauseVideo) centered(s string, y int, color uint32) {
-	v.text(s, (64-len(s)*glyphW)/2, y, color)
-}
-func (v *pauseVideo) panel(tall bool) {
+
+// Fixed 5x7 uppercase glyphs. Each letter advances nine pixels, giving the
+// visibly spaced message “P A U S E D” a 50-pixel ink width plus its shadow.
+func (v *pauseVideo) preparePaused() {
 	for i := range v.pixels {
 		v.pixels[i] = 0
 	}
-	top, bottom := 8, 56
-	if tall {
-		top, bottom = 0, 64
+	glyphs := [6][5]byte{
+		{0x7f, 0x09, 0x09, 0x09, 0x06}, // P
+		{0x7e, 0x09, 0x09, 0x09, 0x7e}, // A
+		{0x3f, 0x40, 0x40, 0x40, 0x3f}, // U
+		{0x46, 0x49, 0x49, 0x49, 0x31}, // S
+		{0x7f, 0x49, 0x49, 0x49, 0x41}, // E
+		{0x7f, 0x41, 0x41, 0x22, 0x1c}, // D
 	}
-	v.rect(2, top, 60, bottom-top, 1)
-	v.rect(0, top+2, 64, bottom-top-4, 1)
+	// Draw shadow first so it never obscures another letter's white ink.
+	for pass := 1; pass >= 0; pass-- {
+		color := uint32(4)
+		if pass == 1 {
+			color = 1
+		}
+		for letter, cols := range glyphs {
+			for col, bits := range cols {
+				for row := 0; row < 7; row++ {
+					if bits&(1<<uint(row)) != 0 {
+						v.pixel(7+letter*9+col+pass, 28+row+pass, color)
+					}
+				}
+			}
+		}
+	}
 }
 func (v *pauseVideo) restore() {
 	if !v.saved {

@@ -43,7 +43,7 @@ GUIDES = [
     ("sfx", "Make a sound effect", "audio", "docs/audio/sfx.md", "Create short clips for jumps, pickups, and collisions."),
     ("music", "Compose a song", "audio", "docs/audio/music.md", "Arrange clips into parts and a complete soundtrack."),
     ("foreach", "Working with foreach", "data", "docs/loops/foreach.md", "Callbacks, lists, and safe mutation patterns."),
-    ("pause-menu", "Shared pause menu", "data", "docs/pause-menu.md", "Resume, load, save and exit through one common menu."),
+    ("pause-menu", "System pause", "data", "docs/pause-menu.md", "Opt into Start pause/resume during gameplay; keep it disabled in menus."),
     ("saving", "Saving on a real GBA", "data", "docs/saving.md", "Save progress to cartridge memory and test it on EZ-Flash Omega."),
     ("save-game", "Save Game: cartridge example", "data", "examples/save-game/README.md", "Save a run, power off, and restore it on a real GBA."),
 ]

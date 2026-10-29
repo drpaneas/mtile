@@ -62,7 +62,8 @@ need files in your project. Custom fonts are stored in
 
 Built-in fonts are read-only. Copies are independent, so editing a copy never
 changes its source. BLANK intentionally leaves letters empty: draw the glyphs
-needed by your game, and the ASCII letters used by the shared pause overlay.
+needed by your game. The fixed system pause message uses its own glyphs and
+is independent of the project font.
 The overlay uses the same selected font to avoid shipping a second font bank.
 
 ## Compatibility contract

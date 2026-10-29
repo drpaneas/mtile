@@ -1,0 +1,38 @@
+{
+  "capturedFrames": 120,
+  "defaultDisabled": true,
+  "differingPixels": 0,
+  "disabledAgain": true,
+  "literalAndDynamicEnable": true,
+  "otherButtonsIgnored": true,
+  "physicalHardwareVerified": false,
+  "renderers": {
+    "auto": {
+      "ewramFree": 254128,
+      "medianPauseCycles": 422,
+      "p95PauseCycles": 422,
+      "romBytes": 25172,
+      "romSha256": "52e6256501cf74c5efa2c176f8b88fb64a5c9081dde2d550d16c8d789822ee91",
+      "samples": 120
+    },
+    "mode0": {
+      "ewramFree": 254128,
+      "medianPauseCycles": 422,
+      "p95PauseCycles": 422,
+      "romBytes": 25172,
+      "romSha256": "52e6256501cf74c5efa2c176f8b88fb64a5c9081dde2d550d16c8d789822ee91",
+      "samples": 120
+    },
+    "mode4": {
+      "ewramFree": 254352,
+      "medianPauseCycles": 430,
+      "p95PauseCycles": 430,
+      "romBytes": 25388,
+      "romSha256": "53aa777ba339c7b883dce53a3060ac8926cadaf3859cb5840468fa2cf4d22ee8",
+      "samples": 120
+    }
+  },
+  "resumeRestoresPixels": true,
+  "schemaVersion": 2,
+  "worksWithoutGameInput": true
+}

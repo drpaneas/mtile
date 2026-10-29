@@ -11,14 +11,6 @@ import (
 )
 
 func (g *generator) emitStmt(b *sourceBuilder, stmt luaparser.Stmt, indent int) {
-	if g.pauseAnalysisCalls[stmt] {
-		// The analysis-only alternatives include menu callbacks. Emit only
-		// the original ordinary update, held in the final branch.
-		for _, original := range stmt.(*luaparser.IfStmt).Else.Body {
-			g.emitStmt(b, original, indent)
-		}
-		return
-	}
 	pad := strings.Repeat("\t", indent)
 	switch s := stmt.(type) {
 	case *luaparser.AssignStmt:

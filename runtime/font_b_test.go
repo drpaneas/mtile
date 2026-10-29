@@ -77,76 +77,13 @@ func TestFontBMetricsAndScreenBounds(t *testing.T) {
 		t.Fatal("print allocates", a)
 	}
 }
-func pauseBPixel(v *pauseVideo, x, y int) uint32 {
-	return v.pixels[(y/8*8+x/8)*8+y%8] >> uint(x%8*4) & 15
-}
-func TestFontBPauseRendersWholeGlyphAndFitsAllStates(t *testing.T) {
-	f := fontBSolidFixture(t)
-	var v pauseVideo
-	v.font = f
-	v.text("AA", 0, 0, 4)
-	for y := 0; y < 10; y++ {
-		for x := 0; x < 12; x++ {
-			if pauseBPixel(&v, x, y) != 4 {
-				t.Fatalf("pause truncated B at %d,%d", x, y)
-			}
-		}
-	}
-	// Every status uses a single, bounded heading; items and cooldown stay visible.
-	for _, state := range []struct {
-		result  int8
-		heading string
-	}{{0, "PAUSED"}, {1, "Saved"}, {2, "Loaded"}, {3, "No save"}, {4, "Wrong save"}, {5, "Bad save"}, {-1, "Save error"}, {-2, "Load error"}, {10, "Disabled"}} {
-		var c Context
-		c.SetFont(DefaultFont())
-		c.ConfigurePauseMenu()
-		c.pause.result = state.result
-		c.pause.wait = 1
-		c.PreparePauseMenu()
-		assertPauseBText(t, &c.pause.video, state.heading, (64-len(state.heading)*6)/2, 1)
-		for i, label := range []string{"Load", "Save", "Exit"} {
-			assertPauseBText(t, &c.pause.video, label, 10, 16+i*13)
-		}
-		assertPauseBText(t, &c.pause.video, "WAIT", 20, 54)
-	}
-}
-func assertPauseBText(t *testing.T, v *pauseVideo, s string, x, y int) {
-	t.Helper()
-	for i, cp := range s {
-		cols := DefaultFont().Columns(cp)
-		for col, bits := range cols {
-			for row := 0; row < 10; row++ {
-				if bits&(1<<uint(row)) == 0 {
-					continue
-				}
-				px, py := x+i*6+col, y+row
-				if px < 0 || px >= 64 || py < 0 || py >= 64 {
-					t.Fatal("pause ink outside system OBJ")
-				}
-				got := pauseBPixel(v, px, py)
-				if got != 3 && got != 4 && got != 5 {
-					t.Fatalf("pause %q lost ink at %d,%d", s, px, py)
-				}
-			}
-		}
-	}
-}
-
-func TestFontBPauseEndedStatesFitOriginalOBJ(t *testing.T) {
-	for _, wait := range []uint8{0, 1} {
-		var c Context
-		c.SetFont(DefaultFont())
-		c.pause.ended = true
-		c.pause.wait = wait
-		c.PreparePauseMenu()
-		assertPauseBText(t, &c.pause.video, "SESSION", 11, 5)
-		assertPauseBText(t, &c.pause.video, "ENDED", 17, 18)
-		if wait > 0 {
-			assertPauseBText(t, &c.pause.video, "Please", 14, 38)
-			assertPauseBText(t, &c.pause.video, "wait", 20, 50)
-		} else {
-			assertPauseBText(t, &c.pause.video, "Power off", 5, 38)
-			assertPauseBText(t, &c.pause.video, "or reset", 8, 50)
-		}
+func TestProjectFontDoesNotRestyleSystemPause(t *testing.T) {
+	var a, b Context
+	a.SetFont(DefaultFont())
+	b.SetFont(fontBSolidFixture(t))
+	a.PreparePauseMenu()
+	b.PreparePauseMenu()
+	if a.pause.video.pixels != b.pause.video.pixels {
+		t.Fatal("custom font changed system pause message")
 	}
 }

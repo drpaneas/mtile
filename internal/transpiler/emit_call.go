@@ -16,20 +16,22 @@ func (g *generator) emitCall(call *luaparser.CallExpr, value bool) string {
 		name = call.Method
 	}
 	if spec, ok := Builtins[name]; ok {
-		if name == "pause_menu" {
-			if value {
-				g.pending = append(g.pending, "c.ConfigurePauseMenu()")
-				return "rt.NilVal()"
-			}
-			return "c.ConfigurePauseMenu()"
-		}
 		if name == "save_read" || name == "save_write" {
 			key, err := saveKey(call)
 			if err != nil {
 				g.setErr(err)
 				return "rt.NilVal()"
 			}
-			return fmt.Sprintf("rt.IntVal(c.%s(%q))", spec.GoName, key)
+			args := g.sequenceAdjustedExprs(call.Args[1:])
+			if len(args) > 1 {
+				g.setErr(fmt.Errorf("transpiler: %s: %s expects 1..2 arguments", call.Pos(), name))
+				return "rt.NilVal()"
+			}
+			slot := "rt.IntVal(0)"
+			if len(args) == 1 {
+				slot = adjustedLuaValue(args[0])
+			}
+			return fmt.Sprintf("c.%s(%q, %s)", spec.GoName, key, slot)
 		}
 		argCount := g.exprListWidth(call.Args)
 		if argCount < spec.MinArgs || argCount > spec.MaxArgs {
@@ -216,6 +218,10 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return "rt.NilVal()"
 	}
 	switch name {
+	case "pause":
+		return void("c.PauseEnableV(" + arg(0) + ")")
+	case "save_pending":
+		return "rt.BoolVal(c.SavePending())"
 	case "save_get", "save_set":
 		return "c." + Builtins[name].GoName + "(" + argsUpTo(Builtins[name].MaxArgs) + ")"
 	case "spr", "camera":

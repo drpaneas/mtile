@@ -1,5 +1,10 @@
 # Shared pause menu: parity and cost
 
+> Historical evidence for the previous feature version. Current behavior and
+> reproducible workloads are documented in [pause-only v2](pause-only-v2.md)
+> and [save slots v2](saving-slots-v2.md). The original source/workload must be
+> checked out to reproduce the old report below.
+
 The common Start menu is exercised by the dedicated Save Game example and
 a second generated cartridge with only `_draw() cls(1)`: no game input,
 clock, save code, or registration. Both renderers display the same fixed

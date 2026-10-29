@@ -1,175 +1,182 @@
 # Saving games on a real GBA
 
-Use the dedicated [Save Game example](../examples/save-game/README.md) to try
-cartridge saving. It saves a few game-defined values and restores them on
-startup. You choose what represents progress: a checkpoint, inventory,
-position, collected items, or high score.
+Mtile provides cartridge-save APIs for game-defined menus. The dedicated
+[Save Game example](../examples/save-game/README.md) has three independent
+player files, five-letter names, Save and Continue, Save and Quit, and Load.
+The example enables Start pause only during gameplay with `pause`;
+its menus use Start normally. There are no system Save/Load/Exit actions.
 
-**Physical verification is pending.** The implementation targets GBA
-SRAM-compatible save memory; the automated tests described below establish
-software behavior. Only a recorded real-device power-cycle run establishes
-compatibility with a particular console and cartridge.
+Saving records progress chosen by the programmer: checkpoint, inventory,
+position, collected items or score. It does not capture the running machine.
+**Physical verification remains pending.** Emulator and fault-injection tests
+establish software behavior; a recorded console/cartridge power-cycle run
+establishes compatibility with that hardware combination.
 
 ## Hardware and storage
 
-The first implementation uses the 32 KiB SRAM/FRAM interface. It needs a
-cartridge providing that interface, or a flash cartridge configured to
-support it. It does not implement EEPROM or Flash command protocols. A ROM
-file on its own cannot add save storage to a cartridge without it.
-
-SRAM/FRAM uses byte accesses at `0x0E000000`, with eight SRAM wait states.
-The read routine runs in IWRAM, with inlining disabled. The linked ROM
-contains a word-aligned `SRAM_Vnnn` detection signature. Games without save
-calls omit this signature and save buffer. See the
+The API uses the 32 KiB SRAM/FRAM interface at `0x0E000000`, with byte accesses
+and eight SRAM wait states. It requires a cartridge exposing this interface
+or a compatible flash cartridge. EEPROM and Flash command protocols are not
+implemented. The noinline read routine runs in IWRAM; linked saving ROMs
+contain a word-aligned `SRAM_Vnnn` detection signature. Games without storage
+calls omit the signature and save buffer. See the
 [GBATEK SRAM/FRAM specification](https://mgba-emu.github.io/gbatek/#gba-cart-backup-sramfram).
 
-Mtile stores 64 signed 16:16 numbers (256 bytes of payload). It uses two
-304-byte records at SRAM offsets 0 and 512; the rest of the cartridge save
-memory is untouched. These records are two recovery copies of **one saved
-game**, not multiple player profiles or namespaces. The staging buffer uses
-864 bytes of EWRAM (256 staging plus 608 scratch) only in games that call
-the save API. Record processing needs no heap allocation.
+There are **32 independent slots, numbered 0..31**. Each holds 64 signed 16:16
+numbers (256 payload bytes). Each slot owns two 304-byte recovery records at
+`slot * 1024` and `slot * 1024 + 512`. A write affects only the chosen slot;
+unused slots and record gaps remain untouched. The two records within a slot
+are backups of one file, not two player files. The shared staging buffer
+uses 864 bytes of EWRAM (256 fields plus 608 scratch), regardless of slot count.
+Record processing allocates no heap memory.
+
+The original single-save API still uses **slot 0**, at the same offsets and
+with the same record format. Existing saves remain readable with their
+original key and field layout. Adding slots does not migrate game payloads.
 
 ## Lua API
 
 | Call | Meaning and result |
 | --- | --- |
-| `save_set(index, number)` | Stage a number in field 0..63. Returns true on success, false for a noninteger/out-of-range/nonnumeric index or a nonnumeric value. Does not write the cartridge. |
-| `save_get(index)` | Read one staged number. Invalid indices return 0. Fields start at 0. |
-| `save_write("unique-game-v1")` | Write all 64 staged fields, verify them, then commit. Returns a numeric status below. |
-| `save_read("unique-game-v1")` | Load all 64 fields from the newest complete record. Every unsuccessful read leaves the staging buffer unchanged. Returns a numeric status below. |
+| `save_set(index, number)` | Stage field 0..63. Returns true for an integer in-range index and numeric value; otherwise false. No cartridge write. |
+| `save_get(index)` | Read a staged number; invalid indices return 0. Fields initially contain 0. |
+| `save_write("game-v1" [, slot])` | Write, verify and commit all 64 staged fields to one slot. Omitted slot means 0. |
+| `save_read("game-v1" [, slot])` | Read the newest complete recovery copy in one slot into all 64 fields. Omitted slot means 0. Every failure preserves staging. |
+| `save_pending()` | Boolean: a successful write occurred within the last 150 engine polls (about five seconds at 30 Hz). This is a power-off reminder, not an SD flush probe. |
+
+Slot expressions may be dynamic and evaluate once. Slots must be integer
+numbers 0..31; invalid types, fractions or out-of-range values return `-5`
+without touching SRAM, staging or the reminder. All slots share one RAM
+staging buffer: a successful read replaces its contents. Slot selection is
+explicit on every read/write; it does not change a hidden active slot.
 
 Keys must be **literal strings of 1..32 bytes**, optionally parenthesized.
-Dynamic keys and invalid literals fail compilation in every renderer with
-source-positioned `SAVE_KEY`. Pick a unique, stable key that includes your
-game's save-layout version. Changing field meanings requires explicit
-migration or a new key; a new key detects old data rather than interpreting
-it as the new layout. The key is stored and compared exactly, not hashed.
+Dynamic keys and invalid literals fail every renderer with source-positioned
+`SAVE_KEY`. Use a stable key identifying your game and payload version. All
+player files can use the same key; **the slot selects the file**, while the
+key checks the layout. Different keys do not create additional files in one
+slot. Key comparison is exact, without hashing.
 
 | Status | Meaning |
 | --- | --- |
-| `1` | Read succeeded, or write completed and matched cartridge readback. A read may have recovered the older valid copy. |
-| `0` | Read found no save: both records are uniformly blank (00 or FF). |
-| `-1` | Write verification failed, or save storage was not attached by the runtime. |
-| `-2` | Read found no valid record: damaged, interrupted first save, or unsupported record format. |
-| `-3` | The newest valid record has another game's/layout's key. |
-| `-4` | Invalid key in a direct Go call; invalid Lua keys are compile errors. |
+| `1` | Read succeeded, or write matched cartridge readback and committed. A read may recover the older valid copy in this slot. |
+| `0` | Read found both records in this slot uniformly blank (00 or FF). |
+| `-1` | Write verification failed, or runtime save storage was not attached. |
+| `-2` | No valid record in this slot: damage, interrupted first save, or unsupported format. |
+| `-3` | This slot's newest valid record has another key/layout. |
+| `-4` | Invalid key in a direct Go call; Lua keys are checked at compile time. |
+| `-5` | Invalid slot. |
 
-Test statuses explicitly: Lua considers **0 and negative numbers true**.
-An absent or incompatible save chip cannot reliably be identified by reads
-alone; it may look empty or corrupt. A write returns `-1` when readback
-does not match, rather than claiming the hardware is present.
+Test `result == 1` explicitly: Lua treats **0 and negative numbers as true**.
+A missing/incompatible save chip cannot reliably be identified by reads alone;
+it may appear empty or corrupt. Writes return `-1` when readback disagrees.
 
 ```lua
-function _init()
-  if save_read("my-game-v1") == 1 then
-    -- Check application-specific ranges before applying saved values.
-    score = save_get(0)
-  else
-    score = 0
-  end
+local active_slot = 0 -- The game's file picker chooses 0, 1 or 2.
+local score = 0
+
+function store_progress()
+  save_set(0, score)
+  return save_write("my-game-v1", active_slot)
 end
 
-function store_checkpoint()
-  save_set(0, score)
-  local result = save_write("my-game-v1")
+function restore_progress()
+  local result = save_read("my-game-v1", active_slot)
   if result == 1 then
-    -- Show "Saved" and follow the cartridge's power-off procedure.
-  else
-    -- Keep playing, show failure, and offer another explicit save attempt.
+    local saved_score = save_get(0)
+    if saved_score < 0 or saved_score > 999 then return -6 end
+    score = saved_score
   end
+  return result
 end
 ```
 
-The [shared pause menu](pause-menu.md) provides Save and Load in every game
-that registers its progress callbacks, plus Start pause/resume and Exit for every game.
+The game controls the active slot, file names, New Game, overwrite confirmation,
+and any copy/erase actions. Names can be encoded using `ord` into numeric
+fields and reconstructed with `chr`, as in the example. To erase a file
+atomically, commit a valid payload that your game recognizes as empty. Do not
+clear raw commit markers: that could expose an older recovery copy.
 
-Read/write calls are synchronous. Trigger writes once per intentional player
-action, not every frame. `btnp` has held-button repeat; the shared menu uses
-button edges so holding A performs just one write.
-The API preserves every raw fixed-point bit, including fractions and
-negative values. It does not serialize tables, strings, globals, graphics,
-audio, or a running machine. Both renderers have the same save semantics;
-see the [renderer contract](render-modes.md#cartridge-saves).
+The former `pause_menu` registration has been removed. Move those progress
+functions into your own input/menu flow; no callback registration is needed.
+Use button edges for writes: `btnp` repeats held buttons. Calls are synchronous;
+write once per deliberate player action, never every frame. The API preserves
+every raw fixed-point bit but does not serialize tables, strings, globals,
+graphics or audio. The [renderer contract](render-modes.md#cartridge-saves)
+is identical for both renderers.
 
 ## Failure and recovery
 
-Each record contains a format version, exact key, generation counter, all
-64 fields, and CRC-32 covering the metadata and payload. The next write
-chooses the other record, invalidates and checks its commit byte, writes
-and verifies its body, then writes a one-byte commit marker last. The
-newest valid record is not modified. Generations compare across uint32 wrap.
+Each record contains a version, exact key, generation, all fields and CRC-32.
+A write targets the other copy **within the selected slot**, invalidates and
+checks its commit byte, writes and verifies the body, then commits last with
+one byte. The newest valid copy remains untouched. Generation comparisons
+handle uint32 wrap. Reads validate both copies, select the newest valid one,
+then check the key. A newer different key returns `-3` even if the older copy
+matches. Interrupted first writes may report corrupt rather than empty.
 
-On loading, Mtile verifies both records and selects the newest valid one.
-An interrupted write or a detected damaged newest record can therefore
-leave the previous complete save available. A failed first save may leave
-no valid save at all. Failed writes do not change the game's staging buffer.
-CRC detects accidental corruption; it is not authentication or a guarantee
-against every possible corruption. Complete storage failure can lose both
-copies.
+Failed writes preserve staging and the previous complete record; failed
+reads preserve staging and never write SRAM. Games must validate all payload
+meanings before changing live progress. The example uses `-6` for its own
+payload validation failure; this is not a runtime save status.
 
-Loading never writes storage. A deliberate `save_write` can replace corrupt
-data or another key, while keeping the newest valid record until the new
-write commits. Do not autosave after detecting damage or a key mismatch:
-let the player choose whether to replace the saved game. Validate your
-game's field ranges as well as checking the API status. Failed restoration
-should not replace a running game's values with defaults.
+An explicit write can replace corrupt data or a different key in that slot.
+Request deliberate player intent before replacement; do not automatically
+save defaults over an unreadable file. Other slots remain independent. CRC
+is accidental-corruption detection, not authentication. Whole-chip failure
+or loss of a flashcart's SD save file can still lose every slot.
 
 ## EZ-Flash Omega procedure
 
-These instructions are for the **original EZ-Flash Omega**. The Definitive
-Edition and other models have different backup behavior.
+These instructions target the **original EZ-Flash Omega**, not the Definitive
+Edition, whose backup behavior differs.
 
-1. Back up `SAVER` on your SD card and use a distinct filename for this example.
-2. Build the example and copy `game.gba` to the card.
-3. Select **CLEAN BOOT**. Try SAVE TYPE **AUTO**; select SRAM if necessary.
-4. Press Start, select Save, and press A. The shared menu's wait reminder
-   clears after five seconds; wait for that change before resuming or powering off.
-5. Fully power off and on, launch the same ROM, and check the restored data.
+1. Back up `SAVER` on the SD card and use a distinct ROM filename for the example.
+2. Build and copy `game.gba`, then launch with **CLEAN BOOT**. Try SAVE TYPE
+   **AUTO**, or select SRAM if needed.
+3. Choose an empty file, enter a name, select **END**, and press A. Wait until
+   **PLEASE WAIT** clears and the file picker returns.
+4. Open that file, play, press **Select**, and choose **Save and Quit**.
+   Wait for the file picker before powering off or resetting.
+5. Fully power off/on, open the same ROM and choose that named file. Check its
+   progress. Create two more files and check all three remain independent.
 
-The [official Omega manual](https://www.ezflash.cn/omega.html) specifies at
-least 2–3 seconds after saving and recommends counting to five. Mtile's
-success result verifies cartridge-visible bytes; it cannot observe whether
-the Omega's microSD flush has completed or report all SD filesystem errors.
-The shared menu's five-second timer is a reminder, not a flush probe;
-each successful write restarts it, and an error is never cleared by its expiry.
-Two recovery records inside a save file cannot protect the filesystem or
-the whole file from an interrupted SD write. Do not deliberately cut power
-during that flush to test recovery.
+The [official Omega manual](https://www.ezflash.cn/omega.html) specifies at least
+2–3 seconds after saving and recommends counting to five. `save_pending()`
+restarts on every successful write, advances during pause, and does not block
+pause/resume. Failed writes do not clear or restart an earlier reminder.
+The example displays its own waiting screen until the reminder expires.
 
-Keep the same ROM filename during this test. Do not use the cartridge's
-SAVE/LOAD state menu: the example saves through its own Lua code. The
-built-in editor preview is useful for testing gameplay but is not the
-physical persistence gate, and this feature does not add preview save-file
-management.
+The timer only measures elapsed engine polls. The API verifies cartridge-visible
+bytes; it cannot observe microSD flush completion or all SD filesystem errors.
+Recovery copies cannot protect the whole SD file or filesystem from an
+interrupted flush. Do not deliberately cut power during an Omega SD write.
+Keep the ROM filename unchanged between tests. Do not use flashcart save states;
+the example saves through its own Lua code. Editor preview is useful for UI
+checks but is not the physical persistence gate.
 
 ## Verification
 
-Automated runtime tests cover all 64 raw numeric fields, blank storage,
-bad arguments/keys, exact key comparison, cold-context loading, repeated
-writes, generation wrap, each corrupted record byte, write failures and
-retry, and interruption at every byte store during first saves and record
-reuse. Compiler/parser tests cover the API, source positions, argument
-adjustment, generated execution, and Mode 0/4/AUTO selection.
+Runtime tests cover all fields and all 32 slots, slot-zero compatibility,
+invalid arguments, cold-context reads, CRC corruption, generation wrap,
+failed writes/retries and byte-by-byte interruption. Nonzero-slot interruption
+tests verify the target recovers and neighboring slots remain unchanged.
+The reminder test calls `SaveWrite` directly, checks all 150 polls, retry
+restart/failure behavior and immediate Start resume during the reminder.
 
-The [paired ARM renderer check](benchmarks/render-modes/saving-v1.md) supplies
-pixel-parity and timing evidence. It exercises the SRAM interface in mGBA;
-an ARM playthrough also verifies the example's save/load and machine-reset
-restoration in Mode 4, Mode 0, and AUTO. Neither substitutes for physical
-hardware.
-
-Run the required software gates from the repository root:
+Parser, compiler and generated-runtime tests cover dynamic slot evaluation,
+argument adjustment, errors and Mode 0/4/AUTO selection. The
+[paired ARM workload](benchmarks/render-modes/saving-slots-v2.md) exercises slot
+selection and SRAM on the target; a separate playthrough creates three named
+files and checks loading after a machine reset. The dynamic-name example uses
+Mode 4 (AUTO falls back with `M0_PRINT_SHAPE`); the numeric save API and system
+pause also have Mode 0 parity/cost coverage.
 
 ```sh
 go test ./internal/luaparser ./internal/transpiler ./internal/build ./cmd/mtile
 cd runtime && go test ./...
 ```
 
-For physical verification, record the exact ROM SHA-256, build, console,
-cartridge, firmware, SD card, and renderer using the example's
-[result form](../examples/save-game/hardware-results.md). Check initial
-save, reload, repeated overwrites, ten full power cycles, unsaved changes,
-intentional new-game replacement, and an overnight power-off. Repeat with
-both renderer builds. Only mark the recorded combination verified after
-all checks pass. Interruption tests on direct SRAM/FRAM cartridges require
-a separate test setup; the original Omega test follows its SD flush rules.
+Record the real console, cartridge, firmware, SD card, ROM SHA-256 and renderer
+in the [hardware results form](../examples/save-game/hardware-results.md).
+Only mark that exact combination verified after its physical checks pass.

@@ -16,10 +16,10 @@ func (g *generator) saveEnabled() bool {
 }
 
 func saveKey(call *luaparser.CallExpr) (string, error) {
-	if len(call.Args) == 1 {
+	if len(call.Args) >= 1 {
 		if key, ok := unparenExpr(call.Args[0]).(*luaparser.StringExpr); ok && len(key.Value) >= 1 && len(key.Value) <= 32 {
 			return key.Value, nil
 		}
 	}
-	return "", fmt.Errorf("transpiler: %s: [SAVE_KEY] save_read/save_write require one literal string key of 1..32 bytes", call.Pos())
+	return "", fmt.Errorf("transpiler: %s: [SAVE_KEY] save_read/save_write require a literal string key of 1..32 bytes and an optional slot", call.Pos())
 }

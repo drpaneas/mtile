@@ -2,6 +2,10 @@
 x = 88
 left = false
 
+function _init()
+  pause(true) -- This example starts directly in gameplay.
+end
+
 function _update()
   if btn(0) then x = x - 1 left = true end
   if btn(1) then x = x + 1 left = false end

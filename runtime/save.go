@@ -4,15 +4,18 @@ import "github.com/drpaneas/mtile/runtime/hw"
 
 const (
 	SaveFieldCount = 64
+	SaveSlotCount  = 32
 	SaveOK         = 1
 	SaveEmpty      = 0
 	SaveIOError    = -1
 	SaveCorrupt    = -2
 	SaveWrongKey   = -3
 	SaveBadKey     = -4
+	SaveBadSlot    = -5
 
 	saveRecordBytes  = 304
 	saveRecordStride = 512
+	saveSlotStride   = 2 * saveRecordStride
 	saveCommit       = 0xa5
 )
 
@@ -122,20 +125,50 @@ func saveNewest(a, b *saveRecord) int {
 	return -1
 }
 
-// SaveRead selects the newest complete record before checking its key. The
-// two records are recovery copies of ONE save, not independent game slots.
-// Every failure leaves the staging buffer and cartridge bytes untouched.
-func (c *Context) SaveRead(key string) int {
+// SaveRead and SaveWrite retain the original slot-zero storage layout.
+func (c *Context) SaveRead(key string) int  { return c.SaveReadSlot(key, 0) }
+func (c *Context) SaveWrite(key string) int { return c.SaveWriteSlot(key, 0) }
+
+func saveSlotIndex(slot Value) (int, bool) {
+	return slot.Int(), slot.Kind == KindNumber && slot.Num&0xffff == 0 && slot.Num >= 0 && slot.Num < FromInt(SaveSlotCount)
+}
+
+func (c *Context) SaveReadV(key string, slot Value) Value {
+	i, ok := saveSlotIndex(slot)
+	if !ok {
+		return IntVal(SaveBadSlot)
+	}
+	return IntVal(c.SaveReadSlot(key, i))
+}
+
+func (c *Context) SaveWriteV(key string, slot Value) Value {
+	i, ok := saveSlotIndex(slot)
+	if !ok {
+		return IntVal(SaveBadSlot)
+	}
+	return IntVal(c.SaveWriteSlot(key, i))
+}
+
+// SavePending reports a five-second power-off reminder, not the cartridge's
+// SD flush status. The generated loop advances it even while paused.
+func (c *Context) SavePending() bool { return c.saveWait > 0 }
+
+// SaveReadSlot selects the newest complete recovery copy in one independent
+// slot before checking its key. Every failure leaves staging and SRAM intact.
+func (c *Context) SaveReadSlot(key string, slot int) int {
 	if len(key) < 1 || len(key) > 32 {
 		return SaveBadKey
+	}
+	if slot < 0 || slot >= SaveSlotCount {
+		return SaveBadSlot
 	}
 	if c.saveMemory == nil {
 		return SaveIOError
 	}
 	hw.PrepareSRAM()
 	a, b := &c.saveMemory.records[0], &c.saveMemory.records[1]
-	saveReadRecord(0, a)
-	saveReadRecord(1, b)
+	saveReadRecord(slot*2, a)
+	saveReadRecord(slot*2+1, b)
 	n := saveNewest(a, b)
 	if n < 0 {
 		if saveBlank(a) && saveBlank(b) {
@@ -165,17 +198,20 @@ func (c *Context) SaveRead(key string) int {
 // writes and verifies the body, then commits with a single byte. No write
 // touches the newest valid record. Success verifies cartridge-visible bytes;
 // flashcart firmware may still have its own later SD-card flush procedure.
-func (c *Context) SaveWrite(key string) int {
+func (c *Context) SaveWriteSlot(key string, slot int) int {
 	if len(key) < 1 || len(key) > 32 {
 		return SaveBadKey
+	}
+	if slot < 0 || slot >= SaveSlotCount {
+		return SaveBadSlot
 	}
 	if c.saveMemory == nil {
 		return SaveIOError
 	}
 	hw.PrepareSRAM()
 	a, b := &c.saveMemory.records[0], &c.saveMemory.records[1]
-	saveReadRecord(0, a)
-	saveReadRecord(1, b)
+	saveReadRecord(slot*2, a)
+	saveReadRecord(slot*2+1, b)
 	n := saveNewest(a, b)
 	target, generation := 0, uint32(1)
 	if n >= 0 {
@@ -203,7 +239,7 @@ func (c *Context) SaveWrite(key string) int {
 		savePutWord(record, 48+i*4, uint32(value))
 	}
 	savePutWord(record, 44, saveCRC(record))
-	base := target * saveRecordStride
+	base := slot*saveSlotStride + target*saveRecordStride
 	hw.WriteSRAMByte(base, 0)
 	if hw.ReadSRAMByte(base) != 0 {
 		return SaveIOError
@@ -220,6 +256,6 @@ func (c *Context) SaveWrite(key string) int {
 	if hw.ReadSRAMByte(base) != saveCommit {
 		return SaveIOError
 	}
-	c.pause.wait = 150
+	c.saveWait = 150
 	return SaveOK
 }

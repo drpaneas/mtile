@@ -5,16 +5,17 @@ import (
 	"testing"
 )
 
-func pauseKeys(c *Context, keys uint16) PauseAction {
+func pauseKeys(c *Context, keys uint16) {
 	hw.SetKeyInputForTest(0x3ff &^ keys)
 	c.PollInput()
-	return c.PollPauseMenu()
+	c.PollPauseMenu()
 }
 
 func TestPauseRestoresGraphicsAndConsumesMenuKeys(t *testing.T) {
 	for _, mode := range []uint16{0x1f40, 0x1454} {
 		hw.ResetForTest()
 		var c Context
+		c.PauseEnableV(BoolVal(true))
 		hw.SetReg16(hw.DISPCNT, mode)
 		hw.SetReg16(pauseBlendControl, 0x1234)
 		for i := 0; i < 512; i++ {
@@ -34,7 +35,7 @@ func TestPauseRestoresGraphicsAndConsumesMenuKeys(t *testing.T) {
 			t.Fatal("held Start immediately resumed")
 		}
 		pauseKeys(&c, 0)
-		pauseKeys(&c, 2)
+		pauseKeys(&c, 8|2)
 		c.PresentPauseMenu()
 		if c.PauseActive() || hw.GetReg16(hw.DISPCNT) != mode || hw.GetReg16(pauseBlendControl) != 0x1234 {
 			t.Fatal("display state not restored")
@@ -61,132 +62,22 @@ func TestPauseRestoresGraphicsAndConsumesMenuKeys(t *testing.T) {
 	}
 }
 
-func TestSaveWriteOutsidePauseBlocksResumeFor150Polls(t *testing.T) {
-	hw.ResetForTest()
-	hw.ResetSRAMForTest(0xff)
-	c := saveContext()
-	if result := c.SaveWrite("pause-direct-v1"); result != SaveOK {
-		t.Fatalf("SaveWrite failed: %d", result)
-	}
-	if c.PauseActive() {
-		t.Fatal("SaveWrite opened the pause menu")
-	}
-
-	// The first Start opens the menu. Alternate B and Start afterward so
-	// every remaining poll attempts to resume with a fresh button edge.
-	// No PauseSaveResult call may supply the wait on SaveWrite's behalf.
-	for poll := 1; poll <= 150; poll++ {
-		keys := uint16(8)
-		if poll%2 == 0 {
-			keys = 2
-		}
-		pauseKeys(c, keys)
-		c.PreparePauseMenu()
-		c.PresentPauseMenu()
-		if poll < 150 && !c.PauseActive() {
-			t.Fatalf("resumed on poll %d before the 150-poll wait expired", poll)
-		}
-		if poll == 150 && c.PauseActive() {
-			t.Fatal("resume still blocked after 150 polls")
-		}
-	}
-}
-
-func TestPauseActionsCooldownAndExit(t *testing.T) {
+func TestPauseOnlyStartResumes(t *testing.T) {
 	hw.ResetForTest()
 	var c Context
-	c.ConfigurePauseMenu()
-	pauseKeys(&c, 8)
-	pauseKeys(&c, 0)
-	pauseKeys(&c, 0x80)
-	pauseKeys(&c, 0)
-	if action := pauseKeys(&c, 1); action != PauseSave {
-		t.Fatal(action)
-	}
-	c.PauseSaveResult(SaveOK)
-	if pauseKeys(&c, 1) != PauseNone {
-		t.Fatal("held A repeated save")
-	}
-	for i := 0; i < 100; i++ {
-		pauseKeys(&c, 0)
-	}
-	pauseKeys(&c, 2)
-	if c.pause.closing {
-		t.Fatal("resumed before Omega wait")
-	}
-	pauseKeys(&c, 0)
-	if pauseKeys(&c, 1) != PauseSave {
-		t.Fatal("second save")
-	}
-	c.PauseSaveResult(SaveOK)
-	for i := 0; i < 149; i++ {
-		pauseKeys(&c, 0)
-	}
-	if c.pause.wait != 1 {
-		t.Fatal("save did not restart full wait")
-	}
-	pauseKeys(&c, 0)
-	if c.pause.wait != 0 {
-		t.Fatal("wait stuck")
-	}
-	c.pause.wait = 10
-	c.PauseSaveResult(SaveIOError)
-	for i := 0; i < 11; i++ {
-		pauseKeys(&c, 0)
-	}
-	if c.pause.result != -1 {
-		t.Fatal("wait expiry hid failure")
-	}
-	pauseKeys(&c, 0x40)
-	pauseKeys(&c, 0)
-	if pauseKeys(&c, 1) != PauseLoad {
-		t.Fatal("load action")
-	}
-	c.PauseLoadResult(SaveEmpty)
-	if c.pause.result != 3 {
-		t.Fatal("empty save feedback")
-	}
-	pauseKeys(&c, 0)
-	pauseKeys(&c, 0x80)
-	pauseKeys(&c, 0)
-	pauseKeys(&c, 0x80)
-	pauseKeys(&c, 0)
-	c.pause.wait = 5
-	if pauseKeys(&c, 1) != PauseExit || !c.pause.ended {
-		t.Fatal("exit did not end session")
-	}
-	for i := 0; i < 8; i++ {
-		pauseKeys(&c, 8|2)
-		c.PresentPauseMenu()
-	}
-	if !c.PauseActive() || !c.pause.ended || c.pause.wait != 0 {
-		t.Fatal("ended session resumed or wait stuck")
-	}
-}
-
-func TestPauseUnavailableSaving(t *testing.T) {
-	var c Context
-	pauseKeys(&c, 8)
-	pauseKeys(&c, 0)
-	pauseKeys(&c, 0x80)
-	pauseKeys(&c, 0)
-	if pauseKeys(&c, 1) != PauseNone || c.pause.result != 10 {
-		t.Fatal("unconfigured game attempted load")
-	}
-}
-
-func TestPauseStartTogglesAndDefaultSelectionIsLoad(t *testing.T) {
-	hw.ResetForTest()
-	var c Context
-	c.ConfigurePauseMenu()
+	c.PauseEnableV(BoolVal(true))
 	pauseKeys(&c, 8)
 	c.PreparePauseMenu()
 	c.PresentPauseMenu()
-	pauseKeys(&c, 0)
-	if pauseKeys(&c, 1) != PauseLoad {
-		t.Fatal("first menu item must be Load")
+	original := c.pause.video.pixels
+	for _, keys := range []uint16{0, 1, 2, 0x40, 0x80, 0x10, 0x20, 0x100, 0x200} {
+		pauseKeys(&c, keys)
+		c.PreparePauseMenu()
+		c.PresentPauseMenu()
+		if !c.PauseActive() || original != c.pause.video.pixels {
+			t.Fatal("non-Start input changed pause")
+		}
 	}
-	pauseKeys(&c, 0)
 	pauseKeys(&c, 8)
 	c.PresentPauseMenu()
 	if c.PauseActive() {
@@ -194,9 +85,50 @@ func TestPauseStartTogglesAndDefaultSelectionIsLoad(t *testing.T) {
 	}
 }
 
+func TestSaveWriteStartsIndependent150PollReminder(t *testing.T) {
+	hw.ResetForTest()
+	hw.ResetSRAMForTest(0xff)
+	c := saveContext()
+	c.PauseEnableV(BoolVal(true))
+	if c.SavePending() || c.SaveWrite("direct-v1") != SaveOK || !c.SavePending() || c.PauseActive() {
+		t.Fatal("direct write did not start reminder")
+	}
+	for poll := 1; poll <= 150; poll++ {
+		// A successful save must never prevent Start from toggling pause.
+		keys := uint16(0)
+		if poll == 1 || poll == 3 {
+			keys = 8
+		}
+		pauseKeys(c, keys)
+		if c.PauseActive() {
+			c.PreparePauseMenu()
+			c.PresentPauseMenu()
+		}
+		if poll == 3 && c.PauseActive() {
+			t.Fatal("save reminder blocked resume")
+		}
+		if c.SavePending() != (poll < 150) {
+			t.Fatalf("wrong pending result at poll %d", poll)
+		}
+	}
+	if c.SaveWrite("direct-v1") != SaveOK {
+		t.Fatal("repeat write")
+	}
+	pauseKeys(c, 0)
+	hw.SetSRAMWriteLimitForTest(0)
+	if c.SaveWrite("direct-v1") != SaveIOError || c.saveWait != 149 {
+		t.Fatal("failed save cleared or restarted prior reminder")
+	}
+	hw.SetSRAMWriteLimitForTest(-1)
+	if c.SaveWrite("direct-v1") != SaveOK || c.saveWait != 150 {
+		t.Fatal("successful retry did not restart reminder")
+	}
+}
+
 func TestPauseOverlayPreservesFrozenLayersAndObjectOrder(t *testing.T) {
 	hw.ResetForTest()
 	var c Context
+	c.PauseEnableV(BoolVal(true))
 	hw.SetReg16(hw.DISPCNT, 0x1f40)
 	// A full valid game allocation uses 127 entries; entry 127 is private.
 	for i := 0; i < 127; i++ {
@@ -229,24 +161,45 @@ func TestPauseOverlayPreservesFrozenLayersAndObjectOrder(t *testing.T) {
 	}
 }
 
-func TestPauseOverlayHasCentered64PixelPanel(t *testing.T) {
+func TestPauseOverlayContainsOnlyCenteredSpacedLabel(t *testing.T) {
 	var c Context
-	c.ConfigurePauseMenu()
+	c.PauseEnableV(BoolVal(true))
 	c.PreparePauseMenu()
 	pixel := func(x, y int) uint32 { return c.pause.video.pixels[(y/8*8+x/8)*8+y%8] >> uint(x%8*4) & 15 }
-	// B uses the complete existing 64x64 system OBJ. Its rounded corners stay
-	// transparent, and the heading occupies a centered six-cell box at x=14.
-	if pixel(0, 0) != 0 || pixel(63, 63) != 0 || pixel(2, 0) != 1 {
-		t.Fatal("panel bounds")
-	}
-	for y := 1; y < 11; y++ {
+	ink, shadow := 0, 0
+	for y := 0; y < 64; y++ {
 		for x := 0; x < 64; x++ {
-			if pixel(x, y) == 5 && (x < 14 || x >= 50) {
-				t.Fatal("heading is not centered")
+			v := pixel(x, y)
+			if v == 0 {
+				continue
+			}
+			if x < 7 || x > 57 || y < 28 || y > 35 {
+				t.Fatalf("ink outside centered message: %d,%d", x, y)
+			}
+			if v == 4 {
+				ink++
+			} else if v == 1 {
+				shadow++
+			} else {
+				t.Fatal("unexpected panel or highlight")
 			}
 		}
 	}
-	if pixel(4, 14) != 3 || pixel(59, 14) != 2 {
-		t.Fatal("missing selection bar or row highlight")
+	if ink < 80 || shadow < 20 {
+		t.Fatal("missing message or shadow")
+	}
+	for letter := 0; letter < 5; letter++ {
+		for y := 28; y <= 35; y++ {
+			if pixel(7+letter*9+7, y) != 0 {
+				t.Fatal("missing inter-letter spacing")
+			}
+		}
+	}
+	// Project font selection cannot restyle the system label.
+	original := c.pause.video.pixels
+	c.font = &Font{}
+	c.PreparePauseMenu()
+	if original != c.pause.video.pixels {
+		t.Fatal("project font changed system label")
 	}
 }

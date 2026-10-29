@@ -5,6 +5,10 @@ facing_left = false
 visited = false
 returned = false
 
+function _init()
+  pause(true) -- This example starts directly in gameplay.
+end
+
 function _update()
   if btn(0) then player_x -= 2 facing_left = true end
   if btn(1) then player_x += 2 facing_left = false end

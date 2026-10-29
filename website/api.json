@@ -5,7 +5,7 @@
     "signature": "btn(index)",
     "summary": "Check whether a button is held down.",
     "example": "if btn(0) then x -= 2 end",
-    "note": "Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B. Start is reserved for the shared pause menu in generated games; game input and button-repeat ticks freeze while paused."
+    "note": "Indices: 0 left, 1 right, 2 up, 3 down, 4 B, 5 A, 6 Start, 7 Select, 8 L, 9 R. Invalid indices return false. In the editor preview, Z is A and X is B. System pause starts disabled. pause(true) reserves Start; pause(false) lets btn(6)/btnp(6) handle it normally in menus. Game input and button-repeat ticks freeze only during active pause."
   },
   {
     "name": "btnp",
@@ -13,7 +13,7 @@
     "signature": "btnp(index)",
     "summary": "React to a button press, with held-button repeat.",
     "example": "if btnp(5) then score = 0 end",
-    "note": "Fires on held tick 1, then 15, 19, 23, and every four held ticks thereafter. Releasing resets the counter. Use btn() for continuous movement."
+    "note": "Fires on held tick 1, then 15, 19, 23, and every four held ticks thereafter. Releasing resets the counter. Use btn() for continuous movement. Start is ordinary input unless the game opts into system pause with pause(true)."
   },
   {
     "name": "spr",
@@ -586,25 +586,33 @@
   {
     "name": "save_read",
     "category": "data",
-    "signature": "save_read(\"unique-game-v1\")",
-    "summary": "Restore the newest valid cartridge save into the staging buffer.",
-    "example": "if save_read(\"my-game-v1\") == 1 then score = save_get(0) end",
-    "note": "The key must be a literal string of 1..32 bytes. Returns 1 on success, 0 for blank records, -2 for corrupt/unsupported records, -3 for a different key, or -1 for missing runtime storage. Failed reads preserve the buffer. Test == 1 explicitly: zero and negative numbers are truthy in Lua. Uses SRAM-compatible cartridge memory; physical verification remains pending."
+    "signature": "save_read(\"unique-game-v1\" [, slot])",
+    "summary": "Restore one independent cartridge save slot into the staging buffer.",
+    "example": "if save_read(\"my-game-v1\", active_slot) == 1 then score = save_get(0) end",
+    "note": "Slots are integer numbers 0..31; omitted means slot 0, preserving the original format. Dynamic slots evaluate once. The key must be a literal string of 1..32 bytes. Returns 1 on success, 0 for blank records, -2 for corrupt/unsupported records, -3 for a different key, -5 for an invalid slot, or -1 for missing runtime storage. Failed reads preserve the buffer. Test == 1 explicitly: zero and negative numbers are truthy in Lua. Two recovery copies belong to each slot. Renderer-independent; physical verification remains pending."
   },
   {
     "name": "save_write",
     "category": "data",
-    "signature": "save_write(\"unique-game-v1\")",
-    "summary": "Write and verify all 64 staged fields in cartridge save memory.",
-    "example": "save_set(0, score)\nresult = save_write(\"my-game-v1\")",
-    "note": "The key must be a literal string of 1..32 bytes. Returns 1 for verified cartridge-visible bytes or -1 on write verification failure. Alternates two checked recovery records and commits last. A failure keeps current progress in RAM. An explicit write can replace another key or damaged data; request player intent before replacement. On the original EZ-Flash Omega, wait five seconds after saving before power-off or reset; SD persistence is controlled by the cart firmware. Renderer-independent. A successful write also restarts the shared pause menu’s five-second resume/power-off reminder."
+    "signature": "save_write(\"unique-game-v1\" [, slot])",
+    "summary": "Write and verify all 64 staged fields in one independent cartridge slot.",
+    "example": "save_set(0, score)\nresult = save_write(\"my-game-v1\", active_slot)",
+    "note": "Slots are integer numbers 0..31; omitted means slot 0. The key must be a literal string of 1..32 bytes. Returns 1 for verified cartridge-visible bytes, -1 on verification failure, or -5 for an invalid slot. Alternates two recovery records within this slot and commits last; other slots are untouched. Failed writes preserve staged progress. An explicit write can replace damaged data or another key: offer deliberate confirmation. Success restarts save_pending for 150 engine polls, including during pause, without blocking Start resume. On original EZ-Flash Omega, wait five seconds before power-off/reset. This timer cannot acknowledge microSD completion. Renderer-independent."
   },
   {
-    "name": "pause_menu",
+    "name": "save_pending",
     "category": "data",
-    "signature": "pause_menu(\"save_function\", \"load_function\")",
-    "summary": "Connect game progress functions to the shared Start pause menu.",
-    "example": "function store_progress()\n  save_set(0, score)\n  return save_write(\"my-game-v1\")\nend\nfunction restore_progress()\n  local result = save_read(\"my-game-v1\")\n  if result == 1 then score = save_get(0) end\n  return result\nend\nfunction _init()\n  pause_menu(\"store_progress\", \"restore_progress\")\nend",
-    "note": "Every game has the same fixed centered Load, Save, Exit overlay on Start; Start toggles pause/resume. The layout and items cannot be customized or disabled. Save/Load remain unavailable until one direct unconditional _init call binds two literal zero-argument function names. Each function returns one numeric save status. Callbacks run only on menu actions and participate in renderer proofs. A successful save blocks resuming for five seconds; Exit ends the session and shows power-off/reset instructions. Load restores one logical save; the two SRAM records are recovery copies, not slots. The private sprite overlay preserves the frozen game in both renderers; Mode 0 reserves system OBJ resources as documented in the renderer contract."
+    "signature": "save_pending()",
+    "summary": "Check the five-second power-off reminder after a successful save.",
+    "example": "if save_pending() then print(\"PLEASE WAIT\", 84, 76, 7) end",
+    "note": "Returns a boolean. True for 150 engine polls (about five seconds at 30 Hz) after each successful save_write, including while paused. A failed write neither clears nor restarts a previous reminder. It never blocks pause/resume. This is a timed reminder for cartridge procedures, not a hardware busy bit or proof of SD flush completion. Renderer-independent; it does not allocate save storage by itself."
+  },
+  {
+    "name": "pause",
+    "category": "input",
+    "signature": "pause(enabled)",
+    "summary": "Enable or disable the fixed Start pause during gameplay.",
+    "example": "pause(true) -- Gameplay\npause(false) -- Title / file / inventory menus",
+    "note": "Disabled by default. Accepts one boolean and returns no values; other types are ignored. The setting takes effect at the next engine input poll. While enabled, Start freezes the game behind the fixed centered PAUSED message, and a second Start resumes. While disabled, btn(6) and btnp(6) receive Start normally. A Start press held through enabling must be released and pressed again to pause. Disabling an active pause restores graphics in the normal presentation window before gameplay resumes. Only availability is configurable; appearance and controls stay fixed. Renderer-independent; system OBJ resources remain reserved even while disabled."
   }
 ]

@@ -1,5 +1,10 @@
 # Cartridge saving: parity and timing
 
+> Historical evidence for the previous feature version. Current behavior and
+> reproducible workloads are documented in [pause-only v2](pause-only-v2.md)
+> and [save slots v2](saving-slots-v2.md). The original source/workload must be
+> checked out to reproduce the old report below.
+
 The four save builtins are renderer-independent. The fixture
 `cmd/renderbench/testdata/workloads/saving.lua`, using the Save Game example's
 assets, exercises all 64 dynamic field indices, signed/fractional payloads,

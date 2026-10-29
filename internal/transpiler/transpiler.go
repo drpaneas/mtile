@@ -226,11 +226,11 @@ type BuiltinSpec struct {
 // BuiltinRendererCompatibility; adding a builtin requires classifying it there
 // and documenting its Mode 0/Mode 4 semantics in docs/render-modes.md.
 var Builtins = map[string]BuiltinSpec{
-	// Progress callbacks only: the mandatory system overlay cannot be customized.
-	"pause_menu": {"ConfigurePauseMenu", 2, 2, 0},
-	"save_get":   {"SaveGetV", 1, 1, 1}, "save_set": {"SaveSetV", 2, 2, 1},
-	"save_read": {"SaveRead", 1, 1, 1}, "save_write": {"SaveWrite", 1, 1, 1},
-	"cls": {"ClsV", 0, 1, 0}, "pset": {"PsetV", 2, 3, 0}, "pget": {"PgetV", 2, 2, 1},
+	"pause":    {"PauseEnableV", 1, 1, 0},
+	"save_get": {"SaveGetV", 1, 1, 1}, "save_set": {"SaveSetV", 2, 2, 1},
+	"save_read": {"SaveReadV", 1, 2, 1}, "save_write": {"SaveWriteV", 1, 2, 1},
+	"save_pending": {"SavePending", 0, 0, 1},
+	"cls":          {"ClsV", 0, 1, 0}, "pset": {"PsetV", 2, 3, 0}, "pget": {"PgetV", 2, 2, 1},
 	"line": {"LineV", 4, 5, 0}, "rect": {"RectV", 4, 5, 0}, "rectfill": {"RectfillV", 4, 5, 0},
 	"circ": {"CircV", 3, 4, 0}, "circfill": {"CircfillV", 3, 4, 0},
 	"spr": {"SprV", 3, 7, 0}, "sspr": {"SSprV", 6, 10, 0},
@@ -407,13 +407,7 @@ func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generat
 		opts.MapPlaneMask = plan.storageMask
 		opts.MapDrawMask = plan.drawMask
 	}
-	restorePause, pauseCalls, pauseErr := lowerPauseAnalysisRoots(chunk)
-	defer restorePause()
-	if pauseErr != nil {
-		return "", generationMetadata{}, pauseErr
-	}
 	g := newGenerator(chunk, opts)
-	g.pauseAnalysisCalls = pauseCalls
 	if err := g.prepare(); err != nil {
 		return "", generationMetadata{}, err
 	}
@@ -523,9 +517,8 @@ type localScope struct {
 }
 
 type generator struct {
-	pauseAnalysisCalls map[luaparser.Stmt]bool
-	chunk              *luaparser.Chunk
-	opts               Options
+	chunk *luaparser.Chunk
+	opts  Options
 
 	funcs    map[string]*functionInfo
 	funcList []*functionInfo
