@@ -164,3 +164,18 @@ navigation, direct guide entry, title-screen return, search, copy controls, and
 the mobile topic menu. Check that nested routes and subdirectory hosting retain
 working relative links. Screenshots in `build/website-style-previews/` are
 review evidence, not source assets or a public deployment.
+
+## Effective mTile chapter
+
+`docs/performance.md` now leads with beginner decisions at its existing
+`guides/performance.html` route. Preserve the abstract explanation, equivalent
+Lua examples, choice/tradeoff and optional implementation note in that order.
+`assets/effective-mtile.css` and `assets/effective-mtile.js` are scoped to this
+page. They inherit the booklet's cream paper, indigo, fonts and focus treatment.
+The element-storage slider uses a shared 384-byte scale, counts 12-byte general
+slots against 4-byte numeric elements, and explicitly excludes headers. It is
+an explanatory model, not an emulator or a performance estimator. Palette grids
+use one square per actual entry; timing bars keep their stated common scale.
+Old timing notes remain in a disclosure with their original anchor IDs. Hash
+navigation opens the containing disclosure. Keep no-JavaScript explanations,
+keyboard-accessible controls and honest version/measurement qualifications.

@@ -21,6 +21,7 @@ ROM, follow the getting-started guide; for a working project, browse the
 mtile doctor [options]
 mtile new   [options] project-dir
 mtile build [options] project-dir
+mtile lint  [options] [project-dir|entry.lua]
 mtile edit  [options] project-dir
 mtile render-audio [options] project-dir
 ```
@@ -49,6 +50,16 @@ graphics/audio availability or compile a ROM.
 | `-runtime` | checkout or embedded runtime | Runtime module directory |
 | `-keep-work` | off | Keep the temporary generated Go workspace |
 | `-renderer` | project setting | One-build override: `mode4`, `mode0`, or `auto` |
+
+`lint` reads the configured Lua entry and its `require()` graph, reporting
+[Effective mTile opportunities](lint.md) without building or changing a ROM.
+It accepts `-format text|json`, `-strict` (fail when advice is present), and
+`-disable MTL001,MTL003` (exclude named rules for the whole analysis).
+`-include-notes` shows conditional allocation and reuse-fallback context;
+these notes do not fail `-strict`. Text reports include source/caret frames
+and documentation URLs. `-docs-url` selects a rendered guide base URL.
+With no input it checks the current directory. Advice requires review;
+an empty report does not establish renderer eligibility or a frame budget.
 
 `edit` opens the Ebitengine IDE. Audio Studio is one native four-channel Music
 Lab: its piano/drum editor, CH1–CH4 hardware inspector, live-performance

@@ -35,7 +35,8 @@ GUIDES = [
     ("graphics", "Maps & drawing order", "maps", "docs/graphics-model.md", "Tile maps, layers, scrolling, and sprite placement."),
     ("tile-links", "Tile links: objects from the map", "maps", "docs/tile-links.md", "Link a shared tile to a pose or clip, then place objects by painting Map Lab."),
     ("renderers", "Renderer compatibility", "debug", "docs/render-modes.md", "Understand hardware tiles, bitmap drawing, and AUTO selection."),
-    ("performance", "Frame budgets", "debug", "docs/performance.md", "Measure your cartridge and keep it within its frame budget."),
+    ("performance", "Effective mTile", "debug", "docs/performance.md", "Understand the choices behind fast Lua: same game, less repeated work, measured tradeoffs."),
+    ("lint", "MTile Lint", "debug", "docs/lint.md", "Find Effective mTile opportunities in Lua, understand the tradeoffs, and use structured advice in CI."),
     ("garbage-collection", "Making room for the next enemy", "data", "docs/garbage-collection.md", "A picture guide to memory, garbage collection, and keeping your GBA game running smoothly."),
     ("lua-api", "Lua API walkthrough", "loop", "docs/lua-api.md", "Common signatures, examples, and behavior notes for every supported builtin."),
     ("audio-editor", "Music Lab walkthrough", "audio", "docs/audio/editor.md", "Compose, arrange, perform, record, and create gameplay effects."),
@@ -62,7 +63,7 @@ DOC_ROUTES[(ROOT / "docs/first-game.md").resolve()] = "guides/first-game.html"
 CATEGORY_GUIDES = {
     "start": ["install", "first-game", "small-games"], "loop": ["game-loop", "reference", "lua-api"], "input": [],
     "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
-    "math": [], "data": ["garbage-collection", "foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "garbage-collection", "renderers"], "editor": ["editor"],
+    "math": [], "data": ["garbage-collection", "foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "lint", "garbage-collection", "renderers"], "editor": ["editor"],
 }
 ICON_PATHS = {
     "flag": '<path d="M5 21V3h13l-3 5 3 5H5"/>',
@@ -180,6 +181,8 @@ def layout(page, title, description, body, active="", toc="", section="guide"):
                   for name, route, label in [("guide", "guide.html", "Guide"), ("learn", "learn.html", "Learn"), ("api", "api.html", "API"), ("examples", "examples.html", "Examples")])
     rail = f'<aside class="on-this-page" aria-label="On this page"><p>On this page</p>{toc}</aside>' if toc and '<li>' in toc else ''
     article_styles = f'<link rel="stylesheet" href="{url("assets/gc.css")}">' if page == 'guides/garbage-collection.html' else ''
+    if page == 'guides/performance.html':
+        article_styles = f'<link rel="stylesheet" href="{url("assets/effective-mtile.css")}"><script src="{url("assets/effective-mtile.js")}" defer></script>'
     contract = '''<!--
 THESIS: Follow one disappearing enemy to explain references and copying GC through the article itself.
 OWN-WORLD: Inherit the mTile booklet's indigo, cream paper, Rubik headings, body type and code face.
@@ -290,6 +293,8 @@ def build(output):
         text = re.sub(r'^# .+\n', '', text, count=1)
         article, toc = render_markdown(text, ROOT / source, page, output)
         article_class = 'prose gc-feature' if slug == 'garbage-collection' else 'prose'
+        if slug == 'performance':
+            article_class = 'prose effective-feature'
         body = page_heading(title, description) + f'<article class="{article_class}">{article}</article><a class="source-link" href="{REPO}/blob/main/{source}">View this guide on GitHub</a>'
         write(page, title, description, body, group, toc, 'learn')
     for api in APIS:

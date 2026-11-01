@@ -453,7 +453,7 @@ Offsets are Unicode rune positions, so cursor movement and selection do not
 split UTF-8 characters. Parser diagnostics use the same Lua parser as the
 build, so a reported syntax error is not a separate linter's approximation.
 
-Problems, Output, Build, Runtime, Watches, Memory, and Generated Go are real bounded views.
+Problems, Lint, Output, Build, Runtime, Watches, Memory, and Generated Go are real bounded views.
 Text panels wrap long messages without discarding their tails. Use the mouse
 wheel, scrollbar, Page Up/Down or arrow keys to read every wrapped row. Drag to
 select text; Cmd/Ctrl+A selects the entire panel, and Cmd/Ctrl+C copies the
@@ -466,6 +466,33 @@ Click a Problems message or press Enter there to open its diagnostic source.
 
 Generated Go is the exact build artifact and receives Go syntax color rather
 than pretending to be editable Lua.
+
+### Effective mTile checks
+
+Open **Develop → Lint**, next to Problems, to review the same
+[MTile Lint rules](lint.md) used by the command line. The editor checks the
+configured entry and its `require()` graph in the background after edits,
+including unsaved text in every open Lua document. It does not save buffers,
+build a ROM or restart the running cartridge. Older results disappear as soon
+as you edit and are discarded if a newer source revision has replaced them.
+
+Advice appears with the original source lines, an explanation, its tradeoff
+and a **Docs** link. Click a blue source/location row, or select it with the
+arrow keys and press Enter, to open that exact file and position. For MTL008,
+the first call, replacing call and replacing write are independently
+navigable. Existing dirty documents keep their text and undo history.
+
+Use **Show context notes** inside the panel to reveal conditional allocations
+and recognized pool fallbacks. Notes explain context; they are not proven
+optimization mistakes. Advice highlights the Lint tab and stays separate
+from compiler/renderer errors in Problems, so it does not block Build + Reload.
+An empty advice list is not a guarantee that the game meets its frame budget.
+
+**Docs** opens the explanation in your browser. A source checkout with a built
+learning website uses the local HTML guide; other installations open the
+repository documentation. The panel retains its usual scrolling, selection
+and **COPY ALL** behaviour. It grows at larger window sizes while retaining
+the cartridge preview, and scrolls at the minimum supported size.
 
 ### Memory inspector
 

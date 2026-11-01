@@ -167,6 +167,8 @@ func (g *Game) updateDevelopTextInput(layout developLayout) bool {
 		if g.developPanel == developProblems {
 			g.openDevelopDiagnostic()
 			g.developTextFocused = false
+		} else if g.developPanel == developLint {
+			g.openDevelopLintRow()
 		}
 	default:
 		delta := 0
@@ -216,6 +218,10 @@ func (g *Game) drawDevelopPanelText(screen *ebiten.Image, layout developLayout) 
 	clip := screen.SubImage(image.Rect(int(math.Floor(float64(body.X)*s)), int(math.Floor(float64(body.Y)*s)), int(math.Ceil(float64(body.X+body.W)*s)), int(math.Ceil(float64(body.Y+body.H)*s)))).(*ebiten.Image)
 	visible := max(1, body.H/codeLineHeight)
 	start := g.developScroll[g.developPanel]
+	var lintRows []developLintRow
+	if g.developPanel == developLint {
+		lintRows = g.developLintRows()
+	}
 	from, to, selected := v.document.Selection()
 	for row := 0; row < visible && start+row < len(v.rows); row++ {
 		item := v.rows[start+row]
@@ -223,7 +229,9 @@ func (g *Game) drawDevelopPanelText(screen *ebiten.Image, layout developLayout) 
 		clr := colorText
 		original := v.document.Line(item.line)
 		lower := strings.ToLower(original)
-		if strings.Contains(lower, "error") || strings.Contains(lower, "failed") {
+		if g.developPanel == developLint && item.line < len(lintRows) {
+			clr = developLintColor(lintRows[item.line])
+		} else if strings.Contains(lower, "error") || strings.Contains(lower, "failed") {
 			clr = colorDanger
 		} else if strings.HasPrefix(original, "OK") || strings.Contains(lower, "completed successfully") {
 			clr = colorRun

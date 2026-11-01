@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
@@ -20,6 +21,7 @@ type developPanel uint8
 
 const (
 	developProblems developPanel = iota
+	developLint
 	developOutput
 	developBuild
 	developRuntime
@@ -30,7 +32,7 @@ const (
 )
 
 func (p developPanel) label() string {
-	return [...]string{"PROBLEMS", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "MEMORY", "GENERATED GO"}[p]
+	return [...]string{"PROBLEMS", "LINT", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "MEMORY", "GENERATED GO"}[p]
 }
 
 var developDiagnosticLocation = regexp.MustCompile(`(?:^|[ (])([^ :()]+\.lua):(\d+):(\d+)`)
@@ -65,7 +67,7 @@ func newDevelopPanelLayout(panel developPanel) developLayout {
 		previewVerticalClearance = 2
 	)
 	bottomH := 176
-	if panel == developMemory {
+	if panel == developMemory || panel == developLint {
 		// Give the comparison room without covering the running cartridge.
 		// Compact windows retain enough stage height for a 1x GBA preview.
 		bottomH = min(336, 176+max(0, screenHeight-840))
@@ -824,6 +826,9 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 			clr = colorDanger
 			label += " !"
 		}
+		if panel == int(developLint) && g.lintAdviceCount() > 0 {
+			clr = colorHighlight
+		}
 		drawDevelopTextCentered(screen, label, tab, clr)
 	}
 	drawLine(screen, r.X+8, r.Y+34, r.X+r.W-8, r.Y+34, colorBorder)
@@ -836,7 +841,7 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 
 func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
 	r := layout.Code.Diagnostics
-	widths := [...]int{112, 96, 92, 106, 112, 104, 150}
+	widths := [...]int{112, 68, 96, 92, 106, 112, 104, 150}
 	tabs := make([]editor.Rect, 0, len(widths))
 	x := r.X + 1
 	available := r.W - 2
@@ -889,6 +894,8 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 			g.beginDevelopTextSelection(layout, x, max(body.Y, y), ebiten.IsKeyPressed(ebiten.KeyShift))
 			if g.developPanel == developProblems {
 				g.openDevelopDiagnostic()
+			} else if g.developPanel == developLint {
+				g.openDevelopLintRow()
 			}
 		}
 	}
@@ -915,6 +922,9 @@ func (g *Game) hasDevelopProblems() bool {
 }
 
 func (g *Game) developPanelLines(panel developPanel) []string {
+	if panel == developLint {
+		return g.developLintLines()
+	}
 	if panel == developMemory {
 		return g.developMemoryLines()
 	}
@@ -1092,6 +1102,10 @@ func (g *Game) openProjectDiagnostic(path string, line, column int) {
 		g.statusMsg = "open diagnostic: " + err.Error()
 		return
 	}
-	g.code.SetCursor(g.code.Offset(max(0, line-1), max(0, column-1)), false)
+	lineIndex := min(max(0, line-1), max(0, g.code.LineCount()-1))
+	text := g.code.Line(lineIndex)
+	byteColumn := min(max(0, column-1), len(text))
+	runeColumn := utf8.RuneCountInString(text[:byteColumn])
+	g.code.SetCursor(g.code.Offset(lineIndex, runeColumn), false)
 	g.keepCodeCursorVisible(newDevelopPanelLayout(g.developPanel).Code)
 }

@@ -145,3 +145,13 @@ component attribution remains in the [project notices](../docs/third-party/READM
 The [content review](../docs/website-content-review.md) records factual corrections,
 implementation evidence, and the limits of automated verification. Run the
 API snippet gate with `go test ./internal/transpiler -run TestWebsiteAPIExamples`.
+
+Effective mTile uses `docs/performance.md` at the existing
+`guides/performance.html` route. Its page-only assets are `effective-mtile.css`
+and `effective-mtile.js`. The storage slider models element bytes, not CPU
+speed; its initial example remains readable without JavaScript. The earlier
+engineering reference remains in a disclosure and old hash links open it.
+`TestEffectiveMtilePrograms` executes all 22 published Lua programs with their
+stated assets and compares behavior; `test_effective_mtile.py` checks the site
+structure, scales, accessibility hooks and preserved links. Advanced compiler
+notes identify the optimization revision they require.

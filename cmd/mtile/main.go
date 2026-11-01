@@ -51,6 +51,8 @@ func runWithInput(args []string, stdin io.Reader, stdout, stderr io.Writer) erro
 		return runEdit(args[1:], stdout, stderr)
 	case "lsp":
 		return runLSP(args[1:], stdin, stdout, stderr)
+	case "lint":
+		return runLint(args[1:], stdout, stderr)
 	case "render-audio":
 		return runRenderAudio(args[1:], stdout)
 	case "help", "-h", "--help":
@@ -69,6 +71,7 @@ Commands:
   build  transpile Lua and assets, link a .gba ROM
   edit   open the Sprites, Map, Audio, Code, and Play IDE
   lsp    serve Lua completion, hover, and live diagnostics over stdio
+  lint   review Lua for Effective mTile performance opportunities
   render-audio  render the PSG editor preview to a WAV file
 
 Run mtile <command> -h for flags.`

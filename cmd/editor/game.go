@@ -243,6 +243,7 @@ type Game struct {
 	codeAnalysisDue          time.Time
 	codeAnalysisBusy         bool
 	codeAnalysisResults      chan codeAnalysisResult
+	lintShowNotes            bool
 	developGameFocus         bool
 
 	// Build/run state is synchronized because TinyGo and the emulator helper

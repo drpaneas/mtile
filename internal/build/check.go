@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/lint"
 	"github.com/drpaneas/mtile/internal/luaparser"
 	"github.com/drpaneas/mtile/internal/sourcebundle"
 	"github.com/drpaneas/mtile/internal/transpiler"
@@ -40,6 +41,10 @@ type ProjectAnalysis struct {
 	// RendererReady is false after any source, asset, or transpiler error.
 	// A partial report must never be presented as a proven selection.
 	RendererReady bool
+	// Lint is source-only advice, kept separate from build/renderer errors.
+	// It may be ready even when an asset or semantic check later fails.
+	Lint      []lint.Diagnostic
+	LintReady bool
 }
 
 // CheckProject runs the build's front end using unsaved Lua buffers. It loads
@@ -74,6 +79,11 @@ func (s Service) CheckProject(projectDir string, overlay map[string]string) Proj
 	if err != nil {
 		return fail(err, "SOURCE")
 	}
+	result.Lint, err = lint.Analyze(bundle)
+	if err != nil {
+		return fail(err, "SOURCE")
+	}
+	result.LintReady = true
 	result.SourceAnalysis, err = analyzeResolvedSources(bundle)
 	if err != nil {
 		return fail(bundle.RemapError(err), "TRANSPILE")

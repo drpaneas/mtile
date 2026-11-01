@@ -1,0 +1,273 @@
+{
+  "sourceRevision": "b99eb5132f6e9e5e238b5e07328977ad5b63982d",
+  "sourceReport": "docs/benchmarks/final-map-palette-2026-10-31/README.md",
+  "sourceFilesSHA256": {
+    "product.json": "1987d4eccd8a931c90655713681fe8f6cd249d162feed6c309f4b6f29bb43836",
+    "density.json": "578a802bc7de8fc6cadc6151a371c3e5904f322f2a4b5a775e5bf467c3758959",
+    "butano-controls.json": "c89bee86eb9b9d6e0e41733d328c89ca12533d072a7e8af7e1b4d2b697b8a84c",
+    "README.md": "b40e92803fdab5fbc31601d78f16b3f22f7a0d6654484bfd5fe981138ee54d44"
+  },
+  "note": "Existing measured snapshots copied for teaching. This documentation task did not run new performance benchmarks.",
+  "previousMtileMedian": {
+    "palette_16": 11389,
+    "collision_1024": 46981
+  },
+  "mtile": [
+    {
+      "case": "collision_1024",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 42890.0,
+          "p95": 42890,
+          "maximum": 42890,
+          "minimum": 42890,
+          "budgetPercent": 7.634498177261335,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 5,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 42890.0,
+          "p95": 42890,
+          "maximum": 42890,
+          "minimum": 42890,
+          "budgetPercent": 7.634498177261335,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 5,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    },
+    {
+      "case": "palette_16",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 4670.0,
+          "p95": 4670,
+          "maximum": 4670,
+          "minimum": 4670,
+          "budgetPercent": 0.8312685121895649,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 4670.0,
+          "p95": 4670,
+          "maximum": 4670,
+          "minimum": 4670,
+          "budgetPercent": 0.8312685121895649,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    }
+  ],
+  "butano": [
+    {
+      "case": "collision_1024",
+      "variant": "arm-iwram",
+      "romSHA256": "b8a20b01a4d9ea64854ed3baac17a955ba8ee2d841481e4c6348324d3e533c40",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 34157.5,
+          "p95": 34165,
+          "maximum": 34166,
+          "minimum": 34149,
+          "budgetPercent": 6.080097260195944,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 11,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 34157.5,
+          "p95": 34165,
+          "maximum": 34166,
+          "minimum": 34149,
+          "budgetPercent": 6.080097260195944,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 11,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    },
+    {
+      "case": "palette_16",
+      "variant": "arm-iwram",
+      "romSHA256": "0a9db7c727f44bc77cb9843f5853526ac1174839c622236f5425d8bbb70647ef",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 13476.0,
+          "p95": 13476,
+          "maximum": 13492,
+          "minimum": 13475,
+          "budgetPercent": 2.3987525632262474,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 11,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 13476.0,
+          "p95": 13476,
+          "maximum": 13492,
+          "minimum": 13475,
+          "budgetPercent": 2.3987525632262474,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 11,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    }
+  ],
+  "densePalette128": [
+    {
+      "count": 128,
+      "variant": "previous",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 20030.0,
+          "p95": 20030,
+          "maximum": 20030,
+          "minimum": 20030,
+          "budgetPercent": 3.565376509455457,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 20030.0,
+          "p95": 20030,
+          "maximum": 20030,
+          "minimum": 20030,
+          "budgetPercent": 3.565376509455457,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    },
+    {
+      "count": 128,
+      "variant": "current",
+      "captures": [
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 20030.0,
+          "p95": 20030,
+          "maximum": 20030,
+          "minimum": 20030,
+          "budgetPercent": 3.565376509455457,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        },
+        {
+          "observedHz": 29.863750284802915,
+          "refreshGapHistogram": {
+            "2": 599
+          },
+          "overBudgetTicks": 0,
+          "samples": 600,
+          "median": 20030.0,
+          "p95": 20030,
+          "maximum": 20030,
+          "minimum": 20030,
+          "budgetPercent": 3.565376509455457,
+          "missed": 0,
+          "videoRefreshes": 1198,
+          "firstPublicationVideoFrame": 7,
+          "gcCollections": 0,
+          "heapPeak": 0
+        }
+      ]
+    }
+  ]
+}

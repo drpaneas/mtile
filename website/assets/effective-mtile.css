@@ -1,0 +1,76 @@
+/* Effective mTile extends the existing warm-paper instruction booklet. */
+.effective-feature{--effective-rule:#bcb1c7;--effective-soft:#e6ddef;display:flow-root}
+.effective-feature .effective-opening{font-size:21px;line-height:1.55;max-width:39em}
+.effective-feature figure{margin:30px 0 36px;clear:both}
+.effective-feature figcaption{margin:14px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+.effective-feature figure>strong{display:block;font:600 19px/1.4 var(--display);color:var(--purple);margin-bottom:14px}
+.effective-compare,.effective-palettes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 30px;padding:20px 0;border-block:1px solid var(--effective-rule)}
+.effective-compare>div,.effective-palettes>div{min-width:0}
+.effective-compare strong,.effective-palettes strong{font:600 18px/1.4 var(--display);color:var(--purple)}
+.effective-compare p,.effective-palettes p{margin:10px 0;font-size:15px}
+.effective-trade{display:block;color:var(--muted);font-size:13px;line-height:1.5}
+.effective-compare figcaption,.effective-palettes figcaption{grid-column:1/-1;margin:0}
+.effective-loop{border-block:1px solid var(--effective-rule);padding:20px 0}
+.effective-once{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding-bottom:18px;border-bottom:1px dashed var(--effective-rule)}
+.effective-once strong{color:var(--purple)}
+.effective-once span{font-size:14px;color:var(--muted)}
+.effective-feature .effective-loop ol,.effective-feature .effective-measure ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;list-style:none;margin:20px 0 0;padding:0;counter-reset:jobs}
+.effective-loop li,.effective-measure li{margin:0!important;position:relative;padding-top:24px;counter-increment:jobs}
+.effective-loop li::before,.effective-measure li::before{content:counter(jobs) ".";position:absolute;top:0;color:var(--muted);font-size:13px}
+.effective-loop li strong,.effective-measure li strong{display:block;font:600 16px/1.45 var(--display);color:var(--purple);margin-bottom:7px}
+.effective-loop li span,.effective-measure li span{display:block;font-size:13px;line-height:1.5;color:var(--muted)}
+.effective-loop li code{font-size:12px!important}
+.effective-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 30px;padding:20px 0;border-block:1px solid var(--effective-rule)}
+.effective-proof>div:first-child{grid-column:1/-1}
+.effective-proof strong{font:600 18px/1.4 var(--display);color:var(--purple)}
+.effective-proof p{margin:8px 0 0;font-size:14px}
+.effective-proof figcaption{grid-column:1/-1;margin-top:0}
+.effective-feature details.effective-note,.effective-feature details.effective-history{margin:24px 0 34px;border-block:1px solid var(--effective-rule)}
+.effective-feature summary{cursor:pointer;padding:16px 24px 16px 0;font:600 16px/1.5 var(--display);color:var(--purple);text-underline-offset:3px}
+.effective-feature summary:hover{text-decoration:underline}
+.effective-feature summary:focus-visible,.effective-feature input:focus-visible{outline:2px solid var(--purple);outline-offset:5px;border-radius:4px}
+.effective-feature details[open]>summary{border-bottom:1px dashed var(--effective-rule);margin-bottom:16px}
+.effective-feature details>p:last-child,.effective-feature details>ul:last-child{margin-bottom:20px}
+.effective-history h3{margin-top:32px}
+.effective-history h4{font-family:var(--display);margin:25px 0 10px}
+.effective-history table{display:block;overflow-x:auto}
+.effective-storage,.effective-results{padding:20px 0;border-block:1px solid var(--effective-rule)}
+.effective-storage>p{font-size:14px}
+.effective-storage label{display:flex;align-items:baseline;justify-content:space-between;gap:20px;font-weight:600;margin:20px 0 8px}
+.effective-storage output{font-variant-numeric:tabular-nums;color:var(--purple)}
+.effective-storage input{display:block;width:100%;min-height:32px;margin:0 0 20px;accent-color:var(--purple);cursor:ew-resize}
+.effective-storage-row{margin:18px 0}
+.effective-storage-row>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:7px;font-size:15px}
+.effective-storage-row strong{font-size:15px}
+.effective-storage-row>div:first-child>span:last-child{font-variant-numeric:tabular-nums}
+.effective-track{height:24px;background:var(--raised)}
+.effective-track>span{display:block;height:100%;background:var(--purple);transition:width .18s cubic-bezier(.16,1,.3,1)}
+#storage-general-bar{background:var(--muted)}
+.effective-scale{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+#storage-feedback{min-height:3.2em;font-size:14px;margin:16px 0 0}
+.effective-results .effective-storage-row:nth-of-type(1) .effective-track>span{background:var(--muted)}
+.effective-results .effective-storage-row:nth-of-type(3) .effective-track>span{background:#8c714a}
+.effective-palette-grid{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;width:100%;max-width:272px;margin:14px 0}
+.effective-palette-grid>span{aspect-ratio:1;background:var(--raised);min-width:0;display:grid;place-items:center;font:9px/1 var(--mono);color:var(--text)}
+.effective-palette-grid.effective-full>span{background:var(--muted)}
+.effective-palette-grid .effective-changed{background:var(--purple);color:#fffdf6}
+.effective-memory-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 30px;padding:20px 0;border-block:1px solid var(--effective-rule)}
+.effective-memory-map strong{display:block;font:600 18px/1.4 var(--display);color:var(--purple)}
+.effective-memory-map span{display:block;font-variant-numeric:tabular-nums;margin-top:6px}
+.effective-memory-map p{font-size:14px;margin:8px 0 0}
+.effective-memory-map figcaption{grid-column:1/-1;margin-top:0}
+.effective-measure{padding:0 0 20px;border-bottom:1px solid var(--effective-rule)}
+@media(max-width:620px){
+ .effective-feature .effective-opening{font-size:19px}
+ .effective-compare,.effective-palettes,.effective-proof,.effective-memory-map{grid-template-columns:1fr;gap:20px}
+ .effective-feature .effective-loop ol,.effective-feature .effective-measure ol{grid-template-columns:1fr 1fr;gap:20px 16px}
+ .effective-loop li strong,.effective-measure li strong{font-size:16px}
+ .effective-palette-grid{max-width:272px}
+ .effective-storage-row>div:first-child{font-size:14px}
+ #storage-feedback{min-height:4.8em}
+}
+@media(prefers-reduced-motion:reduce){.effective-track>span{transition:none}}
+@media print{.effective-storage input{display:none}.effective-feature figure{break-inside:avoid}}
+
+/* The archive stays discoverable as one entry in the learning path. */
+.on-this-page a[href="#historical-reference"]+ul{display:none}

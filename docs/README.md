@@ -51,6 +51,7 @@ These are references, not prerequisites for your first game.
 | [Lua language server](language-server.md) | External-editor completion, hover, and live renderer diagnostics |
 | [Renderer compatibility](render-modes.md) | Exact Mode 0, Mode 4, and AUTO restrictions |
 | [Performance](performance.md) | Cycle budgets, memory limits, and measured costs |
+| [MTile Lint](lint.md) | Source checks and reviewable Effective mTile advice for terminal, agents and CI |
 
 ## Work on Mtile
 
