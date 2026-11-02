@@ -8,7 +8,7 @@ import (
 
 func TestEveryBuiltinHasRendererCompatibility(t *testing.T) {
 	want := map[RendererCompatibility]int{
-		RendererIndependent:      51,
+		RendererIndependent:      52,
 		RendererBoth:             8,
 		RendererMode0Conditional: 12,
 		RendererMode4Only:        7,

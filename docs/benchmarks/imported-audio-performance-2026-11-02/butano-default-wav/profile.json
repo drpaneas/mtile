@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537600,
+    "instructionCycles": 8189916,
+    "waitInstructionCycles": 53400,
+    "activeEventCycles": 34211,
+    "haltEventCycles": 160313473,
+    "otherAddressCycles": 79800,
+    "instructions": 4302947,
+    "mailboxMemory": [
+      33512,
+      10624,
+      292,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50364284,
+        "maxSP": 50364320,
+        "observedRange": 36
+      },
+      {
+        "mode": 19,
+        "minSP": 50364368,
+        "maxSP": 50364384,
+        "observedRange": 16
+      },
+      {
+        "mode": 31,
+        "minSP": 50363852,
+        "maxSP": 50364128,
+        "observedRange": 276
+      }
+    ],
+    "mixerCapacity": 20,
+    "minObservedVoices": 0,
+    "maxObservedVoices": 1
+  },
+  "categoriesPerTick": {
+    "other": 7021.12,
+    "publication": 191.0,
+    "wait": 178.0,
+    "maxmod": 19485.6,
+    "irq": 158.0
+  },
+  "cpu": {
+    "mean": 27121.72,
+    "median": 27302.0,
+    "p95": 30761,
+    "maximum": 32165,
+    "minimum": 23574,
+    "percent": 4.827715595807701
+  },
+  "top": [
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12668.0
+    },
+    {
+      "name": ".mpmac_6",
+      "cyclesPerTick": 2679.9
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 995.1333333333333
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 940.0
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::update_impl()",
+      "cyclesPerTick": 876.0
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 535.0
+    },
+    {
+      "name": "bn::audio_manager::execute_commands()",
+      "cyclesPerTick": 509.3333333333333
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 494.0
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 390.0
+    },
+    {
+      "name": "bn::palettes_bank::update()",
+      "cyclesPerTick": 332.0
+    },
+    {
+      "name": ".fetch",
+      "cyclesPerTick": 318.3
+    },
+    {
+      "name": "bn::hblank_effects_manager::update()",
+      "cyclesPerTick": 234.0
+    },
+    {
+      "name": "bn::hw::timer::ticks()",
+      "cyclesPerTick": 216.0
+    },
+    {
+      "name": "bn::bg_blocks_manager::update()",
+      "cyclesPerTick": 194.0
+    },
+    {
+      "name": "publish",
+      "cyclesPerTick": 191.0
+    },
+    {
+      "name": "bn::sprite_tiles_manager::update()",
+      "cyclesPerTick": 174.0
+    },
+    {
+      "name": "bn::sprites_manager::commit(bool)",
+      "cyclesPerTick": 172.0
+    },
+    {
+      "name": "bn::core::update()",
+      "cyclesPerTick": 164.0
+    },
+    {
+      "name": "bn::sprite_affine_mats_manager::update()",
+      "cyclesPerTick": 156.0
+    },
+    {
+      "name": "bn::sprites_manager::update()",
+      "cyclesPerTick": 142.0
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::_vblank_intr()",
+      "cyclesPerTick": 138.0
+    },
+    {
+      "name": "bn::hblank_effects_manager::commit()",
+      "cyclesPerTick": 138.0
+    },
+    {
+      "name": "bn::bg_blocks_manager::commit_uncompressed(bool)",
+      "cyclesPerTick": 134.0
+    },
+    {
+      "name": "bn::palettes_bank::retrieve_commit_data() const",
+      "cyclesPerTick": 130.0
+    },
+    {
+      "name": "bn::bgs_manager::commit_big_maps()",
+      "cyclesPerTick": 126.0
+    }
+  ],
+  "cpuWithNonHaltEvents": {
+    "mean": 27235.756666666668,
+    "median": 27417.0,
+    "p95": 30876,
+    "maximum": 32280,
+    "minimum": 23687,
+    "percent": 4.84801433033341
+  },
+  "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+}

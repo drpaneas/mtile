@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537618,
+    "instructionCycles": 167985938,
+    "waitInstructionCycles": 158625056,
+    "activeEventCycles": 551680,
+    "haltEventCycles": 0,
+    "otherAddressCycles": 52800,
+    "instructions": 30472434,
+    "mailboxMemory": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50332476,
+        "maxSP": 50332672,
+        "observedRange": 196
+      },
+      {
+        "mode": 31,
+        "minSP": 50336752,
+        "maxSP": 50336824,
+        "observedRange": 72
+      }
+    ],
+    "mixerCapacity": 32,
+    "minObservedVoices": 0,
+    "maxObservedVoices": 1
+  },
+  "categoriesPerTick": {
+    "irq": 2670.0,
+    "other": 1601.3333333333333,
+    "wait": 528750.1866666666,
+    "publication": 2657.0,
+    "maxmod": 24098.606666666667
+  },
+  "cpu": {
+    "mean": 31202.94,
+    "median": 31223.0,
+    "p95": 31223,
+    "maximum": 31223,
+    "minimum": 27765,
+    "percent": 5.554180194805195
+  },
+  "top": [
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12668.0
+    },
+    {
+      "name": ".mpmac_6",
+      "cyclesPerTick": 5345.91
+    },
+    {
+      "name": "handleInterrupt",
+      "cyclesPerTick": 2016.0
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 1471.9533333333334
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+      "cyclesPerTick": 1255.0
+    },
+    {
+      "name": ".fetch",
+      "cyclesPerTick": 957.55
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+      "cyclesPerTick": 956.0
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 940.0
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 877.6333333333333
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 758.0
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 594.0
+    },
+    {
+      "name": "memset",
+      "cyclesPerTick": 250.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/audio.pcmMix",
+      "cyclesPerTick": 228.0
+    },
+    {
+      "name": "runtime/volatile.LoadUint16",
+      "cyclesPerTick": 220.01333333333332
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PerformanceStats",
+      "cyclesPerTick": 160.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "cyclesPerTick": 136.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut16",
+      "cyclesPerTick": 132.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "cyclesPerTick": 122.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "cyclesPerTick": 112.0
+    },
+    {
+      "name": "handleInterruptARM",
+      "cyclesPerTick": 108.0
+    },
+    {
+      "name": ".fetchsmall",
+      "cyclesPerTick": 99.75
+    },
+    {
+      "name": "runtime/volatile.StoreUint16",
+      "cyclesPerTick": 93.02666666666667
+    },
+    {
+      "name": "memcpy",
+      "cyclesPerTick": 92.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Add",
+      "cyclesPerTick": 81.0
+    },
+    {
+      "name": "runtime/interrupt.callInterruptHandler",
+      "cyclesPerTick": 80.0
+    }
+  ],
+  "cpuWithNonHaltEvents": {
+    "mean": 33041.87333333334,
+    "median": 33066.0,
+    "p95": 33066,
+    "maximum": 33066,
+    "minimum": 29604,
+    "percent": 5.881513680033418
+  },
+  "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+}

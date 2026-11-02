@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537600,
+    "instructionCycles": 167987046,
+    "waitInstructionCycles": 148519696,
+    "activeEventCycles": 550554,
+    "haltEventCycles": 0,
+    "otherAddressCycles": 52800,
+    "instructions": 33387956,
+    "mailboxMemory": [
+      57344,
+      0,
+      0,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50332476,
+        "maxSP": 50332672,
+        "observedRange": 196
+      },
+      {
+        "mode": 31,
+        "minSP": 50336816,
+        "maxSP": 50336816,
+        "observedRange": 0
+      }
+    ],
+    "mixerCapacity": 32,
+    "minObservedVoices": 4,
+    "maxObservedVoices": 4
+  },
+  "categoriesPerTick": {
+    "irq": 2670.0,
+    "other": 2936.81,
+    "wait": 495065.6533333333,
+    "publication": 2473.0,
+    "maxmod": 56635.35666666667
+  },
+  "cpu": {
+    "mean": 64891.166666666664,
+    "median": 66687.5,
+    "p95": 67920,
+    "maximum": 71861,
+    "minimum": 57699,
+    "percent": 11.550745946305156
+  },
+  "top": [
+    {
+      "name": ".mpmaa_10",
+      "cyclesPerTick": 23467.853333333333
+    },
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12664.66
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+      "cyclesPerTick": 2234.6666666666665
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 2216.68
+    },
+    {
+      "name": "handleInterrupt",
+      "cyclesPerTick": 2016.0
+    },
+    {
+      "name": "mppProcessTick",
+      "cyclesPerTick": 1648.7733333333333
+    },
+    {
+      "name": ".mix_remaining",
+      "cyclesPerTick": 1427.6266666666668
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 1414.0
+    },
+    {
+      "name": ".fetch",
+      "cyclesPerTick": 1400.04
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 1390.93
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+      "cyclesPerTick": 1110.0
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 1042.8866666666668
+    },
+    {
+      "name": "__udivsi3",
+      "cyclesPerTick": 1018.9333333333333
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+      "cyclesPerTick": 932.0
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 849.94
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_envelopes",
+      "cyclesPerTick": 808.0
+    },
+    {
+      "name": ".fetchsmall",
+      "cyclesPerTick": 688.3666666666667
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_disable_and_panning",
+      "cyclesPerTick": 599.2666666666667
+    },
+    {
+      "name": "mpp_SamplePointer",
+      "cyclesPerTick": 513.4666666666667
+    },
+    {
+      "name": ".mpm_mix_short",
+      "cyclesPerTick": 459.25666666666666
+    },
+    {
+      "name": ".mpm_mix_complete",
+      "cyclesPerTick": 428.7866666666667
+    },
+    {
+      "name": ".mpm_remix_test",
+      "cyclesPerTick": 413.21666666666664
+    },
+    {
+      "name": "mpp_Update_ACHN_notest",
+      "cyclesPerTick": 370.3333333333333
+    },
+    {
+      "name": "mpp_InstrumentPointer",
+      "cyclesPerTick": 338.8
+    },
+    {
+      "name": "memset",
+      "cyclesPerTick": 250.0
+    }
+  ],
+  "cpuWithNonHaltEvents": {
+    "mean": 66726.34666666666,
+    "median": 68517.0,
+    "p95": 69754,
+    "maximum": 73696,
+    "minimum": 59550,
+    "percent": 11.877411331358699
+  },
+  "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+}

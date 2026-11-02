@@ -69,7 +69,9 @@ samples. It only writes registers for scheduled events at 256 Hz.
 
 The GBA also has Direct Sound FIFO A/B for PCM. Audio v2 deliberately does not
 use them, DMA1/2, PCM buffers, or a software mixer. Earlier reference ROMs
-remain useful hardware research but are outside the product.
+remain useful hardware research. The new optional
+[Maxmod companion](samples.md) uses both FIFOs with DMA1/2 and Timer 1;
+the PSG v2 controller retains Timer 0.
 
 References:
 

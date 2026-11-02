@@ -1,0 +1,23 @@
+{
+  "butanoRevision": "04374b034c76b82bfdc3aa6c38d652e5e7778a68",
+  "mtileRevision": "00897dd13e5b34560cf654bba5e76cd16b2bb4c7",
+  "mtileDirty": true,
+  "tinygo": "tinygo version 0.42.0 darwin/arm64 (using go version go1.27.1 and LLVM version 22.1.4)",
+  "gcc": "arm-none-eabi-g++ (devkitARM release 65) 14.2.0",
+  "playerSHA256": "337e7930e48c8ccc016480e887a87cfd7a8e795fa3451e5290049a94e1a38544",
+  "profilerSHA256": "e48cac3ba81b5aa124f80d5049f50d36aac4164a836868ff9fe87aa26f69ce1f",
+  "mmutilSHA256": "ba0f070ace254a62b89bb7c7688d45588630085b2a9f089f44a8249f0ac36d63",
+  "soundbankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6",
+  "soundbankBytes": 11820,
+  "inputs": {
+    "voices04.mod": "a042e2cf2d09cd122a8e9939f20389efe523d5215e47d5c70b87e6bf16a41dbe",
+    "voices01.mod": "a0c07ec2ba044da2dad8eed784f8a8d7c08f49756d446d1f051bdeede007f43b",
+    "voices16.mod": "b0f7a1bec28937d8b3f7f5f6efc13351a18aedb057012145dd935a126f8efe51",
+    "bell.wav": "ce2a3d60474498ff506c56c7079dc1622144f55348e0650ae545e32df6202d25",
+    "voices32.mod": "4bf6a37d28ba7ce6d6b6bf979c7c1501ac238af6d8ef3da662c1663d85d510a4"
+  },
+  "warmup": 60,
+  "profileTicks": 300,
+  "captureTicks": 600,
+  "cyclesPer30HzTick": 561792
+}

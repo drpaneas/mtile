@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "sounds": [
+    {
+      "id": 0,
+      "name": "pulse_ping",
+      "kind": "ch1",
+      "route": "both",
+      "pulse": {
+        "duty": 50,
+        "length": 0,
+        "useLength": false,
+        "envelope": {
+          "initial": 8,
+          "direction": "down",
+          "pace": 2
+        },
+        "sweep": {
+          "pace": 0,
+          "direction": "up",
+          "shift": 0
+        }
+      }
+    }
+  ]
+}

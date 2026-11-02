@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "format": 24,
+  "bank": "bank-b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6.bin",
+  "sha256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6",
+  "music": [
+    {
+      "name": "voices01",
+      "source": "music_voices01.mod",
+      "bankId": 0
+    },
+    {
+      "name": "voices04",
+      "source": "music_voices04.mod",
+      "bankId": 1
+    },
+    {
+      "name": "voices16",
+      "source": "music_voices16.mod",
+      "bankId": 2
+    },
+    {
+      "name": "voices32",
+      "source": "music_voices32.mod",
+      "bankId": 3
+    }
+  ],
+  "samples": [
+    {
+      "name": "bell",
+      "source": "sfx_bell.wav",
+      "bankId": 2
+    }
+  ]
+}

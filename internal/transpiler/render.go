@@ -24,8 +24,10 @@ func (g *generator) render() string {
 	b.line("")
 	b.line("import (")
 	b.line("\trt \"github.com/drpaneas/mtile/runtime\"")
-	if g.nativeAudioEnabled {
+	if g.nativeAudioEnabled || g.directAudioEnabled() {
 		b.line("\t\"github.com/drpaneas/mtile/runtime/audio\"")
+	}
+	if g.nativeAudioEnabled {
 		b.line("\t\"github.com/drpaneas/mtile/runtime/hw\"")
 	}
 	if g.mapRasterEligible() || g.hasPackedMap() {
@@ -214,6 +216,9 @@ func (g *generator) renderGame(b *sourceBuilder) {
 	if g.nativeAudioEnabled {
 		b.line("//go:section .ewram\nvar nativeAudioController audio.Controller")
 	}
+	if g.directAudioEnabled() {
+		g.renderDirectAudioStorage(b)
+	}
 	b.line("")
 	b.line("type Game struct {")
 	for _, name := range g.globals {
@@ -374,6 +379,10 @@ func (g *generator) renderMain(b *sourceBuilder) {
 		b.line(fmt.Sprintf("\tif !nativeAudioController.ConfigureOutput(%d, %d, %s) { %s }", settings.LeftLevel, settings.RightLevel, transpilerPSGRatioGoName(settings.PSGRatio), g.haltStatement("Sound output settings were rejected. Check the project's audio settings.")))
 		b.line("\tif !nativeAudioController.Bind(audio.Library{Sounds: nativeSoundROM[:], Clips: nativeClipROM[:], Parts: nativePartROM[:], Songs: nativeSongROM[:]}) { " + g.haltStatement("Sound assets were rejected. Check sounds.json and music.json, then rebuild.") + " }")
 		b.line("\tctx.AttachNativeAudio(&nativeAudioController)")
+	}
+	if g.directAudioEnabled() {
+		b.line("\tif !pcmAudioController.Init(pcmBankROM[:],pcmMusicIDs[:],pcmSampleIDs[:]) { " + g.haltStatement("Imported audio could not start. Run mtile import-audio and rebuild.") + " }")
+		b.line("\tctx.AttachPCMAudio(&pcmAudioController)")
 	}
 	if g.saveEnabled() {
 		b.line("\tctx.AttachSaveMemory(&saveMemory)")

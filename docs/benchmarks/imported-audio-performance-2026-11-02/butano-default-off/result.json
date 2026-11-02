@@ -1,0 +1,470 @@
+{
+  "variant": "butano-default",
+  "workload": {
+    "name": "off",
+    "kind": 0,
+    "voices": 0,
+    "effects": 0
+  },
+  "romBytes": 42728,
+  "romSHA256": "0c081fd09654b09c53859b99fc49eb3c29cd48269b725d853f9404dc7a57abac",
+  "elfSHA256": "668076efdb0c7716509d64ecb05f59436aa9249887ce147c53bb09b09812cd2c",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168537600,
+      "instructionCycles": 2099100,
+      "waitInstructionCycles": 53400,
+      "activeEventCycles": 0,
+      "haltEventCycles": 166438500,
+      "otherAddressCycles": 79800,
+      "instructions": 609300,
+      "mailboxMemory": [
+        30692,
+        3948,
+        284,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50364284,
+          "maxSP": 50364320,
+          "observedRange": 36
+        },
+        {
+          "mode": 19,
+          "minSP": 50364368,
+          "maxSP": 50364384,
+          "observedRange": 16
+        },
+        {
+          "mode": 31,
+          "minSP": 50363944,
+          "maxSP": 50364136,
+          "observedRange": 192
+        }
+      ],
+      "mixerCapacity": 0,
+      "minObservedVoices": 0,
+      "maxObservedVoices": 0
+    },
+    "categoriesPerTick": {
+      "other": 6214.0,
+      "publication": 181.0,
+      "wait": 178.0,
+      "irq": 158.0
+    },
+    "cpu": {
+      "mean": 6819,
+      "median": 6819.0,
+      "p95": 6819,
+      "maximum": 6819,
+      "minimum": 6819,
+      "percent": 1.2137944292549556
+    },
+    "top": [
+      {
+        "name": "bn::core::(anonymous namespace)::update_impl()",
+        "cyclesPerTick": 876.0
+      },
+      {
+        "name": "bn::audio_manager::execute_commands()",
+        "cyclesPerTick": 390.0
+      },
+      {
+        "name": "bn::palettes_bank::update()",
+        "cyclesPerTick": 332.0
+      },
+      {
+        "name": "bn::hblank_effects_manager::update()",
+        "cyclesPerTick": 234.0
+      },
+      {
+        "name": "bn::hw::timer::ticks()",
+        "cyclesPerTick": 216.0
+      },
+      {
+        "name": "bn::bg_blocks_manager::update()",
+        "cyclesPerTick": 194.0
+      },
+      {
+        "name": "publish",
+        "cyclesPerTick": 181.0
+      },
+      {
+        "name": "bn::sprite_tiles_manager::update()",
+        "cyclesPerTick": 174.0
+      },
+      {
+        "name": "bn::sprites_manager::commit(bool)",
+        "cyclesPerTick": 172.0
+      },
+      {
+        "name": "bn::core::update()",
+        "cyclesPerTick": 164.0
+      },
+      {
+        "name": "bn::sprite_affine_mats_manager::update()",
+        "cyclesPerTick": 156.0
+      },
+      {
+        "name": "bn::sprites_manager::update()",
+        "cyclesPerTick": 142.0
+      },
+      {
+        "name": "bn::core::(anonymous namespace)::_vblank_intr()",
+        "cyclesPerTick": 138.0
+      },
+      {
+        "name": "bn::hblank_effects_manager::commit()",
+        "cyclesPerTick": 138.0
+      },
+      {
+        "name": "bn::bg_blocks_manager::commit_uncompressed(bool)",
+        "cyclesPerTick": 134.0
+      },
+      {
+        "name": "bn::palettes_bank::retrieve_commit_data() const",
+        "cyclesPerTick": 130.0
+      },
+      {
+        "name": "bn::bgs_manager::commit_big_maps()",
+        "cyclesPerTick": 126.0
+      },
+      {
+        "name": "interrupt_found",
+        "cyclesPerTick": 124.0
+      },
+      {
+        "name": "bn::sprite_affine_mats_manager::retrieve_commit_data()",
+        "cyclesPerTick": 114.0
+      },
+      {
+        "name": "bn::hw::dma::stop_hdma(int)",
+        "cyclesPerTick": 112.0
+      },
+      {
+        "name": "bn::palettes_manager::update()",
+        "cyclesPerTick": 106.0
+      },
+      {
+        "name": "bn::hdma_manager::commit_entries(bool)",
+        "cyclesPerTick": 104.0
+      },
+      {
+        "name": "bn::hw::link::active()",
+        "cyclesPerTick": 100.0
+      },
+      {
+        "name": "bn::display_manager::update()",
+        "cyclesPerTick": 98.0
+      },
+      {
+        "name": "bn::ivector<unsigned short>::empty() const",
+        "cyclesPerTick": 96.0
+      }
+    ],
+    "cpuWithNonHaltEvents": {
+      "mean": 6819,
+      "median": 6819.0,
+      "p95": 6819,
+      "maximum": 6819,
+      "minimum": 6819,
+      "percent": 1.2137944292549556
+    },
+    "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 0,
+        "overflows": 0,
+        "peak": 0,
+        "rmsLeft": 0,
+        "rmsMono": 0,
+        "rmsRight": 0,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 30692,
+        "staticIWRAM": 3948,
+        "currentStack": 284,
+        "dynamicEWRAM": 0
+      }
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 0,
+        "overflows": 0,
+        "peak": 0,
+        "rmsLeft": 0,
+        "rmsMono": 0,
+        "rmsRight": 0,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 30692,
+        "staticIWRAM": 3948,
+        "currentStack": 284,
+        "dynamicEWRAM": 0
+      }
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".iwram",
+        "bytes": 3672,
+        "address": 50331648
+      },
+      {
+        "name": ".bss",
+        "bytes": 264,
+        "address": 50335320
+      },
+      {
+        "name": ".data",
+        "bytes": 0,
+        "address": 50335584
+      },
+      {
+        "name": ".init_array",
+        "bytes": 8,
+        "address": 50335584
+      },
+      {
+        "name": ".fini_array",
+        "bytes": 4,
+        "address": 50335592
+      },
+      {
+        "name": ".iwram0",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram1",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram2",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram3",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram4",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram5",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram6",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram7",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram8",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".iwram9",
+        "bytes": 0,
+        "address": 50335596
+      },
+      {
+        "name": ".ewram",
+        "bytes": 156,
+        "address": 33554432
+      },
+      {
+        "name": ".sbss",
+        "bytes": 30536,
+        "address": 33554588
+      },
+      {
+        "name": ".pad",
+        "bytes": 8,
+        "address": 33585124
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "_ZN2bn15sprites_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 9812,
+        "address": 33575008
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_120external_data_bufferE",
+        "bytes": 6724,
+        "address": 33556768
+      },
+      {
+        "name": "_ZN2bn20sprite_tiles_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 5748,
+        "address": 33569260
+      },
+      {
+        "name": "_ZN2bn16palettes_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 3408,
+        "address": 33563604
+      },
+      {
+        "name": "_ZN2bn26sprite_affine_mats_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 2248,
+        "address": 33567012
+      },
+      {
+        "name": "_ZN2bn17bg_blocks_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 744,
+        "address": 33555036
+      },
+      {
+        "name": "_ZN2bn11bgs_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 692,
+        "address": 33555780
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "bytes": 544,
+        "address": 50333492
+      },
+      {
+        "name": "_ZN2bn13audio_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 448,
+        "address": 33554588
+      },
+      {
+        "name": "_ZN2bn2hw4link12_GLOBAL__N_111data_bufferE",
+        "bytes": 304,
+        "address": 33584820
+      },
+      {
+        "name": "__aeabi_memcpy",
+        "bytes": 292,
+        "address": 50334048
+      },
+      {
+        "name": "_ZN2bn15sprites_manager22_check_items_on_screenERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 220,
+        "address": 50331648
+      },
+      {
+        "name": "_ZN2bn15sprites_manager20_update_cameras_implERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 180,
+        "address": 50331964
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_113internal_dataE",
+        "bytes": 176,
+        "address": 50335348
+      },
+      {
+        "name": "_ZN2bn15display_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 168,
+        "address": 33556600
+      },
+      {
+        "name": "_ZN2bn2hw8game_pak14_slow_game_pakEv",
+        "bytes": 156,
+        "address": 33554432
+      },
+      {
+        "name": "clr_blend_fast",
+        "bytes": 108,
+        "address": 50332596
+      },
+      {
+        "name": "_ZN2bn15sprites_manager21_rebuild_handles_implEiPvRNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 94,
+        "address": 50331868
+      },
+      {
+        "name": "memset32",
+        "bytes": 76,
+        "address": 50332820
+      },
+      {
+        "name": "_ZN2bn2hw8palettes10brightnessEPKNS_5colorEiiPS2_",
+        "bytes": 72,
+        "address": 50332144
+      },
+      {
+        "name": "_ZN2bn4core12_GLOBAL__N_111data_bufferE",
+        "bytes": 72,
+        "address": 33556528
+      },
+      {
+        "name": "__aeabi_memset",
+        "bytes": 72,
+        "address": 50334520
+      },
+      {
+        "name": "_ZN2bn12hdma_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 68,
+        "address": 33563492
+      },
+      {
+        "name": "_ZN2bn2hw8palettes11_lut_effectEPKNS_5colorEPKhiPS2_",
+        "bytes": 64,
+        "address": 50332216
+      },
+      {
+        "name": "IRQ_VectorTable",
+        "bytes": 56,
+        "address": 50335528
+      }
+    ]
+  },
+  "ram": {
+    "ewramStatic": 30692,
+    "iwramStatic": 3948,
+    "iwramStackReservation": 0,
+    "mailbox": 512
+  },
+  "bankBytes": 0,
+  "bankSHA256": null
+}

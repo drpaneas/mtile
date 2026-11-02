@@ -197,6 +197,8 @@ type Options struct {
 
 	// NativeAudio supplies the four-channel PSG asset contract.
 	NativeAudio *assetsync.NativeAudioAssets
+	// DirectAudio supplies imported Maxmod tracker songs and WAV effects.
+	DirectAudio *assetsync.DirectAudioAssets
 	// Debug emits the fixed preview mailbox and runtime instrumentation. It is
 	// off for normal CLI/release cartridge builds.
 	Debug bool
@@ -267,7 +269,8 @@ var Builtins = map[string]BuiltinSpec{
 	"chr": {"Chr", 1, 1, 1}, "ord": {"Ord", 1, 2, 1},
 	"t": {"T", 0, 0, 1}, "time": {"Time", 0, 0, 1}, "stat": {"StatV", 1, 1, 1}, "sfx": {"SFXV", 1, 4, 0},
 	"music": {"MusicV", 0, 2, 0}, "sample": {"SampleV", 1, 3, 0},
-	"gba_note": {"GBANoteV", 3, 4, 0}, "gba_stop": {"GBAStopV", 1, 1, 0}, "printh": {"noop", 1, 2, 0},
+	"pcm_music": {"PCMMusicV", 1, 2, 0},
+	"gba_note":  {"GBANoteV", 3, 4, 0}, "gba_stop": {"GBAStopV", 1, 1, 0}, "printh": {"noop", 1, 2, 0},
 }
 
 // Transpile parses source and returns generated Go source. Existing callers
@@ -299,6 +302,7 @@ func TranspileWithReport(sourceName, source string, opts Options) (string, Rende
 	opts.MapPlaneMask = report.MapPlaneMask
 	opts.MapDrawMask = report.MapDrawMask
 	report.NativeAudioLinked = opts.NativeAudio != nil && chunkUsesNativeAudio(chunk)
+	report.PCMAudioLinked = opts.DirectAudio != nil && (chunkCallsBuiltin(chunk, "sample") || chunkCallsBuiltin(chunk, "pcm_music"))
 	if planeCells, ok := checkedProduct(opts.MapW, opts.MapH); ok {
 		if retainedCells, ok := checkedProduct(planeCells, mapMaskCount(report.MapPlaneMask)); ok {
 			report.MapStreaming = retainedCells > assetsync.MapStreamingThresholdCells
@@ -732,6 +736,9 @@ func (g *generator) prepare() error {
 		g.paletteIsDefault = slices.Equal(g.opts.Palette, canonical[:])
 	}
 	if err := g.validateStaticAudioCalls(); err != nil {
+		return err
+	}
+	if err := g.validateDirectAudioCalls(); err != nil {
 		return err
 	}
 	g.opts.MapStreaming = len(g.mapCompact) > assetsync.MapStreamingThresholdCells

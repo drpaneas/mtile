@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-02",
+  "rootGate": {
+    "command": "go test ./internal/transpiler ./internal/build ./cmd/mtile",
+    "output": "ok  \tgithub.com/drpaneas/mtile/internal/transpiler\t353.223s\nok  \tgithub.com/drpaneas/mtile/internal/build\t81.983s\nok  \tgithub.com/drpaneas/mtile/cmd/mtile\t15.895s\n"
+  },
+  "runtimeGate": {
+    "command": "cd runtime && GOCACHE=/private/tmp/mtile-effective-guide-20261031/go-cache go test ./...",
+    "output": "ok  \tgithub.com/drpaneas/mtile/runtime\t(cached)\nok  \tgithub.com/drpaneas/mtile/runtime/audio\t(cached)\nok  \tgithub.com/drpaneas/mtile/runtime/hw\t(cached)\nok  \tgithub.com/drpaneas/mtile/runtime/internal/audioref\t(cached)\n?   \tgithub.com/drpaneas/mtile/runtime/internal/cmd/audiorefmanifest\t[no test files]\nok  \tgithub.com/drpaneas/mtile/runtime/internal/cmd/checkallocs\t(cached)\nok  \tgithub.com/drpaneas/mtile/runtime/internal/cmd/gentarget\t(cached)\n"
+  },
+  "websiteGate": {
+    "command": "website/.venv/bin/python -m unittest discover -s website -p 'test_*.py'",
+    "tests": 14,
+    "passed": true
+  },
+  "benchmarkEvidence": {
+    "configurations": 31,
+    "profileIntervalsPerConfiguration": 300,
+    "independentCapturesPerConfiguration": 2,
+    "publicationsPerCapture": 600,
+    "cycleBucketsReconcile": true,
+    "repeatedCapturesIdentical": true
+  },
+  "listeningExample": {
+    "project": "examples/audio-only",
+    "renderer": "mode0",
+    "capturedPublications": 120,
+    "twoRefreshIntervals": 119,
+    "pcm": {
+      "clippedFrames": 0,
+      "nonzeroFrames": 191204,
+      "overflows": 0,
+      "peak": 3389,
+      "rmsLeft": 1323.1124329432444,
+      "rmsMono": 1183.9007888770516,
+      "rmsRight": 1324.2158602180557,
+      "sampleRate": 48000,
+      "stereoFrames": 191204
+    },
+    "luaHeapCapacity": 0,
+    "gcCollections": 0
+  }
+}

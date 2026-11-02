@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-02",
+  "butanoRevision": "04374b034c76b82bfdc3aa6c38d652e5e7778a68",
+  "mmutilRevision": "afd0270861d91d5a45ee92839b8047a48a008202",
+  "maxmodSource": "Butano vendored BlocksDS fork at the pinned revision",
+  "emulator": "mGBA 0.10.3 (repository headless mtile-player)",
+  "toolchain": "TinyGo 0.42.0, LLVM 22.1.4",
+  "allFormats": [
+    {
+      "format": "MOD",
+      "peak": 10246,
+      "rms": 5084.142460868183,
+      "samples": 72000
+    },
+    {
+      "format": "XM",
+      "peak": 9080,
+      "rms": 2420.123771192452,
+      "samples": 71998
+    },
+    {
+      "format": "S3M",
+      "peak": 22209,
+      "rms": 5371.965772050612,
+      "samples": 72000
+    },
+    {
+      "format": "IT",
+      "peak": 7439,
+      "rms": 597.2584615697518,
+      "samples": 72000
+    },
+    {
+      "format": "stopped",
+      "peak": 0,
+      "rms": 0,
+      "samples": 96008
+    }
+  ],
+  "formatsBankSHA256": "1c66d3b49999f8f55c0ebf8cb441282173ae5b7b2208a1c79fb342397e3a3c8e",
+  "allFormatsROMBytes": 734392,
+  "physicalHardwareVerified": false,
+  "tests": {
+    "twoRendererPixelParity": true,
+    "wav880HzVerified": true,
+    "psg440HzCoexistence": true,
+    "stableTwoRefreshPacing": true,
+    "stopTailRMS": 0.0
+  },
+  "legacyMASLayout": {
+    "version": 24,
+    "ROMBytes": 74168,
+    "nonSilent": true,
+    "postStopRMS": 0.0
+  },
+  "nativeConformance": {
+    "mode4": {
+      "romBytes": 77280,
+      "ewramFree": 249540,
+      "iwramUsed": 23876,
+      "updates": 118
+    },
+    "mode0": {
+      "romBytes": 77472,
+      "ewramFree": 249308,
+      "iwramUsed": 23780,
+      "updates": 118
+    }
+  },
+  "inputSHA256": {
+    "theme.mod": "232d9bc7912e44850602c61d0fe07bcb226a195bb0d3396dbbfe5dba2f67ff68",
+    "mj_totsnuk01.xm": "6040a513569cbbb1c1b4cb39337b441401e36b55dff58f07785c4a7b92d41ba1",
+    "soda7_xcopy_ohc.s3m": "aaded4b7ebe22db1dced5bce2030b2f75a6a302ba2a7d3778aa509379755f543",
+    "battle_clean.it": "51a665a5675c3b7c7ca61874b6347f6dc7f21d7e72e4093c68a8791920370766"
+  }
+}

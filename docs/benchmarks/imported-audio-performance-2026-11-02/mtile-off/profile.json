@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537592,
+    "instructionCycles": 168537592,
+    "waitInstructionCycles": 167309092,
+    "activeEventCycles": 0,
+    "haltEventCycles": 0,
+    "otherAddressCycles": 0,
+    "instructions": 27650358,
+    "mailboxMemory": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 31,
+        "minSP": 50336832,
+        "maxSP": 50336832,
+        "observedRange": 0
+      }
+    ],
+    "mixerCapacity": 0,
+    "minObservedVoices": 0,
+    "maxObservedVoices": 0
+  },
+  "categoriesPerTick": {
+    "other": 1484.0,
+    "wait": 557696.9733333334,
+    "publication": 2611.0
+  },
+  "cpu": {
+    "mean": 4095,
+    "median": 4095.0,
+    "p95": 4095,
+    "maximum": 4095,
+    "minimum": 4095,
+    "percent": 0.7289174641148325
+  },
+  "top": [
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+      "cyclesPerTick": 1251.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+      "cyclesPerTick": 908.0
+    },
+    {
+      "name": "memset",
+      "cyclesPerTick": 250.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PerformanceStats",
+      "cyclesPerTick": 158.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "cyclesPerTick": 132.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut16",
+      "cyclesPerTick": 132.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "cyclesPerTick": 122.0
+    },
+    {
+      "name": "runtime/volatile.LoadUint16",
+      "cyclesPerTick": 100.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Add",
+      "cyclesPerTick": 93.0
+    },
+    {
+      "name": "memcpy",
+      "cyclesPerTick": 92.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "cyclesPerTick": 80.0
+    },
+    {
+      "name": "main.main",
+      "cyclesPerTick": 72.0
+    },
+    {
+      "name": "__aeabi_memclr",
+      "cyclesPerTick": 66.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "cyclesPerTick": 66.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugGet32",
+      "cyclesPerTick": 65.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "cyclesPerTick": 53.0
+    },
+    {
+      "name": "runtime/volatile.StoreUint16",
+      "cyclesPerTick": 48.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "cyclesPerTick": 48.0
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memset",
+      "cyclesPerTick": 45.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "cyclesPerTick": 45.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "cyclesPerTick": 45.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.mode0PresentWindowFits",
+      "cyclesPerTick": 32.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).clearRender",
+      "cyclesPerTick": 27.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ensureDrawState",
+      "cyclesPerTick": 24.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ClipReset",
+      "cyclesPerTick": 24.0
+    }
+  ],
+  "cpuWithNonHaltEvents": {
+    "mean": 4095,
+    "median": 4095.0,
+    "p95": 4095,
+    "maximum": 4095,
+    "minimum": 4095,
+    "percent": 0.7289174641148325
+  },
+  "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+}

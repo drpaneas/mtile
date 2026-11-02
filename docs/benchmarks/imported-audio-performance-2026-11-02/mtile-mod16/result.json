@@ -1,0 +1,446 @@
+{
+  "variant": "mtile",
+  "workload": {
+    "name": "mod16",
+    "kind": 3,
+    "voices": 16,
+    "effects": 0
+  },
+  "romBytes": 56292,
+  "romSHA256": "7f571149deaf59d1f78516b255227632ef9e4bb5a04b09cbe22d8ba39197a082",
+  "elfSHA256": "56b972e299f5e3b523de96546a5890cf0d306b1792e0cb487f4eb2697403525b",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168537600,
+      "instructionCycles": 167986707,
+      "waitInstructionCycles": 114905188,
+      "activeEventCycles": 550893,
+      "haltEventCycles": 0,
+      "otherAddressCycles": 52800,
+      "instructions": 43196929,
+      "mailboxMemory": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50332476,
+          "maxSP": 50332672,
+          "observedRange": 196
+        },
+        {
+          "mode": 31,
+          "minSP": 50336824,
+          "maxSP": 50336824,
+          "observedRange": 0
+        }
+      ],
+      "mixerCapacity": 32,
+      "minObservedVoices": 16,
+      "maxObservedVoices": 16
+    },
+    "categoriesPerTick": {
+      "irq": 2670.0,
+      "other": 6416.21,
+      "wait": 383017.29333333333,
+      "publication": 2657.0,
+      "maxmod": 165019.18666666668
+    },
+    "cpu": {
+      "mean": 176938.39666666667,
+      "median": 182269.5,
+      "p95": 187313,
+      "maximum": 202738,
+      "minimum": 154943,
+      "percent": 31.495357119123568
+    },
+    "top": [
+      {
+        "name": ".mpmaa_10",
+        "cyclesPerTick": 93871.41333333333
+      },
+      {
+        "name": ".mpm_copy2",
+        "cyclesPerTick": 12664.66
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+        "cyclesPerTick": 8938.666666666666
+      },
+      {
+        "name": ".mix_remaining",
+        "cyclesPerTick": 5710.506666666667
+      },
+      {
+        "name": ".fetch",
+        "cyclesPerTick": 5600.16
+      },
+      {
+        "name": ".mpm_cloop",
+        "cyclesPerTick": 4638.88
+      },
+      {
+        "name": "__udivsi3",
+        "cyclesPerTick": 4075.733333333333
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_envelopes",
+        "cyclesPerTick": 3232.0
+      },
+      {
+        "name": ".fetchsmall",
+        "cyclesPerTick": 2753.4666666666667
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_disable_and_panning",
+        "cyclesPerTick": 2397.0666666666666
+      },
+      {
+        "name": "mppProcessTick",
+        "cyclesPerTick": 2303.3733333333334
+      },
+      {
+        "name": "mpp_SamplePointer",
+        "cyclesPerTick": 2053.866666666667
+      },
+      {
+        "name": "handleInterrupt",
+        "cyclesPerTick": 2016.0
+      },
+      {
+        "name": ".mpm_mix_short",
+        "cyclesPerTick": 1837.0266666666666
+      },
+      {
+        "name": ".mpm_mix_complete",
+        "cyclesPerTick": 1715.1466666666668
+      },
+      {
+        "name": ".mpm_remix_test",
+        "cyclesPerTick": 1652.8666666666666
+      },
+      {
+        "name": "mpp_Update_ACHN_notest",
+        "cyclesPerTick": 1481.3333333333333
+      },
+      {
+        "name": "mmUpdateEffects",
+        "cyclesPerTick": 1414.0
+      },
+      {
+        "name": ".mpm_next",
+        "cyclesPerTick": 1390.93
+      },
+      {
+        "name": "mpp_InstrumentPointer",
+        "cyclesPerTick": 1355.2
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+        "cyclesPerTick": 1255.0
+      },
+      {
+        "name": "mmMixerMix",
+        "cyclesPerTick": 1042.8866666666668
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+        "cyclesPerTick": 956.0
+      },
+      {
+        "name": ".medfetch",
+        "cyclesPerTick": 886.2
+      },
+      {
+        "name": "mmFrame",
+        "cyclesPerTick": 849.94
+      }
+    ],
+    "cpuWithNonHaltEvents": {
+      "mean": 178774.70666666667,
+      "median": 184097.0,
+      "p95": 189166,
+      "maximum": 204578,
+      "minimum": 156780,
+      "percent": 31.822223646236804
+    },
+    "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": 0,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959204,
+        "overflows": 0,
+        "peak": 13279,
+        "rmsLeft": 5288.110965080052,
+        "rmsMono": 4733.17591678466,
+        "rmsRight": 5293.075891666786,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": 0,
+      "heapAllocated": 0,
+      "heapLive": 0,
+      "heapPeak": 0,
+      "gcCollections": 0,
+      "heapError": 0
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": 0,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959204,
+        "overflows": 0,
+        "peak": 13279,
+        "rmsLeft": 5288.110965080052,
+        "rmsMono": 4733.17591678466,
+        "rmsRight": 5293.075891666786,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": 0,
+      "heapAllocated": 0,
+      "heapLive": 0,
+      "heapPeak": 0,
+      "gcCollections": 0,
+      "heapError": 0
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".stack",
+        "bytes": 9216,
+        "address": 50331648
+      },
+      {
+        "name": ".data",
+        "bytes": 5940,
+        "address": 50340864
+      },
+      {
+        "name": ".ewram",
+        "bytes": 11292,
+        "address": 33554432
+      },
+      {
+        "name": ".debug_mailbox",
+        "bytes": 512,
+        "address": 33816064
+      },
+      {
+        "name": ".bss",
+        "bytes": 1896,
+        "address": 50346804
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "main.ctx",
+        "bytes": 7056,
+        "address": 33554884
+      },
+      {
+        "name": "modules",
+        "bytes": 1280,
+        "address": 33561980
+      },
+      {
+        "name": "mppProcessTick",
+        "bytes": 1104,
+        "address": 50344092
+      },
+      {
+        "name": "mix",
+        "bytes": 1056,
+        "address": 50347216
+      },
+      {
+        "name": "wave",
+        "bytes": 1056,
+        "address": 33564668
+      },
+      {
+        "name": "active",
+        "bytes": 896,
+        "address": 33563260
+      },
+      {
+        "name": "mmUpdateChannel_T0",
+        "bytes": 780,
+        "address": 50345824
+      },
+      {
+        "name": "channels",
+        "bytes": 512,
+        "address": 33564156
+      },
+      {
+        "name": "main.debugMailbox",
+        "bytes": 512,
+        "address": 33816064
+      },
+      {
+        "name": "mpp_Channel_NewNote",
+        "bytes": 452,
+        "address": 50343640
+      },
+      {
+        "name": "main.cartData",
+        "bytes": 448,
+        "address": 33554436
+      },
+      {
+        "name": "mmReadPattern",
+        "bytes": 388,
+        "address": 50345332
+      },
+      {
+        "name": "memcpy",
+        "bytes": 296,
+        "address": 50340988
+      },
+      {
+        "name": "memmove",
+        "bytes": 296,
+        "address": 50340988
+      },
+      {
+        "name": "__aeabi_uidiv",
+        "bytes": 280,
+        "address": 50341284
+      },
+      {
+        "name": "__aeabi_uidivmod",
+        "bytes": 280,
+        "address": 50341284
+      },
+      {
+        "name": "__udivsi3",
+        "bytes": 280,
+        "address": 50341284
+      },
+      {
+        "name": "mmChannelStartACHN",
+        "bytes": 168,
+        "address": 50346604
+      },
+      {
+        "name": "mm_schannels",
+        "bytes": 160,
+        "address": 50348280
+      },
+      {
+        "name": "mmAllocChannel",
+        "bytes": 136,
+        "address": 50345196
+      },
+      {
+        "name": "memset",
+        "bytes": 124,
+        "address": 50340864
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime/audio.pcmVBlank",
+        "bytes": 108,
+        "address": 50343532
+      },
+      {
+        "name": "mmGetPeriod",
+        "bytes": 104,
+        "address": 50345720
+      },
+      {
+        "name": "mmLayerMain",
+        "bytes": 60,
+        "address": 50348464
+      },
+      {
+        "name": "mmLayerSub",
+        "bytes": 60,
+        "address": 50348524
+      }
+    ]
+  },
+  "build": {
+    "ROMPath": "/private/tmp/mtile-pcm-compare-20261102/roms/mtile-mod16.gba",
+    "ROMSize": 56292,
+    "MapPath": "/private/tmp/mtile-pcm-compare-20261102/roms/mtile-mod16.gba.game.map",
+    "EWRAMUsed": 11292,
+    "EWRAMFree": 250340,
+    "IWRAMUsed": 17052,
+    "HeapLinked": false,
+    "WorkDir": "",
+    "AudioROMBytes": 11830,
+    "AudioVoices": 32,
+    "PoseMemory": {
+      "PoseCount": 0,
+      "ClipCount": 0,
+      "PoseNames": [],
+      "Source": "none",
+      "SourcePixelBytes": 0,
+      "UniquePixelBytes": 0,
+      "PixelROMBytes": 0,
+      "ResidentVRAMBytes": 0,
+      "MetadataROMBytes": 0,
+      "StageRAMBytes": 0,
+      "LinkedMemoryAvailable": true,
+      "PixelsLinked": false,
+      "MetadataLinked": false,
+      "StageLinked": false
+    },
+    "AudioProfile": "maxmod",
+    "AudioPSGRatio": 0,
+    "Entry": "game.lua",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "GlobalUsage": {
+      "Count": 1,
+      "Limit": 256,
+      "Symbols": [
+        {
+          "Name": "ticks",
+          "Source": "game.lua",
+          "Line": 1,
+          "Column": 1
+        }
+      ]
+    },
+    "GeneratedGo": "package main\n\nimport (\n\trt \"github.com/drpaneas/mtile/runtime\"\n\t\"github.com/drpaneas/mtile/runtime/audio\"\n\t_ \"unsafe\"\n)\n\n//go:section .rodata\nvar projectFontExtraROM = [...]rt.FontGlyph{\n}\n//go:section .rodata\nvar projectFontROM = rt.Font{ASCII:[95][6]uint16{\n{0,0,0,0,0,0},\n{0,0,190,0,0,0},\n{0,14,0,14,0,0},\n{40,254,40,254,40,0},\n{8,84,254,84,32,0},\n{196,42,84,168,70,0},\n{108,146,172,64,160,0},\n{0,0,14,0,0,0},\n{0,56,68,130,0,0},\n{0,130,68,56,0,0},\n{84,56,16,56,84,0},\n{16,16,124,16,16,0},\n{0,256,192,64,0,0},\n{16,16,16,16,16,0},\n{0,128,448,128,0,0},\n{192,32,16,8,6,0},\n{56,68,130,68,56,0},\n{136,132,254,128,128,0},\n{196,162,146,146,140,0},\n{66,130,146,154,102,0},\n{48,40,36,254,32,0},\n{94,146,138,138,114,0},\n{120,164,146,146,96,0},\n{2,194,34,26,6,0},\n{108,146,146,146,108,0},\n{12,146,146,74,60,0},\n{0,136,476,136,0,0},\n{0,264,220,72,0,0},\n{0,16,40,68,130,0},\n{40,40,40,40,40,0},\n{0,130,68,40,16,0},\n{4,2,178,10,4,0},\n{124,130,178,170,28,0},\n{248,36,34,36,248,0},\n{130,254,146,146,108,0},\n{124,130,130,130,68,0},\n{130,254,130,130,124,0},\n{254,146,146,146,130,0},\n{254,18,18,18,2,0},\n{124,130,130,162,100,0},\n{254,16,16,16,254,0},\n{0,130,254,130,0,0},\n{64,128,130,126,2,0},\n{254,16,40,68,130,0},\n{254,128,128,128,128,0},\n{254,8,16,8,254,0},\n{254,8,16,32,254,0},\n{124,130,130,130,124,0},\n{254,18,18,18,12,0},\n{124,130,194,130,380,0},\n{254,18,50,82,140,0},\n{76,146,146,146,100,0},\n{2,2,254,2,2,0},\n{126,128,128,128,126,0},\n{14,112,128,112,14,0},\n{254,64,48,64,254,0},\n{198,40,16,40,198,0},\n{6,8,240,8,6,0},\n{194,162,146,138,134,0},\n{0,254,130,130,0,0},\n{6,8,16,32,192,0},\n{0,130,130,254,0,0},\n{8,4,2,4,8,0},\n{256,256,256,256,256,0},\n{0,0,1,2,0,0},\n{64,168,168,168,240,0},\n{254,80,136,136,112,0},\n{112,136,136,136,80,0},\n{112,136,136,80,254,0},\n{112,168,168,168,48,0},\n{16,252,18,18,4,0},\n{304,584,584,584,504,0},\n{254,16,8,8,240,0},\n{0,136,250,128,0,0},\n{0,384,512,520,506,0},\n{254,32,32,80,136,0},\n{0,130,254,128,0,0},\n{248,8,112,8,240,0},\n{248,16,8,8,240,0},\n{112,136,136,136,112,0},\n{1016,80,136,136,112,0},\n{112,136,136,80,1016,0},\n{248,16,8,8,16,0},\n{144,168,168,168,64,0},\n{8,126,136,136,64,0},\n{120,128,128,64,248,0},\n{24,96,128,96,24,0},\n{120,128,96,128,120,0},\n{136,80,32,80,136,0},\n{312,576,576,544,504,0},\n{136,200,168,152,136,0},\n{0,16,84,170,130,0},\n{0,0,254,0,0,0},\n{0,130,170,84,16,0},\n{12,2,4,8,6,0},\n},Extra:projectFontExtraROM[:]}\n\nfunc gluNumberDivFraction(n rt.Number, divisor uint32) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := magnitude / divisor\n\tremainder := magnitude - quotient * divisor\n\tresult := (quotient << 16) + ((remainder << 16) / divisor)\n\tif n < 0 { result = 0 - result }\n\treturn rt.Number(result)\n}\nfunc gluValueDivFraction(a rt.Value, divisor uint32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivFraction(a.Num, divisor))\n}\nfunc gluNumberDivReciprocal(n rt.Number, multiplier, divisor uint32) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := uint32((uint64(magnitude) * uint64(multiplier)) >> 32)\n\tif uint64(quotient) * uint64(divisor) > uint64(magnitude) << 16 { quotient-- }\n\tif n < 0 { quotient = 0 - quotient }\n\treturn rt.Number(quotient)\n}\nfunc gluValueDivReciprocal(a rt.Value, multiplier, divisor uint32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivReciprocal(a.Num, multiplier, divisor))\n}\nfunc gluNumberDivThreeHalves(n rt.Number) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := rt.Number(uint32((uint64(magnitude) * 0xaaaaaaab) >> 32))\n\tif n < 0 { return -quotient }\n\treturn quotient\n}\nfunc gluNumberDivPow2(n rt.Number, shift int) rt.Number {\n\tif n >= 0 { return n >> shift }\n\treturn (n + (1 << shift) - 1) >> shift\n}\nfunc gluNumberModPow2(n rt.Number, shift int) rt.Number {\n\treturn n - ((n >> shift) << shift)\n}\nfunc gluNumberModLit(n rt.Number, z int32) rt.Number {\n\tif z == 0 { return 0 }\n\tr := n % rt.Number(z)\n\tif r != 0 && ((r < 0) != (z < 0)) { r += rt.Number(z) }\n\treturn r\n}\nfunc gluValueDivThreeHalves(a rt.Value) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivThreeHalves(a.Num))\n}\nfunc gluValueDivPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivPow2(a.Num, shift))\n}\nfunc gluValueMulPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(a.Num << shift)\n}\nfunc gluValueDivInt(a rt.Value, k int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number(int32(a.Num) / k))\n}\nfunc gluValueIDivInt(a rt.Value, k int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number(int32(a.Num) / k).Flr())\n}\nfunc gluValueDivLit(a rt.Value, d int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number((int64(a.Num) << 16) / int64(d)))\n}\nfunc gluValueModLit(a rt.Value, z int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberModLit(a.Num, z))\n}\nfunc gluValueModPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberModPow2(a.Num, shift))\n}\nfunc gluValueNegNumber(a rt.Value) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(-a.Num)\n}\n//go:noinline\nfunc gluPushRoots(c *rt.Context, roots ...rt.Value) int {\n\tn := 0\n\tfor _, root := range roots {\n\t\tif root.Kind != rt.KindTable && root.Kind != rt.KindString { continue }\n\t\tif !c.PushLocal(root) { c.PopLocals(n); return -1 }\n\t\tn++\n\t}\n\treturn n\n}\nfunc gluPopRoots(c *rt.Context, n int) { if n > 0 { c.PopLocals(n) } }\nfunc gluMust(v rt.Value, err rt.HeapError) rt.Value { if err != rt.HeapOK { return rt.NilVal() }; return v }\nfunc gluCmp(c *rt.Context, a, z rt.Value, op string) bool {\n\tcmp := 0\n\tif a.Kind == rt.KindNumber && z.Kind == rt.KindNumber { if a.Num < z.Num { cmp = -1 } else if a.Num > z.Num { cmp = 1 } } else { var ok bool; cmp, ok = c.CompareStrings(a,z); if !ok { return false } }\n\tswitch op { case \"<\": return cmp < 0; case \"<=\": return cmp <= 0; case \">\": return cmp > 0; case \">=\": return cmp >= 0 }; return false\n}\nfunc gluLen(c *rt.Context, v rt.Value) rt.Value { if v.Kind == rt.KindString || v.Kind == rt.KindStaticString { return rt.IntVal(c.StrLen(v)) }; if v.Kind == rt.KindTable { return rt.IntVal(c.TableLen(v)) }; return rt.IntVal(0) }\nfunc gluNumberMod(a, z rt.Number) rt.Number { return a.Mod(z) }\nfunc gluMod(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberMod(a.Num,z.Num)) }\nfunc gluNumberPow(a, z rt.Number) rt.Number { n := z.Int(); if n == 0 { return rt.One }; neg := n < 0; if neg { n = -n }; out := rt.One; for n > 0 { if n&1 != 0 { out = out.Mul(a) }; a = a.Mul(a); n >>= 1 }; if neg { out = rt.One.Div(out) }; return out }\nfunc gluPow(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberPow(a.Num,z.Num)) }\nfunc gluConcat(c *rt.Context, a, z rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c, a, z); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c, roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v, err := c.Concat(a,z); gluPopRoots(c,n+m); return gluMust(v,err) }\nfunc gluSub(c *rt.Context, s, i, j rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c,s,i,j); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v,err := c.Sub(s,i,j); gluPopRoots(c,n+m); return gluMust(v,err) }\nfunc gluChr(c *rt.Context, n rt.Value, roots ...rt.Value) rt.Value { k := gluPushRoots(c,n); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; v,err := c.Chr(n); gluPopRoots(c,k+m); return gluMust(v,err) }\nfunc gluTostr(c *rt.Context, v rt.Value, hex bool, roots ...rt.Value) rt.Value { k := gluPushRoots(c,v); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; out,err := c.Tostr(v,hex); gluPopRoots(c,k+m); return gluMust(out,err) }\nfunc gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }\nfunc gluTableAppendKnown(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }\nfunc gluTableAppendKnownHeld(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }\nfunc gluTableSetRooted(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }\nfunc gluTableSetStable(c *rt.Context, t, k, v rt.Value, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStable(t,k,v,cache) }; n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStable(t,k,v,cache); gluPopRoots(c,n+m); return err }\nfunc gluTableSetStableNumber(c *rt.Context, t, k rt.Value, v rt.Number, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStableNumber(t,k,v,cache) }; n := gluPushRoots(c,t,k); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStableNumber(t,k,v,cache); gluPopRoots(c,n+m); return err }\nfunc gluPrintV(c *rt.Context, s, x, y, color rt.Value, roots ...rt.Value) int { n := gluPushRoots(c,s,x,y,color); if n < 0 { return x.Int() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return x.Int() }; out := c.PrintV(s,x,y,color); gluPopRoots(c,n+m); return out }\n\nconst (\n\tSheetW = 8; SheetH = 8; MapW = 1; MapH = 1; MapLayers = 1; MapPlaneMask = 0; MapStreaming = false; SheetReadOnly = true\n\tSpriteCols = SheetW / 8; SpriteRows = SheetH / 8; SpriteN = SpriteCols * SpriteRows\n)\n\n//go:section .rodata\nvar sheetROM = [ 0 ]byte{}\n//go:section .rodata\nvar sheetIndexROM = [ 1 ]uint16{0x0000}\n//go:section .rodata\nvar mapROM = [ 0 ]uint16{}\n//go:section .rodata\nvar flagROM = [ 1 ]byte{0x00}\n//go:section .rodata\nvar poseIndexROM = [ 0 ]rt.PoseRange{}\nconst PoseVariantBaseCount = 0\nvar poseVariantNamesROM = []string(nil)\n//go:section .rodata\nvar posePartROM = [ 0 ]rt.PosePart{}\n//go:section .rodata\nvar animationClipROM = [0]rt.AnimationClip{}\n//go:section .rodata\nvar animationFrameROM = [0]uint16{}\n\n//go:section .ewram\nvar sheetRAM [0]byte\n//go:section .ewram\nvar sheetIndexRAM [1]uint16\n//go:section .ewram\nvar mapRAM [0]uint16\n//go:section .ewram\nvar flagRAM [1]byte\n//go:section .ewram\nvar cartData rt.AssetMemory\n//go:section .ewram\nvar ctx rt.Context\n//go:section .ewram\nvar game Game\n//go:section .debug_mailbox\nvar debugMailbox rt.DebugMailbox\n//go:section .rodata\nvar pcmBankROM = [...]uint32{\n0x00040003,\n0x78616d2a,\n0x2a646f6d,\n0x0000002c,\n0x000002c4,\n0x000002dc,\n0x00002234,\n0x000024d0,\n0x00002784,\n0x00002a98,\n0xffffffff,\n0x00000290,\n0xba001801,\n0x00000280,\n0x00000280,\n0x021fba00,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0xaca7a19b,\n0xbebab6b1,\n0xc6c5c3c1,\n0xc3c5c6c6,\n0xb6babec1,\n0xa1a7acb1,\n0x878e949b,\n0x6c727980,\n0x54595f65,\n0x42464a4f,\n0x3a3b3d3f,\n0x3d3b3a3a,\n0x4a46423f,\n0x5f59544f,\n0x79726c65,\n0x948e8780,\n0x00000010,\n0xba001801,\n0x00000000,\n0xffffffff,\n0x021fba00,\n0x80808080,\n0x00001f50,\n0xba011801,\n0x00001f40,\n0xffffffff,\n0x040fba00,\n0xb4a69480,\n0xa8b5bbbb,\n0x5b6d8296,\n0x4b45464d,\n0x917c6857,\n0xbcbab1a3,\n0x8699aab6,\n0x47505e71,\n0x65544944,\n0xafa08d79,\n0xadb7bcb9,\n0x6275899d,\n0x48444852,\n0x89756252,\n0xbcb7ad9d,\n0x8da0afb9,\n0x49556579,\n0x5f504745,\n0xaa998671,\n0xb1babbb6,\n0x687c91a3,\n0x46454b57,\n0x826e5c4e,\n0xbbb4a796,\n0x94a6b3ba,\n0x4d5a6c80,\n0x594c4646,\n0xa4927e6a,\n0xb5bbbab2,\n0x708497a8,\n0x45474f5d,\n0x7a67564b,\n0xb9b0a18f,\n0x9babb6bb,\n0x51607387,\n0x54494548,\n0x9e8b7764,\n0xb7bbb7ad,\n0x778b9ead,\n0x45495464,\n0x73615248,\n0xb6ab9b87,\n0xa1b0b8bb,\n0x57677a8f,\n0x4f47464b,\n0x9784705e,\n0xb9bab4a8,\n0x7e92a4b1,\n0x464d596a,\n0x6c5b4e47,\n0xb2a59480,\n0xa7b3bab9,\n0x5c6e8296,\n0x4c46474f,\n0x907c6958,\n0xbab9b0a2,\n0x8599a9b5,\n0x48515f72,\n0x66564b46,\n0xae9f8d79,\n0xacb6bab7,\n0x6275899c,\n0x49464953,\n0x89756253,\n0xbab6ac9c,\n0x8d9faeb7,\n0x4b566679,\n0x5f514846,\n0xa9998572,\n0xb0b8bab4,\n0x697c90a2,\n0x48474c58,\n0x826e5d4f,\n0xb9b3a695,\n0x94a5b2b9,\n0x4e5b6c80,\n0x5a4d4747,\n0xa3927e6b,\n0xb3b9b8b1,\n0x708497a7,\n0x4748505e,\n0x7b67574c,\n0xb7afa08e,\n0x9aaab5b9,\n0x53617387,\n0x554b4749,\n0x9d8b7764,\n0xb6b9b6ac,\n0x778b9dac,\n0x474b5564,\n0x7461534a,\n0xb5aa9a87,\n0xa0aeb7b9,\n0x58687b8e,\n0x5149474c,\n0x9784705e,\n0xb8b9b3a7,\n0x7e92a3b0,\n0x484e5a6b,\n0x6d5c4f48,\n0xb1a49380,\n0xa6b2b8b8,\n0x5d6e8295,\n0x4d484850,\n0x907c6959,\n0xb9b7afa1,\n0x8598a8b3,\n0x49526072,\n0x66574c47,\n0xad9e8c79,\n0xabb5b9b6,\n0x6375899b,\n0x4b474b54,\n0x89756354,\n0xb9b5aa9b,\n0x8c9eadb6,\n0x4c576679,\n0x60524a48,\n0xa8988572,\n0xafb7b8b3,\n0x6a7c90a1,\n0x49484e59,\n0x826f5d50,\n0xb8b1a595,\n0x93a4b0b7,\n0x505c6d80,\n0x5b4f4849,\n0xa2917e6b,\n0xb2b8b7af,\n0x708496a6,\n0x484a525f,\n0x7b68584d,\n0xb6ad9f8e,\n0x99a9b3b8,\n0x54627487,\n0x564c484b,\n0x9c8a7765,\n0xb5b8b5ab,\n0x778a9cab,\n0x484c5665,\n0x7462544b,\n0xb3a99987,\n0x9fadb6b8,\n0x59687b8e,\n0x524a494e,\n0x9683705f,\n0xb6b7b2a6,\n0x7e91a2af,\n0x494f5b6c,\n0x6d5d5049,\n0xb0a39380,\n0xa5b1b7b6,\n0x5e6f8294,\n0x4f494a51,\n0x8f7d6a5a,\n0xb7b6aea1,\n0x8598a7b2,\n0x4b536172,\n0x67584d49,\n0xac9e8c79,\n0xa9b3b7b4,\n0x6476899b,\n0x4c494c56,\n0x89766456,\n0xb7b3a99b,\n0x8c9dabb4,\n0x4e586779,\n0x61544b49,\n0xa7978572,\n0xadb5b7b2,\n0x6a7d8fa0,\n0x4a4a4f5a,\n0x826f5e52,\n0xb6b0a494,\n0x93a3afb6,\n0x515d6d80,\n0x5c504a4a,\n0xa2917e6c,\n0xb1b6b5ae,\n0x718396a5,\n0x4a4b5360,\n0x7b69594f,\n0xb4ac9f8e,\n0x99a8b2b6,\n0x55637487,\n0x574d4a4c,\n0x9c8a7766,\n0xb3b6b3aa,\n0x778a9caa,\n0x4a4d5766,\n0x7463554c,\n0xb2a89987,\n0x9eacb4b6,\n0x5a697b8d,\n0x534c4a4f,\n0x95837160,\n0xb5b6b0a5,\n0x7e91a1ae,\n0x4b515c6c,\n0x6e5e524b,\n0xaea29280,\n0xa4afb5b5,\n0x5f6f8294,\n0x504b4b52,\n0x8f7d6b5b,\n0xb6b4ada0,\n0x8597a6b1,\n0x4c546273,\n0x68594f4a,\n0xaa9d8c79,\n0xa8b2b6b3,\n0x6576889a,\n0x4e4a4e57,\n0x88766557,\n0xb6b2a89a,\n0x8c9daab3,\n0x4f596879,\n0x62554d4b,\n0xa6978573,\n0xacb4b5b0,\n0x6b7d8f9f,\n0x4c4b505b,\n0x82705f53,\n0xb5afa394,\n0x92a2aeb4,\n0x525e6e80,\n0x5d514b4c,\n0xa1907e6c,\n0xafb5b4ad,\n0x718395a4,\n0x4b4d5461,\n0x7b695a50,\n0xb3ab9e8d,\n0x98a7b1b5,\n0x56647487,\n0x584f4b4e,\n0x9b8a7867,\n0xb2b5b2a9,\n0x788a9ba9,\n0x4b4f5867,\n0x7464564e,\n0xb0a69887,\n0x9eabb3b5,\n0x5b6a7b8d,\n0x544d4c50,\n0x95837161,\n0xb3b4afa4,\n0x7e90a0ac,\n0x4c525d6d,\n0x6e5f534c,\n0xada19280,\n0xa3aeb4b4,\n0x60708293,\n0x514c4d54,\n0x8f7d6b5c,\n0xb4b3ab9f,\n0x8596a5af,\n0x4e566373,\n0x685a504c,\n0xa99c8b79,\n0xa7b1b4b2,\n0x65768899,\n0x4f4c4f58,\n0x88766558,\n0xb4b0a799,\n0x8b9ca9b2,\n0x505a6879,\n0x63564e4c,\n0xa5968573,\n0xabb2b4af,\n0x6b7d8e9f,\n0x4d4d525c,\n0x82706054,\n0xb3ada293,\n0x92a1adb3,\n0x535f6e80,\n0x5e534d4d,\n0xa0907e6d,\n0xaeb3b2ac,\n0x728395a3,\n0x4d4e5562,\n0x7b6a5c51,\n0xb1aa9d8d,\n0x97a6afb3,\n0x57647586,\n0x59504d4f,\n0x9a8a7867,\n0xb0b3b0a8,\n0x788a9aa8,\n0x4d505a67,\n0x7565574f,\n0xafa59786,\n0x9da9b1b3,\n0x5c6a7b8d,\n0x564e4d52,\n0x94837262,\n0xb2b3aea3,\n0x7e909fab,\n0x4e535e6d,\n0x6f5f544e,\n0xaca09180,\n0xa2adb2b2,\n0x61708293,\n0x534e4e55,\n0x8e7d6c5d,\n0xb3b1aa9e,\n0x8596a4ae,\n0x4f576373,\n0x695b514d,\n0xa89b8b7a,\n0xa6afb3b0,\n0x66778898,\n0x504d5059,\n0x88776659,\n0xb3afa698,\n0x8b9ba8b0,\n0x525b697a,\n0x6457504e,\n0xa4958573,\n0xaab1b2ae,\n0x6c7d8e9e,\n0x4f4e535e,\n0x82706155,\n0xb2aca193,\n0x91a0abb1,\n0x55606f80,\n0x5f544e4f,\n0x9f907e6e,\n0xadb2b1aa,\n0x728394a2,\n0x4e4f5763,\n0x7b6b5d53,\n0xb0a89c8c,\n0x97a4aeb2,\n0x59657586,\n0x5b524e50,\n0x99897868,\n0xafb2afa6,\n0x788999a6,\n0x4e525b68,\n0x75655951,\n0xaea49786,\n0x9ca8b0b2,\n0x5d6b7b8c,\n0x57504f53,\n0x94837263,\n0xb0b1aca2,\n0x7e8f9eaa,\n0x4f555f6e,\n0x6f60554f,\n0xaba09180,\n0xa1abb1b1,\n0x62718292,\n0x544f5056,\n0x8e7d6c5e,\n0xb1b0a99d,\n0x8595a3ad,\n0x51586474,\n0x6a5c534f,\n0xa79a8b7a,\n0xa5aeb1af,\n0x67778898,\n0x524f525a,\n0x8877675a,\n0xb1aea598,\n0x8b9aa7af,\n0x535c6a7a,\n0x6458514f,\n0xa3958574,\n0xa8afb1ac,\n0x6d7d8e9d,\n0x5050545f,\n0x82716257,\n0xb0aba092,\n0x919faab0,\n0x56616f80,\n0x60555050,\n0x9e8f7e6e,\n0xabb0afa9,\n0x728393a1,\n0x50515863,\n0x7b6b5e54,\n0xafa79b8c,\n0x96a3adb0,\n0x5a667586,\n0x5c535052,\n0x99897869,\n0xaeb0aea5,\n0x788999a5,\n0x50535c69,\n0x75665a52,\n0xaca39686,\n0x9ba7aeb0,\n0x5e6b7b8c,\n0x58515054,\n0x93837364,\n0xafb0aba1,\n0x7e8f9da9,\n0x5156606e,\n0x70615751,\n0xa99f9080,\n0xa0aaafaf,\n0x63718292,\n0x55505158,\n0x8d7d6d5f,\n0xb0aea89c,\n0x8494a2ab,\n0x52596574,\n0x6a5d5450,\n0xa69a8a7a,\n0xa4acb0ad,\n0x68778797,\n0x5350535b,\n0x8777685b,\n0xb0aca497,\n0x8a99a6ad,\n0x545d6a7a,\n0x655a5251,\n0xa2948474,\n0xa7aeafab,\n0x6d7d8d9c,\n0x52515660,\n0x81716358,\n0xafa99f91,\n0x909ea9ae,\n0x57627080,\n0x61575152,\n0x9d8f7f6f,\n0xaaafaea8,\n0x738393a0,\n0x51525964,\n0x7c6c5f55,\n0xada69a8c,\n0x95a2abaf,\n0x5b677686,\n0x5d545153,\n0x98897969,\n0xacafaca4,\n0x798998a4,\n0x51545d69,\n0x76675b53,\n0xaba29586,\n0x9aa6adaf,\n0x5f6c7c8c,\n0x59535256,\n0x93837365,\n0xadaeaaa0,\n0x7f8e9da7,\n0x5257616f,\n0x70625852,\n0xa89e9080,\n0x9fa9aeae,\n0x64728191,\n0x57525359,\n0x8d7d6e60,\n0xaeada69b,\n0x8494a1aa,\n0x545b6674,\n0x6b5e5652,\n0xa5998a7a,\n0xa3abaeac,\n0x69778796,\n0x5552555c,\n0x8777695c,\n0xaeaba396,\n0x8a99a4ac,\n0x565e6b7a,\n0x665b5452,\n0xa0948475,\n0xa6acaeaa,\n0x6e7d8d9b,\n0x53535761,\n0x81726459,\n0xada89e91,\n0x8f9da7ad,\n0x59637180,\n0x62585353,\n0x9c8e7f6f,\n0xa9adada7,\n0x7383929f,\n0x53545a65,\n0x7c6d6057,\n0xaca59a8b,\n0x95a1aaad,\n0x5c687686,\n0x5e565355,\n0x9789796a,\n0xabadaba3,\n0x798897a3,\n0x53565e6a,\n0x76685c55,\n0xaaa19586,\n0x99a5abad,\n0x606d7c8b,\n0x5b545357,\n0x92837365,\n0xacada89f,\n0x7f8e9ca6,\n0x5459626f,\n0x71635954,\n0xa79d8f80,\n0x9ea7acac,\n0x64728191,\n0x5853545a,\n0x8d7d6e61,\n0xadaba59a,\n0x8493a0a9,\n0x555c6775,\n0x6c5f5753,\n0xa3988a7a,\n0xa2aaadab,\n0x69788796,\n0x5653565e,\n0x8778695e,\n0xada9a195,\n0x8a98a3aa,\n0x57606c7a,\n0x675c5554,\n0x9f938475,\n0xa5abaca8,\n0x6e7d8c9a,\n0x55545862,\n0x8172655b,\n0xaca79d90,\n0x8f9ca6ab,\n0x5a647180,\n0x63595455,\n0x9b8e7f70,\n0xa7acaba5,\n0x7483929e,\n0x54555c66,\n0x7c6d6158,\n0xaaa4998b,\n0x94a0a8ac,\n0x5d687686,\n0x5f575456,\n0x9688796b,\n0xa9aca9a2,\n0x798896a2,\n0x54575f6b,\n0x76695d56,\n0xa8a09485,\n0x99a3aaac,\n0x616d7c8b,\n0x5c565558,\n0x91837466,\n0xababa79e,\n0x7f8d9ba5,\n0x555a6370,\n0x71645b55,\n0xa59c8f80,\n0x9da6abab,\n0x65738190,\n0x5955565b,\n0x8c7d6f62,\n0xabaaa499,\n0x84929fa7,\n0x565d6875,\n0x6c605855,\n0xa297897b,\n0xa0a8aba9,\n0x6a788795,\n0x5755575f,\n0x87786a5f,\n0xaba8a095,\n0x8997a2a9,\n0x59616c7b,\n0x685d5755,\n0x9e928475,\n0xa3aaaba7,\n0x6f7d8c99,\n0x56555a63,\n0x8173665c,\n0xaaa69c90,\n0x8e9ba5aa,\n0x5b657280,\n0x645b5656,\n0x9a8d7f70,\n0xa6aaaaa4,\n0x7483919d,\n0x56575d67,\n0x7c6e6259,\n0xa9a2988b,\n0x939fa7aa,\n0x5e697785,\n0x60595658,\n0x9688796c,\n0xa8aaa8a1,\n0x798896a1,\n0x5659606c,\n0x77695f58,\n0xa79f9385,\n0x98a2a9aa,\n0x626e7c8a,\n0x5d57565a,\n0x91837467,\n0xa9aaa69d,\n0x7f8d9aa4,\n0x565b6471,\n0x72655c57,\n0xa49b8e80,\n0x9ca5a9a9,\n0x6673818f,\n0x5b56575d,\n0x8c7d6f63,\n0xaaa9a399,\n0x84929ea6,\n0x585e6976,\n0x6d625a56,\n0xa196897b,\n0x9fa7aaa8,\n0x6b788794,\n0x59565960,\n0x87786b60,\n0xaaa79f94,\n0x8996a1a8,\n0x5a626d7b,\n0x695e5857,\n0x9d928476,\n0xa2a8a9a5,\n0x707d8c98,\n0x58575b64,\n0x8173675d,\n0xa9a49b8f,\n0x8e9aa4a9,\n0x5d667280,\n0x655c5758,\n0x998d7f71,\n0xa5a9a8a3,\n0x7583909c,\n0x57585e68,\n0x7c6f635b,\n0xa7a1978a,\n0x939ea6a9,\n0x606a7785,\n0x615a5759,\n0x95887a6c,\n0xa6a9a6a0,\n0x7a88959f,\n0x575a616c,\n0x776a6059,\n0xa59e9385,\n0x97a1a7a9,\n0x636f7c8a,\n0x5e59585b,\n0x90837568,\n0xa8a8a49c,\n0x7f8d99a2,\n0x585c6571,\n0x72665d58,\n0xa39a8e80,\n0x9ba3a8a8,\n0x6774818f,\n0x5c58595e,\n0x8b7d7064,\n0xa8a7a198,\n0x84919da4,\n0x595f6976,\n0x6e635b58,\n0xa096897b,\n0x9ea5a8a6,\n0x6c788693,\n0x5a585a61,\n0x86786c61,\n0xa8a59e93,\n0x8995a0a6,\n0x5b636e7b,\n0x6a605a58,\n0x9c918476,\n0xa1a7a8a4,\n0x707d8b97,\n0x59585c65,\n0x8174685e,\n0xa7a39a8f,\n0x8d99a2a7,\n0x5e677380,\n0x665d5959,\n0x988c7f71,\n0xa3a7a7a1,\n0x7582909b,\n0x595a5f69,\n0x7c6f645c,\n0xa6a0968a,\n0x929da4a7,\n0x616b7785,\n0x625b595a,\n0x94877a6d,\n0xa5a7a59e,\n0x7a87949e,\n0x595b636d,\n0x776b615b,\n0xa49d9285,\n0x96a0a6a7,\n0x646f7c8a,\n0x605a595d,\n0x90827569,\n0xa6a7a39b,\n0x7f8c98a1,\n0x595e6672,\n0x73675e5a,\n0xa2998d80,\n0x9aa2a6a6,\n0x6874818e,\n0x5d595a5f,\n0x8b7e7165,\n0xa7a6a097,\n0x84919ba3,\n0x5b616a76,\n0x6e645c59,\n0x9f95887b,\n0x9da4a7a5,\n0x6c798693,\n0x5c595c62,\n0x86796c62,\n0xa7a49d93,\n0x88959ea5,\n0x5d646f7b,\n0x6a615b5a,\n0x9b908476,\n0xa0a5a6a3,\n0x717e8b97,\n0x5b5a5e66,\n0x81746960,\n0xa6a2998e,\n0x8d98a1a6,\n0x5f687380,\n0x675f5a5a,\n0x978c7f72,\n0xa2a6a5a0,\n0x75828f9a,\n0x5a5b606a,\n0x7c70655e,\n0xa59f9589,\n0x919ca3a6,\n0x626c7885,\n0x645d5a5c,\n0x93877a6e,\n0xa4a6a49d,\n0x7a87939d,\n0x5a5d646e,\n0x786c625c,\n0xa39c9185,\n0x959fa4a6,\n0x65707c89,\n0x615c5a5e,\n0x8f82756a,\n0xa5a5a29a,\n0x7f8c97a0,\n0x5b5f6772,\n0x7368605b,\n0xa0988d80,\n0x99a1a5a5,\n0x6974818e,\n0x5f5b5b60,\n0x8a7e7166,\n0xa5a49f96,\n0x84909aa2,\n0x5c626b77,\n0x6f655e5b,\n0x9d94887b,\n0x9ca3a5a3,\n0x6d798692,\n0x5d5b5d63,\n0x86796d63,\n0xa5a29c92,\n0x88949da3,\n0x5e656f7b,\n0x6b625c5b,\n0x9a908377,\n0x9fa4a5a1,\n0x717e8a96,\n0x5c5b5f67,\n0x81756961,\n0xa4a0988e,\n0x8c97a0a4,\n0x60697480,\n0x68605c5c,\n0x968b7f72,\n0xa1a4a49f,\n0x76828f99,\n0x5c5d626a,\n0x7d70665f,\n0xa39e9589,\n0x919ba2a4,\n0x636c7885,\n0x655e5c5d,\n0x93877a6e,\n0xa2a4a29c,\n0x7a87939c,\n0x5c5e656e,\n0x786d635d,\n0xa19a9085,\n0x949da3a4,\n0x66717d89,\n0x625d5c5f,\n0x8e82766b,\n0xa3a4a099,\n0x7f8b969e,\n0x5c606873,\n0x7469615d,\n0x9f978c80,\n0x98a0a4a3,\n0x6a75818d,\n0x605c5d62,\n0x8a7e7267,\n0xa4a39e95,\n0x838f99a0,\n0x5e636c77,\n0x70665f5c,\n0x9c93887c,\n0x9ba1a4a2,\n0x6e798691,\n0x5e5c5e65,\n0x86796e65,\n0xa4a19b91,\n0x88939ca2,\n0x5f66707c,\n0x6c635e5d,\n0x998f8377,\n0x9da2a3a0,\n0x727e8a95,\n0x5e5d6068,\n0x81756a62,\n0xa39f978d,\n0x8c969ea3,\n0x626a7480,\n0x69615d5d,\n0x968b7f73,\n0x9fa3a29e,\n0x76828e98,\n0x5d5e636b,\n0x7d716760,\n0xa29c9489,\n0x909aa0a3,\n0x646d7884,\n0x66605d5f,\n0x92877b6f,\n0xa1a3a19b,\n0x7b87929b,\n0x5d60666f,\n0x786d655f,\n0xa0999084,\n0x949ca1a3,\n0x67717d89,\n0x635e5d61,\n0x8e82766c,\n0xa2a29f98,\n0x7f8b959d,\n0x5e626973,\n0x746a625e,\n0x9e968c80,\n0x979ea2a2,\n0x6b75818d,\n0x615e5e63,\n0x8a7e7268,\n0xa2a19c94,\n0x838f989f,\n0x5f646d77,\n0x7067615e,\n0x9b92877c,\n0x9aa0a2a1,\n0x6f7a8590,\n0x605e6066,\n0x857a6f66,\n0xa2a09a90,\n0x87929ba0,\n0x6167717c,\n0x6d655f5e,\n0x988e8378,\n0x9ca1a29f,\n0x737e8994,\n0x5f5e6269,\n0x81766b63,\n0xa19e968c,\n0x8b969da1,\n0x636a7580,\n0x6a625f5f,\n0x958a7f74,\n0x9ea1a19c,\n0x77828d97,\n0x5f5f646c,\n0x7d726862,\n0xa09b9388,\n0x8f989fa1,\n0x666e7984,\n0x67615f60,\n0x91867b70,\n0x9fa19f9a,\n0x7b86919a,\n0x5f616770,\n0x796e6660,\n0x9f988f84,\n0x939ba0a1,\n0x69727d88,\n0x65605f62,\n0x8d82776d,\n0xa0a19e97,\n0x7f8a949c,\n0x5f636a74,\n0x756b6460,\n0x9c958b80,\n0x969da1a0,\n0x6c76818c,\n0x635f6064,\n0x897e7369,\n0xa1a09b93,\n0x838e979e,\n0x61656e78,\n0x7168625f,\n0x9a92877c,\n0x999ea19f,\n0x6f7a8590,\n0x615f6167,\n0x857a6f67,\n0xa19e9890,\n0x87919a9f,\n0x6268717c,\n0x6e666160,\n0x978e8378,\n0x9b9fa09d,\n0x737e8993,\n0x6060636a,\n0x81766c65,\n0xa09c958c,\n0x8b959ca0,\n0x646b7580,\n0x6b646060,\n0x948a7f74,\n0x9da09f9b,\n0x77828d96,\n0x6061656d,\n0x7d726963,\n0x9f9a9288,\n0x8f979da0,\n0x676f7984,\n0x68626062,\n0x90867b71,\n0x9ea09e99,\n0x7b869099,\n0x60626871,\n0x796f6762,\n0x9d978e84,\n0x929a9ea0,\n0x6a737d88,\n0x66616063,\n0x8d82776d,\n0x9f9f9c96,\n0x7f8a939b,\n0x61646b74,\n0x756c6561,\n0x9b948b80,\n0x959c9f9f,\n0x6d76818c,\n0x64616165,\n0x897e746b,\n0x9f9e9a92,\n0x838d969c,\n0x62676e78,\n0x72696361,\n0x9991877c,\n0x979d9f9e,\n0x707a858f,\n0x63616368,\n0x857a7068,\n0x9f9d978f,\n0x8791999e,\n0x6469727c,\n0x6f676261,\n0x968d8378,\n0x9a9e9f9c,\n0x747e8992,\n0x6261656b,\n0x81766d66,\n0x9e9b948b,\n0x8a949a9e,\n0x666c7680,\n0x6c656262,\n0x93897f75,\n0x9b9e9e9a,\n0x77828c95,\n0x6262676e,\n0x7d736a64,\n0x9d999188,\n0x8e969c9e,\n0x68707984,\n0x69646263,\n0x8f867b71,\n0x9d9e9d97,\n0x7b868f97,\n0x62646971,\n0x79706863,\n0x9c968e84,\n0x91989d9e,\n0x6b737d88,\n0x67636265,\n0x8c82786e,\n0x9d9e9b95,\n0x7f899299,\n0x62666c75,\n0x766d6663,\n0x9a938a80,\n0x949a9e9d,\n0x6e77818b,\n0x65626367,\n0x887e746c,\n0x9e9d9992,\n0x838d959b,\n0x63686f79,\n0x726a6562,\n0x9790867c,\n0x969c9e9c,\n0x717a858e,\n0x64626469,\n0x857a7169,\n0x9e9b968e,\n0x8690979c,\n0x656a737c,\n0x6f686463,\n0x958d8379,\n0x989c9d9b,\n0x747e8891,\n0x6363666c,\n0x81776e67,\n0x9d9a938b,\n0x8a93999d,\n0x676d7680,\n0x6d666363,\n0x92897f75,\n0x9a9d9c99,\n0x78828c94,\n0x6364686f,\n0x7d746b66,\n0x9c979087,\n0x8d959b9d,\n0x69707a84,\n0x6a656364,\n0x8f857b72,\n0x9b9d9b96,\n0x7b858f96,\n0x63656a72,\n0x7a716965,\n0x9a958d84,\n0x90979c9d,\n0x6c747d87,\n0x68646366,\n0x8b82786f,\n0x9c9c9994,\n0x7f899298,\n0x64676d75,\n0x766e6764,\n0x99928a80,\n0x93999c9c,\n0x6f77818a,\n0x67646468,\n0x887e756d,\n0x9c9b9791,\n0x838c949a,\n0x65697079,\n0x736b6664,\n0x968f867c,\n0x959a9c9b,\n0x727b848e,\n0x6664666a,\n0x847b726a,\n0x9c9a958e,\n0x868f969b,\n0x666c737c,\n0x70696564,\n0x948c8379,\n0x979b9c99,\n0x757e8890,\n0x6564676d,\n0x81776f68,\n0x9b98928a,\n0x8992989b,\n0x686e7780,\n0x6e686565,\n0x91897f76,\n0x999b9b97,\n0x78828b93,\n0x65656970,\n0x7d746d67,\n0x9a968f87,\n0x8c94999b,\n0x6a717a83,\n0x6b666566,\n0x8e857c73,\n0x9a9b9a95,\n0x7c858e95,\n0x65676c73,\n0x7a716a66,\n0x99948c83,\n0x8f969a9b,\n0x6d747d87,\n0x6a666567,\n0x8b827870,\n0x9a9b9893,\n0x7f889197,\n0x65686e76,\n0x776f6965,\n0x97918980,\n0x92989b9a,\n0x7078818a,\n0x68656669,\n0x877e756e,\n0x9b9a9690,\n0x838b9398,\n0x666a7179,\n0x746d6765,\n0x958e867d,\n0x94999b99,\n0x727b848d,\n0x6765676b,\n0x847b726b,\n0x9b99948d,\n0x868e9599,\n0x686d747d,\n0x716b6766,\n0x938b8279,\n0x969a9a98,\n0x767e8790,\n0x6666696e,\n0x8178706a,\n0x9a97918a,\n0x8991979a,\n0x696f7780,\n0x6f696666,\n0x90887f76,\n0x979a9a96,\n0x79828a92,\n0x66676a71,\n0x7e756e68,\n0x99958f86,\n0x8c93989a,\n0x6b727a83,\n0x6d686667,\n0x8d857c74,\n0x989a9894,\n0x7c858d94,\n0x66686d74,\n0x7a726c67,\n0x98938c83,\n0x8e95999a,\n0x6e757e86,\n0x6b676669,\n0x8a827971,\n0x99999792,\n0x7f889096,\n0x676a6f77,\n0x77706a67,\n0x96908980,\n0x91969999,\n0x70788189,\n0x6967676b,\n0x877e766f,\n0x9999958f,\n0x828b9297,\n0x686c727a,\n0x756e6967,\n0x948e867d,\n0x93979998,\n0x737b848c,\n0x6867686d,\n0x847b736d,\n0x9997938c,\n0x858d9498,\n0x696e757d,\n0x726c6867,\n0x928b827a,\n0x95989997,\n0x767e878f,\n0x68676a6f,\n0x8178716b,\n0x98969089,\n0x88909598,\n0x6b707880,\n0x706a6868,\n0x8f887f77,\n0x96989895,\n0x79828a91,\n0x68686c72,\n0x7e766f6a,\n0x98948e86,\n0x8b929698,\n0x6d737b83,\n0x6e696869,\n0x8c857c74,\n0x97989793,\n0x7c858c93,\n0x68696e74,\n0x7b736d69,\n0x96928b83,\n0x8e949798,\n0x6f767e86,\n0x6c69686a,\n0x8a827972,\n0x98989591,\n0x7f878f94,\n0x686b7077,\n0x78716b68,\n0x958f8880,\n0x90959898,\n0x71798189,\n0x6b68696c,\n0x877f7770,\n0x9897948e,\n0x828a9196,\n0x696d737a,\n0x756f6a68,\n0x938d857d,\n0x92969897,\n0x747c848b,\n0x6a686a6e,\n0x847c746e,\n0x9896928b,\n0x858d9396,\n0x6a6f757d,\n0x736d6969,\n0x918a827a,\n0x93979795,\n0x777f878e,\n0x69696b70,\n0x8179726c,\n0x97948f89,\n0x888f9497,\n0x6c717880,\n0x716c6969,\n0x8e877f77,\n0x95979794,\n0x7a818990,\n0x696a6d72,\n0x7e76706b,\n0x96938d86,\n0x8a919597,\n0x6e747b83,\n0x6f6b696a,\n0x8c847c75,\n0x96979692,\n0x7c848c92,\n0x696b6f75,\n0x7b746e6a,\n0x95918a83,\n0x8d929697,\n0x70767e86,\n0x6d6a696b,\n0x89817a73,\n0x9696948f,\n0x7f878e93,\n0x6a6c7178,\n0x78726d6a,\n0x938e8880,\n0x8f949696,\n0x72798188,\n0x6c6a6a6d,\n0x867f7771,\n0x9696928d,\n0x82899094,\n0x6b6e737a,\n0x76706c6a,\n0x928c857d,\n0x91959695,\n0x757c838b,\n0x6b6a6b6f,\n0x837c756f,\n0x9695918b,\n0x858c9195,\n0x6c70767d,\n0x746e6b6a,\n0x9089827b,\n0x92959694,\n0x777f868d,\n0x6b6a6d71,\n0x8179736e,\n0x96938e88,\n0x878e9395,\n0x6d727980,\n0x726d6b6b,\n0x8d877f78,\n0x93959592,\n0x7a81898f,\n0x6b6b6e73,\n0x7e77716c,\n0x95918c85,\n0x8a909495,\n0x6f747b83,\n0x706c6b6c,\n0x8b847d76,\n0x94959490,\n0x7d848b90,\n0x6b6c7076,\n0x7b756f6c,\n0x938f8a83,\n0x8c919495,\n0x71777e85,\n0x6f6b6b6d,\n0x88817a74,\n0x9595938e,\n0x7f878d92,\n0x6b6e7278,\n0x79736e6b,\n0x928d8780,\n0x8e929595,\n0x737a8188,\n0x6d6b6c6e,\n0x867f7872,\n0x9594918c,\n0x82898f93,\n0x6c6f747b,\n0x77716d6b,\n0x908b857d,\n0x90939594,\n0x757c838a,\n0x6d6b6d70,\n0x837c7670,\n0x95938f8a,\n0x848b9094,\n0x6d71777d,\n0x746f6c6c,\n0x8e89827b,\n0x91949492,\n0x787f868c,\n0x6c6c6e72,\n0x817a746f,\n0x94928d87,\n0x878d9194,\n0x6f737980,\n0x736e6c6c,\n0x8c867f79,\n0x92949491,\n0x7a81888e,\n0x6c6d6f74,\n0x7e77726e,\n0x93908b85,\n0x898f9294,\n0x70757c83,\n0x716d6c6d,\n0x8a847d76,\n0x9394938f,\n0x7d848a8f,\n0x6c6e7176,\n0x7c75706d,\n0x928e8982,\n0x8b909394,\n0x72787e85,\n0x706d6c6e,\n0x88817b74,\n0x9393918d,\n0x7f868c91,\n0x6d6f7379,\n0x79746f6d,\n0x918c8780,\n0x8d919393,\n0x747a8187,\n0x6f6d6d70,\n0x857f7873,\n0x9393908b,\n0x82888e91,\n0x6d70757b,\n0x77726e6d,\n0x8f8a847e,\n0x8e929392,\n0x767c8389,\n0x6e6d6e71,\n0x837c7671,\n0x93928e89,\n0x848a8f92,\n0x6f72777e,\n0x75716e6d,\n0x8d88827b,\n0x90929391,\n0x797f858b,\n0x6e6d6f73,\n0x817a7470,\n0x93908c87,\n0x868c9092,\n0x70747a80,\n0x74706e6e,\n0x8b867f79,\n0x91929290,\n0x7b81878d,\n0x6e6e7175,\n0x7e78736f,\n0x928f8a85,\n0x888d9192,\n0x71767c82,\n0x726f6e6e,\n0x89837d77,\n0x9192918e,\n0x7d83898e,\n0x6e6f7277,\n0x7c76726f,\n0x918d8882,\n0x8a8f9292,\n0x73787e85,\n0x716e6e70,\n0x87817b75,\n0x9292908c,\n0x7f868b8f,\n0x6e707479,\n0x7a75706e,\n0x8f8b8680,\n0x8c909292,\n0x757a8187,\n0x706e6f71,\n0x857f7974,\n0x92918f8a,\n0x82888d90,\n0x6f72767c,\n0x7873706e,\n0x8e89847e,\n0x8d909291,\n0x777d8389,\n0x6f6e6f72,\n0x837d7772,\n0x92908d88,\n0x84898e91,\n0x7073787e,\n0x76726f6f,\n0x8c87827c,\n0x8e919190,\n0x797f858a,\n0x6f6f7174,\n0x817b7571,\n0x918f8b86,\n0x868b8f91,\n0x71757a80,\n0x75716f6f,\n0x8b857f7a,\n0x8f91918e,\n0x7b81878c,\n0x6f6f7276,\n0x7e797471,\n0x908e8a84,\n0x888c9091,\n0x73777c82,\n0x73706f70,\n0x89837d78,\n0x9091908d,\n0x7d83898d,\n0x6f707378,\n0x7c777370,\n0x8f8c8882,\n0x898e9091,\n0x74797e84,\n0x72706f71,\n0x87817b76,\n0x90908f8b,\n0x7f858a8e,\n0x7072757a,\n0x7a757270,\n0x8e8b8680,\n0x8b8e9090,\n0x767b8186,\n0x71707072,\n0x857f7975,\n0x90908e8a,\n0x82878c8f,\n0x7073777c,\n0x79747170,\n0x8d89847e,\n0x8c8f908f,\n0x787d8388,\n0x71707174,\n0x837d7874,\n0x908f8c88,\n0x83898d8f,\n0x7174797e,\n0x77737170,\n0x8b87827c,\n0x8d8f908e,\n0x7a7f8489,\n0x71707275,\n0x807b7673,\n0x908e8a86,\n0x858a8e90,\n0x72767b80,\n0x76727071,\n0x8a85807a,\n0x8e908f8d,\n0x7c81868b,\n0x70717377,\n0x7f797572,\n0x8f8d8984,\n0x878b8e8f,\n0x74787d82,\n0x74727171,\n0x88837e79,\n0x8e8f8e8c,\n0x7e83888c,\n0x71727579,\n0x7d787471,\n0x8e8b8782,\n0x898c8f8f,\n0x757a7f84,\n0x73717172,\n0x86817c77,\n0x8f8f8d8a,\n0x8085898d,\n0x7173767a,\n0x7b767371,\n0x8d8a8580,\n0x8a8d8f8f,\n0x777b8085,\n0x73717173,\n0x847f7a76,\n0x8f8e8c89,\n0x81868a8d,\n0x7274787c,\n0x79757271,\n0x8c88837e,\n0x8b8e8f8e,\n0x797d8287,\n0x72717275,\n0x827d7975,\n0x8f8e8b87,\n0x83888b8e,\n0x7375797e,\n0x78747272,\n0x8a86817c,\n0x8c8e8e8d,\n0x7a7f8488,\n0x72727376,\n0x807c7774,\n0x8e8d8985,\n0x85898c8e,\n0x74777b80,\n0x77747272,\n0x8984807b,\n0x8d8e8e8c,\n0x7c81868a,\n0x72727478,\n0x7f7a7673,\n0x8d8b8883,\n0x868a8d8e,\n0x75797d82,\n0x76737273,\n0x87837e79,\n0x8d8e8d8b,\n0x7e83878b,\n0x72737679,\n0x7d797573,\n0x8d8a8682,\n0x888b8d8e,\n0x767a7f83,\n0x75737274,\n0x85817c78,\n0x8d8d8c89,\n0x8084888b,\n0x7374777b,\n0x7b777473,\n0x8c898580,\n0x898c8d8d,\n0x787c8085,\n0x74737375,\n0x847f7b77,\n0x8d8d8b88,\n0x8186898c,\n0x7375797d,\n0x7a767473,\n0x8a87837e,\n0x8a8c8d8d,\n0x797e8286,\n0x74737476,\n0x827e7976,\n0x8d8c8a86,\n0x83878a8c,\n0x74777a7e,\n0x79767473,\n0x8986817d,\n0x8b8d8d8c,\n0x7b7f8488,\n0x73737577,\n0x807c7875,\n0x8d8b8885,\n0x84888b8d,\n0x75787c80,\n0x78757374,\n0x8884807b,\n0x8b8d8c8b,\n0x7c818589,\n0x73747679,\n0x7f7b7775,\n0x8c8a8783,\n0x86898b8c,\n0x76797d82,\n0x77747474,\n0x86827e7a,\n0x8c8c8c8a,\n0x7e82868a,\n0x7475777a,\n0x7d797674,\n0x8b898682,\n0x878a8c8c,\n0x777b7f83,\n0x76747475,\n0x85817d79,\n0x8c8c8b88,\n0x8084878a,\n0x7475787c,\n0x7c787674,\n0x8a888480,\n0x888a8c8c,\n0x797c8084,\n0x75747476,\n0x837f7b78,\n0x8c8b8a87,\n0x8185888b,\n0x7576797d,\n0x7b777574,\n0x8986837f,\n0x898b8c8b,\n0x7a7e8286,\n0x75747577,\n0x827e7a77,\n0x8c8b8986,\n0x8386898b,\n0x75787b7f,\n0x7a777575,\n0x8885817d,\n0x898b8b8a,\n0x7b7f8387,\n0x75757678,\n0x807d7976,\n0x8b8a8784,\n0x84878a8b,\n0x76797c80,\n0x79767575,\n0x8783807c,\n0x8a8b8b89,\n0x7d818488,\n0x75757779,\n0x7f7b7876,\n0x8b898683,\n0x85888a8b,\n0x777a7e81,\n0x78767576,\n0x86827e7b,\n0x8a8b8a88,\n0x7e828688,\n0x7576787b,\n0x7e7a7776,\n0x8a888581,\n0x86898a8b,\n0x787b7f83,\n0x77767576,\n0x84817d7a,\n0x8a8b8987,\n0x80838689,\n0x7677797c,\n0x7c797776,\n0x89878480,\n0x87898a8a,\n0x7a7d8084,\n0x77767677,\n0x837f7c79,\n0x8a8a8986,\n0x81848789,\n0x76787a7d,\n0x7b797776,\n0x8885827f,\n0x88898a8a,\n0x7b7e8285,\n0x76767678,\n0x827e7b78,\n0x8a898885,\n0x8285888a,\n0x77797b7f,\n0x7a787676,\n0x8784817e,\n0x888a8a89,\n0x7c7f8386,\n0x76767779,\n0x807d7a78,\n0x8a898684,\n0x8386888a,\n0x787a7d80,\n0x7a777676,\n0x8683807c,\n0x898a8988,\n0x7d818487,\n0x7677787a,\n0x7f7c7977,\n0x89888582,\n0x84878989,\n0x797b7e81,\n0x79777777,\n0x85827f7b,\n0x89898987,\n0x7f828587,\n0x7777797c,\n0x7e7b7977,\n0x88878481,\n0x85878989,\n0x7a7c7f82,\n0x78777778,\n0x84817d7b,\n0x89898886,\n0x80838688,\n0x77787a7d,\n0x7d7a7877,\n0x88868380,\n0x86888989,\n0x7b7d8083,\n0x78777778,\n0x827f7c7a,\n0x89898785,\n0x81848688,\n0x78797b7e,\n0x7c7a7877,\n0x8785827f,\n0x87888988,\n0x7c7e8184,\n0x78777879,\n0x817e7c79,\n0x89888684,\n0x82858788,\n0x787a7c7f,\n0x7b797878,\n0x8684817e,\n0x87888888,\n0x7d7f8285,\n0x7878797a,\n0x807d7b79,\n0x88878583,\n0x83858788,\n0x797b7d80,\n0x7b797878,\n0x8583807d,\n0x87888887,\n0x7e818386,\n0x7878797b,\n0x7f7d7a79,\n0x88868582,\n0x84868788,\n0x7a7c7e81,\n0x7a797878,\n0x84817f7c,\n0x87888786,\n0x7f818486,\n0x78797a7c,\n0x7e7c7a79,\n0x87868481,\n0x84868788,\n0x7b7d7f82,\n0x7a797879,\n0x83807e7c,\n0x87888785,\n0x80828586,\n0x79797b7d,\n0x7d7b7a79,\n0x86858380,\n0x85878787,\n0x7b7e8083,\n0x7979797a,\n0x82807d7b,\n0x87878684,\n0x81838587,\n0x797a7c7e,\n0x7d7b7979,\n0x8684827f,\n0x85878787,\n0x7c7f8183,\n0x7979797a,\n0x817f7c7b,\n0x87878583,\n0x82848687,\n0x7a7b7d7f,\n0x7c7a7979,\n0x8583817e,\n0x86878786,\n0x7d808284,\n0x79797a7b,\n0x807e7c7a,\n0x87868483,\n0x82848687,\n0x7a7c7e80,\n0x7c7a7979,\n0x8482807e,\n0x86878686,\n0x7e808385,\n0x797a7b7c,\n0x7f7d7b7a,\n0x86858482,\n0x83858686,\n0x7b7d7f81,\n0x7b7a7a7a,\n0x83817f7d,\n0x86868685,\n0x7f818385,\n0x7a7a7b7d,\n0x7f7d7b7a,\n0x86858381,\n0x83858686,\n0x7c7d7f82,\n0x7b7a7a7a,\n0x82807e7c,\n0x86868584,\n0x80828485,\n0x7a7b7c7e,\n0x7e7c7b7a,\n0x85848280,\n0x84858686,\n0x7c7e8082,\n0x7b7a7a7b,\n0x82807e7c,\n0x86868583,\n0x81828485,\n0x7a7b7d7f,\n0x7d7c7b7a,\n0x8583817f,\n0x84858685,\n0x7d7f8183,\n0x7b7a7b7c,\n0x817f7d7c,\n0x86858483,\n0x81838485,\n0x7b7c7d7f,\n0x7d7c7b7b,\n0x8482817f,\n0x84858585,\n0x7e808283,\n0x7b7b7b7c,\n0x807e7d7b,\n0x85858482,\n0x82838585,\n0x7c7d7e80,\n0x7d7b7b7b,\n0x8382807e,\n0x85858584,\n0x7f808284,\n0x7b7b7c7d,\n0x807e7c7b,\n0x85848381,\n0x82848585,\n0x7c7d7f81,\n0x7c7b7b7b,\n0x82817f7e,\n0x85858584,\n0x7f818284,\n0x7b7c7c7e,\n0x7f7d7c7b,\n0x84838281,\n0x83848585,\n0x7d7e8081,\n0x7c7b7b7c,\n0x82807f7d,\n0x84858483,\n0x80818384,\n0x7c7c7d7e,\n0x7e7d7c7c,\n0x84838280,\n0x83848484,\n0x7d7f8082,\n0x7c7c7c7c,\n0x81807e7d,\n0x84848483,\n0x80828384,\n0x7c7d7e7f,\n0x7e7d7c7c,\n0x8382817f,\n0x83848484,\n0x7e7f8182,\n0x7c7c7c7d,\n0x817f7e7d,\n0x84848382,\n0x81828384,\n0x7c7d7e7f,\n0x7e7d7c7c,\n0x8382807f,\n0x83848484,\n0x7e808182,\n0x7c7c7d7d,\n0x807f7e7d,\n0x84838381,\n0x81828384,\n0x7d7e7f80,\n0x7e7d7c7c,\n0x8281807f,\n0x83848483,\n0x7f808182,\n0x7c7d7d7e,\n0x807e7d7d,\n0x83838281,\n0x82838384,\n0x7d7e7f80,\n0x7d7d7d7d,\n0x82817f7e,\n0x83838383,\n0x7f818283,\n0x7d7d7e7e,\n0x7f7e7d7d,\n0x83828180,\n0x82838383,\n0x7e7f8081,\n0x7d7d7d7d,\n0x81807f7e,\n0x83838382,\n0x80818283,\n0x7d7d7e7f,\n0x7f7e7d7d,\n0x83828180,\n0x82838383,\n0x7e7f8081,\n0x7d7d7d7e,\n0x81807f7e,\n0x83838282,\n0x80818283,\n0x7d7e7e7f,\n0x7f7e7d7d,\n0x82818180,\n0x82828383,\n0x7f808081,\n0x7e7d7e7e,\n0x80807f7e,\n0x83828281,\n0x81818282,\n0x7e7e7f80,\n0x7f7e7e7e,\n0x8281807f,\n0x82828282,\n0x7f808181,\n0x7e7e7e7e,\n0x807f7f7e,\n0x82828281,\n0x81818282,\n0x7e7f7f80,\n0x7f7e7e7e,\n0x8181807f,\n0x82828282,\n0x7f808181,\n0x7e7e7e7f,\n0x807f7f7e,\n0x82828181,\n0x81818282,\n0x7e7f8080,\n0x7f7e7e7e,\n0x8180807f,\n0x82828281,\n0x80808181,\n0x7e7e7f7f,\n0x807f7f7e,\n0x82818180,\n0x81818282,\n0x7f7f8080,\n0x7f7e7e7e,\n0x8180807f,\n0x82828181,\n0x80808181,\n0x7e7f7f7f,\n0x7f7f7f7e,\n0x81818180,\n0x81818181,\n0x7f808081,\n0x7f7f7f7f,\n0x80807f7f,\n0x81818181,\n0x80818181,\n0x7f7f7f80,\n0x7f7f7f7f,\n0x81818080,\n0x81818181,\n0x7f808081,\n0x7f7f7f7f,\n0x80807f7f,\n0x81818181,\n0x80818181,\n0x7f7f8080,\n0x7f7f7f7f,\n0x81808080,\n0x81818181,\n0x80808081,\n0x7f7f7f7f,\n0x80807f7f,\n0x81818180,\n0x80808181,\n0x7f808080,\n0x807f7f7f,\n0x80808080,\n0x81818181,\n0x80808080,\n0x7f7f8080,\n0x8080807f,\n0x80808080,\n0x80808081,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x80808080,\n0x00000294,\n0xbaba1800,\n0x01020201,\n0x7d06403a,\n0xbababa00,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0xffffff00,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0x00000128,\n0x00000134,\n0x00000230,\n0x0000023c,\n0x00000248,\n0x00000080,\n0x00000000,\n0x00008001,\n0x00000000,\n0x00000000,\n0x0000000c,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x082a0008,\n0x40000000,\n0x00000000,\n0x082a0000,\n0x40000000,\n0x00010000,\n0x3c33813f,\n0x00000001,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00308100,\n0x00000000,\n0x00000000,\n0x00000000,\n0x01000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000001,\n0x00000000,\n0x00000000,\n0x00000000,\n0xbababa00,\n0x000002ac,\n0xbaba1800,\n0x01020201,\n0x7d06403a,\n0xbababa00,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0xffffff00,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0x00000128,\n0x00000134,\n0x00000230,\n0x0000023c,\n0x00000248,\n0x00000080,\n0x00000000,\n0x00008001,\n0x00000000,\n0x00000000,\n0x0000000c,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x082a0008,\n0x40000000,\n0x00000000,\n0x082a0000,\n0x40000000,\n0x00010000,\n0x3c33813f,\n0x3e338201,\n0x40338301,\n0x41338401,\n0x00000001,\n0x00000000,\n0x00000000,\n0x00000000,\n0x82308100,\n0x84308330,\n0x00000030,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x00000004,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x00000004,\n0x00000000,\n0x00000000,\n0x00000000,\n0xbababa00,\n0x0000030c,\n0xbaba1800,\n0x01020201,\n0x7d06403a,\n0xbababa00,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0xffffff00,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0x00000128,\n0x00000134,\n0x00000230,\n0x0000023c,\n0x00000248,\n0x00000080,\n0x00000000,\n0x00008001,\n0x00000000,\n0x00000000,\n0x0000000c,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x082a0008,\n0x40000000,\n0x00000000,\n0x082a0000,\n0x40000000,\n0x00010000,\n0x3c33813f,\n0x3e338201,\n0x40338301,\n0x41338401,\n0x3c338501,\n0x3e338601,\n0x40338701,\n0x41338801,\n0x3c338901,\n0x3e338a01,\n0x40338b01,\n0x41338c01,\n0x3c338d01,\n0x3e338e01,\n0x40338f01,\n0x41339001,\n0x00000001,\n0x00000000,\n0x00000000,\n0x00000000,\n0x82308100,\n0x84308330,\n0x86308530,\n0x88308730,\n0x8a308930,\n0x8c308b30,\n0x8e308d30,\n0x90308f30,\n0x00000030,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x07060504,\n0x0b0a0908,\n0x0f0e0d0c,\n0x00000010,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x07060504,\n0x0b0a0908,\n0x0f0e0d0c,\n0x00000010,\n0x00000000,\n0x00000000,\n0x00000000,\n0xbababa00,\n0x0000038c,\n0xbaba1800,\n0x01020201,\n0x7d06403a,\n0xbababa00,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40404040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0x40c0c040,\n0xffffff00,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0xffffffff,\n0x00000128,\n0x00000134,\n0x00000230,\n0x0000023c,\n0x00000248,\n0x00000080,\n0x00000000,\n0x00008001,\n0x00000000,\n0x00000000,\n0x0000000c,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x00000000,\n0x082a0008,\n0x40000000,\n0x00000000,\n0x082a0000,\n0x40000000,\n0x00010000,\n0x3c33813f,\n0x3e338201,\n0x40338301,\n0x41338401,\n0x3c338501,\n0x3e338601,\n0x40338701,\n0x41338801,\n0x3c338901,\n0x3e338a01,\n0x40338b01,\n0x41338c01,\n0x3c338d01,\n0x3e338e01,\n0x40338f01,\n0x41339001,\n0x3c339101,\n0x3e339201,\n0x40339301,\n0x41339401,\n0x3c339501,\n0x3e339601,\n0x40339701,\n0x41339801,\n0x3c339901,\n0x3e339a01,\n0x40339b01,\n0x41339c01,\n0x3c339d01,\n0x3e339e01,\n0x40339f01,\n0x4133a001,\n0x00000001,\n0x00000000,\n0x00000000,\n0x00000000,\n0x82308100,\n0x84308330,\n0x86308530,\n0x88308730,\n0x8a308930,\n0x8c308b30,\n0x8e308d30,\n0x90308f30,\n0x92309130,\n0x94309330,\n0x96309530,\n0x98309730,\n0x9a309930,\n0x9c309b30,\n0x9e309d30,\n0xa0309f30,\n0x00000030,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x07060504,\n0x0b0a0908,\n0x0f0e0d0c,\n0x13121110,\n0x17161514,\n0x1b1a1918,\n0x1f1e1d1c,\n0x00000020,\n0x00000000,\n0x00000000,\n0x00000000,\n0x03020100,\n0x07060504,\n0x0b0a0908,\n0x0f0e0d0c,\n0x13121110,\n0x17161514,\n0x1b1a1918,\n0x1f1e1d1c,\n0x00000020,\n0x00000000,\n0x00000000,\n0x00000000,\n0xbababa00,\n}\n//go:section .rodata\nvar pcmMusicIDs = [...]uint16{\n0,\n1,\n2,\n3,\n}\n//go:section .rodata\nvar pcmSampleIDs = [...]uint16{\n2,\n}\n//go:section .ewram\nvar pcmAudioController audio.PCMController\n\ntype Game struct {\n\tticks rt.Number\n}\n\ntype Runnable interface { Init(*rt.Context); Update(*rt.Context); Draw(*rt.Context) }\nvar _ Runnable = (*Game)(nil)\n\nfunc (g *Game) Init(c *rt.Context) {\n\tif !c.SetFont(&projectFontROM) { panic(\"invalid project font\") }\n\tglu_rhs_1 := rt.Number(0)\n\tg.ticks = glu_rhs_1\n\tg.gluInit(c)\n}\n\nfunc (g *Game) Update(c *rt.Context) {\n\tg.gluUpdate(c)\n}\n\nfunc (g *Game) Draw(c *rt.Context) {\n\tg.gluDraw(c)\n}\n\n\nfunc (g *Game) gluInit(c *rt.Context) {\n\tglu_arg_2 := rt.Number(131072)\n\tc.PCMMusicV(rt.NumVal(glu_arg_2),rt.Value{})\n}\n\nfunc (g *Game) __glu_call_gluInit(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluInit(c)\n\tgluPopRoots(c,n)\n}\n\nfunc (g *Game) gluUpdate(c *rt.Context) {\n\tglu_num_3 := g.ticks\n\tglu_num_4 := rt.Number(65536)\n\tglu_rhs_5 := (glu_num_3 + glu_num_4)\n\tg.ticks = glu_rhs_5\n}\n\nfunc (g *Game) __glu_call_gluUpdate(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluUpdate(c)\n\tgluPopRoots(c,n)\n}\n\nfunc (g *Game) gluDraw(c *rt.Context) {\n\tglu_arg_6 := rt.Number(0)\n\tc.ClsV(rt.NumVal(glu_arg_6))\n}\n\nfunc (g *Game) __glu_call_gluDraw(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluDraw(c)\n\tgluPopRoots(c,n)\n}\n\n\nvar cartImage = rt.AssetImage{\n\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,\n\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],\n\t\tPoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],\n\t\tPoseVariantBaseCount: 0, PoseVariantNames: poseVariantNamesROM,\n\t\tAnimationClips: animationClipROM[:], AnimationFrames: animationFrameROM[:],\n\t\tSheetIndex: sheetIndexROM[:],\n}\nfunc main() {\n\trt.DebugLog(\"Cartridge preview started\")\n\tcartData.SheetW, cartData.SheetH = SheetW, SheetH\n\tcartData.SpriteCols, cartData.SpriteRows, cartData.SpriteN = SpriteCols, SpriteRows, SpriteN\n\tcartData.MapW, cartData.MapH, cartData.MapLayers, cartData.MapPlaneMask = MapW, MapH, MapLayers, MapPlaneMask\n\tcartData.MapStreaming, cartData.SheetReadOnly = MapStreaming, SheetReadOnly\n\tcartData.Sheet = sheetRAM[:]\n\tcartData.SheetIndex = sheetIndexRAM[:]\n\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]\n\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]\n\tcartData.PoseVariantBaseCount, cartData.PoseVariantNames = 0, poseVariantNamesROM\n\tcartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]\n\tif !ctx.Init(&cartImage, &cartData) { rt.DebugLog(\"Cartridge assets could not be initialized. Rebuild the project.\"); for {} }\n\tctx.InitHardware()\n\tctx.SetProfiling(true)\n\tif !pcmAudioController.Init(pcmBankROM[:],pcmMusicIDs[:],pcmSampleIDs[:]) { rt.DebugLog(\"Imported audio could not start. Run mtile import-audio and rebuild.\"); for {} }\n\tctx.AttachPCMAudio(&pcmAudioController)\n\tgame.Init(&ctx)\n\t// _init runs while Mode 0 is force-blanked; commit its\n\t// spritesheet mutations before the first visible frame.\n\tctx.FinalizeInitHardware()\n\tfor {\n\t\t// One iteration = exactly two display frames (about 30 Hz).\n\t\t// The LCD always scans at 59.73 Hz;\n\t\t// each rendered image is shown for two whole scans. PaceFrame30\n\t\t// burns whatever time update/draw left over in the first frame, so\n\t\t// the flip always lands in the second frame's VBlank - a fast\n\t\t// iteration can never flip one frame early and alternate cadence.\n\t\tctx.BeginFramePace()\n\t\tctx.PollInput()\n\t\tctx.PollPauseMenu()\n\t\tpaused := ctx.PauseActive()\n\t\tif !paused {\n\t\tctx.BeginProfilePhase(rt.ProfileUpdate)\n\t\tgame.Update(&ctx)\n\t\tctx.EndProfilePhase(rt.ProfileUpdate)\n\t\tctx.BeginProfilePhase(rt.ProfileDraw)\n\t\tctx.BeginRenderFrame()\n\t\tgame.Draw(&ctx)\n\t\tctx.EndProfilePhase(rt.ProfileDraw)\n\t\t// Finish renderer work off screen: Mode 4 already drew on the hidden\n\t\t// page, so nothing tears, and update+draw own the full two-frame\n\t\t// window (~562k cycles) minus only the flip itself.\n\t\tctx.PrepareRender()\n\t\t}\n\t\tif paused { ctx.PreparePauseMenu() }\n\t\tctx.PaceFrame30()\n\t\tctx.WaitForPresentWindow()\n\t\tif paused { ctx.PresentPauseMenu() } else { ctx.PresentRender() }\n\t\theaplessStats := ctx.DebugSnapshot()\n\t\theaplessStats.HeapCapacity, heaplessStats.HeapHandleLimit = 0, 0\n\t\tdebugMailbox.Begin(heaplessStats)\n\t\tdebugMailbox.Add(\"ticks\", rt.NumVal(game.ticks))\n\t\tdebugMailbox.End()\n\t\tctx.EndFramePace30()\n\t\tctx.WaitVDraw()\n\t}\n}\n",
+    "Warnings": null,
+    "RendererRequested": 1,
+    "Renderer": 1,
+    "RendererReason": "M0_FORCED_PROVEN",
+    "RendererProfile": "",
+    "RendererDiagnostic": "",
+    "RendererLayers": 0,
+    "RendererObjects": false,
+    "RendererText": false,
+    "RendererOAMEntries": 0,
+    "RendererLineCycles": 0
+  },
+  "ram": {
+    "ewramStatic": 11292,
+    "iwramStatic": 7836,
+    "iwramStackReservation": 9216,
+    "mailbox": 512
+  },
+  "bankBytes": 11820,
+  "bankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6"
+}

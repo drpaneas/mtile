@@ -45,6 +45,8 @@ GUIDES = [
     ("audio-api", "Audio commands", "audio", "docs/audio/api-v2.md", "Play sound effects, songs, and direct hardware notes."),
     ("sfx", "Make a sound effect", "audio", "docs/audio/sfx.md", "Create short clips for jumps, pickups, and collisions."),
     ("music", "Compose a song", "audio", "docs/audio/music.md", "Arrange clips into parts and a complete soundtrack."),
+    ("samples", "Import WAV and tracker music", "audio", "docs/audio/samples.md", "Play recorded effects and MOD/XM/S3M/IT songs using Maxmod Direct Sound."),
+    ("audio-performance", "What imported audio costs", "audio", "docs/audio/imported-performance.md", "Measured CPU, ROM, RAM and GC: compare audio-only mTile and Butano programs at 30 FPS."),
     ("foreach", "Working with foreach", "data", "docs/loops/foreach.md", "Callbacks, lists, and safe mutation patterns."),
     ("pause-menu", "System pause", "data", "docs/pause-menu.md", "Opt into Start pause/resume during gameplay; keep it disabled in menus."),
     ("saving", "Saving on a real GBA", "data", "docs/saving.md", "Save progress to cartridge memory and test it on EZ-Flash Omega."),
@@ -62,7 +64,7 @@ DOC_ROUTES[(ROOT / "examples/README.md").resolve()] = "examples.html"
 DOC_ROUTES[(ROOT / "docs/first-game.md").resolve()] = "guides/first-game.html"
 CATEGORY_GUIDES = {
     "start": ["install", "first-game", "small-games"], "loop": ["game-loop", "reference", "lua-api"], "input": [],
-    "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "audio-api", "audio-editor"],
+    "sprites": ["moth-study", "moon-door", "poses-and-animations"], "maps": ["tidewalk", "lantern-rooms", "graphics", "tile-links"], "drawing": [], "audio": ["audio", "sfx", "music", "samples", "audio-performance", "audio-api", "audio-editor"],
     "math": [], "data": ["garbage-collection", "foreach", "saving", "save-game", "pause-menu"], "debug": ["performance", "lint", "garbage-collection", "renderers"], "editor": ["editor"],
 }
 ICON_PATHS = {
@@ -239,8 +241,8 @@ def build(output):
         raise ValueError('build output must be website/_site')
     output.mkdir(parents=True, exist_ok=True)
     names = [api['name'] for api in APIS]
-    if len(names) != len(set(names)) or set(names) != registry() - {'sample'}:
-        raise ValueError('API index must cover every project-supported builtin; sample is explicitly unsupported in Audio v2')
+    if len(names) != len(set(names)) or set(names) != registry():
+        raise ValueError('API index must cover every project-supported builtin')
     classes = classifications()
     if set(names) - classes.keys():
         raise ValueError('missing renderer classifications')
@@ -275,7 +277,7 @@ def build(output):
     steps = '''<div class="section-heading"><div><h2>Start here</h2><p>Each step gives you something to try. Stop with a working game.</p></div></div><section class="learning-strip" aria-label="Getting started steps"><a href="guides/install.html"><span>1</span><div><strong>Get set up</strong><small>Install mTile and check your tools with <code>mtile doctor</code>.</small></div></a><a href="guides/first-game.html"><span>2</span><div><strong>Play, then change one value</strong><small>Move around Coin Quest. Change the explorer’s speed and play again.</small></div></a><a href="guides/moth-study.html"><span>3</span><div><strong>Try a pose, then a clip</strong><small>Open Moth Study. Draw one still picture, then give its wings a saved sequence.</small></div></a></section>'''
     body = hero + steps + '<div class="section-heading"><div><h2>Look things up as you need them</h2><p>The topics below are a reference, not a reading list. Return when your game needs something new.</p></div><a href="api.html">Full API index</a></div><details><summary>Browse topics and functions</summary>' + category_tiles('guide.html') + '</details>'
     write('guide.html', 'Home', 'Learn to make Game Boy Advance games with Lua. Beginner tutorials, working examples, and a searchable mTile API reference.', body)
-    write('api.html', 'API reference', 'Find a mTile function by topic. Learn its common use and renderer requirements.', page_heading('A function for that.', 'Find what you need, see it in context, and get back to making your game.') + category_tiles('api.html') + '<p class="notice">Native Audio v2 does not support PCM playback or <code>sample()</code>. Use SFX clips, songs, and hardware notes.</p>', section='api')
+    write('api.html', 'API reference', 'Find a mTile function by topic. Learn its common use and renderer requirements.', page_heading('A function for that.', 'Find what you need, see it in context, and get back to making your game.') + category_tiles('api.html') + '<p class="notice">Music Lab edits four-channel PSG audio. For WAV effects and MOD/XM/S3M/IT music, see <a href="guides/samples.html">imported Direct Sound audio</a>.</p>', section='api')
     for cat in CATEGORIES:
         page = f'topics/{cat["id"]}.html'
         body = page_heading(cat['title'], cat['description']) + '<div class="guide-list">' + guide_links(cat['id'], page) + '</div>'

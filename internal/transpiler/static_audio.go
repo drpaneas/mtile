@@ -46,6 +46,9 @@ func (g *generator) validateStaticAudioCalls() error {
 			if g.opts.NativeAudio != nil {
 				switch name {
 				case "sample":
+					if g.opts.DirectAudio != nil {
+						return
+					}
 					firstErr = fmt.Errorf("transpiler: %s: sample() is not part of four-channel audio v2", call.Pos())
 					return
 				case "sfx":

@@ -9,20 +9,24 @@ Advance. It exposes exactly four hardware channels:
 - CH4 noise.
 
 The GBA generates these voices in hardware. Mtile performs bounded register
-updates at 256 Hz, so production audio has no software sample mixer, FIFO
-stream, audio DMA, PCM samples, or underruns.
+updates at 256 Hz. A PSG-only cartridge has no software sample mixer or audio
+DMA. For recorded effects and tracker music, the optional
+[Direct Sound import path](samples.md) adds a separate Maxmod bank.
 
 Start here:
 
 - [`plan.md`](plan.md): active product and engineering plan.
 - [`schema-v2.md`](schema-v2.md): strict four-channel asset contract.
 - [`api-v2.md`](api-v2.md): beginner and native APIs.
+- [Imported audio performance](imported-performance.md): illustrated CPU,
+  RAM, ROM and GC measurements against Butano at 30 FPS.
 - [`gba-hardware.md`](gba-hardware.md): the four real channel capabilities.
 - [`editor.md`](editor.md): the single-screen Music Lab and performance model.
 - [`conformance.md`](conformance.md): emulator and hardware verification.
 - [`completion.md`](completion.md): current audit.
 
-Direct Sound/PCM is unsupported. The superseded software mixer, PICO audio
+Direct Sound is available through `mtile import-audio`; it is independent of
+the PSG v2 assets edited by Music Lab. The superseded software mixer, PICO audio
 import/conformance tools, and audio-v1 fixtures have been removed. Existing v1
 assets are rejected explicitly; they are never silently converted or overwritten.
 

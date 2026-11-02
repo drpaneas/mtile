@@ -83,6 +83,7 @@ type Context struct {
 	staticN     uint16
 
 	nativeAudio *audio.Controller
+	pcmAudio    *audio.PCMController
 	saveMemory  *SaveMemory
 	saveWait    uint8
 	pause       pauseState

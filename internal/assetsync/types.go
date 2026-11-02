@@ -185,6 +185,7 @@ type Assets struct {
 	Project      Project
 	AudioVersion int
 	NativeAudio  *NativeAudioAssets
+	DirectAudio  *DirectAudioAssets
 
 	Palette              Palette
 	PaletteROM           [256]uint16

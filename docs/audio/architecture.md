@@ -3,7 +3,8 @@
 ## Decision
 
 Audio v2 uses only the four Game Boy PSG channels present in the GBA. Direct
-Sound, PCM samples, software oscillators, and software mixing are deferred.
+Sound is a separate, opt-in [imported audio companion](samples.md), implemented
+with Maxmod. The PSG v2 component itself does not mix PCM or change its schema.
 
 ```text
 fixed command queue

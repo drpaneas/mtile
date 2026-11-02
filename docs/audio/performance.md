@@ -1,5 +1,8 @@
 # PSG performance
 
+For imported WAV and tracker playback through Maxmod Direct Sound, read the
+separate [mTile/Butano performance comparison](imported-performance.md).
+
 ## Budget model
 
 Audio v2 performs no per-sample work. CH1–CH4 generate sound in hardware. The

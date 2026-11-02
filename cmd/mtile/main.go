@@ -53,6 +53,8 @@ func runWithInput(args []string, stdin io.Reader, stdout, stderr io.Writer) erro
 		return runLSP(args[1:], stdin, stdout, stderr)
 	case "lint":
 		return runLint(args[1:], stdout, stderr)
+	case "import-audio":
+		return runImportAudio(args[1:], stdout, stderr)
 	case "render-audio":
 		return runRenderAudio(args[1:], stdout)
 	case "help", "-h", "--help":
@@ -72,6 +74,7 @@ Commands:
   edit   open the Sprites, Map, Audio, Code, and Play IDE
   lsp    serve Lua completion, hover, and live diagnostics over stdio
   lint   review Lua for Effective mTile performance opportunities
+  import-audio  import WAV effects and MOD/XM/S3M/IT music with Maxmod
   render-audio  render the PSG editor preview to a WAV file
 
 Run mtile <command> -h for flags.`

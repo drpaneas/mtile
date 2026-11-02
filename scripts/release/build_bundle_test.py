@@ -27,7 +27,8 @@ class BundleTest(unittest.TestCase):
         self.script = script
         for name in ("LICENSE", "scripts/release/BUNDLE-README.md", "third_party/mgba/LICENSE",
                      "docs/third-party/mgba.md", "docs/third-party/tinygo.md",
-                     "docs/third-party/TinyGo-LICENSE.txt", "fonts/JetBrainsMono/OFL.txt",
+                     "docs/third-party/TinyGo-LICENSE.txt", "runtime/maxmod/COPYING",
+                     "docs/third-party/maxmod.md", "fonts/JetBrainsMono/OFL.txt",
                      "fonts/OpenDyslexic/LICENSE.txt", "fonts/pico-8-wide.otf/license.txt"):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)

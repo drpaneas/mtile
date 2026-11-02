@@ -13,6 +13,7 @@ func (c *Context) AttachNativeAudio(controller *audio.Controller) {
 // Reading it does not enable profiling or change audio production.
 type AudioStats struct {
 	Native audio.NativeStats
+	PCM    audio.PCMStats
 }
 
 func (c *Context) AudioStats() AudioStats {
@@ -22,6 +23,9 @@ func (c *Context) AudioStats() AudioStats {
 	var stats AudioStats
 	if c.nativeAudio != nil {
 		stats.Native = c.nativeAudio.Stats()
+	}
+	if c.pcmAudio != nil {
+		stats.PCM = c.pcmAudio.PCMStats()
 	}
 	return stats
 }
@@ -57,9 +61,45 @@ func (c *Context) MusicV(id, _ Value) {
 	}
 }
 
-// SampleV preserves the asset-free compatibility no-op. Project builds
-// reject sample() because PSG channels cannot play PCM assets.
-func (c *Context) SampleV(id, volume, priority Value) {}
+// AttachPCMAudio binds an imported Direct Sound bank alongside the PSG library.
+func (c *Context) AttachPCMAudio(controller *audio.PCMController) {
+	if c != nil {
+		c.pcmAudio = controller
+	}
+}
+
+// SampleV plays one imported WAV. Volume is 0..1; priority is 0..255.
+// sample(-1) stops imported WAV voices, retaining both music systems.
+func (c *Context) SampleV(id, volume, priority Value) {
+	if c == nil || c.pcmAudio == nil {
+		return
+	}
+	if (volume.Kind != KindNil && volume.Kind != KindNumber) || (priority.Kind != KindNil && priority.Kind != KindNumber) {
+		return
+	}
+	n := id.IntOr(-2)
+	v := volume.NumberOr(One)
+	p := priority.IntOr(160)
+	if priority.Kind == KindNumber && priority.Num != FromInt(p) {
+		return
+	}
+	if v < 0 || v > One || (id.Kind != KindNumber || id.Num != FromInt(n)) {
+		return
+	}
+	c.pcmAudio.Sample(n, int((int64(v)*255)>>16), p)
+}
+
+// PCMMusicV starts an imported tracker song; omitted loop means true.
+func (c *Context) PCMMusicV(id, loop Value) {
+	if c == nil || c.pcmAudio == nil || id.Kind != KindNumber {
+		return
+	}
+	n := id.Int()
+	if id.Num != FromInt(n) {
+		return
+	}
+	c.pcmAudio.Music(n, loop.Kind == KindNil || loop.Truthy())
+}
 
 // GBANoteV queues one direct note on a fixed PSG channel. CH4 ignores note but
 // still requires a channel-compatible sound ID.

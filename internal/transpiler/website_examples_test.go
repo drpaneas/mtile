@@ -26,6 +26,9 @@ func TestWebsiteAPIExamples(t *testing.T) {
 			opts.PoseNames = []string{"hero_idle", "hero_hold"}
 			opts.Renderer = RendererMode4
 			opts.NativeAudio = nativeTranspilerOptions(t).NativeAudio
+			if entry.Name == "sample" || entry.Name == "pcm_music" {
+				opts.DirectAudio = directAudioFixture(t)
+			}
 			opts.PoseVariantBaseCount = len(opts.PoseIndex)
 			opts.PoseVariantNames = []string{"alternate"}
 			opts.PoseIndex = append(opts.PoseIndex, opts.PoseIndex...)

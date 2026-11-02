@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537600,
+    "instructionCycles": 7091400,
+    "waitInstructionCycles": 53400,
+    "activeEventCycles": 34800,
+    "haltEventCycles": 161411400,
+    "otherAddressCycles": 79800,
+    "instructions": 3812100,
+    "mailboxMemory": [
+      33512,
+      10624,
+      284,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50364284,
+        "maxSP": 50364320,
+        "observedRange": 36
+      },
+      {
+        "mode": 19,
+        "minSP": 50364368,
+        "maxSP": 50364384,
+        "observedRange": 16
+      },
+      {
+        "mode": 31,
+        "minSP": 50363920,
+        "maxSP": 50364136,
+        "observedRange": 216
+      }
+    ],
+    "mixerCapacity": 20,
+    "minObservedVoices": 0,
+    "maxObservedVoices": 0
+  },
+  "categoriesPerTick": {
+    "other": 6770.0,
+    "publication": 181.0,
+    "wait": 178.0,
+    "maxmod": 16085.0,
+    "irq": 158.0
+  },
+  "cpu": {
+    "mean": 23460,
+    "median": 23460.0,
+    "p95": 23460,
+    "maximum": 23460,
+    "minimum": 23460,
+    "percent": 4.175922761449077
+  },
+  "top": [
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12668.0
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 972.0
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 940.0
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::update_impl()",
+      "cyclesPerTick": 876.0
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 494.0
+    },
+    {
+      "name": "bn::audio_manager::execute_commands()",
+      "cyclesPerTick": 490.0
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 480.0
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 390.0
+    },
+    {
+      "name": "bn::palettes_bank::update()",
+      "cyclesPerTick": 332.0
+    },
+    {
+      "name": "bn::hblank_effects_manager::update()",
+      "cyclesPerTick": 234.0
+    },
+    {
+      "name": "bn::hw::timer::ticks()",
+      "cyclesPerTick": 216.0
+    },
+    {
+      "name": "bn::bg_blocks_manager::update()",
+      "cyclesPerTick": 194.0
+    },
+    {
+      "name": "publish",
+      "cyclesPerTick": 181.0
+    },
+    {
+      "name": "bn::sprite_tiles_manager::update()",
+      "cyclesPerTick": 174.0
+    },
+    {
+      "name": "bn::sprites_manager::commit(bool)",
+      "cyclesPerTick": 172.0
+    },
+    {
+      "name": "bn::core::update()",
+      "cyclesPerTick": 164.0
+    },
+    {
+      "name": "bn::sprite_affine_mats_manager::update()",
+      "cyclesPerTick": 156.0
+    },
+    {
+      "name": "bn::sprites_manager::update()",
+      "cyclesPerTick": 142.0
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::_vblank_intr()",
+      "cyclesPerTick": 138.0
+    },
+    {
+      "name": "bn::hblank_effects_manager::commit()",
+      "cyclesPerTick": 138.0
+    },
+    {
+      "name": "bn::bg_blocks_manager::commit_uncompressed(bool)",
+      "cyclesPerTick": 134.0
+    },
+    {
+      "name": "bn::palettes_bank::retrieve_commit_data() const",
+      "cyclesPerTick": 130.0
+    },
+    {
+      "name": "bn::bgs_manager::commit_big_maps()",
+      "cyclesPerTick": 126.0
+    },
+    {
+      "name": "interrupt_found",
+      "cyclesPerTick": 124.0
+    },
+    {
+      "name": "bn::audio_manager::delayed_commit()",
+      "cyclesPerTick": 122.0
+    }
+  ],
+  "cpuWithNonHaltEvents": {
+    "mean": 23576,
+    "median": 23576.0,
+    "p95": 23576,
+    "maximum": 23576,
+    "minimum": 23576,
+    "percent": 4.196570972886763
+  },
+  "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+}

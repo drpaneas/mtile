@@ -51,14 +51,15 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(errors, [])
 
     def test_api_coverage_and_renderer_contract(self):
-        supported = build.registry() - {'sample'}
+        supported = build.registry()
         indexed = {api['name'] for api in build.APIS}
         self.assertEqual(supported, indexed)
         for name in indexed:
             self.assertIn(name, build.classifications())
             self.assertTrue((self.output / 'api' / f'{name}.html').is_file())
-        self.assertFalse((self.output / 'api/sample.html').exists())
-        self.assertIn('does not support PCM', (self.output / 'api.html').read_text())
+        self.assertTrue((self.output / 'api/sample.html').exists())
+        self.assertTrue((self.output / 'api/pcm_music.html').exists())
+        self.assertIn('imported Direct Sound audio', (self.output / 'api.html').read_text())
         self.assertIn('Mode 4 drawing', (self.output / 'api/rectfill.html').read_text())
         self.assertIn('Mode 0 with conditions', (self.output / 'api/spr.html').read_text())
 

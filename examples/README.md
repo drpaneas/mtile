@@ -47,6 +47,7 @@ and one visible checkpoint at a time. See [choose one small game](../docs/small-
 | [tile-links](tile-links/README.md) | Paint flowers and lamps in Map Lab; linked tiles draw their poses and clips | Scroll; press A to pick a flower; unlink the flower tile in Sprite Lab |
 | [audio-gb-melody](audio-gb-melody/README.md) | Start/stop a looping four-channel melody | A plays; B stops; edit one channel in Music Lab |
 | [audio-gb-song](audio-gb-song/README.md) | Arrange an intro followed by a looping section | Change a part and hear the transition |
+| [audio-only](audio-only/README.md) | Hear four imported tracker voices with no gameplay | Read the matched Butano example and measured CPU/RAM explanation |
 
 ## Go further
 

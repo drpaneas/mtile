@@ -1,0 +1,471 @@
+{
+  "variant": "butano-default",
+  "workload": {
+    "name": "mixed4",
+    "kind": 4,
+    "voices": 4,
+    "effects": 4
+  },
+  "romBytes": 73184,
+  "romSHA256": "9e6edefde44dacb2fe89e2d4fcf572cb4ab26f7c0a288aa6856c12fc1fe2141b",
+  "elfSHA256": "f6dd002f63f4b4e2f7ee7bedda31184b946d6497f99468795f008786a777047d",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168530574,
+      "instructionCycles": 23288863,
+      "waitInstructionCycles": 53400,
+      "activeEventCycles": 84368,
+      "haltEventCycles": 145157343,
+      "otherAddressCycles": 79800,
+      "instructions": 11286858,
+      "mailboxMemory": [
+        33512,
+        10624,
+        292,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50364284,
+          "maxSP": 50364320,
+          "observedRange": 36
+        },
+        {
+          "mode": 19,
+          "minSP": 50364368,
+          "maxSP": 50364384,
+          "observedRange": 16
+        },
+        {
+          "mode": 31,
+          "minSP": 50363848,
+          "maxSP": 50364128,
+          "observedRange": 280
+        }
+      ],
+      "mixerCapacity": 20,
+      "minObservedVoices": 4,
+      "maxObservedVoices": 8
+    },
+    "categoriesPerTick": {
+      "other": 8706.056666666667,
+      "publication": 203.0,
+      "wait": 178.0,
+      "maxmod": 68118.48666666666,
+      "irq": 158.0
+    },
+    "cpu": {
+      "mean": 77451.54333333333,
+      "median": 76398.5,
+      "p95": 94773,
+      "maximum": 101387,
+      "minimum": 57562,
+      "percent": 13.786515887256018
+    },
+    "top": [
+      {
+        "name": ".mpmaa_10",
+        "cyclesPerTick": 23468.243333333332
+      },
+      {
+        "name": ".mpm_copy2",
+        "cyclesPerTick": 12664.666666666666
+      },
+      {
+        "name": ".mpmac_6",
+        "cyclesPerTick": 10574.093333333334
+      },
+      {
+        "name": ".fetch",
+        "cyclesPerTick": 2662.7733333333335
+      },
+      {
+        "name": ".mpm_cloop",
+        "cyclesPerTick": 2088.5333333333333
+      },
+      {
+        "name": ".mix_remaining",
+        "cyclesPerTick": 1719.59
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+        "cyclesPerTick": 1611.8666666666666
+      },
+      {
+        "name": "mppProcessTick",
+        "cyclesPerTick": 1409.5866666666666
+      },
+      {
+        "name": "mmUpdateEffects",
+        "cyclesPerTick": 1064.5333333333333
+      },
+      {
+        "name": "mmMixerMix",
+        "cyclesPerTick": 1042.66
+      },
+      {
+        "name": ".fetchsmall",
+        "cyclesPerTick": 971.62
+      },
+      {
+        "name": ".mpm_next",
+        "cyclesPerTick": 905.6666666666666
+      },
+      {
+        "name": "bn::core::(anonymous namespace)::update_impl()",
+        "cyclesPerTick": 876.0
+      },
+      {
+        "name": "bn::audio_manager::execute_commands()",
+        "cyclesPerTick": 676.5
+      },
+      {
+        "name": ".mpm_mix_short",
+        "cyclesPerTick": 661.5266666666666
+      },
+      {
+        "name": ".mpm_mix_complete",
+        "cyclesPerTick": 608.0666666666667
+      },
+      {
+        "name": ".mpm_remix_test",
+        "cyclesPerTick": 595.04
+      },
+      {
+        "name": "mmFrame",
+        "cyclesPerTick": 564.4266666666666
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "cyclesPerTick": 555.52
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_envelopes",
+        "cyclesPerTick": 530.88
+      },
+      {
+        "name": "mpp_Update_ACHN_notest",
+        "cyclesPerTick": 485.44
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_disable_and_panning",
+        "cyclesPerTick": 477.12
+      },
+      {
+        "name": ".medfetch",
+        "cyclesPerTick": 338.1
+      },
+      {
+        "name": "bn::palettes_bank::update()",
+        "cyclesPerTick": 332.0
+      },
+      {
+        "name": "mpp_InstrumentPointer",
+        "cyclesPerTick": 324.6933333333333
+      }
+    ],
+    "cpuWithNonHaltEvents": {
+      "mean": 77732.77,
+      "median": 76677.0,
+      "p95": 95113,
+      "maximum": 101781,
+      "minimum": 57785,
+      "percent": 13.836574746525404
+    },
+    "cpuMetric": "non-wait instruction cycles; excludes event advancement"
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959204,
+        "overflows": 0,
+        "peak": 5985,
+        "rmsLeft": 1559.0430075597587,
+        "rmsMono": 1442.397497891015,
+        "rmsRight": 1559.218544740217,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 33512,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959204,
+        "overflows": 0,
+        "peak": 5985,
+        "rmsLeft": 1559.0430075597587,
+        "rmsMono": 1442.397497891015,
+        "rmsRight": 1559.218544740217,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 33512,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".iwram",
+        "bytes": 8432,
+        "address": 50331648
+      },
+      {
+        "name": ".bss",
+        "bytes": 2180,
+        "address": 50340080
+      },
+      {
+        "name": ".data",
+        "bytes": 0,
+        "address": 50342260
+      },
+      {
+        "name": ".init_array",
+        "bytes": 8,
+        "address": 50342260
+      },
+      {
+        "name": ".fini_array",
+        "bytes": 4,
+        "address": 50342268
+      },
+      {
+        "name": ".iwram0",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram1",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram2",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram3",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram4",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram5",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram6",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram7",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram8",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram9",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".ewram",
+        "bytes": 156,
+        "address": 33554432
+      },
+      {
+        "name": ".sbss",
+        "bytes": 33356,
+        "address": 33554588
+      },
+      {
+        "name": ".pad",
+        "bytes": 8,
+        "address": 33587944
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "_ZN2bn15sprites_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 9812,
+        "address": 33575008
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_120external_data_bufferE",
+        "bytes": 6724,
+        "address": 33556768
+      },
+      {
+        "name": "_ZN2bn20sprite_tiles_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 5748,
+        "address": 33569260
+      },
+      {
+        "name": "_ZN2bn16palettes_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 3408,
+        "address": 33563604
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_engine_bufferE",
+        "bytes": 2736,
+        "address": 33584820
+      },
+      {
+        "name": "_ZN2bn26sprite_affine_mats_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 2248,
+        "address": 33567012
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_mixing_bufferE",
+        "bytes": 1056,
+        "address": 50340284
+      },
+      {
+        "name": "mmUpdateChannel_T0",
+        "bytes": 796,
+        "address": 50334008
+      },
+      {
+        "name": "_ZN2bn17bg_blocks_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 744,
+        "address": 33555036
+      },
+      {
+        "name": "_ZN2bn11bgs_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 692,
+        "address": 33555780
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "bytes": 544,
+        "address": 50336148
+      },
+      {
+        "name": "mppProcessTick",
+        "bytes": 526,
+        "address": 50332652
+      },
+      {
+        "name": "_ZN2bn13audio_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 448,
+        "address": 33554588
+      },
+      {
+        "name": "mmReadPattern",
+        "bytes": 392,
+        "address": 50333508
+      },
+      {
+        "name": "_ZN2bn2hw4link12_GLOBAL__N_111data_bufferE",
+        "bytes": 304,
+        "address": 33587640
+      },
+      {
+        "name": "__aeabi_memcpy",
+        "bytes": 292,
+        "address": 50336704
+      },
+      {
+        "name": "_ZN2bn15sprites_manager22_check_items_on_screenERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 220,
+        "address": 50331648
+      },
+      {
+        "name": "mpp_Channel_NewNote",
+        "bytes": 208,
+        "address": 50332444
+      },
+      {
+        "name": "_ZN2bn15sprites_manager20_update_cameras_implERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 180,
+        "address": 50331964
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_113internal_dataE",
+        "bytes": 176,
+        "address": 50340108
+      },
+      {
+        "name": "mmChannelStartACHN",
+        "bytes": 176,
+        "address": 50333180
+      },
+      {
+        "name": "_ZN2bn15display_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 168,
+        "address": 33556600
+      },
+      {
+        "name": "mpph_ProcessEnvelope",
+        "bytes": 162,
+        "address": 50332280
+      },
+      {
+        "name": "mm_schannels",
+        "bytes": 160,
+        "address": 50341612
+      },
+      {
+        "name": "_ZN2bn2hw8game_pak14_slow_game_pakEv",
+        "bytes": 156,
+        "address": 33554432
+      }
+    ]
+  },
+  "ram": {
+    "ewramStatic": 33512,
+    "iwramStatic": 10624,
+    "iwramStackReservation": 0,
+    "mailbox": 512
+  },
+  "bankBytes": 11820,
+  "bankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6"
+}

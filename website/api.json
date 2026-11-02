@@ -248,6 +248,22 @@
     "note": "Create a song with this ID first. music(-1) stops song-owned notes while leaving gameplay effects independent."
   },
   {
+    "name": "pcm_music",
+    "category": "audio",
+    "signature": "pcm_music(id [, loop])",
+    "summary": "Play an imported tracker song with Direct Sound.",
+    "example": "pcm_music(0)",
+    "note": "Import MOD, XM, S3M or IT with mtile import-audio first. Loop defaults to true. pcm_music(-1) stops the imported song; music(id) retains its PSG meaning."
+  },
+  {
+    "name": "sample",
+    "category": "audio",
+    "signature": "sample(id [, volume [, priority]])",
+    "summary": "Play an imported WAV sound effect.",
+    "example": "sample(0, 0.75)",
+    "note": "Import a PCM WAV with mtile import-audio first. Volume is 0–1 (default 1); priority is 0–255 (default 160). sample(-1) stops imported WAV effects. It does not stop tracker or PSG music."
+  },
+  {
     "name": "gba_note",
     "category": "audio",
     "signature": "gba_note(channel, note, sound_id [, duration_ticks])",

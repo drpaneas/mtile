@@ -14,7 +14,7 @@ import (
 // builds. This lets an installed editor materialize its runtime without
 // relying on the original Mtile source checkout.
 //
-//go:embed go.mod LICENSE crt0/gba.s crt0/gba.ld *.go audio/*.go hw/*.go
+//go:embed go.mod LICENSE crt0/gba.s crt0/gba.ld *.go audio/*.go hw/*.go maxmod
 var runtimeSource embed.FS
 
 // MaterializeSource writes the embedded runtime module below destination.

@@ -11,8 +11,8 @@ Read the [language and project reference](reference.md) for the Lua subset,
 16:16 numbers, callbacks, source modules, and input mapping. The
 [renderer contract](render-modes.md) defines exact accepted Mode 0 call shapes
 and AUTO fallback conditions; a common signature here is not a promise that
-every argument expression can use Mode 0. Audio v2 does not support PCM
-`sample`; use the [four-channel audio API](audio/api-v2.md).
+every argument expression can use Mode 0. Use the [four-channel audio API](audio/api-v2.md)
+for PSG music, or [import WAV and tracker songs](audio/samples.md) for Direct Sound.
 
 ## Browse by task
 
@@ -498,6 +498,34 @@ Create a song with this ID first. music(-1) stops song-owned notes while leaving
 
 ```lua
 music(0)
+```
+
+### pcm_music
+
+```text
+pcm_music(id [, loop])
+```
+
+Play an imported tracker song with Direct Sound.
+
+Import MOD, XM, S3M or IT with mtile import-audio first. Loop defaults to true. pcm_music(-1) stops the imported song; music(id) retains its PSG meaning.
+
+```lua
+pcm_music(0)
+```
+
+### sample
+
+```text
+sample(id [, volume [, priority]])
+```
+
+Play an imported WAV sound effect.
+
+Import a PCM WAV with mtile import-audio first. Volume is 0–1 (default 1); priority is 0–255 (default 160). sample(-1) stops imported WAV effects. It does not stop tracker or PSG music.
+
+```lua
+sample(0, 0.75)
 ```
 
 ### gba_note

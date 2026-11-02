@@ -74,6 +74,10 @@ func Load(projectDir string) (*Assets, error) {
 		return nil, err
 	}
 	assets.AudioVersion = audioVersion
+	assets.DirectAudio, err = LoadDirectAudio(projectDir)
+	if err != nil {
+		return nil, err
+	}
 	if audioVersion == NativeAudioSchemaVersion {
 		native, err := LoadNativeAudio(projectDir)
 		if err != nil {

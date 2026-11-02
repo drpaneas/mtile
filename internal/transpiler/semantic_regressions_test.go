@@ -645,7 +645,7 @@ func TestBuiltinResultAritiesAreExhaustivelyClassified(t *testing.T) {
 		"circ": true, "circfill": true, "spr": true, "sspr": true, "pspr": true, "anim": true, "map": true,
 		"camera": true, "clip": true, "pal": true, "palt": true, "color": true,
 		"pvariant": true, "cursor": true, "sset": true, "fset": true, "mset": true, "srand": true,
-		"foreach": true, "sfx": true, "music": true, "sample": true,
+		"foreach": true, "sfx": true, "music": true, "sample": true, "pcm_music": true,
 		"gba_note": true, "gba_stop": true, "printh": true,
 	}
 	for name, spec := range Builtins {

@@ -53,9 +53,12 @@ hardware definition; it does not silently rewrite a user-edited instrument.
 
 ## PCM/FIFO question
 
-Audio v2 does not use Direct Sound, PCM samples, FIFO A/B, DMA1/2, or a software
-mixer. Seeing those controls in the active editor or generated v2 path is a
-product bug, not a configuration problem.
+The PSG v2 Music Lab remains four-channel hardware audio. Imported WAV effects
+and MOD/XM/S3M/IT music use the optional [Direct Sound bank](samples.md), enabled
+with `mtile import-audio`. If `sample()` is rejected, import a WAV into that
+project first; if `mmutil` is missing, pass `-mmutil` or set `MMUTIL`. Import
+errors leave the previously compiled bank intact. Reload the cartridge after
+updating imported files.
 
 ## Launchkey is not detected
 

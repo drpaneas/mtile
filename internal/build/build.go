@@ -260,7 +260,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		s.emit(PhaseTranspile, "Warning: "+rendererReport.Warnings[i])
 	}
 	result.Warnings = rendererReport.Warnings
-	audioROMBytes, err := validateLinkedAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask, rendererReport.NativeAudioLinked)
+	audioROMBytes, err := validateLinkedAssetFootprintForPlanes(assets, rendererReport.MapPlaneMask, rendererReport.NativeAudioLinked, rendererReport.PCMAudioLinked)
 	if err != nil {
 		return result, err
 	}
@@ -301,6 +301,11 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	targetPath := filepath.Join(workDir, "target-gba.json")
 	if err := GenerateTarget(tinygoRoot, s.RuntimeDir, targetPath); err != nil {
 		return result, err
+	}
+	if rendererReport.PCMAudioLinked {
+		if err := addDirectAudioTarget(tinygoRoot, s.RuntimeDir, targetPath, assets.DirectAudio.Manifest.Format); err != nil {
+			return result, err
+		}
 	}
 
 	mapPath := filepath.Join(workDir, "game.map")
@@ -360,6 +365,13 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		audioVoices = 4
 		audioProfile = assets.NativeAudio.Settings.Profile
 		audioPSGRatio = assets.NativeAudio.Settings.PSGRatio
+	}
+	if rendererReport.PCMAudioLinked {
+		audioVoices += 32
+		if audioProfile != "" {
+			audioProfile += "+"
+		}
+		audioProfile += "maxmod"
 	}
 	result = Result{
 		ROMPath: outputPath, ROMSize: len(rom),
@@ -431,6 +443,7 @@ func (s Service) transpilerOptions(project assetsync.Project, assets *assetsync.
 		ObjSheet:             assets.ObjSheetROM,
 		Palette:              assets.PaletteROM[:],
 		NativeAudio:          assets.NativeAudio,
+		DirectAudio:          assets.DirectAudio,
 		Debug:                s.Debug,
 	}
 }
@@ -538,7 +551,7 @@ func validateCompiledAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneM
 	return validateLinkedAssetFootprintForPlanes(assets, mapPlaneMask, true)
 }
 
-func validateLinkedAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMask uint8, includeNativeAudio bool) (int, error) {
+func validateLinkedAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMask uint8, includeNativeAudio bool, includePCM ...bool) (int, error) {
 	if assets == nil {
 		return 0, errors.New("compiled assets are required")
 	}
@@ -553,6 +566,9 @@ func validateLinkedAssetFootprintForPlanes(assets *assetsync.Assets, mapPlaneMas
 	var audioBytes uint64
 	if includeNativeAudio && assets.NativeAudio != nil {
 		audioBytes += uint64(assetsync.CompiledNativeAudioROMBytes(assets.NativeAudio.Library))
+	}
+	if assets.DirectAudio != nil && (len(includePCM) == 0 || includePCM[0]) {
+		audioBytes += uint64(len(assets.DirectAudio.Bank) + 2*(len(assets.DirectAudio.Manifest.Music)+len(assets.DirectAudio.Manifest.Samples)))
 	}
 	mapCells := uint64(assets.MapW * assets.MapH * mapPlanePopulation(mapPlaneMask))
 	total := uint64(len(assets.SheetROM)) + mapCells*2 +
@@ -690,6 +706,9 @@ func runtimeBuildTags(report transpiler.RendererReport) string {
 			tags += ","
 		}
 		tags += staticTag
+	}
+	if report.PCMAudioLinked {
+		tags += ",mtile_pcm"
 	}
 	return tags + ",mtile_project_font"
 }

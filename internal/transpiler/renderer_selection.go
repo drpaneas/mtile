@@ -102,6 +102,7 @@ type RendererReport struct {
 	// builtin and the generated cartridge therefore contains the PSG runtime
 	// and authored audio records. Merely authoring assets does not link them.
 	NativeAudioLinked bool
+	PCMAudioLinked    bool
 	// HeapLinked reports whether generated code can allocate a Lua table/string
 	// and therefore retains collection plus the two target semispaces.
 	HeapLinked bool

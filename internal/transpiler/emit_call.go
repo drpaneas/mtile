@@ -426,6 +426,8 @@ func (g *generator) emitBuiltin(name string, argExprs []luaparser.Expr, value bo
 		return void("c.MusicV(" + argsUpTo(2) + ")")
 	case "sample":
 		return void("c.SampleV(" + argsUpTo(3) + ")")
+	case "pcm_music":
+		return void("c.PCMMusicV(" + argsUpTo(2) + ")")
 	case "gba_note":
 		return void("c.GBANoteV(" + argsUpTo(4) + ")")
 	case "gba_stop":

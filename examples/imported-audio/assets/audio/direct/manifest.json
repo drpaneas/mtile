@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "format": 25,
+  "bank": "bank-5e46923c9384aadf6bb54faf8d91d0087c223149fccd2282c1fc17e12a7da779.bin",
+  "sha256": "5e46923c9384aadf6bb54faf8d91d0087c223149fccd2282c1fc17e12a7da779",
+  "music": [
+    {
+      "name": "theme",
+      "source": "music_theme.mod",
+      "bankId": 0
+    }
+  ],
+  "samples": [
+    {
+      "name": "bell",
+      "source": "sfx_bell.wav",
+      "bankId": 2
+    }
+  ]
+}

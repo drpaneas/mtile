@@ -22,6 +22,7 @@ mtile doctor [options]
 mtile new   [options] project-dir
 mtile build [options] project-dir
 mtile lint  [options] [project-dir|entry.lua]
+mtile import-audio -project project-dir [options] audio-file ...
 mtile edit  [options] project-dir
 mtile render-audio [options] project-dir
 ```
@@ -370,8 +371,8 @@ and performance gates.
 
 ## Audio
 
-Audio v2 is the active runtime, compiler, asset format, and editor contract.
-Legacy PICO-compatible or PCM assets are rejected with an unsupported-format
+Audio v2 is the PSG runtime, asset format, and Music Lab editor contract.
+Legacy PICO-compatible or audio-v1 PCM assets are rejected with an unsupported-format
 diagnostic rather than silently converted. The superseded software mixer and its tooling have been removed.
 
 Opening Audio Studio in an older graphics-only project initializes empty v2
@@ -381,13 +382,22 @@ explicit conversion.
 Audio v2 is a deliberate hard reset around the four Game Boy PSG channels in
 the Game Boy Advance: CH1 pulse with sweep, CH2 pulse, CH3 programmable wave,
 and CH4 noise. The GBA hardware generates the sound; Mtile only schedules
-bounded register updates at 256 Hz. Direct Sound, FIFO streaming, PCM samples,
-software mixing, and audio DMA are explicitly deferred so this version stays
-small, predictable, and inexpensive on the ARM7 CPU.
+bounded register updates at 256 Hz. A PSG-only game keeps this inexpensive path.
+For the WAV effects and MOD/XM/S3M/IT tracker music supported by Butano, use
+the optional [Direct Sound import path](audio/samples.md):
+
+```sh
+mtile import-audio -project mygame theme.xm jump.wav
+```
+
+`-mmutil` selects the Maxmod converter, otherwise `MMUTIL` or `PATH` is used.
+The command prints stable `pcm_music(id)` and `sample(id)` IDs. An imported
+project builds and plays in the IDE without needing the converter again.
 
 One runtime controller owns the shared sound registers, Timer 0, and CH1–CH4.
 The v2 asset model contains `sounds.json`, `music.json`, and `settings.json`
-only. It does not contain a sample library or PCM API.
+only. Imported PCM/tracker assets have a separate versioned manifest under
+`assets/audio/direct/`; existing PSG JSON files and their IDs are preserved.
 
 The implemented design is documented in the [audio overview](audio/README.md),
 [engineering plan](audio/plan.md), [hardware model](audio/gba-hardware.md),

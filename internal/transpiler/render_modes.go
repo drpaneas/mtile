@@ -70,7 +70,7 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		"add", "del", "deli", "count", "all", "pairs", "foreach",
 		"sub", "tostr", "tonum", "chr", "ord",
 		"t", "time", "stat",
-		"sfx", "music", "sample", "gba_note", "gba_stop", "printh":
+		"sfx", "music", "sample", "pcm_music", "gba_note", "gba_stop", "printh":
 		return RendererIndependent
 	default:
 		return RendererUnknown

@@ -177,7 +177,7 @@ func builtinNoAlloc(name string) bool {
 	case "pause", "save_get", "save_set", "save_read", "save_write", "save_pending", "flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",
 		"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr",
 		"btn", "btnp", "t", "time", "stat", "tonum", "ord", "printh",
-		"sfx", "music", "sample", "gba_note", "gba_stop",
+		"sfx", "music", "sample", "pcm_music", "gba_note", "gba_stop",
 		"del", "deli", "count", "all", "pairs",
 		"sget", "sset", "fget", "fset", "mget", "mset",
 		"cls", "pset", "pget", "line", "rect", "rectfill", "circ", "circfill", "spr", "sspr", "pspr", "anim", "map",

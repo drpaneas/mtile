@@ -43,7 +43,9 @@ gba_stop(channel)
 - Calls enter the same fixed command queue as compiled music.
 
 There is no `sample`, `gba_sample`, `gba_stop_bus`, FIFO, PCM, pan, or mixer
-voice API in Audio v2.
+voice API in the PSG v2 schema. The separately versioned
+[Direct Sound companion](samples.md) enables `sample` and `pcm_music` without
+changing these PSG calls or assets.
 
 ## Go API
 
