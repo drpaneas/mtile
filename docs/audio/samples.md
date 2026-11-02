@@ -17,6 +17,11 @@ BlocksDS Maxmod player and the `mmutil` converter. See the
 
 ## Bring files into a project
 
+You can do this without typing an import command: open `mtile edit mygame`
+and choose **PCM** in the top bar. The **PCM Editor** has a three-step import
+wizard, native **Browse**, WAV audition, a project library, **Copy Lua call**,
+and **Delete asset**. See [the editor workflow](#pcm-editor-workflow).
+
 Install **mmutil**, the Maxmod converter supplied by the Butano/devkitPro or
 Wonderful/BlocksDS toolchain. It must be on your `PATH`. Alternatively set
 `MMUTIL` or pass `-mmutil /path/to/mmutil`. The upstream converter and build
@@ -47,6 +52,207 @@ The importer stores copies of source files and a compiled bank under
 bank is published before its manifest, so a failed conversion leaves the
 previous bank playable. Old bank/source files are not automatically deleted.
 Keep the generated manifest intact; reimport the sources to change it.
+
+## PCM Editor workflow
+
+![The native PCM Editor: preparing an imported WAV with GBA quality presets.](../media/pcm-editor/prepare.png)
+
+```text
+Browse for a file -> Prepare for GBA -> Import + Save -> Copy Lua call
+                         |                  |
+                    audition WAV      assets/audio/direct/
+```
+
+1. Open the project with `mtile edit mygame`, then click **PCM** in the top
+   bar and **Import audio**. **Browse** uses the desktop file picker and
+   accepts multiple files. You can also paste one full path per line and
+   choose **Next: Prepare**.
+2. For a WAV, choose a quality preset. The wizard shows the original and
+   prepared duration, sample rate, channels, bit depth and file size. Use
+   **Original WAV** and **Prepared WAV** to compare up to fifteen seconds
+   of each version. Review the space-saving advice and optional edge trim.
+   Enter a short asset name, such as `jump` or `door_open`.
+3. Choose **Import + Save**. The editor converts the source with `mmutil`,
+   saves the bank and its manifest, and shows the exact call, for example
+   `sample(0)` or `pcm_music(0)`. **Copy Lua call** copies it to the clipboard.
+   Build + Reload to hear the final cartridge mix.
+
+![The completed import shows the saved asset and its copyable Lua call.](../media/pcm-editor/ready.png)
+
+### Import many files together
+
+Select several WAV and/or tracker files in **Browse** using your desktop's
+multiple-selection controls. The left column becomes an **import queue**.
+Click each row to inspect its source/prepared format, size, advice and
+Original/Prepared WAV audition. Edit that row's asset name if needed.
+
+![The batch queue shows two WAV effects and a tracker song, with shared WAV settings and selected-file size advice.](../media/pcm-editor/batch-review.png)
+
+The preset controls marked **ALL WAVs** apply to every queued WAV. Shared
+**Trim eligible WAVs** only trims recordings with the conservative quiet
+edges described below; it skips all-quiet, loop-marked and ineligible WAVs.
+Tracker notes and instruments remain intact. Keep Source turns shared trim
+off. Select a WAV row to change these common settings in a mixed queue.
+Each fresh file selection starts with trim off; changing a preset or adding
+files to the current queue preserves that queue's explicit trim choice.
+**Add files** appends more sources; **Remove** excludes the selected queued
+file without touching an existing project asset.
+
+Files with preparation errors stay visible as **Needs attention**. Choose
+another shared preset or remove the failed row. The wizard blocks import
+while a failed row remains; it does not silently import a subset. Duplicate
+source paths are deduplicated, and initially colliding basenames receive
+suffixes such as `_2`. Duplicate names introduced by editing must be fixed
+before import. A WAV and a tracker song may share a name because their
+public ID spaces are independent.
+
+**Import N files** runs `mmutil` **once** for the complete selection and
+publishes one bank and manifest. If the batch replaces existing names,
+**Replace + Import** asks for confirmation and preserves their IDs. A failed
+conversion leaves the previously published bank playable. Completed rows
+show their exact Lua calls. **Copy Lua call** copies the selected call;
+**Copy all calls** copies a commented reference list, so pasting that list
+does not accidentally start every sound. Put tracker calls in `_init()`
+and WAV calls at their game events as shown below.
+
+![After one batch import, every row shows its actual public Lua call and the editor offers a commented reference list.](../media/pcm-editor/batch-ready.png)
+
+Batch preparation processes sources sequentially and stages the results in
+a temporary directory. The queue holds metadata; it loads one prepared
+waveform at a time for review rather than retaining all of them in editor
+RAM. Closing the wizard removes its completed temporary workspace. Original
+files are untouched. The displayed **Prepared** total adds staged WAV and
+tracker source sizes; it is not a final-bank ROM-size prediction.
+
+A selection can contain at most 512 files. The existing limits still apply:
+256 public slots per kind (including reserved deleted IDs), 24 MiB per input
+and 24 MiB for the final bank. The importer includes existing active assets
+when rebuilding the bank, so review its actual size after import.
+
+Conversion happens during **import or an explicit audio-library change**.
+Ordinary builds embed the already prepared bank; they do not repeat WAV
+preparation, trim or `mmutil` conversion, and do not require `mmutil`.
+
+No separate audio application or ffmpeg is needed to prepare a supported
+WAV. The editor accepts integer PCM 8/16/24/32-bit and IEEE float 32/64-bit
+WAV, mono or stereo, from 1–192 kHz. The direct CLI importer still requires
+the 8/16-bit integer PCM formats accepted by `mmutil`; the wizard prepares
+the broader inputs *before* calling that same importer. Compressed WAV,
+WAVE_FORMAT_EXTENSIBLE, MP3, OGG and FLAC are not decoded by this wizard;
+export those as ordinary PCM WAV first. Each input is limited to 24 MiB.
+
+| Preset | Preparation | Decision |
+| --- | --- | --- |
+| **GBA balanced** (default) | Mono, at most 16 kHz, 8-bit PCM with dither | Retains more detail within the player's approximately 16 kHz output range. |
+| **Smallest** | Mono, at most 8 kHz, 8-bit PCM with dither | About half the recording data of 16 kHz; removes more high-frequency detail. Audition voices and effects before choosing it. |
+| **Keep source** | Original 8/16-bit integer PCM WAV | Retains source rate, channels and metadata. May occupy more cartridge space; Maxmod still converts it to its GBA playback format. |
+
+The first two presets average stereo to mono, apply a windowed-sinc low-pass
+filter before downsampling, and quantize with deterministic triangular
+dither. They do not boost volume or speed it up. Trimming is off unless you
+explicitly enable **Trim quiet edges**, described below. They
+do not upsample an already lower-rate source. Mono conversion removes stereo
+placement; unusually out-of-phase stereo channels can cancel, so audition
+such recordings. Preparation rebuilds the WAV's audio data and drops source
+metadata, including authored sample-loop markers; use Keep source if those
+markers are intentional. The original external file is never modified.
+The project stores the **prepared** WAV, so keep your external master if you
+want to make a different quality choice later.
+
+For example, one second of 44.1 kHz stereo 16-bit PCM contains 176,400 bytes
+of recording data. Balanced preparation produces 16,000 bytes; Smallest
+produces 8,000 bytes, plus WAV headers before import. The final bank has
+Maxmod's own headers, padding and instrument data; read the actual **Bank**
+size in the library rather than treating the WAV size as final ROM usage.
+These options primarily save **cartridge space**. They do not reduce the
+fixed mixer RAM reservation or guarantee less CPU work per active voice.
+
+### Space-saving advice and optional quiet-edge trimming
+
+Each quality option shows its predicted prepared WAV size and percentage
+saved relative to the external source file. The selected option's actual
+prepared size is shown separately. When another preset would save at least
+**1 KiB and 10%**, the wizard gives a concrete recommendation, for example:
+
+> Try Smallest: 15.7 KiB instead of 31.3 KiB; save 15.6 KiB (50%). Select it
+> above and audition the difference.
+
+Balanced suggests Smallest when it would save space; Keep Source suggests
+Balanced first. These numbers use the preparation code's frame rounding,
+WAV header and padding rules. They describe WAV files, not final ROM-bank
+sizes or a promise that both recordings will sound equally good.
+
+The wizard also flags a **prepared** recording lasting at least **30 seconds**
+or occupying at least **256 KiB**. These are review thresholds, not import
+errors: a long narration or song may be intentional. The editor cannot know
+your game's timing or the sound's role. It suggests a shorter effect or
+tracker music and lets you keep the recording. The 24 MiB input/bank limits
+and the final cartridge build checks still apply.
+
+For WAV, quiet-edge analysis runs on the original decoded samples, **before
+mono mixing and 8-bit dither**. It checks every channel independently. An
+edge is a candidate only when its peak stays at or below **0.001 full scale
+(approximately -60 dBFS)** for at least **100 ms**. The wizard shows quiet
+time at the beginning/end and the duration an optional trim would remove.
+It retains **20 ms of padding** next to each cut. Interior pauses and brief
+edge gaps remain intact; opposing stereo channels are not mistaken for silence.
+
+![After an optional trim, the prepared recording is shorter and the Restore quiet edges action remains available.](../media/pcm-editor/trimmed.png)
+
+Choose **Trim quiet edges** to prepare that shorter recording. The button
+then becomes **Restore quiet edges**, which prepares it again from the
+external master. Compare Original WAV and Prepared WAV before saving:
+removing a leading delay changes when a sound starts after `sample(id)`,
+and removing a tail changes its total duration. Quiet tails may be intentional.
+There is no automatic cut or claim that a low-level passage is musically
+unnecessary. Keep Source disables trimming and restores the original timing.
+Entirely quiet recordings receive a warning and cannot be trimmed to an
+empty sound. WAVs with authored `smpl` loop markers also cannot be trimmed;
+use Keep Source to preserve those markers. Tracker modules are not scanned
+for silent patterns or rewritten by this analysis.
+
+All analysis and preparation happen on the desktop. No analyzer, silence
+scanner or additional allocation is introduced into the GBA game loop.
+
+Tracker files (`.mod`, `.xm`, `.s3m`, `.it`) follow the same wizard but retain
+their notes, instruments and channel layout. WAV presets do not rewrite
+tracker instruments. A WAV recording remains a `sample(id)` even if it
+contains a complete song; it does not become looping tracker music.
+Tracker audition uses the built cartridge through Build + Reload.
+
+`mmutil` is still required to create or update a bank. If it is not on PATH,
+choose **MMUTIL…** at the top of the PCM Editor and locate its executable;
+that selection lasts for the editor session. `MMUTIL` also works as an
+environment variable. An unavailable converter or failed conversion leaves
+the previously published bank playable. Conversion warnings are shown in
+the wizard. Native Browse uses macOS's file picker, Windows's file dialog,
+or `zenity`/`kdialog` on Linux; the path field is the fallback.
+
+### Replace or delete an imported asset
+
+Importing the same name and kind asks for confirmation, replaces its audio,
+and keeps its Lua ID. Choose an existing item in **Project audio** to copy
+its Lua call, audition a WAV, or choose **Delete asset**. Deletion asks for
+confirmation, rebuilds the bank without the item, then removes that item's
+project source and the previous active generated bank. Other files in the
+directory and external master recordings are left alone. Deleting the last
+item leaves a valid empty bank and the reserved ID slots.
+
+Deleting `sample(0)` never changes the meaning of `sample(1)`. The deleted
+slot remains reserved in the manifest; it is not silently reused for a new
+name. Reimporting the same name restores its old slot. Up to 256 public
+slots per kind are available, including reserved deleted slots. Literal Lua
+calls to a deleted ID fail at their source position during build; dynamic
+calls to it do nothing. Update any game code which still references the
+removed asset. Import and delete are immediate disk changes, independent
+of the sprite/PSG undo stack.
+
+The Direct Sound companion manifest now supports version 2 for reserved
+deleted slots. Existing version 1 banks still load unchanged; their first
+deletion upgrades only this companion manifest to version 2. This is
+independent of the PSG library's v2 schema. Older mTile versions cannot read
+the new deleted-slot representation; retain a Git revision of the previous
+directory if you need to build with an older release.
 
 ## Play the result
 

@@ -5,6 +5,18 @@ The measured 32-voice pacing fault is fixed, including the moving-sprite
 PCM/PSG fixtures in both renderers. Playback still has zero Lua allocations
 and collections in these audio-only programs.
 
+## PCM Editor and batch-import recheck
+
+The [current 25-configuration audit](../benchmarks/pcm-batch-audit-2026-11-02/README.md)
+also measures files prepared by the new PCM batch wizard. Paired mTile and
+Butano banks match byte for byte. Current non-wait instruction work is
+28,506 versus 27,858 cycles/update for a short WAV, 65,746 versus 63,830 for
+four music voices, and 327,087 versus 313,344 for 32 voices: about 2.3%,
+3.0% and 4.4% more work respectively. All 25 configurations keep two-refresh
+cadence in both 600-update captures, with zero Lua heap/GC in these fixtures.
+Desktop preparation adds no runtime analyzer or growing playback buffer.
+The audit also documents two corrected editor state/lifecycle bugs.
+
 ## Latest: stop polling, keep the frames steady
 
 The old engine kept checking whether enough time had passed. The new engine

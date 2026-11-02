@@ -1,0 +1,12 @@
+=== RUN   TestPCMEditorPreparedAudioROMConformance
+=== RUN   TestPCMEditorPreparedAudioROMConformance/mode4
+    pcm_editor_integration_test.go:194: prepared WAV: 982.8 Hz, RMS 5121.3; tracker RMS 4542.3; deleted IDs silent; 88 updates
+=== RUN   TestPCMEditorPreparedAudioROMConformance/mode0
+    pcm_editor_integration_test.go:194: prepared WAV: 982.8 Hz, RMS 5103.6; tracker RMS 4538.9; deleted IDs silent; 88 updates
+=== RUN   TestPCMEditorPreparedAudioROMConformance/all_deleted
+--- PASS: TestPCMEditorPreparedAudioROMConformance (6.10s)
+    --- PASS: TestPCMEditorPreparedAudioROMConformance/mode4 (2.02s)
+    --- PASS: TestPCMEditorPreparedAudioROMConformance/mode0 (2.01s)
+    --- PASS: TestPCMEditorPreparedAudioROMConformance/all_deleted (1.99s)
+PASS
+ok  	github.com/drpaneas/mtile/internal/emulator	6.466s

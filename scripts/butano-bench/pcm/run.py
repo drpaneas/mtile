@@ -19,6 +19,10 @@ def write(p,s):
     if not p.exists() or p.read_text()!=s:p.write_text(s)
 def dump(p,o):write(p,json.dumps(o,indent=2)+"\n")
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def import_assets(a,driver,project,files,log):
+    if a.prepare_quality=='raw':cmd=[driver,'import',project,a.mmutil,*files]
+    else:cmd=[driver,'batch-import',project,a.mmutil,a.prepare_quality,str(a.trim).lower(),*files]
+    run(cmd,ROOT,log)
 def run(cmd,cwd=None,log=None):
     p=subprocess.run(list(map(str,cmd)),cwd=cwd,env=ENV,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=900)
     if log:write(log,p.stdout)
@@ -66,7 +70,7 @@ def prepare(a):
     inputs=assets(work);shared=work/'shared'
     if not shared.exists():shutil.copytree(ROOT/'examples/imported-audio',shared);shutil.rmtree(shared/'assets/audio/direct')
     files=sorted(inputs.glob('*.mod'))+[inputs/'bell.wav']
-    run([driver,'import',shared,a.mmutil,*files],ROOT,work/'import.log')
+    import_assets(a,driver,shared,files,work/'import.log')
     manifest=json.loads((shared/'assets/audio/direct/manifest.json').read_text())
     assert manifest['format']==24,'Butano/devkitARM requires the MAS 0x18 converter for this comparison'
     return butano,driver,profiler,shared,manifest
@@ -86,7 +90,7 @@ def long_assets(a,driver,shared):
     with wave.open(str(source),'wb') as w:
         w.setnchannels(1);w.setsampwidth(2);w.setframerate(22050)
         w.writeframes(b''.join(struct.pack('<h',round(12000*math.sin(2*math.pi*880*i/22050))) for i in range(220500)))
-    run([driver,'import',p,a.mmutil,source],ROOT,a.work/'long-import.log')
+    import_assets(a,driver,p,[source],a.work/'long-import.log')
     return p,json.loads((p/'assets/audio/direct/manifest.json').read_text())
 
 def mtile_build(a,driver,shared,w,variant):
@@ -223,10 +227,10 @@ def capture(a,driver,rom,out):
 
 def main():
     global ENV
-    ap=argparse.ArgumentParser();ap.add_argument('--work',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-pcm-compare-20261102'));ap.add_argument('--out',type=pathlib.Path,default=ROOT/'docs/benchmarks/imported-audio-performance-2026-11-02');ap.add_argument('--butano',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-butano-20261029'));ap.add_argument('--mmutil',type=pathlib.Path,required=True);ap.add_argument('--ticks',type=int,default=300);ap.add_argument('--samples',type=int,default=600);ap.add_argument('--warmup',type=int,default=60);ap.add_argument('--only',default='');ap.add_argument('--variants',default='',help='Exact comma-separated build variants');ap.add_argument('--rebuild',action='store_true');a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--work',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-pcm-compare-20261102'));ap.add_argument('--out',type=pathlib.Path,default=ROOT/'docs/benchmarks/imported-audio-performance-2026-11-02');ap.add_argument('--butano',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-butano-20261029'));ap.add_argument('--mmutil',type=pathlib.Path,required=True);ap.add_argument('--ticks',type=int,default=300);ap.add_argument('--samples',type=int,default=600);ap.add_argument('--warmup',type=int,default=60);ap.add_argument('--only',default='');ap.add_argument('--variants',default='',help='Exact comma-separated build variants');ap.add_argument('--rebuild',action='store_true');ap.add_argument('--prepare-quality',choices=['raw','balanced','small','source'],default='raw',help='Use the real PCM batch preparation path before comparing');ap.add_argument('--trim',action='store_true');a=ap.parse_args()
     ENV=os.environ.copy();ENV.update(DEVKITPRO='/opt/devkitpro',DEVKITARM='/opt/devkitpro/devkitARM',GOCACHE='/private/tmp/mtile-effective-guide-20261031/go-cache');ENV['PATH']='/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:'+ENV['PATH']
     butano,driver,profiler,shared,manifest=prepare(a)
-    dump(a.out/'environment.json',dict(butanoRevision=REV,mtileRevision=run(['git','rev-parse','HEAD'],ROOT).strip(),mtileDirty=True,tinygo=run(['tinygo','version']).strip(),gcc=run([PREFIX+'g++','--version']).splitlines()[0],playerSHA256=sha(ROOT/'build/player/mtile-player'),mgbaCompatSHA256=sha(ROOT/'cmd/mtile-player/mgba_halt_compat.cmake') if (ROOT/'cmd/mtile-player/mgba_halt_compat.cmake').exists() else None,profilerSHA256=sha(HERE/'native/profile.c'),mmutilSHA256=sha(a.mmutil),soundbankSHA256=sha(shared/'assets/audio/direct'/manifest['bank']),soundbankBytes=(shared/'assets/audio/direct'/manifest['bank']).stat().st_size,inputs={f.name:sha(f) for f in (a.work/'inputs').iterdir()},warmup=a.warmup,profileTicks=a.ticks,captureTicks=a.samples,cyclesPer30HzTick=BUDGET))
+    dump(a.out/'environment.json',dict(preparationQuality=a.prepare_quality,trimEligible=a.trim,butanoRevision=REV,mtileRevision=run(['git','rev-parse','HEAD'],ROOT).strip(),mtileDirty=True,tinygo=run(['tinygo','version']).strip(),gcc=run([PREFIX+'g++','--version']).splitlines()[0],playerSHA256=sha(ROOT/'build/player/mtile-player'),mgbaCompatSHA256=sha(ROOT/'cmd/mtile-player/mgba_halt_compat.cmake') if (ROOT/'cmd/mtile-player/mgba_halt_compat.cmake').exists() else None,profilerSHA256=sha(HERE/'native/profile.c'),mmutilSHA256=sha(a.mmutil),soundbankSHA256=sha(shared/'assets/audio/direct'/manifest['bank']),soundbankBytes=(shared/'assets/audio/direct'/manifest['bank']).stat().st_size,inputs={f.name:sha(f) for f in (a.work/'inputs').iterdir()},warmup=a.warmup,profileTicks=a.ticks,captureTicks=a.samples,cyclesPer30HzTick=BUDGET))
     results=[]
     for w in cases():
         case_shared,case_manifest=long_assets(a,driver,shared) if w.get('long') else (shared,manifest)

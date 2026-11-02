@@ -1,0 +1,468 @@
+{
+  "variant": "butano-matched",
+  "workload": {
+    "name": "wav",
+    "kind": 2,
+    "voices": 0,
+    "effects": 1
+  },
+  "romBytes": 73176,
+  "romSHA256": "4e8c8d4e07d875d7097410e82ff81e1804e8318004ac10f046a232ee10d2a87e",
+  "elfSHA256": "df64b808bdefce3c657fbecdcfe8b9314b66bed10b75a3d265e7007c2d588c27",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168537600,
+      "instructionCycles": 8410680,
+      "waitInstructionCycles": 53400,
+      "activeEventCycles": 33395,
+      "haltEventCycles": 160093525,
+      "otherAddressCycles": 79800,
+      "instructions": 4356530,
+      "mailboxMemory": [
+        34888,
+        10624,
+        292,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50364284,
+          "maxSP": 50364320,
+          "observedRange": 36
+        },
+        {
+          "mode": 19,
+          "minSP": 50364368,
+          "maxSP": 50364384,
+          "observedRange": 16
+        },
+        {
+          "mode": 31,
+          "minSP": 50363852,
+          "maxSP": 50364128,
+          "observedRange": 276
+        }
+      ],
+      "mixerCapacity": 32,
+      "minObservedVoices": 0,
+      "maxObservedVoices": 1,
+      "mmFrameCalls": 600,
+      "mmFrameCycles": 5980365,
+      "mmFrameMaximum": 11822,
+      "mmFrameOver160Lines": 0
+    },
+    "categoriesPerTick": {
+      "other": 7205.0,
+      "publication": 191.0,
+      "wait": 178.0,
+      "maxmod": 20037.6,
+      "irq": 158.0
+    },
+    "cpu": {
+      "mean": 27857.6,
+      "median": 28044.5,
+      "p95": 31501,
+      "maximum": 32940,
+      "minimum": 24302,
+      "percent": 4.95870357712463
+    },
+    "cpuWithNonHaltEvents": {
+      "mean": 27968.916666666668,
+      "median": 28160.5,
+      "p95": 31617,
+      "maximum": 33055,
+      "minimum": 24408,
+      "percent": 4.9785181466924895
+    },
+    "top": [
+      {
+        "name": ".mpm_copy2",
+        "cyclesPerTick": 12668.0
+      },
+      {
+        "name": ".mpmac_6",
+        "cyclesPerTick": 2679.9
+      },
+      {
+        "name": "mmUpdateEffects",
+        "cyclesPerTick": 995.1333333333333
+      },
+      {
+        "name": "mmMixerMix",
+        "cyclesPerTick": 940.0
+      },
+      {
+        "name": "bn::core::(anonymous namespace)::update_impl()",
+        "cyclesPerTick": 876.0
+      },
+      {
+        "name": ".mpm_cloop",
+        "cyclesPerTick": 823.0
+      },
+      {
+        "name": ".mpm_next",
+        "cyclesPerTick": 758.0
+      },
+      {
+        "name": "bn::audio_manager::execute_commands()",
+        "cyclesPerTick": 629.5666666666667
+      },
+      {
+        "name": "mmFrame",
+        "cyclesPerTick": 390.0
+      },
+      {
+        "name": "bn::palettes_bank::update()",
+        "cyclesPerTick": 332.0
+      },
+      {
+        "name": ".fetch",
+        "cyclesPerTick": 318.3
+      },
+      {
+        "name": "bn::hblank_effects_manager::update()",
+        "cyclesPerTick": 234.0
+      },
+      {
+        "name": "bn::hw::timer::ticks()",
+        "cyclesPerTick": 216.0
+      },
+      {
+        "name": "bn::bg_blocks_manager::update()",
+        "cyclesPerTick": 194.0
+      },
+      {
+        "name": "publish",
+        "cyclesPerTick": 191.0
+      },
+      {
+        "name": "bn::sprite_tiles_manager::update()",
+        "cyclesPerTick": 174.0
+      },
+      {
+        "name": "bn::sprites_manager::commit(bool)",
+        "cyclesPerTick": 172.0
+      },
+      {
+        "name": "bn::core::update()",
+        "cyclesPerTick": 164.0
+      },
+      {
+        "name": "bn::sprite_affine_mats_manager::update()",
+        "cyclesPerTick": 156.0
+      },
+      {
+        "name": "bn::sprites_manager::update()",
+        "cyclesPerTick": 142.0
+      },
+      {
+        "name": "bn::core::(anonymous namespace)::_vblank_intr()",
+        "cyclesPerTick": 138.0
+      },
+      {
+        "name": "bn::hblank_effects_manager::commit()",
+        "cyclesPerTick": 138.0
+      },
+      {
+        "name": "bn::audio_manager::delayed_commit()",
+        "cyclesPerTick": 136.0
+      },
+      {
+        "name": "bn::bg_blocks_manager::commit_uncompressed(bool)",
+        "cyclesPerTick": 134.0
+      },
+      {
+        "name": "bn::palettes_bank::retrieve_commit_data() const",
+        "cyclesPerTick": 130.0
+      }
+    ]
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 523114,
+        "overflows": 0,
+        "peak": 778,
+        "rmsLeft": 209.85830640125133,
+        "rmsMono": 209.85830640125133,
+        "rmsRight": 209.85830640125133,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 34888,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 523114,
+        "overflows": 0,
+        "peak": 778,
+        "rmsLeft": 209.85830640125133,
+        "rmsMono": 209.85830640125133,
+        "rmsRight": 209.85830640125133,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 34888,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".iwram",
+        "bytes": 8432,
+        "address": 50331648
+      },
+      {
+        "name": ".bss",
+        "bytes": 2180,
+        "address": 50340080
+      },
+      {
+        "name": ".data",
+        "bytes": 0,
+        "address": 50342260
+      },
+      {
+        "name": ".init_array",
+        "bytes": 8,
+        "address": 50342260
+      },
+      {
+        "name": ".fini_array",
+        "bytes": 4,
+        "address": 50342268
+      },
+      {
+        "name": ".iwram0",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram1",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram2",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram3",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram4",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram5",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram6",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram7",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram8",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram9",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".ewram",
+        "bytes": 156,
+        "address": 33554432
+      },
+      {
+        "name": ".sbss",
+        "bytes": 34732,
+        "address": 33554588
+      },
+      {
+        "name": ".pad",
+        "bytes": 8,
+        "address": 33589320
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "_ZN2bn15sprites_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 9812,
+        "address": 33575344
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_120external_data_bufferE",
+        "bytes": 6724,
+        "address": 33557104
+      },
+      {
+        "name": "_ZN2bn20sprite_tiles_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 5748,
+        "address": 33569596
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_engine_bufferE",
+        "bytes": 3744,
+        "address": 33585156
+      },
+      {
+        "name": "_ZN2bn16palettes_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 3408,
+        "address": 33563940
+      },
+      {
+        "name": "_ZN2bn26sprite_affine_mats_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 2248,
+        "address": 33567348
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_mixing_bufferE",
+        "bytes": 1056,
+        "address": 50340284
+      },
+      {
+        "name": "mmUpdateChannel_T0",
+        "bytes": 796,
+        "address": 50334008
+      },
+      {
+        "name": "_ZN2bn13audio_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 784,
+        "address": 33554588
+      },
+      {
+        "name": "_ZN2bn17bg_blocks_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 744,
+        "address": 33555372
+      },
+      {
+        "name": "_ZN2bn11bgs_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 692,
+        "address": 33556116
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "bytes": 544,
+        "address": 50336148
+      },
+      {
+        "name": "mppProcessTick",
+        "bytes": 526,
+        "address": 50332652
+      },
+      {
+        "name": "mmReadPattern",
+        "bytes": 392,
+        "address": 50333508
+      },
+      {
+        "name": "_ZN2bn2hw4link12_GLOBAL__N_111data_bufferE",
+        "bytes": 304,
+        "address": 33589016
+      },
+      {
+        "name": "__aeabi_memcpy",
+        "bytes": 292,
+        "address": 50336704
+      },
+      {
+        "name": "_ZN2bn15sprites_manager22_check_items_on_screenERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 220,
+        "address": 50331648
+      },
+      {
+        "name": "mpp_Channel_NewNote",
+        "bytes": 208,
+        "address": 50332444
+      },
+      {
+        "name": "_ZN2bn15sprites_manager20_update_cameras_implERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 180,
+        "address": 50331964
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_113internal_dataE",
+        "bytes": 176,
+        "address": 50340108
+      },
+      {
+        "name": "mmChannelStartACHN",
+        "bytes": 176,
+        "address": 50333180
+      },
+      {
+        "name": "_ZN2bn15display_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 168,
+        "address": 33556936
+      },
+      {
+        "name": "mpph_ProcessEnvelope",
+        "bytes": 162,
+        "address": 50332280
+      },
+      {
+        "name": "mm_schannels",
+        "bytes": 160,
+        "address": 50341612
+      },
+      {
+        "name": "_ZN2bn2hw8game_pak14_slow_game_pakEv",
+        "bytes": 156,
+        "address": 33554432
+      }
+    ]
+  },
+  "bankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6",
+  "bankBytes": 11820
+}

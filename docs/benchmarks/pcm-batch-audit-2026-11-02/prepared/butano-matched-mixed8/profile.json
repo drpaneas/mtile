@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168528686,
+    "instructionCycles": 28483795,
+    "waitInstructionCycles": 53400,
+    "activeEventCycles": 100405,
+    "haltEventCycles": 139944486,
+    "otherAddressCycles": 79800,
+    "instructions": 13544440,
+    "mailboxMemory": [
+      34888,
+      10624,
+      292,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50364284,
+        "maxSP": 50364320,
+        "observedRange": 36
+      },
+      {
+        "mode": 19,
+        "minSP": 50364368,
+        "maxSP": 50364384,
+        "observedRange": 16
+      },
+      {
+        "mode": 31,
+        "minSP": 50363848,
+        "maxSP": 50364128,
+        "observedRange": 280
+      }
+    ],
+    "mixerCapacity": 32,
+    "minObservedVoices": 4,
+    "maxObservedVoices": 12,
+    "mmFrameCalls": 600,
+    "mmFrameCycles": 25282962,
+    "mmFrameMaximum": 61206,
+    "mmFrameOver160Lines": 0
+  },
+  "categoriesPerTick": {
+    "other": 9861.59,
+    "publication": 203.0,
+    "wait": 178.0,
+    "maxmod": 84279.39333333333,
+    "irq": 158.0
+  },
+  "cpu": {
+    "mean": 94767.98333333334,
+    "median": 96606.0,
+    "p95": 128080,
+    "maximum": 141850,
+    "minimum": 58914,
+    "percent": 16.868873770600747
+  },
+  "cpuWithNonHaltEvents": {
+    "mean": 95102.66666666667,
+    "median": 96942.5,
+    "p95": 128483,
+    "maximum": 142268,
+    "minimum": 59086,
+    "percent": 16.928448013974332
+  },
+  "top": [
+    {
+      "name": ".mpmaa_10",
+      "cyclesPerTick": 23468.243333333332
+    },
+    {
+      "name": ".mpmac_6",
+      "cyclesPerTick": 21148.18666666667
+    },
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12664.666666666666
+    },
+    {
+      "name": ".fetch",
+      "cyclesPerTick": 3927.2266666666665
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 3018.4
+    },
+    {
+      "name": ".mix_remaining",
+      "cyclesPerTick": 2012.2966666666666
+    },
+    {
+      "name": "mppProcessTick",
+      "cyclesPerTick": 1997.5733333333333
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+      "cyclesPerTick": 1611.8666666666666
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 1389.6666666666667
+    },
+    {
+      "name": ".fetchsmall",
+      "cyclesPerTick": 1252.9533333333334
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 1157.0666666666666
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 1042.66
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::update_impl()",
+      "cyclesPerTick": 876.0
+    },
+    {
+      "name": "bn::audio_manager::execute_commands()",
+      "cyclesPerTick": 870.4666666666667
+    },
+    {
+      "name": ".mpm_mix_short",
+      "cyclesPerTick": 864.4066666666666
+    },
+    {
+      "name": ".mpm_mix_complete",
+      "cyclesPerTick": 787.96
+    },
+    {
+      "name": ".mpm_remix_test",
+      "cyclesPerTick": 777.44
+    },
+    {
+      "name": "mme_get_mix_channel_index",
+      "cyclesPerTick": 624.8
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 564.4266666666666
+    },
+    {
+      "name": "__aeabi_idivmod",
+      "cyclesPerTick": 555.52
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_envelopes",
+      "cyclesPerTick": 530.88
+    },
+    {
+      "name": "mpp_Update_ACHN_notest",
+      "cyclesPerTick": 485.44
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_disable_and_panning",
+      "cyclesPerTick": 477.12
+    },
+    {
+      "name": ".medfetch",
+      "cyclesPerTick": 453.3666666666667
+    },
+    {
+      "name": ".end_fetch",
+      "cyclesPerTick": 378.56
+    }
+  ]
+}

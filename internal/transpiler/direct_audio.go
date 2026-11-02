@@ -52,7 +52,7 @@ func (g *generator) validateDirectAudioCalls() error {
 			if name == "sample" {
 				items = g.opts.DirectAudio.Manifest.Samples
 			}
-			if id, literal := staticNumberLiteral(call.Args[0]); literal && (id != math.Trunc(id) || id < -1 || id >= float64(len(items))) {
+			if id, literal := staticNumberLiteral(call.Args[0]); literal && (id != math.Trunc(id) || id < -1 || id >= float64(len(items)) || id >= 0 && items[int(id)].Deleted) {
 				first = fmt.Errorf("transpiler: %s: %s ID %g is not present in the imported audio manifest", call.Pos(), name, id)
 				return
 			}

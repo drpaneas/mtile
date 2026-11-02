@@ -20,7 +20,7 @@ func TestDirectAudioValidatesBankAndCompanionSchema(t *testing.T) {
 	}
 	for _, mutate := range []func(*DirectAudioManifest, []byte){
 		func(m *DirectAudioManifest, b []byte) { b[len(b)-1] ^= 1 },
-		func(m *DirectAudioManifest, b []byte) { m.Version = 2 },
+		func(m *DirectAudioManifest, b []byte) { m.Version = 3 },
 		func(m *DirectAudioManifest, b []byte) { m.Samples[0].BankID = 65535 },
 		func(m *DirectAudioManifest, b []byte) { m.Music[0].Source = "../escape.mod" },
 	} {

@@ -268,6 +268,8 @@ var Builtins = map[string]BuiltinSpec{
 	"sub": {"Sub", 2, 3, 1}, "tostr": {"Tostr", 1, 2, 1}, "tonum": {"Tonum", 1, 1, 1},
 	"chr": {"Chr", 1, 1, 1}, "ord": {"Ord", 1, 2, 1},
 	"t": {"T", 0, 0, 1}, "time": {"Time", 0, 0, 1}, "stat": {"StatV", 1, 1, 1}, "sfx": {"SFXV", 1, 4, 0},
+	// Imported IDs stay stable after deletion: deleted literals fail validation;
+	// dynamic calls to deleted slots do nothing in either renderer.
 	"music": {"MusicV", 0, 2, 0}, "sample": {"SampleV", 1, 3, 0},
 	"pcm_music": {"PCMMusicV", 1, 2, 0},
 	"gba_note":  {"GBANoteV", 3, 4, 0}, "gba_stop": {"GBAStopV", 1, 1, 0}, "printh": {"noop", 1, 2, 0},

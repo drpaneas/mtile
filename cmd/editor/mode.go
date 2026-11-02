@@ -235,6 +235,7 @@ func (g *Game) drawEditorTabs(screen *ebiten.Image) {
 		drawTextCentered(screen, fmt.Sprintf("%d  %s", index+1, primaryModeLabel(mode)), r, colorText)
 	}
 	drawFontButton(screen, fontButtonRect(), "FONT", g.fontEditor.open, colorSprite)
+	drawFontButton(screen, pcmButtonRect(), "PCM", g.pcm.open, colorMusic)
 	active := editorTabRect(g.mode)
 	fillRect(screen, editor.Rect{X: active.X, Y: active.Y + active.H - 3, W: active.W, H: 3}, colorSprite)
 }

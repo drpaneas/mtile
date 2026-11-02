@@ -1,0 +1,5 @@
+--- FAIL: TestPCMBatchNewSelectionDoesNotInheritAnEarlierTrimOptIn (0.24s)
+    pcm_editor_batch_test.go:202: new selection silently inherited an earlier trim opt-in
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/editor	1.330s
+FAIL

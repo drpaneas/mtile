@@ -14,9 +14,10 @@ import (
 // Direct Sound is an opt-in companion asset, not a reinterpretation of the
 // authored PSG v2 library. Public IDs stay stable across repeated imports.
 type DirectAudioItem struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
-	BankID int    `json:"bankId"`
+	Name    string `json:"name"`
+	Source  string `json:"source"`
+	BankID  int    `json:"bankId"`
+	Deleted bool   `json:"deleted,omitempty"`
 }
 type DirectAudioManifest struct {
 	Version int               `json:"version"`
@@ -56,7 +57,7 @@ func LoadDirectAudio(project string) (*DirectAudioAssets, error) {
 // playback code sees it. Both current BlocksDS and devkitPro MAS layouts are
 // selected explicitly; they must never be confused by the target player.
 func ValidateDirectAudio(m DirectAudioManifest, bank []byte) error {
-	if m.Version != 1 || (m.Format != 0x18 && m.Format != 0x19) {
+	if (m.Version != 1 && m.Version != 2) || (m.Format != 0x18 && m.Format != 0x19) {
 		return errors.New("unsupported Direct Sound manifest or Maxmod format")
 	}
 	if len(bank) < 12 || len(bank) > 24<<20 || string(bank[4:12]) != "*maxmod*" {
@@ -67,7 +68,13 @@ func ValidateDirectAudio(m DirectAudioManifest, bank []byte) error {
 		return errors.New("Direct Sound bank checksum mismatch; run mtile import-audio again")
 	}
 	ns, nm := int(binary.LittleEndian.Uint16(bank)), int(binary.LittleEndian.Uint16(bank[2:]))
-	if nm > 256 || len(m.Music) != nm || len(m.Samples) > 256 || 12+4*(ns+nm) > len(bank) {
+	activeMusic := 0
+	for _, item := range m.Music {
+		if !item.Deleted {
+			activeMusic++
+		}
+	}
+	if nm > 256 || len(m.Music) > 256 || activeMusic != nm || len(m.Samples) > 256 || 12+4*(ns+nm) > len(bank) {
 		return errors.New("invalid Direct Sound item counts")
 	}
 	for i := 0; i < ns+nm; i++ {
@@ -90,13 +97,25 @@ func ValidateDirectAudio(m DirectAudioManifest, bank []byte) error {
 	}{{m.Music, nm}, {m.Samples, ns}} {
 		names := map[string]bool{}
 		for _, item := range group.items {
-			if !directAudioName.MatchString(item.Name) || names[item.Name] || item.BankID < 0 || item.BankID >= group.limit {
+			if !directAudioName.MatchString(item.Name) || names[item.Name] {
 				return errors.New("invalid or duplicate Direct Sound name/ID")
 			}
-			if filepath.Base(item.Source) != item.Source || item.Source == "." {
+			names[item.Name] = true
+			if item.Deleted {
+				if m.Version < 2 {
+					return errors.New("deleted Direct Sound IDs require manifest version 2")
+				}
+				if item.BankID != 65535 || item.Source != "" {
+					return errors.New("invalid deleted Direct Sound slot")
+				}
+				continue
+			}
+			if item.BankID < 0 || item.BankID >= group.limit {
+				return errors.New("invalid Direct Sound bank ID")
+			}
+			if item.Source == "" || filepath.Base(item.Source) != item.Source || item.Source == "." {
 				return errors.New("Direct Sound source must be one filename")
 			}
-			names[item.Name] = true
 		}
 	}
 	return nil

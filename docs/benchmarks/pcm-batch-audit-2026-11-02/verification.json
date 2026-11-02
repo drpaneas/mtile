@@ -1,0 +1,27 @@
+{
+  "configurations": 25,
+  "rawConfigurations": 19,
+  "preparedConfigurations": 6,
+  "captures": 50,
+  "updatesPerCapture": 600,
+  "profileUpdates": 300,
+  "warmupUpdates": 60,
+  "allCadenceGapsTwoRefreshes": true,
+  "allPCMOverflowAndClippingCountersZero": true,
+  "mtileHeapAndGCAllZero": true,
+  "pairedBankHashesMatch": true,
+  "profileCycleBucketsReconcile": true,
+  "beforeFixFailures": [
+    "TestPCMBatchNewSelectionDoesNotInheritAnEarlierTrimOptIn",
+    "TestPCMBatchShutdownKeepsStageUntilActiveJobFinishes"
+  ],
+  "finalGates": [
+    "editor full suite with -race and real mmutil",
+    "audioimport/assetsync/hostfiles with -race",
+    "internal/transpiler internal/build cmd/mtile",
+    "runtime all packages",
+    "native prepared-audio integration: Mode 0, Mode 4, all deleted"
+  ],
+  "matchedMixerCapacity": 32,
+  "websiteTestsPassed": 14
+}

@@ -1,0 +1,5 @@
+--- FAIL: TestPCMBatchShutdownKeepsStageUntilActiveJobFinishes (0.10s)
+    pcm_editor_batch_test.go:231: shutdown removed data still owned by the active job batch workspace is closed; select the source files again
+FAIL
+FAIL	github.com/drpaneas/mtile/cmd/editor	2.204s
+FAIL

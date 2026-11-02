@@ -52,6 +52,7 @@ type Game struct {
 	preferences            editorPreferences
 	preferencesOpen        bool
 	fontEditor             fontEditorState
+	pcm                    pcmEditorState
 
 	mode                 editorMode
 	currentColor         int
@@ -121,7 +122,7 @@ type Game struct {
 	previewPlayer *editorAudioPlayer
 
 	// Audio v2 presents composition, hardware controls, and song order in one
-	// workspace. No PCM/FIFO state is exposed in this editor.
+	// workspace. Imported PCM assets live in their separate PCM Editor.
 	nativeChannel               int
 	nativeSequence              int
 	nativeBar                   int
@@ -685,10 +686,18 @@ func (g *Game) Update() error {
 		g.updateFontEditor()
 		return nil
 	}
+	if g.pcm.open {
+		g.updatePCMEditor()
+		return nil
+	}
 	if !g.preferencesOpen && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		mx, my := editorCursorPosition()
 		if rectContains(fontButtonRect(), mx, my) {
 			g.openFontEditor()
+			return nil
+		}
+		if rectContains(pcmButtonRect(), mx, my) {
+			g.openPCMEditor()
 			return nil
 		}
 	}
@@ -786,6 +795,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawStatusBar(screen)
 	if g.fontEditor.open {
 		g.drawFontEditor(screen)
+	}
+	if g.pcm.open {
+		g.drawPCMEditor(screen)
 	}
 	if g.preferencesOpen {
 		g.drawPreferences(screen)

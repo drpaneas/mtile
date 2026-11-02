@@ -1,7 +1,7 @@
 // Command editor is Mtile's single-window GBA IDE: sprites, maps, the
 // four-channel Music Lab, and a Develop workspace that combines Lua source
 // editing with an embedded Play surface backed by the private headless mGBA
-// helper. Direct Sound/PCM is intentionally absent from the authoring model.
+// helper. The PCM Editor prepares and imports optional Direct Sound assets.
 package main
 
 import (
@@ -30,6 +30,7 @@ func main() {
 	// recording, MIDI and the emulator) still request every frame from Update.
 	ebiten.SetScreenClearedEveryFrame(false)
 	runErr := ebiten.RunGame(&editorWindow{Game: g})
+	g.pcmDiscardBatch()
 	g.closePlayMode()
 	g.closeNativePerformance()
 	// Persist before reporting a fatal error too: log.Fatalf calls os.Exit

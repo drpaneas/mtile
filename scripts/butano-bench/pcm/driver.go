@@ -40,6 +40,19 @@ func main() {
 		r, e := audioimport.Import(a[1], a[3:], a[2])
 		check(e)
 		save(a[1]+"/import.json", r)
+	case "batch-import":
+		trim, e := strconv.ParseBool(a[4])
+		check(e)
+		b, e := audioimport.PrepareBatch(a[5:], nil, audioimport.PrepareOptions{Quality: audioimport.Quality(a[3]), TrimSilence: trim}, nil)
+		check(e)
+		defer b.Close()
+		var names []string
+		for _, item := range b.Items {
+			names = append(names, item.Name)
+		}
+		r, e := b.Import(a[1], names, a[2])
+		check(e)
+		save(a[1]+"/import.json", r)
 	case "build":
 		s, e := build.NewService("", "")
 		check(e)

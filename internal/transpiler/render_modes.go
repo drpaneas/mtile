@@ -64,13 +64,16 @@ func BuiltinRendererCompatibility(name string) RendererCompatibility {
 		// Both the legacy BG0 arities and the layer-first arities access the
 		// shared logical map exactly, independently of linked objects.
 		return RendererBoth
+	case "sample", "pcm_music":
+		// Imported audio, including deleted-slot no-ops, never touches graphics.
+		return RendererIndependent
 	case "pause", "save_get", "save_set", "save_read", "save_write", "save_pending", "btn", "btnp",
 		"flr", "ceil", "abs", "sgn", "min", "max", "mid", "sin", "cos", "atan2", "sqrt", "rnd", "srand",
 		"band", "bor", "bxor", "bnot", "shl", "shr", "lshr", "rotl", "rotr",
 		"add", "del", "deli", "count", "all", "pairs", "foreach",
 		"sub", "tostr", "tonum", "chr", "ord",
 		"t", "time", "stat",
-		"sfx", "music", "sample", "pcm_music", "gba_note", "gba_stop", "printh":
+		"sfx", "music", "gba_note", "gba_stop", "printh":
 		return RendererIndependent
 	default:
 		return RendererUnknown

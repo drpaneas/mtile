@@ -21,18 +21,26 @@ func (p *PCMController) Init(bank []uint32, music, samples []uint16) bool {
 	}
 	count := int(bank[0] & 0xffff)
 	modules := int(bank[0] >> 16)
-	if modules > 256 || len(music) != modules || len(samples) > 256 || len(bank) < 3+count+modules {
+	if modules > 256 || len(music) > 256 || len(samples) > 256 || len(bank) < 3+count+modules {
 		return false
 	}
 	for _, id := range samples {
-		if int(id) >= count {
+		if id != 65535 && int(id) >= count {
 			return false
 		}
 	}
+	activeMusic := 0
 	for _, id := range music {
+		if id == 65535 {
+			continue
+		}
+		activeMusic++
 		if int(id) >= modules {
 			return false
 		}
+	}
+	if activeMusic != modules {
+		return false
 	}
 	if !p.initPCM(bank) {
 		return false
@@ -46,6 +54,9 @@ func (p *PCMController) Music(id int, loop bool) {
 	if p != nil && p.ready && id >= -1 && id < len(p.modules) {
 		if id >= 0 {
 			id = int(p.modules[id])
+			if id == 65535 {
+				return
+			}
 		}
 		p.musicPCM(id, loop)
 	}
@@ -58,6 +69,9 @@ func (p *PCMController) Sample(id, volume, priority int) {
 	}
 	if id >= 0 {
 		id = int(p.samples[id])
+		if id == 65535 {
+			return
+		}
 	}
 	p.samplePCM(id, volume, priority)
 }

@@ -43,32 +43,16 @@ func Import(project string, files []string, converter string) (Result, error) {
 	if err != nil {
 		return result, err
 	}
-	manifest := assetsync.DirectAudioManifest{Version: 1, Music: []assetsync.DirectAudioItem{}, Samples: []assetsync.DirectAudioItem{}}
+	manifest := assetsync.DirectAudioManifest{Version: 2, Music: []assetsync.DirectAudioItem{}, Samples: []assetsync.DirectAudioItem{}}
 	if old != nil {
 		manifest = old.Manifest
 	}
-	if converter == "" {
-		converter = os.Getenv("MMUTIL")
-	}
-	if converter == "" {
-		converter = "mmutil"
-	}
-	tool, err := exec.LookPath(converter)
-	if err != nil {
-		return result, errors.New("mmutil not found; install the Maxmod converter used by Butano, set MMUTIL, or pass -mmutil /path/to/mmutil (see docs/audio/samples.md)")
-	}
-	tool, err = filepath.Abs(tool)
-	if err != nil {
-		return result, err
-	}
-	work, err := os.MkdirTemp("", "mtile-audio-import-*")
-	if err != nil {
-		return result, err
-	}
-	defer os.RemoveAll(work)
 	sources := map[string][]byte{}
 	for _, group := range [][]assetsync.DirectAudioItem{manifest.Music, manifest.Samples} {
 		for _, item := range group {
+			if item.Deleted {
+				continue
+			}
 			raw, err := readSource(filepath.Join(project, "assets", "audio", "direct", "source", item.Source))
 			if err != nil {
 				return result, err
@@ -126,38 +110,85 @@ func Import(project string, files []string, converter string) (Result, error) {
 			prefix = "music_"
 		}
 		source := prefix + name + ext
+		(*items)[index].Deleted = false
 		(*items)[index].Source = source
 		sources[source] = raw
 		if oldSource != "" && oldSource != source {
 			delete(sources, oldSource)
 		}
 	}
+	return compileBank(project, manifest, sources, converter)
+}
+
+// compileBank publishes the new bank before switching the manifest. Public slot
+// positions are independent of the converter's compact, rebuilt bank IDs.
+func compileBank(project string, manifest assetsync.DirectAudioManifest, sources map[string][]byte, converter string) (Result, error) {
+	var result Result
+	if converter == "" {
+		converter = os.Getenv("MMUTIL")
+	}
+	if converter == "" {
+		converter = "mmutil"
+	}
+	work, err := os.MkdirTemp("", "mtile-audio-import-*")
+	if err != nil {
+		return result, err
+	}
+	defer os.RemoveAll(work)
 	args := []string{}
 	for _, group := range [][]assetsync.DirectAudioItem{manifest.Music, manifest.Samples} {
 		for _, item := range group {
+			if item.Deleted {
+				continue
+			}
 			if err := os.WriteFile(filepath.Join(work, item.Source), sources[item.Source], 0o644); err != nil {
 				return result, err
 			}
 			args = append(args, item.Source)
 		}
 	}
-	args = append(args, "-obank.bin", "-hbank.h", "-y")
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, tool, args...)
-	cmd.Dir = work
-	output, err := cmd.CombinedOutput()
-	result.ConverterOutput = string(output)
-	if err != nil {
-		return result, fmt.Errorf("mmutil import failed: %w\n%s", err, output)
-	}
-	bank, err := os.ReadFile(filepath.Join(work, "bank.bin"))
-	if err != nil {
-		return result, err
-	}
-	header, err := os.ReadFile(filepath.Join(work, "bank.h"))
-	if err != nil {
-		return result, err
+	var bank, header []byte
+	if len(args) == 0 {
+		bank = make([]byte, 12)
+		copy(bank[4:], "*maxmod*")
+		if manifest.Format == 0 {
+			manifest.Format = 0x19
+		}
+	} else {
+		tool, err := exec.LookPath(converter)
+		if err != nil {
+			return result, errors.New("mmutil not found; install the Maxmod converter, set MMUTIL, then retry (see docs/audio/samples.md)")
+		}
+		tool, err = filepath.Abs(tool)
+		if err != nil {
+			return result, err
+		}
+		args = append(args, "-obank.bin", "-hbank.h", "-y")
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, tool, args...)
+		cmd.Dir = work
+		output, err := cmd.CombinedOutput()
+		result.ConverterOutput = string(output)
+		if err != nil {
+			return result, fmt.Errorf("mmutil import failed: %w\n%s", err, output)
+		}
+		bank, err = os.ReadFile(filepath.Join(work, "bank.bin"))
+		if err != nil {
+			return result, err
+		}
+		header, err = os.ReadFile(filepath.Join(work, "bank.h"))
+		if err != nil {
+			return result, err
+		}
+		if len(bank) < 20 {
+			return result, errors.New("mmutil produced an empty soundbank")
+		}
+		off := uint64(bank[12]) | uint64(bank[13])<<8 | uint64(bank[14])<<16 | uint64(bank[15])<<24
+		if off+5 >= uint64(len(bank)) {
+			return result, errors.New("mmutil produced an invalid first item")
+		}
+		manifest.Format = int(bank[off+5])
 	}
 	ids := map[string]int{}
 	for _, match := range definition.FindAllStringSubmatch(string(header), -1) {
@@ -170,6 +201,9 @@ func Import(project string, files []string, converter string) (Result, error) {
 	}{{manifest.Music, "MOD_"}, {manifest.Samples, "SFX_"}} {
 		for i := range group.items {
 			item := &group.items[i]
+			if item.Deleted {
+				continue
+			}
 			key := group.prefix + strings.ToUpper(strings.TrimSuffix(item.Source, filepath.Ext(item.Source)))
 			id, ok := ids[key]
 			if !ok {
@@ -178,15 +212,6 @@ func Import(project string, files []string, converter string) (Result, error) {
 			item.BankID = id
 		}
 	}
-	if len(bank) < 20 {
-		return result, errors.New("mmutil produced an empty soundbank")
-	}
-	// MAS prefix version selects the matching player layout at link time.
-	off := uint64(bank[12]) | uint64(bank[13])<<8 | uint64(bank[14])<<16 | uint64(bank[15])<<24
-	if off+5 >= uint64(len(bank)) {
-		return result, errors.New("mmutil produced an invalid first item")
-	}
-	manifest.Format = int(bank[off+5])
 	hash := sha256.Sum256(bank)
 	manifest.SHA256 = hex.EncodeToString(hash[:])
 	manifest.Bank = "bank-" + manifest.SHA256 + ".bin"

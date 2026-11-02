@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-02T20:08:11.557293+00:00",
+  "title": "Design System: mTile PCM Editor",
+  "extensions": {
+    "colorMeta": {
+      "music": {
+        "role": "primary",
+        "displayName": "Music",
+        "tonalRamp": [
+          "oklch(15.00% 0.15245 31.12)",
+          "oklch(26.43% 0.15245 31.12)",
+          "oklch(37.86% 0.15245 31.12)",
+          "oklch(49.29% 0.15245 31.12)",
+          "oklch(60.71% 0.15245 31.12)",
+          "oklch(72.14% 0.15245 31.12)",
+          "oklch(83.57% 0.15245 31.12)",
+          "oklch(95.00% 0.15245 31.12)"
+        ]
+      },
+      "selection": {
+        "role": "primary",
+        "displayName": "Selection",
+        "tonalRamp": [
+          "oklch(15.00% 0.11689 188.89)",
+          "oklch(26.43% 0.11689 188.89)",
+          "oklch(37.86% 0.11689 188.89)",
+          "oklch(49.29% 0.11689 188.89)",
+          "oklch(60.71% 0.11689 188.89)",
+          "oklch(72.14% 0.11689 188.89)",
+          "oklch(83.57% 0.11689 188.89)",
+          "oklch(95.00% 0.11689 188.89)"
+        ]
+      },
+      "danger": {
+        "role": "primary",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.19449 20.48)",
+          "oklch(26.43% 0.19449 20.48)",
+          "oklch(37.86% 0.19449 20.48)",
+          "oklch(49.29% 0.19449 20.48)",
+          "oklch(60.71% 0.19449 20.48)",
+          "oklch(72.14% 0.19449 20.48)",
+          "oklch(83.57% 0.19449 20.48)",
+          "oklch(95.00% 0.19449 20.48)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15.00% 0.02660 286.86)",
+          "oklch(26.43% 0.02660 286.86)",
+          "oklch(37.86% 0.02660 286.86)",
+          "oklch(49.29% 0.02660 286.86)",
+          "oklch(60.71% 0.02660 286.86)",
+          "oklch(72.14% 0.02660 286.86)",
+          "oklch(83.57% 0.02660 286.86)",
+          "oklch(95.00% 0.02660 286.86)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "tonalRamp": [
+          "oklch(15.00% 0.04440 286.73)",
+          "oklch(26.43% 0.04440 286.73)",
+          "oklch(37.86% 0.04440 286.73)",
+          "oklch(49.29% 0.04440 286.73)",
+          "oklch(60.71% 0.04440 286.73)",
+          "oklch(72.14% 0.04440 286.73)",
+          "oklch(83.57% 0.04440 286.73)",
+          "oklch(95.00% 0.04440 286.73)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15.00% 0.07484 289.43)",
+          "oklch(26.43% 0.07484 289.43)",
+          "oklch(37.86% 0.07484 289.43)",
+          "oklch(49.29% 0.07484 289.43)",
+          "oklch(60.71% 0.07484 289.43)",
+          "oklch(72.14% 0.07484 289.43)",
+          "oklch(83.57% 0.07484 289.43)",
+          "oklch(95.00% 0.07484 289.43)"
+        ]
+      },
+      "section-border": {
+        "role": "neutral",
+        "displayName": "Section border",
+        "tonalRamp": [
+          "oklch(15.00% 0.04555 289.17)",
+          "oklch(26.43% 0.04555 289.17)",
+          "oklch(37.86% 0.04555 289.17)",
+          "oklch(49.29% 0.04555 289.17)",
+          "oklch(60.71% 0.04555 289.17)",
+          "oklch(72.14% 0.04555 289.17)",
+          "oklch(83.57% 0.04555 289.17)",
+          "oklch(95.00% 0.04555 289.17)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02579 295.55)",
+          "oklch(26.43% 0.02579 295.55)",
+          "oklch(37.86% 0.02579 295.55)",
+          "oklch(49.29% 0.02579 295.55)",
+          "oklch(60.71% 0.02579 295.55)",
+          "oklch(72.14% 0.02579 295.55)",
+          "oklch(83.57% 0.02579 295.55)",
+          "oklch(95.00% 0.02579 295.55)"
+        ]
+      },
+      "dim": {
+        "role": "neutral",
+        "displayName": "Dim",
+        "tonalRamp": [
+          "oklch(15.00% 0.04520 295.40)",
+          "oklch(26.43% 0.04520 295.40)",
+          "oklch(37.86% 0.04520 295.40)",
+          "oklch(49.29% 0.04520 295.40)",
+          "oklch(60.71% 0.04520 295.40)",
+          "oklch(72.14% 0.04520 295.40)",
+          "oklch(83.57% 0.04520 295.40)",
+          "oklch(95.00% 0.04520 295.40)"
+        ]
+      },
+      "button-face": {
+        "role": "neutral",
+        "displayName": "Button face",
+        "tonalRamp": [
+          "oklch(15.00% 0.04730 284.00)",
+          "oklch(26.43% 0.04730 284.00)",
+          "oklch(37.86% 0.04730 284.00)",
+          "oklch(49.29% 0.04730 284.00)",
+          "oklch(60.71% 0.04730 284.00)",
+          "oklch(72.14% 0.04730 284.00)",
+          "oklch(83.57% 0.04730 284.00)",
+          "oklch(95.00% 0.04730 284.00)"
+        ]
+      },
+      "button-active": {
+        "role": "neutral",
+        "displayName": "Button active",
+        "tonalRamp": [
+          "oklch(15.00% 0.09517 281.75)",
+          "oklch(26.43% 0.09517 281.75)",
+          "oklch(37.86% 0.09517 281.75)",
+          "oklch(49.29% 0.09517 281.75)",
+          "oklch(60.71% 0.09517 281.75)",
+          "oklch(72.14% 0.09517 281.75)",
+          "oklch(83.57% 0.09517 281.75)",
+          "oklch(95.00% 0.09517 281.75)"
+        ]
+      },
+      "button-hover": {
+        "role": "neutral",
+        "displayName": "Button hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.05196 285.93)",
+          "oklch(26.43% 0.05196 285.93)",
+          "oklch(37.86% 0.05196 285.93)",
+          "oklch(49.29% 0.05196 285.93)",
+          "oklch(60.71% 0.05196 285.93)",
+          "oklch(72.14% 0.05196 285.93)",
+          "oklch(83.57% 0.05196 285.93)",
+          "oklch(95.00% 0.05196 285.93)"
+        ]
+      },
+      "button-pressed": {
+        "role": "neutral",
+        "displayName": "Button pressed",
+        "tonalRamp": [
+          "oklch(15.00% 0.05254 284.11)",
+          "oklch(26.43% 0.05254 284.11)",
+          "oklch(37.86% 0.05254 284.11)",
+          "oklch(49.29% 0.05254 284.11)",
+          "oklch(60.71% 0.05254 284.11)",
+          "oklch(72.14% 0.05254 284.11)",
+          "oklch(83.57% 0.05254 284.11)",
+          "oklch(95.00% 0.05254 284.11)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Native body",
+        "purpose": "Shared Go Sans body, including headings and Lua-call display; default Comfort size."
+      },
+      "label": {
+        "displayName": "Native small text",
+        "purpose": "Shared small face for metadata, explanatory text and profile descriptions."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Copy all calls",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Native batch-completion action copies a commented name/call reference list; the selected row also has Copy Lua call.",
+      "html": "<button class=\"ds-pcm-button\">COPY ALL CALLS</button>",
+      "css": ".ds-pcm-button{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:208px;height:36px;border:1px solid #7771a2;background:#1c1b34;color:#ebe7fa;cursor:pointer;}.ds-pcm-button:hover{background:#2b2946;border-color:#ff8570;}.ds-pcm-button:focus-visible{outline:none;border-color:#ff8570;}.ds-pcm-button:active{background:#272643;}"
+    },
+    {
+      "name": "Import complete batch",
+      "kind": "button",
+      "refersTo": "button-active",
+      "description": "Imports the full queue in one converter invocation; existing-name replacements require Replace + Import confirmation.",
+      "html": "<button class=\"ds-pcm-save\">IMPORT 3 FILES</button>",
+      "css": ".ds-pcm-save{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:208px;height:36px;border:1px solid #ff8570;background:#323068;color:#ff8570;cursor:pointer;}.ds-pcm-save:hover{background:#323068;border-color:#ff8570;}.ds-pcm-save:focus-visible{outline:none;border-color:#ff8570;}.ds-pcm-save:active{background:#323068;}"
+    },
+    {
+      "name": "Confirm deletion",
+      "kind": "button",
+      "refersTo": "button-active",
+      "description": "HTML illustration of the native drawTactileButton state; native Go rendering remains authoritative.",
+      "html": "<button class=\"ds-pcm-delete\">CONFIRM DELETE</button>",
+      "css": ".ds-pcm-delete{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:208px;height:36px;border:1px solid #ff5f68;background:#323068;color:#ff5f68;cursor:pointer;}.ds-pcm-delete:hover{background:#323068;border-color:#ff5f68;}.ds-pcm-delete:focus-visible{outline:none;border-color:#ff5f68;}.ds-pcm-delete:active{background:#323068;}"
+    },
+    {
+      "name": "Asset-name input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Renames only the selected queued file; shared preparation settings do not replace edited names. Dark native field with cyan focus edge.",
+      "html": "<input class=\"ds-pcm-input\" aria-label=\"Asset name\" value=\"jump\"/>",
+      "css": ".ds-pcm-input{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:300px;height:36px;padding:0 10px;background:#100f1c;color:#ebe7fa;border:1px solid #7771a2;}.ds-pcm-input:focus-visible{outline:none;border-color:#52d9d0;}"
+    },
+    {
+      "name": "Selected WAV quality",
+      "kind": "custom",
+      "refersTo": "quality-option",
+      "description": "Shared setting for ALL WAVs, but the row size and savings describe only the selected file. Row height is 44 px; cyan marks the active preset.",
+      "html": "<button class=\"ds-pcm-quality\" aria-pressed=\"true\"><span>ALL WAVs: BALANCED / 31.3 KiB / 83% smaller than original / selected file</span><span>Default: mono, up to 16 kHz, 8-bit. Keeps more high-tone detail.</span></button>",
+      "css": ".ds-pcm-quality{position:relative;font-family:\"Go Sans\",sans-serif;font-size:11px;font-weight:400;text-align:left;width:648px;height:44px;padding:0;border:1px solid #52d9d0;border-radius:0;background:#100f1c;color:#ebe7fa;cursor:pointer;}.ds-pcm-quality span{position:absolute;left:10px;top:4px;}.ds-pcm-quality span+span{top:24px;color:#c2bbdb;}.ds-pcm-quality:focus-visible{outline:1px solid #52d9d0;outline-offset:1px;}"
+    },
+    {
+      "name": "Selected project-audio row",
+      "kind": "custom",
+      "description": "Outside batch review, the project library lists asset names above stable public calls. During batch review the queue replaces this list.",
+      "html": "<button class=\"ds-pcm-row\" aria-pressed=\"true\"><span>jump</span><span>sample(0)</span></button>",
+      "css": ".ds-pcm-row{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:264px;height:48px;padding:3px 8px;text-align:left;background:#1c1b34;color:#ebe7fa;border:1px solid #52d9d0;cursor:pointer;}.ds-pcm-row span{display:block;}.ds-pcm-row span+span{margin-top:8px;font-size:11px;color:#c2bbdb;}.ds-pcm-row:focus-visible{outline:1px solid #52d9d0;outline-offset:1px;}"
+    },
+    {
+      "name": "Focused tool panel",
+      "kind": "card",
+      "description": "Native tool container uses a flat panel fill and quiet single-pixel stroke, with no shadow.",
+      "html": "<section class=\"ds-pcm-panel\"><div>PCM EDITOR</div><p>IMPORT / PREPARE / USE IN LUA</p></section>",
+      "css": ".ds-pcm-panel{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;border-radius:0;width:410px;padding:20px 24px;border:1px solid #43405b;background:#232139;color:#ebe7fa;}.ds-pcm-panel p{margin:20px 0 0;font-size:11px;color:#c2bbdb;}"
+    },
+    {
+      "name": "Restore shared quiet edges",
+      "kind": "button",
+      "refersTo": "button-active",
+      "description": "Shared 32 px action restores original timing for queued WAVs. Opt-in trim applies only to eligible WAVs; modules, loop-marked and all-quiet recordings are skipped.",
+      "html": "<button class=\"ds-pcm-restore\">RESTORE QUIET EDGES / all queued WAVs</button>",
+      "css": ".ds-pcm-restore{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;width:410px;height:32px;border:1px solid #ff8570;border-radius:0;background:#323068;color:#ff8570;cursor:pointer;}.ds-pcm-restore:hover{border-color:#ff8570;}.ds-pcm-restore:focus-visible{outline:1px solid #ff8570;outline-offset:1px;}.ds-pcm-restore:active{background:#323068;}"
+    },
+    {
+      "name": "Original and prepared audition",
+      "kind": "custom",
+      "description": "Auditions only the selected WAV, up to fifteen seconds per version. Active playback shows STOP PREPARED or STOP ORIGINAL; decoding is offline.",
+      "html": "<div class=\"ds-pcm-audition\"><button>PREPARED WAV</button><button>ORIGINAL WAV</button></div>",
+      "css": ".ds-pcm-audition{display:flex;gap:10px;}.ds-pcm-audition button{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;width:142px;height:36px;border:1px solid #7771a2;border-radius:0;background:#1c1b34;color:#ebe7fa;cursor:pointer;}.ds-pcm-audition button:hover{border-color:#ff8570;background:#2b2946;}.ds-pcm-audition button:focus-visible{outline:none;border-color:#ff8570;}.ds-pcm-audition button:active{background:#272643;}"
+    },
+    {
+      "name": "Selected queued file",
+      "kind": "custom",
+      "description": "Temporary batch queue row: selected name above kind/prepared size, or Needs attention in danger red. Done rows show actual calls. Prepared total is separate from bank size.",
+      "html": "<button class=\"ds-pcm-queued\" aria-pressed=\"true\"><span>door</span><span>WAV / 31.3 KiB</span></button>",
+      "css": ".ds-pcm-queued{font-family:\"Go Sans\",sans-serif;font-size:13px;font-weight:400;width:264px;height:48px;padding:3px 8px;text-align:left;border:1px solid #52d9d0;border-radius:0;background:#1c1b34;color:#ebe7fa;cursor:pointer;}.ds-pcm-queued span{display:block;}.ds-pcm-queued span+span{margin-top:8px;font-size:11px;color:#c2bbdb;}.ds-pcm-queued:focus-visible{outline:1px solid #52d9d0;outline-offset:1px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Native audio import workbench",
+    "overview": "This document records the PCM Editor only. It extends the incumbent Go/Ebitengine editor without introducing a separate visual identity. The authority is the shared palette, fonts and button rendering in [draw_util.go](../../../cmd/editor/draw_util.go) and [theme.go](../../../cmd/editor/theme.go), together with [PCM state](../../../cmd/editor/pcm_editor.go), [drawing](../../../cmd/editor/pcm_editor_draw.go), [batch state](../../../cmd/editor/pcm_editor_batch.go) and [batch drawing](../../../cmd/editor/pcm_editor_batch_draw.go). Code remains authoritative if this snapshot drifts.\n\nThe top-bar **PCM** button opens a focused panel. Its left column normally shows project audio; selecting multiple files temporarily replaces it with an import queue, then an imported-file receipt. The right column shows the current file or saved call. Quiet dark surfaces keep filenames, shared settings, format changes and the next action readable. The reviewed compact and desktop batch renders had no material visual issues.",
+    "keyCharacteristics": [
+      "Existing native editor chrome and measured Go Sans text.",
+      "Project library outside batch review; temporary queue with per-file inspection during review.",
+      "Shared WAV settings and one confirmed import for the complete batch.",
+      "Source-derived size comparisons, reversible edge trim and original/prepared audition.",
+      "Actual bank size and copyable Lua calls."
+    ],
+    "rules": [],
+    "dos": [
+      "Do reuse the native editor's shared fonts, colors and button primitives.",
+      "Do keep the active library or queue, selected-file context and next action visible together.",
+      "Do distinguish source size, prepared size and actual bank size.",
+      "Do preserve external sources and every unaffected public Lua ID.",
+      "Do make edge trimming reversible and require an explicit choice before changing timing.",
+      "Do distinguish settings shared by all WAVs from the selected file's sizes, name and audition."
+    ],
+    "donts": [
+      "Don't imply that a WAV recording becomes tracker music or that smaller source files remove fixed mixer costs.",
+      "Don't hide converter warnings or publish worker results directly into UI state.",
+      "Don't present long/large advisories as import errors or remove interior pauses.",
+      "Don't import a partial batch while failed rows remain or copy every call as an executable playback block.",
+      "Don't treat generated sidecar ramps or HTML previews as new native design authority."
+    ]
+  }
+}

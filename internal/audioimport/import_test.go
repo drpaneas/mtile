@@ -20,6 +20,14 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 func fakeConverter() {
+	if path := os.Getenv("MTILE_IMPORT_COUNT"); path != "" {
+		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+		if err != nil {
+			panic(err)
+		}
+		f.WriteString("convert\n")
+		f.Close()
+	}
 	var songs, samples []string
 	for _, arg := range os.Args[1:] {
 		if strings.HasPrefix(arg, "-") {

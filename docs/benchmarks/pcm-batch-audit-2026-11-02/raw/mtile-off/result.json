@@ -1,0 +1,383 @@
+{
+  "variant": "mtile",
+  "workload": {
+    "name": "off",
+    "kind": 0,
+    "voices": 0,
+    "effects": 0
+  },
+  "romBytes": 26984,
+  "romSHA256": "4249940993ed38ed064e1017f959bdcdee0c31dd5b4651eaeee8852f8ad67f88",
+  "elfSHA256": "e304f9e9a41dbe1e5b5ef80ddbe7c48957dec49d58122970ef9b3b2c175f34c7",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168537600,
+      "instructionCycles": 1905000,
+      "waitInstructionCycles": 236700,
+      "activeEventCycles": 2400,
+      "haltEventCycles": 166630200,
+      "otherAddressCycles": 146400,
+      "instructions": 432900,
+      "mailboxMemory": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50332648,
+          "maxSP": 50332672,
+          "observedRange": 24
+        },
+        {
+          "mode": 19,
+          "minSP": 50364368,
+          "maxSP": 50364384,
+          "observedRange": 16
+        },
+        {
+          "mode": 31,
+          "minSP": 50336800,
+          "maxSP": 50336832,
+          "observedRange": 32
+        }
+      ],
+      "mixerCapacity": 0,
+      "minObservedVoices": 0,
+      "maxObservedVoices": 0,
+      "mmFrameCalls": 0,
+      "mmFrameCycles": 0,
+      "mmFrameMaximum": 0,
+      "mmFrameOver160Lines": 0
+    },
+    "categoriesPerTick": {
+      "irq": 870.0,
+      "other": 1753.0,
+      "wait": 789.0,
+      "publication": 2450.0
+    },
+    "cpu": {
+      "mean": 5561,
+      "median": 5561.0,
+      "p95": 5561,
+      "maximum": 5561,
+      "minimum": 5561,
+      "percent": 0.9898681362497151
+    },
+    "cpuWithNonHaltEvents": {
+      "mean": 5569,
+      "median": 5569.0,
+      "p95": 5569,
+      "maximum": 5569,
+      "minimum": 5569,
+      "percent": 0.9912921508316245
+    },
+    "top": [
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+        "cyclesPerTick": 1062.0
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+        "cyclesPerTick": 952.0
+      },
+      {
+        "name": "handleInterrupt",
+        "cyclesPerTick": 648.0
+      },
+      {
+        "name": "memset",
+        "cyclesPerTick": 250.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+        "cyclesPerTick": 167.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).PerformanceStats",
+        "cyclesPerTick": 154.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+        "cyclesPerTick": 132.0
+      },
+      {
+        "name": "runtime/volatile.LoadUint16",
+        "cyclesPerTick": 128.0
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime.debugGet32",
+        "cyclesPerTick": 117.0
+      },
+      {
+        "name": "runtime/volatile.StoreUint16",
+        "cyclesPerTick": 116.0
+      },
+      {
+        "name": "handleInterruptARM",
+        "cyclesPerTick": 108.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+        "cyclesPerTick": 106.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+        "cyclesPerTick": 101.0
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+        "cyclesPerTick": 93.0
+      },
+      {
+        "name": "memcpy",
+        "cyclesPerTick": 92.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Add",
+        "cyclesPerTick": 81.0
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime.debugPut16",
+        "cyclesPerTick": 80.0
+      },
+      {
+        "name": "__aeabi_memclr",
+        "cyclesPerTick": 66.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+        "cyclesPerTick": 66.0
+      },
+      {
+        "name": "main.main",
+        "cyclesPerTick": 57.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+        "cyclesPerTick": 48.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+        "cyclesPerTick": 47.0
+      },
+      {
+        "name": "__ARMv5LongLdrPcThunk_memset",
+        "cyclesPerTick": 45.0
+      },
+      {
+        "name": "runtime/volatile.LoadUint32",
+        "cyclesPerTick": 38.0
+      },
+      {
+        "name": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+        "cyclesPerTick": 34.0
+      }
+    ]
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": 0,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 0,
+        "overflows": 0,
+        "peak": 0,
+        "rmsLeft": 0,
+        "rmsMono": 0,
+        "rmsRight": 0,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": 0,
+      "heapAllocated": 0,
+      "heapLive": 0,
+      "heapPeak": 0,
+      "gcCollections": 0,
+      "heapError": 0
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": 0,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 0,
+        "overflows": 0,
+        "peak": 0,
+        "rmsLeft": 0,
+        "rmsMono": 0,
+        "rmsRight": 0,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": 0,
+      "heapAllocated": 0,
+      "heapLive": 0,
+      "heapPeak": 0,
+      "gcCollections": 0,
+      "heapError": 0
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".stack",
+        "bytes": 9216,
+        "address": 50331648
+      },
+      {
+        "name": ".data",
+        "bytes": 420,
+        "address": 50340864
+      },
+      {
+        "name": ".ewram",
+        "bytes": 7512,
+        "address": 33554432
+      },
+      {
+        "name": ".debug_mailbox",
+        "bytes": 512,
+        "address": 33816064
+      },
+      {
+        "name": ".bss",
+        "bytes": 12,
+        "address": 50341284
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "main.ctx",
+        "bytes": 7056,
+        "address": 33554884
+      },
+      {
+        "name": "main.debugMailbox",
+        "bytes": 512,
+        "address": 33816064
+      },
+      {
+        "name": "main.cartData",
+        "bytes": 448,
+        "address": 33554436
+      },
+      {
+        "name": "memcpy",
+        "bytes": 296,
+        "address": 50340988
+      },
+      {
+        "name": "memmove",
+        "bytes": 296,
+        "address": 50340988
+      },
+      {
+        "name": "memset",
+        "bytes": 124,
+        "address": 50340864
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime/hw.displayFrame",
+        "bytes": 4,
+        "address": 50341284
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime/hw.paceFrame",
+        "bytes": 4,
+        "address": 50341292
+      },
+      {
+        "name": "main.game.0",
+        "bytes": 4,
+        "address": 33561940
+      },
+      {
+        "name": "main.sheetIndexRAM",
+        "bytes": 2,
+        "address": 33554432
+      },
+      {
+        "name": "github.com/drpaneas/mtile/runtime/hw.displayClockReady",
+        "bytes": 1,
+        "address": 50341288
+      },
+      {
+        "name": "main.flagRAM",
+        "bytes": 1,
+        "address": 33554434
+      }
+    ]
+  },
+  "bankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6",
+  "bankBytes": 11820,
+  "build": {
+    "ROMPath": "/private/tmp/mtile-pcm-audit-20261102/work/roms/mtile-off.gba",
+    "ROMSize": 26984,
+    "MapPath": "/private/tmp/mtile-pcm-audit-20261102/work/roms/mtile-off.gba.game.map",
+    "EWRAMUsed": 7512,
+    "EWRAMFree": 254120,
+    "IWRAMUsed": 9648,
+    "HeapLinked": false,
+    "WorkDir": "",
+    "AudioROMBytes": 0,
+    "AudioVoices": 0,
+    "PoseMemory": {
+      "PoseCount": 0,
+      "ClipCount": 0,
+      "PoseNames": [],
+      "Source": "none",
+      "SourcePixelBytes": 0,
+      "UniquePixelBytes": 0,
+      "PixelROMBytes": 0,
+      "ResidentVRAMBytes": 0,
+      "MetadataROMBytes": 0,
+      "StageRAMBytes": 0,
+      "LinkedMemoryAvailable": true,
+      "PixelsLinked": false,
+      "MetadataLinked": false,
+      "StageLinked": false
+    },
+    "AudioProfile": "",
+    "AudioPSGRatio": 0,
+    "Entry": "game.lua",
+    "SourceFiles": [
+      "game.lua"
+    ],
+    "GlobalUsage": {
+      "Count": 1,
+      "Limit": 256,
+      "Symbols": [
+        {
+          "Name": "ticks",
+          "Source": "game.lua",
+          "Line": 1,
+          "Column": 1
+        }
+      ]
+    },
+    "GeneratedGo": "package main\n\nimport (\n\trt \"github.com/drpaneas/mtile/runtime\"\n\t_ \"unsafe\"\n)\n\n//go:section .rodata\nvar projectFontExtraROM = [...]rt.FontGlyph{\n}\n//go:section .rodata\nvar projectFontROM = rt.Font{ASCII:[95][6]uint16{\n{0,0,0,0,0,0},\n{0,0,190,0,0,0},\n{0,14,0,14,0,0},\n{40,254,40,254,40,0},\n{8,84,254,84,32,0},\n{196,42,84,168,70,0},\n{108,146,172,64,160,0},\n{0,0,14,0,0,0},\n{0,56,68,130,0,0},\n{0,130,68,56,0,0},\n{84,56,16,56,84,0},\n{16,16,124,16,16,0},\n{0,256,192,64,0,0},\n{16,16,16,16,16,0},\n{0,128,448,128,0,0},\n{192,32,16,8,6,0},\n{56,68,130,68,56,0},\n{136,132,254,128,128,0},\n{196,162,146,146,140,0},\n{66,130,146,154,102,0},\n{48,40,36,254,32,0},\n{94,146,138,138,114,0},\n{120,164,146,146,96,0},\n{2,194,34,26,6,0},\n{108,146,146,146,108,0},\n{12,146,146,74,60,0},\n{0,136,476,136,0,0},\n{0,264,220,72,0,0},\n{0,16,40,68,130,0},\n{40,40,40,40,40,0},\n{0,130,68,40,16,0},\n{4,2,178,10,4,0},\n{124,130,178,170,28,0},\n{248,36,34,36,248,0},\n{130,254,146,146,108,0},\n{124,130,130,130,68,0},\n{130,254,130,130,124,0},\n{254,146,146,146,130,0},\n{254,18,18,18,2,0},\n{124,130,130,162,100,0},\n{254,16,16,16,254,0},\n{0,130,254,130,0,0},\n{64,128,130,126,2,0},\n{254,16,40,68,130,0},\n{254,128,128,128,128,0},\n{254,8,16,8,254,0},\n{254,8,16,32,254,0},\n{124,130,130,130,124,0},\n{254,18,18,18,12,0},\n{124,130,194,130,380,0},\n{254,18,50,82,140,0},\n{76,146,146,146,100,0},\n{2,2,254,2,2,0},\n{126,128,128,128,126,0},\n{14,112,128,112,14,0},\n{254,64,48,64,254,0},\n{198,40,16,40,198,0},\n{6,8,240,8,6,0},\n{194,162,146,138,134,0},\n{0,254,130,130,0,0},\n{6,8,16,32,192,0},\n{0,130,130,254,0,0},\n{8,4,2,4,8,0},\n{256,256,256,256,256,0},\n{0,0,1,2,0,0},\n{64,168,168,168,240,0},\n{254,80,136,136,112,0},\n{112,136,136,136,80,0},\n{112,136,136,80,254,0},\n{112,168,168,168,48,0},\n{16,252,18,18,4,0},\n{304,584,584,584,504,0},\n{254,16,8,8,240,0},\n{0,136,250,128,0,0},\n{0,384,512,520,506,0},\n{254,32,32,80,136,0},\n{0,130,254,128,0,0},\n{248,8,112,8,240,0},\n{248,16,8,8,240,0},\n{112,136,136,136,112,0},\n{1016,80,136,136,112,0},\n{112,136,136,80,1016,0},\n{248,16,8,8,16,0},\n{144,168,168,168,64,0},\n{8,126,136,136,64,0},\n{120,128,128,64,248,0},\n{24,96,128,96,24,0},\n{120,128,96,128,120,0},\n{136,80,32,80,136,0},\n{312,576,576,544,504,0},\n{136,200,168,152,136,0},\n{0,16,84,170,130,0},\n{0,0,254,0,0,0},\n{0,130,170,84,16,0},\n{12,2,4,8,6,0},\n},Extra:projectFontExtraROM[:]}\n\nfunc gluNumberDivFraction(n rt.Number, divisor uint32) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := magnitude / divisor\n\tremainder := magnitude - quotient * divisor\n\tresult := (quotient << 16) + ((remainder << 16) / divisor)\n\tif n < 0 { result = 0 - result }\n\treturn rt.Number(result)\n}\nfunc gluValueDivFraction(a rt.Value, divisor uint32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivFraction(a.Num, divisor))\n}\nfunc gluNumberDivReciprocal(n rt.Number, multiplier, divisor uint32) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := uint32((uint64(magnitude) * uint64(multiplier)) >> 32)\n\tif uint64(quotient) * uint64(divisor) > uint64(magnitude) << 16 { quotient-- }\n\tif n < 0 { quotient = 0 - quotient }\n\treturn rt.Number(quotient)\n}\nfunc gluValueDivReciprocal(a rt.Value, multiplier, divisor uint32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivReciprocal(a.Num, multiplier, divisor))\n}\nfunc gluNumberDivThreeHalves(n rt.Number) rt.Number {\n\tmagnitude := uint32(n)\n\tif n < 0 { magnitude = 0 - magnitude }\n\tquotient := rt.Number(uint32((uint64(magnitude) * 0xaaaaaaab) >> 32))\n\tif n < 0 { return -quotient }\n\treturn quotient\n}\nfunc gluNumberDivPow2(n rt.Number, shift int) rt.Number {\n\tif n >= 0 { return n >> shift }\n\treturn (n + (1 << shift) - 1) >> shift\n}\nfunc gluNumberModPow2(n rt.Number, shift int) rt.Number {\n\treturn n - ((n >> shift) << shift)\n}\nfunc gluNumberModLit(n rt.Number, z int32) rt.Number {\n\tif z == 0 { return 0 }\n\tr := n % rt.Number(z)\n\tif r != 0 && ((r < 0) != (z < 0)) { r += rt.Number(z) }\n\treturn r\n}\nfunc gluValueDivThreeHalves(a rt.Value) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivThreeHalves(a.Num))\n}\nfunc gluValueDivPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberDivPow2(a.Num, shift))\n}\nfunc gluValueMulPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(a.Num << shift)\n}\nfunc gluValueDivInt(a rt.Value, k int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number(int32(a.Num) / k))\n}\nfunc gluValueIDivInt(a rt.Value, k int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number(int32(a.Num) / k).Flr())\n}\nfunc gluValueDivLit(a rt.Value, d int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(rt.Number((int64(a.Num) << 16) / int64(d)))\n}\nfunc gluValueModLit(a rt.Value, z int32) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberModLit(a.Num, z))\n}\nfunc gluValueModPow2(a rt.Value, shift int) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(gluNumberModPow2(a.Num, shift))\n}\nfunc gluValueNegNumber(a rt.Value) rt.Value {\n\tif a.Kind != rt.KindNumber { return rt.NilVal() }\n\treturn rt.NumVal(-a.Num)\n}\n//go:noinline\nfunc gluPushRoots(c *rt.Context, roots ...rt.Value) int {\n\tn := 0\n\tfor _, root := range roots {\n\t\tif root.Kind != rt.KindTable && root.Kind != rt.KindString { continue }\n\t\tif !c.PushLocal(root) { c.PopLocals(n); return -1 }\n\t\tn++\n\t}\n\treturn n\n}\nfunc gluPopRoots(c *rt.Context, n int) { if n > 0 { c.PopLocals(n) } }\nfunc gluMust(v rt.Value, err rt.HeapError) rt.Value { if err != rt.HeapOK { return rt.NilVal() }; return v }\nfunc gluCmp(c *rt.Context, a, z rt.Value, op string) bool {\n\tcmp := 0\n\tif a.Kind == rt.KindNumber && z.Kind == rt.KindNumber { if a.Num < z.Num { cmp = -1 } else if a.Num > z.Num { cmp = 1 } } else { var ok bool; cmp, ok = c.CompareStrings(a,z); if !ok { return false } }\n\tswitch op { case \"<\": return cmp < 0; case \"<=\": return cmp <= 0; case \">\": return cmp > 0; case \">=\": return cmp >= 0 }; return false\n}\nfunc gluLen(c *rt.Context, v rt.Value) rt.Value { if v.Kind == rt.KindString || v.Kind == rt.KindStaticString { return rt.IntVal(c.StrLen(v)) }; if v.Kind == rt.KindTable { return rt.IntVal(c.TableLen(v)) }; return rt.IntVal(0) }\nfunc gluNumberMod(a, z rt.Number) rt.Number { return a.Mod(z) }\nfunc gluMod(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberMod(a.Num,z.Num)) }\nfunc gluNumberPow(a, z rt.Number) rt.Number { n := z.Int(); if n == 0 { return rt.One }; neg := n < 0; if neg { n = -n }; out := rt.One; for n > 0 { if n&1 != 0 { out = out.Mul(a) }; a = a.Mul(a); n >>= 1 }; if neg { out = rt.One.Div(out) }; return out }\nfunc gluPow(a, z rt.Value) rt.Value { if a.Kind != rt.KindNumber || z.Kind != rt.KindNumber { return rt.NilVal() }; return rt.NumVal(gluNumberPow(a.Num,z.Num)) }\nfunc gluConcat(c *rt.Context, a, z rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c, a, z); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c, roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v, err := c.Concat(a,z); gluPopRoots(c,n+m); return gluMust(v,err) }\nfunc gluSub(c *rt.Context, s, i, j rt.Value, roots ...rt.Value) rt.Value { n := gluPushRoots(c,s,i,j); if n < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.NilVal() }; v,err := c.Sub(s,i,j); gluPopRoots(c,n+m); return gluMust(v,err) }\nfunc gluChr(c *rt.Context, n rt.Value, roots ...rt.Value) rt.Value { k := gluPushRoots(c,n); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; v,err := c.Chr(n); gluPopRoots(c,k+m); return gluMust(v,err) }\nfunc gluTostr(c *rt.Context, v rt.Value, hex bool, roots ...rt.Value) rt.Value { k := gluPushRoots(c,v); if k < 0 { return rt.NilVal() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,k); return rt.NilVal() }; out,err := c.Tostr(v,hex); gluPopRoots(c,k+m); return gluMust(out,err) }\nfunc gluTableAdd(c *rt.Context, t, v, i rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v,i); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAdd(t,v,i); gluPopRoots(c,n+m); return err }\nfunc gluTableAppendKnown(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }\nfunc gluTableAppendKnownHeld(c *rt.Context, t, v rt.Value, at int, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableAppendKnown(t,v,at); gluPopRoots(c,n+m); return err }\nfunc gluTableSetRooted(c *rt.Context, t, k, v rt.Value, roots ...rt.Value) rt.HeapError { n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSet(t,k,v); gluPopRoots(c,n+m); return err }\nfunc gluTableSetStable(c *rt.Context, t, k, v rt.Value, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStable(t,k,v,cache) }; n := gluPushRoots(c,t,k,v); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStable(t,k,v,cache); gluPopRoots(c,n+m); return err }\nfunc gluTableSetStableNumber(c *rt.Context, t, k rt.Value, v rt.Number, cache *rt.TableFieldCache, roots ...rt.Value) rt.HeapError { if *cache != 0 { return c.TableSetStableNumber(t,k,v,cache) }; n := gluPushRoots(c,t,k); if n < 0 { return rt.HeapOOM }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return rt.HeapOOM }; err := c.TableSetStableNumber(t,k,v,cache); gluPopRoots(c,n+m); return err }\nfunc gluPrintV(c *rt.Context, s, x, y, color rt.Value, roots ...rt.Value) int { n := gluPushRoots(c,s,x,y,color); if n < 0 { return x.Int() }; m := gluPushRoots(c,roots...); if m < 0 { gluPopRoots(c,n); return x.Int() }; out := c.PrintV(s,x,y,color); gluPopRoots(c,n+m); return out }\n\nconst (\n\tSheetW = 8; SheetH = 8; MapW = 1; MapH = 1; MapLayers = 1; MapPlaneMask = 0; MapStreaming = false; SheetReadOnly = true\n\tSpriteCols = SheetW / 8; SpriteRows = SheetH / 8; SpriteN = SpriteCols * SpriteRows\n)\n\n//go:section .rodata\nvar sheetROM = [ 0 ]byte{}\n//go:section .rodata\nvar sheetIndexROM = [ 1 ]uint16{0x0000}\n//go:section .rodata\nvar mapROM = [ 0 ]uint16{}\n//go:section .rodata\nvar flagROM = [ 1 ]byte{0x00}\n//go:section .rodata\nvar poseIndexROM = [ 0 ]rt.PoseRange{}\nconst PoseVariantBaseCount = 0\nvar poseVariantNamesROM = []string(nil)\n//go:section .rodata\nvar posePartROM = [ 0 ]rt.PosePart{}\n//go:section .rodata\nvar animationClipROM = [0]rt.AnimationClip{}\n//go:section .rodata\nvar animationFrameROM = [0]uint16{}\n\n//go:section .ewram\nvar sheetRAM [0]byte\n//go:section .ewram\nvar sheetIndexRAM [1]uint16\n//go:section .ewram\nvar mapRAM [0]uint16\n//go:section .ewram\nvar flagRAM [1]byte\n//go:section .ewram\nvar cartData rt.AssetMemory\n//go:section .ewram\nvar ctx rt.Context\n//go:section .ewram\nvar game Game\n//go:section .debug_mailbox\nvar debugMailbox rt.DebugMailbox\n\ntype Game struct {\n\tticks rt.Number\n}\n\ntype Runnable interface { Init(*rt.Context); Update(*rt.Context); Draw(*rt.Context) }\nvar _ Runnable = (*Game)(nil)\n\nfunc (g *Game) Init(c *rt.Context) {\n\tif !c.SetFont(&projectFontROM) { panic(\"invalid project font\") }\n\tglu_rhs_1 := rt.Number(0)\n\tg.ticks = glu_rhs_1\n\tg.gluInit(c)\n}\n\nfunc (g *Game) Update(c *rt.Context) {\n\tg.gluUpdate(c)\n}\n\nfunc (g *Game) Draw(c *rt.Context) {\n\tg.gluDraw(c)\n}\n\n\nfunc (g *Game) gluInit(c *rt.Context) {\n}\n\nfunc (g *Game) __glu_call_gluInit(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluInit(c)\n\tgluPopRoots(c,n)\n}\n\nfunc (g *Game) gluUpdate(c *rt.Context) {\n\tglu_num_2 := g.ticks\n\tglu_num_3 := rt.Number(65536)\n\tglu_rhs_4 := (glu_num_2 + glu_num_3)\n\tg.ticks = glu_rhs_4\n}\n\nfunc (g *Game) __glu_call_gluUpdate(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluUpdate(c)\n\tgluPopRoots(c,n)\n}\n\nfunc (g *Game) gluDraw(c *rt.Context) {\n\tglu_arg_5 := rt.Number(0)\n\tc.ClsV(rt.NumVal(glu_arg_5))\n}\n\nfunc (g *Game) __glu_call_gluDraw(c *rt.Context, roots ...rt.Value) {\n\tn := gluPushRoots(c, roots...)\n\tif n < 0 { return }\n\tg.gluDraw(c)\n\tgluPopRoots(c,n)\n}\n\n\nvar cartImage = rt.AssetImage{\n\t\tSheetW: SheetW, SheetH: SheetH, SpriteCols: SpriteCols, SpriteRows: SpriteRows, SpriteN: SpriteN,\n\t\tMapW: MapW, MapH: MapH, MapLayers: MapLayers, MapPlaneMask: MapPlaneMask, MapStreaming: MapStreaming, SheetReadOnly: SheetReadOnly, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],\n\t\tPoseIndex: poseIndexROM[:], PoseParts: posePartROM[:],\n\t\tPoseVariantBaseCount: 0, PoseVariantNames: poseVariantNamesROM,\n\t\tAnimationClips: animationClipROM[:], AnimationFrames: animationFrameROM[:],\n\t\tSheetIndex: sheetIndexROM[:],\n}\nfunc main() {\n\trt.DebugLog(\"Cartridge preview started\")\n\tcartData.SheetW, cartData.SheetH = SheetW, SheetH\n\tcartData.SpriteCols, cartData.SpriteRows, cartData.SpriteN = SpriteCols, SpriteRows, SpriteN\n\tcartData.MapW, cartData.MapH, cartData.MapLayers, cartData.MapPlaneMask = MapW, MapH, MapLayers, MapPlaneMask\n\tcartData.MapStreaming, cartData.SheetReadOnly = MapStreaming, SheetReadOnly\n\tcartData.Sheet = sheetRAM[:]\n\tcartData.SheetIndex = sheetIndexRAM[:]\n\tcartData.Map, cartData.Flags = mapRAM[:], flagRAM[:]\n\tcartData.PoseIndex, cartData.PoseParts = poseIndexROM[:], posePartROM[:]\n\tcartData.PoseVariantBaseCount, cartData.PoseVariantNames = 0, poseVariantNamesROM\n\tcartData.AnimationClips, cartData.AnimationFrames = animationClipROM[:], animationFrameROM[:]\n\tif !ctx.Init(&cartImage, &cartData) { rt.DebugLog(\"Cartridge assets could not be initialized. Rebuild the project.\"); for {} }\n\tctx.InitHardware()\n\tctx.SetProfiling(true)\n\tgame.Init(&ctx)\n\t// _init runs while Mode 0 is force-blanked; commit its\n\t// spritesheet mutations before the first visible frame.\n\tctx.FinalizeInitHardware()\n\tfor {\n\t\t// One iteration = exactly two display frames (about 30 Hz).\n\t\t// The LCD always scans at 59.73 Hz;\n\t\t// each rendered image is shown for two whole scans. PaceFrame30\n\t\t// waits on LCD events with HALT after update/draw, so\n\t\t// the flip always lands in the second frame's VBlank - a fast\n\t\t// iteration can never flip one frame early and alternate cadence.\n\t\tctx.BeginFramePace()\n\t\tctx.PollInput()\n\t\tctx.PollPauseMenu()\n\t\tpaused := ctx.PauseActive()\n\t\tif !paused {\n\t\tctx.BeginProfilePhase(rt.ProfileUpdate)\n\t\tgame.Update(&ctx)\n\t\tctx.EndProfilePhase(rt.ProfileUpdate)\n\t\tctx.BeginProfilePhase(rt.ProfileDraw)\n\t\tctx.BeginRenderFrame()\n\t\tgame.Draw(&ctx)\n\t\tctx.EndProfilePhase(rt.ProfileDraw)\n\t\t// Finish renderer work off screen: Mode 4 already drew on the hidden\n\t\t// page, so nothing tears, and update+draw own the full two-frame\n\t\t// window (~562k cycles) minus only the flip itself.\n\t\tctx.PrepareRender()\n\t\t}\n\t\tif paused { ctx.PreparePauseMenu() }\n\t\tctx.PaceFrame30()\n\t\tctx.WaitForPresentWindow()\n\t\tif paused { ctx.PresentPauseMenu() } else { ctx.PresentRender() }\n\t\theaplessStats := ctx.DebugSnapshot()\n\t\theaplessStats.HeapCapacity, heaplessStats.HeapHandleLimit = 0, 0\n\t\tdebugMailbox.Begin(heaplessStats)\n\t\tdebugMailbox.Add(\"ticks\", rt.NumVal(game.ticks))\n\t\tdebugMailbox.End()\n\t\tctx.EndFramePace30()\n\t\tctx.WaitVDraw()\n\t}\n}\n",
+    "Warnings": null,
+    "RendererRequested": 1,
+    "Renderer": 1,
+    "RendererReason": "M0_FORCED_PROVEN",
+    "RendererProfile": "",
+    "RendererDiagnostic": "",
+    "RendererLayers": 0,
+    "RendererObjects": false,
+    "RendererText": false,
+    "RendererOAMEntries": 0,
+    "RendererLineCycles": 0
+  }
+}

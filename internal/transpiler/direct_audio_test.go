@@ -87,3 +87,27 @@ func TestDirectAudioExampleParsesAndDocumentsBothAPIs(t *testing.T) {
 		}
 	}
 }
+
+func TestDirectAudioDeletedIDsFailAtSourceAndDynamicIDsKeepSentinels(t *testing.T) {
+	for _, mode := range []Renderer{RendererMode0, RendererMode4, RendererAuto} {
+		opts := nativeTranspilerOptions(t)
+		opts.Renderer = mode
+		opts.SheetW, opts.SheetH = 8, 8
+		opts.DirectAudio = directAudioFixture(t)
+		deleted := assetsync.DirectAudioItem{Name: "deleted", BankID: 65535, Deleted: true}
+		opts.DirectAudio.Manifest.Version = 2
+		opts.DirectAudio.Manifest.Music = append([]assetsync.DirectAudioItem{deleted}, opts.DirectAudio.Manifest.Music...)
+		opts.DirectAudio.Manifest.Samples = append([]assetsync.DirectAudioItem{deleted}, opts.DirectAudio.Manifest.Samples...)
+		for _, call := range []string{"sample(0)", "pcm_music(0)"} {
+			source := "function _init() " + call + " end function _draw() cls(1) end"
+			if _, err := Transpile("deleted.lua", source, opts); err == nil || !strings.Contains(err.Error(), "deleted.lua:1:") {
+				t.Fatalf("%s accepted deleted ID: %v", mode, err)
+			}
+		}
+		source := `function _init() local i=1 pcm_music(i) sample(i) end function _draw() cls(1) end`
+		got, _, err := TranspileWithReport("live.lua", source, opts)
+		if err != nil || !strings.Contains(got, "65535,") {
+			t.Fatalf("%s: deleted slot mapping lost: %v", mode, err)
+		}
+	}
+}
