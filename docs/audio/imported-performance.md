@@ -1,11 +1,53 @@
 # What imported audio costs
 
-**Imported audio is close to Butano's CPU cost in these tests. It does not
-allocate or run garbage collection during playback.** The main limitation
-we found is timing at 32 sustained music voices: mTile delayed one update
-in each repeated 20-second capture, while Butano kept its cadence.
+**mTile now remembers LCD frame events and uses HALT while waiting.**
+The measured 32-voice pacing fault is fixed, including the moving-sprite
+PCM/PSG fixtures in both renderers. Playback still has zero Lua allocations
+and collections in these audio-only programs.
 
-These are measurements of **31 ROM/configuration combinations**, taken on
+## Latest: stop polling, keep the frames steady
+
+The old engine kept checking whether enough time had passed. The new engine
+can sleep until a display event wakes it. It also remembers that a new
+display frame began, even if mixing kept the CPU busy for that whole
+visible interval. Your existing Lua music/effect calls need no rewrite.
+
+| Workload | Old mTile instruction execution | New mTile | Butano, matched |
+| --- | ---: | ---: | ---: |
+| No audio | 100.00% | 1.13% | — |
+| One short WAV | 99.67% | 5.22% | 4.99% |
+| Music, 4 voices | 99.67% | 11.85% | 11.39% |
+| Music, 16 voices | 99.67% | 31.79% | 30.43% |
+| Music, 32 voices | 99.67% | 58.37% | 55.82% |
+| Music, 4 voices + 8 effects | 99.67% | 16.96% | 16.90% |
+
+These percentages include polling instructions, so they show the waiting
+improvement directly. They are not battery measurements. The CPU's mixer
+work remains: four voices require 65,672 non-wait instruction cycles per
+update, versus 63,830 in matched Butano. New clock/wakeup bookkeeping adds
+740 cycles relative to the old mTile fixture, about 0.13 percentage points
+of a complete 30 FPS budget. It trades a small amount of bookkeeping for
+removing almost all instruction execution during intentional waits.
+
+![CPU instruction execution before and after LCD-event pacing, compared with matched Butano.](../benchmarks/audio-pacing-2026-11-02/execution.svg)
+
+Every measured 32-voice interval is now two LCD refreshes in both
+independent 600-update captures. The moving-sprite tests also compare exact
+Mode 0/4 pixels, exercise PSG alongside 32 PCM voices, and verify IRQ-state
+preservation. The player still starts mixing at line 0; the renderer keeps
+its safe VRAM-transfer windows. The clock adds 24 bytes of static IWRAM;
+its fixed buffers, Lua heap behavior and stack reservation are unchanged.
+
+![Remembered LCD events remove the extra three-refresh hold.](../benchmarks/audio-pacing-2026-11-02/cadence.svg)
+
+The preview's pinned mGBA also needed its pending-interrupt HALT behavior
+corrected. Both engines were remeasured with that same core. Read the
+[19-configuration follow-up and verification](../benchmarks/audio-pacing-2026-11-02/README.md)
+for the hardware contract, exact tradeoffs and remaining workload limits.
+
+## Original measurements and the choices behind them
+
+The sections below retain the **31 original ROM/configuration combinations**, taken on
 2026-11-02 with the repository's pinned mGBA core. They describe simple
 audio-only programs, not every song or a complete game's performance.
 The [full report and reproducible harness](../benchmarks/imported-audio-performance-2026-11-02/README.md)
@@ -41,6 +83,9 @@ updates every second LCD refresh: approximately 29.86 FPS, normally called
 at 30 FPS. Reducing game updates does not halve the audio work.
 
 ## CPU: how much of the game budget does the work use?
+
+This table retains the original pre-fix work measurements. Current pacing
+and instruction-execution figures are in the latest section above.
 
 A 30 FPS update has **561,792 GBA clock cycles**. The table counts cycles
 spent executing instructions for the application, engine and interrupts,
@@ -85,15 +130,16 @@ more telemetry than this minimal Butano fixture. They are not claims about
 uninstrumented release-ROM performance. The full report also provides the
 no-audio floor and event-inclusive measurements.
 
-## Waiting still uses CPU instructions in mTile
+## What the original waiting loop did
 
 After finishing the work, both programs wait for the correct display time.
-In this build, **mTile polls a timer and display counter**, while Butano
-usually uses the GBA's HALT mechanism during that wait.
+In the original build, **mTile polled a timer and display counter**, while
+Butano usually used the GBA's HALT mechanism during that wait. The new
+event waits above replace this original polling behavior.
 
 ![The four-voice workload separates useful instruction work, active polling, HALT time and hardware event advancement.](../benchmarks/imported-audio-performance-2026-11-02/waiting.svg)
 
-Consequently, mTile executes instructions during almost the entire interval,
+Consequently, the original mTile build executes instructions during almost the entire interval,
 even though about 11.56% is non-wait software work in the four-voice example.
 Butano spends most remaining time HALTed. The primary table measures how
 much useful work must fit into the game budget; it does **not** mean that
@@ -180,6 +226,10 @@ Butano reported zero dynamic EWRAM allocation at all captured publications;
 its audio buffers are static too.
 
 ## The real stress limitation: meeting the right deadline
+
+This is the original diagnosis. The remembered-frame fix above resolves
+the observed pacing fault; the single-service mixer duration remains a
+real workload constraint.
 
 An average below 100% does not guarantee smooth timing. Imagine two
 deliveries: one may take most of the afternoon, but a smaller one still

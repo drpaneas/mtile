@@ -32,7 +32,7 @@ int main() {
 Its audio directory must contain the same source files in the same sorted
 order; the reproducible harness builds and verifies both banks. Open
 [the illustrated measurements](../../docs/audio/imported-performance.md) for CPU,
-ROM, both RAM banks, heap/GC checks and the 32-voice timing limitation.
+ROM, both RAM banks, heap/GC checks and the measured 32-voice pacing fix.
 The benchmark C++ fixture and generation scripts live in
 `scripts/butano-bench/pcm/`. All included audio is original procedural test
 material, under the repository MIT license.

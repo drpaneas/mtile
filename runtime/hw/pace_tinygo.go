@@ -19,11 +19,8 @@ func ReadFrameCycleCounter() uint32 {
 	}
 }
 
-// PaceWaitUntil spins until the frame cycle counter reaches deadline.
-// This burns the whole display frames a 30 Hz schedule owes before the
-// caller does the precise VCOUNT wait, so a fast iteration can never flip
-// one display frame early and alternate between 1- and 2-frame cadence -
-// the only way 30 Hz can visibly jitter on this panel.
+// PaceWaitUntil preserves duration waits for native callers that explicitly
+// mask IRQs. Normal game pacing uses WaitFramePace and BIOS HALT instead.
 func PaceWaitUntil(deadline uint32) {
 	for ReadFrameCycleCounter() < deadline {
 	}

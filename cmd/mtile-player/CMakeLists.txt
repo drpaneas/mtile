@@ -18,8 +18,20 @@ set(M_CORE_GB OFF)
 set(BINARY_NAME mgba-core)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/mgba ${CMAKE_CURRENT_BINARY_DIR}/mgba EXCLUDE_FROM_ALL)
 
+option(MTILE_MGBA_HALT_COMPAT "Fix pending-request HALT behavior in pinned mGBA" ON)
+if(MTILE_MGBA_HALT_COMPAT)
+  include(mgba_halt_compat.cmake)
+endif()
+
 add_executable(mtile-player main.c)
 target_link_libraries(mtile-player PRIVATE mgba-core)
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(mtile-halt-test halt_test.c)
+  target_link_libraries(mtile-halt-test PRIVATE mgba-core)
+  add_test(NAME gba-halt-pending-request COMMAND mtile-halt-test)
+endif()
 
 if(MSVC)
   target_compile_options(mtile-player PRIVATE /W4)

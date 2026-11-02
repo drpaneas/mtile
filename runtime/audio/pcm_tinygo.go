@@ -3,15 +3,12 @@
 package audio
 
 import (
-	"device/gba"
 	"github.com/drpaneas/mtile/runtime/hw"
 	"runtime/interrupt"
 	"unsafe"
 )
 
 var activePCM *PCMController
-var pcmVBlankIRQ = interrupt.New(gba.IRQ_VBLANK, pcmVBlank)
-var pcmMixIRQ = interrupt.New(gba.IRQ_VCOUNT, pcmMix)
 
 func (p *PCMController) initPCM(bank []uint32) bool {
 	if activePCM != nil {
@@ -31,12 +28,7 @@ func (p *PCMController) initPCM(bank []uint32) bool {
 func (p *PCMController) startPCM() {
 	// DMA reset stays at VBlank. Mixing happens at line 0, outside the display
 	// commit window, at the LCD's 59.73 Hz even while the Lua game runs at 30 FPS.
-	state := interrupt.Disable()
-	const dispstat uintptr = 0x04000004
-	hw.SetReg16(dispstat, hw.GetReg16(dispstat)&0x00ff|1<<3|1<<5)
-	pcmVBlankIRQ.Enable()
-	pcmMixIRQ.Enable()
-	interrupt.Restore(state)
+	hw.SetDisplayAudio(pcmVBlank, pcmMix)
 }
 
 func (p *PCMController) musicPCM(id int, loop bool) {
@@ -55,9 +47,9 @@ func (p *PCMController) samplePCM(id, volume, priority int) {
 }
 
 //go:section .iwram
-func pcmVBlank(interrupt.Interrupt) { maxmodVBlank() }
+func pcmVBlank() { maxmodVBlank() }
 
-func pcmMix(interrupt.Interrupt) {
+func pcmMix() {
 	if activePCM == nil {
 		return
 	}

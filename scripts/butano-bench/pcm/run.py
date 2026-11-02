@@ -110,9 +110,10 @@ def mtile_build(a,driver,shared,w,variant):
                 bridge=bridge.replace('[32]','[20]').replace('count = 32','count = 20').replace('[8]','[4]').replace('i < 8','i < 4')
                 write(rt/'maxmod/bridge.c',bridge)
             else:
-                source=(ROOT/'runtime/audio/pcm_tinygo.go').read_text()
-                old='hw.GetReg16(dispstat)&0x00ff|1<<3|1<<5';assert source.count(old)==1
-                write(rt/'audio/pcm_tinygo.go',source.replace(old,'hw.GetReg16(dispstat)&0x00ff|16<<8|1<<3|1<<5'))
+                owner='hw/frame_tinygo.go' if (ROOT/'runtime/hw/frame_tinygo.go').exists() else 'audio/pcm_tinygo.go'
+                source=(ROOT/'runtime'/owner).read_text()
+                old='GetReg16(dispstat)&0x00ff|1<<3|1<<5';assert source.count(old)==1
+                write(rt/owner,source.replace(old,'GetReg16(dispstat)&0x00ff|16<<8|1<<3|1<<5'))
             ENV['PCM_RUNTIME']=str(rt)
         run([driver,'build',p,'mode4' if variant=='mtile-mode4' else 'mode0',rom],ROOT,rom.with_suffix('.build.log'))
     return rom,pathlib.Path(str(rom)+'.game.elf')
@@ -170,7 +171,7 @@ def profile(a,profiler,rom,elf,folder):
         pc=int(r['pc'],16);cost=int(r['cycles']);frames=stacks.get(pc,[]);names=' '.join(f[0] for f in frames)
         i=bisect.bisect_right(starts,pc)-1;symbol=syms[i][1] if i>=0 else '<unmapped>'
         location=' '.join(f[1] for f in frames)
-        if any(s in names for s in ('PaceWaitUntil','WaitForPresentWindow','WaitVDraw','wait_for_vblank','VBlankIntrWait')):
+        if any(s in names for s in ('PaceWaitUntil','WaitFramePace','WaitFrameStart','waitDisplayPhase','WaitForPresentWindow','WaitVDraw','wait_for_vblank','VBlankIntrWait')) or symbol=='mtile_halt_display_wait':
             cat='wait';waitpcs.append(r['pc'])
         elif any(s in names for s in ('DebugMailbox','DebugSnapshot','DebugLog')) or any(f[0]=='publish' for f in frames) or symbol.startswith('_ZL7publish'):cat='publication'
         elif '/maxmod/' in location or symbol.startswith(('mm','mp','mpm')):cat='maxmod'
@@ -222,10 +223,10 @@ def capture(a,driver,rom,out):
 
 def main():
     global ENV
-    ap=argparse.ArgumentParser();ap.add_argument('--work',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-pcm-compare-20261102'));ap.add_argument('--out',type=pathlib.Path,default=ROOT/'docs/benchmarks/imported-audio-performance-2026-11-02');ap.add_argument('--butano',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-butano-20261029'));ap.add_argument('--mmutil',type=pathlib.Path,required=True);ap.add_argument('--ticks',type=int,default=300);ap.add_argument('--samples',type=int,default=600);ap.add_argument('--warmup',type=int,default=60);ap.add_argument('--only',default='');ap.add_argument('--rebuild',action='store_true');a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--work',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-pcm-compare-20261102'));ap.add_argument('--out',type=pathlib.Path,default=ROOT/'docs/benchmarks/imported-audio-performance-2026-11-02');ap.add_argument('--butano',type=pathlib.Path,default=pathlib.Path('/private/tmp/mtile-butano-20261029'));ap.add_argument('--mmutil',type=pathlib.Path,required=True);ap.add_argument('--ticks',type=int,default=300);ap.add_argument('--samples',type=int,default=600);ap.add_argument('--warmup',type=int,default=60);ap.add_argument('--only',default='');ap.add_argument('--variants',default='',help='Exact comma-separated build variants');ap.add_argument('--rebuild',action='store_true');a=ap.parse_args()
     ENV=os.environ.copy();ENV.update(DEVKITPRO='/opt/devkitpro',DEVKITARM='/opt/devkitpro/devkitARM',GOCACHE='/private/tmp/mtile-effective-guide-20261031/go-cache');ENV['PATH']='/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:'+ENV['PATH']
     butano,driver,profiler,shared,manifest=prepare(a)
-    dump(a.out/'environment.json',dict(butanoRevision=REV,mtileRevision=run(['git','rev-parse','HEAD'],ROOT).strip(),mtileDirty=True,tinygo=run(['tinygo','version']).strip(),gcc=run([PREFIX+'g++','--version']).splitlines()[0],playerSHA256=sha(ROOT/'build/player/mtile-player'),profilerSHA256=sha(HERE/'native/profile.c'),mmutilSHA256=sha(a.mmutil),soundbankSHA256=sha(shared/'assets/audio/direct'/manifest['bank']),soundbankBytes=(shared/'assets/audio/direct'/manifest['bank']).stat().st_size,inputs={f.name:sha(f) for f in (a.work/'inputs').iterdir()},warmup=a.warmup,profileTicks=a.ticks,captureTicks=a.samples,cyclesPer30HzTick=BUDGET))
+    dump(a.out/'environment.json',dict(butanoRevision=REV,mtileRevision=run(['git','rev-parse','HEAD'],ROOT).strip(),mtileDirty=True,tinygo=run(['tinygo','version']).strip(),gcc=run([PREFIX+'g++','--version']).splitlines()[0],playerSHA256=sha(ROOT/'build/player/mtile-player'),mgbaCompatSHA256=sha(ROOT/'cmd/mtile-player/mgba_halt_compat.cmake') if (ROOT/'cmd/mtile-player/mgba_halt_compat.cmake').exists() else None,profilerSHA256=sha(HERE/'native/profile.c'),mmutilSHA256=sha(a.mmutil),soundbankSHA256=sha(shared/'assets/audio/direct'/manifest['bank']),soundbankBytes=(shared/'assets/audio/direct'/manifest['bank']).stat().st_size,inputs={f.name:sha(f) for f in (a.work/'inputs').iterdir()},warmup=a.warmup,profileTicks=a.ticks,captureTicks=a.samples,cyclesPer30HzTick=BUDGET))
     results=[]
     for w in cases():
         case_shared,case_manifest=long_assets(a,driver,shared) if w.get('long') else (shared,manifest)
@@ -234,6 +235,7 @@ def main():
         if w['name'] in ('mod32','mixed8'):variants.remove('butano-default')
         if w['name']=='mod4':variants+=['mtile-heap-control','mtile-mode4','mtile-cap20-control']
         if w['name']=='mod32':variants+=['mtile-line16-control']
+        if a.variants:variants=[v for v in variants if v in a.variants.split(',')]
         for variant in variants:
             label=f'{variant}-{w["name"]}'
             if a.only and not any(x in label for x in a.only.split(',')):continue

@@ -407,7 +407,7 @@ func (g *generator) renderMain(b *sourceBuilder) {
 	b.line("\t\t// One iteration = exactly two display frames (about 30 Hz).")
 	b.line("\t\t// The LCD always scans at 59.73 Hz;")
 	b.line("\t\t// each rendered image is shown for two whole scans. PaceFrame30")
-	b.line("\t\t// burns whatever time update/draw left over in the first frame, so")
+	b.line("\t\t// waits on LCD events with HALT after update/draw, so")
 	b.line("\t\t// the flip always lands in the second frame's VBlank - a fast")
 	b.line("\t\t// iteration can never flip one frame early and alternate cadence.")
 	b.line("\t\tctx.BeginFramePace()")

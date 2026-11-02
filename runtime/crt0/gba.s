@@ -114,6 +114,19 @@ handleInterruptARM:
     bx      r0
     .ltorg
 
+// The caller masks IME across its predicate check and this BIOS Halt. An
+// enabled pending request wakes HALT even with IME=0; restoring IME then
+// services it. Video, sound, timers and DMA continue while the CPU sleeps.
+.section .text.mtile_halt_display_wait,"ax",%progbits
+.align 2
+.arm
+.global mtile_halt_display_wait
+.type mtile_halt_display_wait,%function
+mtile_halt_display_wait:
+    swi     0x020000
+    bx      lr
+.size mtile_halt_display_wait, .-mtile_halt_display_wait
+
 // Copy an opaque span list into an equally aligned 240-pixel framebuffer.
 // r0/r1 are EWRAM raster/framebuffer bases, r2 is the packed four-byte
 // Offset/Length/Y span array, and r3 is its count. This common unshifted

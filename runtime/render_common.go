@@ -43,10 +43,12 @@ func (c *Context) WaitForPresentWindow() {
 	}
 }
 
-// WaitVDraw consumes the current VBlank so each generated-loop iteration is
-// locked to exactly one display interval.
+// WaitVDraw consumes the current VBlank by observing the next LCD frame event.
+// An audio IRQ may return after that frame's visible interval; it must not make
+// the game loop wait an extra refresh. VRAM guards use hw.WaitVDraw instead
+// when they require an actual visible scanline followed by a fresh VBlank.
 func (c *Context) WaitVDraw() {
-	hw.WaitVDraw()
+	hw.WaitFrameStart()
 }
 
 func (c *Context) FrameSkips() uint32 {

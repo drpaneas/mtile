@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168537600,
+    "instructionCycles": 1905000,
+    "waitInstructionCycles": 236700,
+    "activeEventCycles": 2400,
+    "haltEventCycles": 166630200,
+    "otherAddressCycles": 146400,
+    "instructions": 432900,
+    "mailboxMemory": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50332648,
+        "maxSP": 50332672,
+        "observedRange": 24
+      },
+      {
+        "mode": 19,
+        "minSP": 50364368,
+        "maxSP": 50364384,
+        "observedRange": 16
+      },
+      {
+        "mode": 31,
+        "minSP": 50336800,
+        "maxSP": 50336832,
+        "observedRange": 32
+      }
+    ],
+    "mixerCapacity": 0,
+    "minObservedVoices": 0,
+    "maxObservedVoices": 0,
+    "mmFrameCalls": 0,
+    "mmFrameCycles": 0,
+    "mmFrameMaximum": 0,
+    "mmFrameOver160Lines": 0
+  },
+  "categoriesPerTick": {
+    "irq": 870.0,
+    "other": 1753.0,
+    "wait": 789.0,
+    "publication": 2450.0
+  },
+  "cpu": {
+    "mean": 5561,
+    "median": 5561.0,
+    "p95": 5561,
+    "maximum": 5561,
+    "minimum": 5561,
+    "percent": 0.9898681362497151
+  },
+  "cpuWithNonHaltEvents": {
+    "mean": 5569,
+    "median": 5569.0,
+    "p95": 5569,
+    "maximum": 5569,
+    "minimum": 5569,
+    "percent": 0.9912921508316245
+  },
+  "top": [
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Begin",
+      "cyclesPerTick": 1062.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut32",
+      "cyclesPerTick": 952.0
+    },
+    {
+      "name": "handleInterrupt",
+      "cyclesPerTick": 648.0
+    },
+    {
+      "name": "memset",
+      "cyclesPerTick": 250.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PresentRender",
+      "cyclesPerTick": 167.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PerformanceStats",
+      "cyclesPerTick": 154.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PollPauseMenu",
+      "cyclesPerTick": 132.0
+    },
+    {
+      "name": "runtime/volatile.LoadUint16",
+      "cyclesPerTick": 128.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugGet32",
+      "cyclesPerTick": 117.0
+    },
+    {
+      "name": "runtime/volatile.StoreUint16",
+      "cyclesPerTick": 116.0
+    },
+    {
+      "name": "handleInterruptARM",
+      "cyclesPerTick": 108.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).PaceFrame30",
+      "cyclesPerTick": 106.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).mode0RequiredCommitCycles",
+      "cyclesPerTick": 101.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime/hw.ReadFrameCycleCounter",
+      "cyclesPerTick": 93.0
+    },
+    {
+      "name": "memcpy",
+      "cyclesPerTick": 92.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.DebugMailbox).Add",
+      "cyclesPerTick": 81.0
+    },
+    {
+      "name": "github.com/drpaneas/mtile/runtime.debugPut16",
+      "cyclesPerTick": 80.0
+    },
+    {
+      "name": "__aeabi_memclr",
+      "cyclesPerTick": 66.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).accountPostPaceWork",
+      "cyclesPerTick": 66.0
+    },
+    {
+      "name": "main.main",
+      "cyclesPerTick": 57.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).EndProfilePhase",
+      "cyclesPerTick": 48.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).ensurePaletteState",
+      "cyclesPerTick": 47.0
+    },
+    {
+      "name": "__ARMv5LongLdrPcThunk_memset",
+      "cyclesPerTick": 45.0
+    },
+    {
+      "name": "runtime/volatile.LoadUint32",
+      "cyclesPerTick": 38.0
+    },
+    {
+      "name": "(*github.com/drpaneas/mtile/runtime.Context).BeginProfilePhase",
+      "cyclesPerTick": 34.0
+    }
+  ],
+  "cpuMetric": "non-wait instruction cycles; event advancement separate"
+}

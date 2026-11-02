@@ -1,0 +1,476 @@
+{
+  "variant": "butano-matched",
+  "workload": {
+    "name": "mod16",
+    "kind": 3,
+    "voices": 16,
+    "effects": 0
+  },
+  "romBytes": 72768,
+  "romSHA256": "0b6062529a3271235fccd8c74aebb6fd3c22d2af7318f61ea304b8ea66081363",
+  "elfSHA256": "77fa39e4c32391aae3e48763356b7d9ef77ffd976c384de84919f7d511ae2b04",
+  "profile": {
+    "metadata": {
+      "firstTick": 61,
+      "lastTick": 361,
+      "elapsedCycles": 168518728,
+      "instructionCycles": 51282825,
+      "waitInstructionCycles": 53400,
+      "activeEventCycles": 179873,
+      "haltEventCycles": 117056030,
+      "otherAddressCycles": 79800,
+      "instructions": 24661843,
+      "mailboxMemory": [
+        34888,
+        10624,
+        292,
+        0
+      ],
+      "stacks": [
+        {
+          "mode": 18,
+          "minSP": 50364284,
+          "maxSP": 50364320,
+          "observedRange": 36
+        },
+        {
+          "mode": 19,
+          "minSP": 50364368,
+          "maxSP": 50364384,
+          "observedRange": 16
+        },
+        {
+          "mode": 31,
+          "minSP": 50363848,
+          "maxSP": 50364128,
+          "observedRange": 280
+        }
+      ],
+      "mixerCapacity": 32,
+      "minObservedVoices": 16,
+      "maxObservedVoices": 16,
+      "mmFrameCalls": 600,
+      "mmFrameCycles": 49008179,
+      "mmFrameMaximum": 101500,
+      "mmFrameOver160Lines": 0
+    },
+    "categoriesPerTick": {
+      "other": 10487.043333333333,
+      "publication": 181.0,
+      "wait": 178.0,
+      "maxmod": 159672.70666666667,
+      "irq": 158.0
+    },
+    "cpu": {
+      "mean": 170764.75,
+      "median": 175198.5,
+      "p95": 179114,
+      "maximum": 194774,
+      "minimum": 151363,
+      "percent": 30.39643675951242
+    },
+    "cpuWithNonHaltEvents": {
+      "mean": 171364.32666666666,
+      "median": 175829.0,
+      "p95": 179743,
+      "maximum": 195458,
+      "minimum": 151882,
+      "percent": 30.503162499050656
+    },
+    "top": [
+      {
+        "name": ".mpmaa_10",
+        "cyclesPerTick": 93872.97333333333
+      },
+      {
+        "name": ".mpm_copy2",
+        "cyclesPerTick": 12664.666666666666
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+        "cyclesPerTick": 6447.466666666666
+      },
+      {
+        "name": ".mix_remaining",
+        "cyclesPerTick": 5707.533333333334
+      },
+      {
+        "name": ".fetch",
+        "cyclesPerTick": 5593.28
+      },
+      {
+        "name": ".mpm_cloop",
+        "cyclesPerTick": 4634.666666666667
+      },
+      {
+        "name": ".fetchsmall",
+        "cyclesPerTick": 2761.1466666666665
+      },
+      {
+        "name": "mppProcessTick",
+        "cyclesPerTick": 2589.72
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_envelopes",
+        "cyclesPerTick": 2123.52
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "cyclesPerTick": 2062.08
+      },
+      {
+        "name": "mpp_Update_ACHN_notest",
+        "cyclesPerTick": 1941.76
+      },
+      {
+        "name": "mpp_Update_ACHN_notest_disable_and_panning",
+        "cyclesPerTick": 1908.48
+      },
+      {
+        "name": ".mpm_mix_short",
+        "cyclesPerTick": 1834.5866666666666
+      },
+      {
+        "name": ".mpm_mix_complete",
+        "cyclesPerTick": 1712.6933333333334
+      },
+      {
+        "name": ".mpm_remix_test",
+        "cyclesPerTick": 1650.56
+      },
+      {
+        "name": ".mpm_next",
+        "cyclesPerTick": 1389.6666666666667
+      },
+      {
+        "name": "mpp_InstrumentPointer",
+        "cyclesPerTick": 1298.7733333333333
+      },
+      {
+        "name": "mpp_SamplePointer",
+        "cyclesPerTick": 1092.2666666666667
+      },
+      {
+        "name": "mmMixerMix",
+        "cyclesPerTick": 1042.66
+      },
+      {
+        "name": "mmUpdateEffects",
+        "cyclesPerTick": 972.0
+      },
+      {
+        "name": ".medfetch",
+        "cyclesPerTick": 891.3333333333334
+      },
+      {
+        "name": "bn::core::(anonymous namespace)::update_impl()",
+        "cyclesPerTick": 876.0
+      },
+      {
+        "name": ".end_fetch",
+        "cyclesPerTick": 800.0
+      },
+      {
+        "name": "____aeabi_uidiv_from_thumb",
+        "cyclesPerTick": 725.76
+      },
+      {
+        "name": "bn::audio_manager::execute_commands()",
+        "cyclesPerTick": 722.0
+      }
+    ],
+    "cpuMetric": "non-wait instruction cycles; event advancement separate"
+  },
+  "captures": [
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959203,
+        "overflows": 0,
+        "peak": 13283,
+        "rmsLeft": 5288.226911292431,
+        "rmsMono": 4732.928458911983,
+        "rmsRight": 5292.5937638995565,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 34888,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    },
+    {
+      "samples": 600,
+      "refreshGaps": {
+        "2": 599
+      },
+      "missedDelta": null,
+      "pcm": {
+        "clippedFrames": 0,
+        "nonzeroFrames": 959203,
+        "overflows": 0,
+        "peak": 13283,
+        "rmsLeft": 5288.226911292431,
+        "rmsMono": 4732.928458911983,
+        "rmsRight": 5292.5937638995565,
+        "sampleRate": 48000,
+        "stereoFrames": 959204
+      },
+      "heapCapacity": null,
+      "heapAllocated": null,
+      "heapLive": null,
+      "heapPeak": null,
+      "gcCollections": null,
+      "heapError": null,
+      "butanoMemory": {
+        "staticEWRAM": 34888,
+        "staticIWRAM": 10624,
+        "currentStack": 292,
+        "dynamicEWRAM": 0
+      }
+    }
+  ],
+  "memory": {
+    "sections": [
+      {
+        "name": ".iwram",
+        "bytes": 8432,
+        "address": 50331648
+      },
+      {
+        "name": ".bss",
+        "bytes": 2180,
+        "address": 50340080
+      },
+      {
+        "name": ".data",
+        "bytes": 0,
+        "address": 50342260
+      },
+      {
+        "name": ".init_array",
+        "bytes": 8,
+        "address": 50342260
+      },
+      {
+        "name": ".fini_array",
+        "bytes": 4,
+        "address": 50342268
+      },
+      {
+        "name": ".iwram0",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram1",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram2",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram3",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram4",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram5",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram6",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram7",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram8",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".iwram9",
+        "bytes": 0,
+        "address": 50342272
+      },
+      {
+        "name": ".ewram",
+        "bytes": 156,
+        "address": 33554432
+      },
+      {
+        "name": ".sbss",
+        "bytes": 34732,
+        "address": 33554588
+      },
+      {
+        "name": ".pad",
+        "bytes": 8,
+        "address": 33589320
+      }
+    ],
+    "largestSymbols": [
+      {
+        "name": "_ZN2bn15sprites_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 9812,
+        "address": 33575344
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_120external_data_bufferE",
+        "bytes": 6724,
+        "address": 33557104
+      },
+      {
+        "name": "_ZN2bn20sprite_tiles_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 5748,
+        "address": 33569596
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_engine_bufferE",
+        "bytes": 3744,
+        "address": 33585156
+      },
+      {
+        "name": "_ZN2bn16palettes_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 3408,
+        "address": 33563940
+      },
+      {
+        "name": "_ZN2bn26sprite_affine_mats_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 2248,
+        "address": 33567348
+      },
+      {
+        "name": "_ZN2bn2hw5audio12_GLOBAL__N_120maxmod_mixing_bufferE",
+        "bytes": 1056,
+        "address": 50340284
+      },
+      {
+        "name": "mmUpdateChannel_T0",
+        "bytes": 796,
+        "address": 50334008
+      },
+      {
+        "name": "_ZN2bn13audio_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 784,
+        "address": 33554588
+      },
+      {
+        "name": "_ZN2bn17bg_blocks_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 744,
+        "address": 33555372
+      },
+      {
+        "name": "_ZN2bn11bgs_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 692,
+        "address": 33556116
+      },
+      {
+        "name": "__aeabi_idivmod",
+        "bytes": 544,
+        "address": 50336148
+      },
+      {
+        "name": "mppProcessTick",
+        "bytes": 526,
+        "address": 50332652
+      },
+      {
+        "name": "mmReadPattern",
+        "bytes": 392,
+        "address": 50333508
+      },
+      {
+        "name": "_ZN2bn2hw4link12_GLOBAL__N_111data_bufferE",
+        "bytes": 304,
+        "address": 33589016
+      },
+      {
+        "name": "__aeabi_memcpy",
+        "bytes": 292,
+        "address": 50336704
+      },
+      {
+        "name": "_ZN2bn15sprites_manager22_check_items_on_screenERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 220,
+        "address": 50331648
+      },
+      {
+        "name": "mpp_Channel_NewNote",
+        "bytes": 208,
+        "address": 50332444
+      },
+      {
+        "name": "_ZN2bn15sprites_manager20_update_cameras_implERNS_14intrusive_listINS_14sorted_sprites5layerEEE",
+        "bytes": 180,
+        "address": 50331964
+      },
+      {
+        "name": "_ZN2bn22hblank_effects_manager12_GLOBAL__N_113internal_dataE",
+        "bytes": 176,
+        "address": 50340108
+      },
+      {
+        "name": "mmChannelStartACHN",
+        "bytes": 176,
+        "address": 50333180
+      },
+      {
+        "name": "_ZN2bn15display_manager12_GLOBAL__N_111data_bufferE",
+        "bytes": 168,
+        "address": 33556936
+      },
+      {
+        "name": "mpph_ProcessEnvelope",
+        "bytes": 162,
+        "address": 50332280
+      },
+      {
+        "name": "mm_schannels",
+        "bytes": 160,
+        "address": 50341612
+      },
+      {
+        "name": "_ZN2bn2hw8game_pak14_slow_game_pakEv",
+        "bytes": 156,
+        "address": 33554432
+      }
+    ]
+  },
+  "bankSHA256": "b4f3ab5a0eea20237784954a6674438f2c81fcd6ceebe9c45f78536db753a0b6",
+  "bankBytes": 11820,
+  "ram": {
+    "ewramStatic": 34888,
+    "iwramStatic": 10624,
+    "iwramStackReservation": 0,
+    "mailbox": 512
+  },
+  "instructionExecutionPercent": 30.431528654785478
+}

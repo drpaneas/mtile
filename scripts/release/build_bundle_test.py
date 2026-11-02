@@ -26,7 +26,7 @@ class BundleTest(unittest.TestCase):
         shutil.copyfile(SCRIPT, script)
         self.script = script
         for name in ("LICENSE", "scripts/release/BUNDLE-README.md", "third_party/mgba/LICENSE",
-                     "docs/third-party/mgba.md", "docs/third-party/tinygo.md",
+                     "docs/third-party/mgba.md", "cmd/mtile-player/mgba_halt_compat.cmake", "docs/third-party/tinygo.md",
                      "docs/third-party/TinyGo-LICENSE.txt", "runtime/maxmod/COPYING",
                      "docs/third-party/maxmod.md", "fonts/JetBrainsMono/OFL.txt",
                      "fonts/OpenDyslexic/LICENSE.txt", "fonts/pico-8-wide.otf/license.txt"):
@@ -140,7 +140,7 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         bundle = output / "mtile-linux-amd64"
         self.assertIn("Working tree: clean", (bundle / "BUILD-INFO.txt").read_text())
         self.assertIn("BUNDLE-README.md", (bundle / "README.md").read_text())
-        for name in ("JETBRAINS-MONO-OFL.txt", "OPENDYSLEXIC-LICENSE.txt", "PICO-8-WIDE-CC0.txt"):
+        for name in ("MGBA-HALT-COMPAT.cmake", "JETBRAINS-MONO-OFL.txt", "OPENDYSLEXIC-LICENSE.txt", "PICO-8-WIDE-CC0.txt"):
             self.assertTrue((bundle / "licenses" / name).is_file())
         smoke_line = next(line for line in result.stdout.splitlines() if line.startswith("SMOKE: "))
         smoke = Path(smoke_line.removeprefix("SMOKE: "))

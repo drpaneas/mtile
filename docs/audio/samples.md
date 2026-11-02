@@ -93,7 +93,7 @@ is preserved. This does not restore the superseded audio-v1 format.
 
 For measured CPU cycles, both RAM banks, ROM, heap/GC controls and the
 Butano comparison, read [What imported audio costs](imported-performance.md).
-It includes audio-only examples and explains the 32-voice timing limitation.
+It includes audio-only examples, the 32-voice pacing fix and timing limits.
 
 Maxmod reads instruments from ROM and mixes stereo output at approximately
 15,768 Hz (its standard "16 kHz" rate), then DMA1/2 feed FIFO A/B. Mixing
@@ -103,9 +103,10 @@ profiler retains Timers 2/3. Shared sound-register ownership preserves both.
 
 The player is serviced at the LCD's 59.73 Hz while game updates remain at
 approximately 30 FPS. A short VBlank handler resets DMA; mixing runs at scanline
-0. A long service can extend into VBlank or delay the main loop's observation
-of visible drawing; the [32-voice stress test](imported-performance.md#the-real-stress-limitation-meeting-the-right-deadline)
-demonstrates a cadence limitation. Missing the audio service deadline can
+0. A long service can extend into VBlank. Remembered LCD events and HALT
+preserve the main loop's pacing across such interrupts; see the
+[32-voice follow-up](../benchmarks/audio-pacing-2026-11-02/README.md).
+Missing the audio service deadline can
 also produce glitches in an overloaded game. Profile the
 complete game with its busiest song and simultaneous effects.
 

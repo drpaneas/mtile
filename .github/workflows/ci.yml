@@ -215,7 +215,8 @@ jobs:
             -DUSE_DISCORD_RPC=OFF -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF \
             -DUSE_SQLITE3=OFF -DUSE_LZMA=OFF -DUSE_EPOXY=OFF \
             -DUSE_MINIZIP=OFF -DUSE_ZLIB=OFF
-          cmake --build /tmp/mtile-player-build --target mtile-player --config Release
+          cmake --build /tmp/mtile-player-build --target mtile-player mtile-halt-test --config Release
+          ctest --test-dir /tmp/mtile-player-build --output-on-failure
 
       - name: Preview diagnostics and live hardware telemetry
         env:
@@ -224,6 +225,16 @@ jobs:
         run: >-
           go test ./internal/emulator
           -run '^TestLive(DebugTelemetry|PSGTelemetry|RuntimeFailureLog)$' -count=1 -v
+
+      - name: LCD pacing and imported audio conformance
+        env:
+          MTILE_FRAME_PACING_INTEGRATION: "1"
+          MTILE_IMPORTED_AUDIO_INTEGRATION: "1"
+          MTILE_PLAYER: /tmp/mtile-player-build/mtile-player
+        run: >-
+          go test ./internal/emulator
+          -run '^Test(FramePacingROMConformance|FramePacingPreservesMaskedIRQs|ImportedAudioROMConformance)$'
+          -count=1 -v
 
       # Full pipeline smoke: Lua + strict four-channel assets -> generated Go
       # -> TinyGo -> .gba. All audio examples use the four-channel PSG schema.

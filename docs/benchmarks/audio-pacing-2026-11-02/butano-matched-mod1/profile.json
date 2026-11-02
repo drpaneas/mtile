@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "firstTick": 61,
+    "lastTick": 361,
+    "elapsedCycles": 168534374,
+    "instructionCycles": 11156314,
+    "waitInstructionCycles": 53400,
+    "activeEventCycles": 48116,
+    "haltEventCycles": 157329944,
+    "otherAddressCycles": 79800,
+    "instructions": 5569478,
+    "mailboxMemory": [
+      34888,
+      10624,
+      292,
+      0
+    ],
+    "stacks": [
+      {
+        "mode": 18,
+        "minSP": 50364284,
+        "maxSP": 50364320,
+        "observedRange": 36
+      },
+      {
+        "mode": 19,
+        "minSP": 50364368,
+        "maxSP": 50364384,
+        "observedRange": 16
+      },
+      {
+        "mode": 31,
+        "minSP": 50363848,
+        "maxSP": 50364128,
+        "observedRange": 280
+      }
+    ],
+    "mixerCapacity": 32,
+    "minObservedVoices": 1,
+    "maxObservedVoices": 1,
+    "mmFrameCalls": 600,
+    "mmFrameCycles": 8740985,
+    "mmFrameMaximum": 16150,
+    "mmFrameOver160Lines": 0
+  },
+  "categoriesPerTick": {
+    "other": 7441.793333333333,
+    "publication": 181.0,
+    "wait": 178.0,
+    "maxmod": 28962.92,
+    "irq": 158.0
+  },
+  "cpu": {
+    "mean": 37009.71333333333,
+    "median": 37860.5,
+    "p95": 38350,
+    "maximum": 39162,
+    "minimum": 33533,
+    "percent": 6.5877964323688
+  },
+  "cpuWithNonHaltEvents": {
+    "mean": 37170.1,
+    "median": 38015.0,
+    "p95": 38520,
+    "maximum": 39329,
+    "minimum": 33705,
+    "percent": 6.616345551378446
+  },
+  "top": [
+    {
+      "name": ".mpm_copy2",
+      "cyclesPerTick": 12664.666666666666
+    },
+    {
+      "name": ".mpmaa_10",
+      "cyclesPerTick": 5872.843333333333
+    },
+    {
+      "name": "mppProcessTick",
+      "cyclesPerTick": 1841.17
+    },
+    {
+      "name": ".mpm_cloop",
+      "cyclesPerTick": 1609.6666666666667
+    },
+    {
+      "name": ".mpm_next",
+      "cyclesPerTick": 1389.6666666666667
+    },
+    {
+      "name": "mmMixerMix",
+      "cyclesPerTick": 1042.66
+    },
+    {
+      "name": "mmUpdateEffects",
+      "cyclesPerTick": 972.0
+    },
+    {
+      "name": "bn::core::(anonymous namespace)::update_impl()",
+      "cyclesPerTick": 876.0
+    },
+    {
+      "name": "bn::audio_manager::execute_commands()",
+      "cyclesPerTick": 722.0
+    },
+    {
+      "name": "mmFrame",
+      "cyclesPerTick": 564.4266666666666
+    },
+    {
+      "name": "mpp_Update_ACHN_notest_set_pitch_volume",
+      "cyclesPerTick": 402.96666666666664
+    },
+    {
+      "name": ".mix_remaining",
+      "cyclesPerTick": 346.47
+    },
+    {
+      "name": "bn::palettes_bank::update()",
+      "cyclesPerTick": 332.0
+    },
+    {
+      "name": ".fetch",
+      "cyclesPerTick": 288.25666666666666
+    },
+    {
+      "name": "bn::hblank_effects_manager::update()",
+      "cyclesPerTick": 234.0
+    },
+    {
+      "name": "mppProcessTickMain",
+      "cyclesPerTick": 218.4
+    },
+    {
+      "name": "bn::hw::timer::ticks()",
+      "cyclesPerTick": 216.05333333333334
+    },
+    {
+      "name": "bn::bg_blocks_manager::update()",
+      "cyclesPerTick": 194.0
+    },
+    {
+      "name": "publish",
+      "cyclesPerTick": 181.0
+    },
+    {
+      "name": ".fetchsmall",
+      "cyclesPerTick": 178.04
+    },
+    {
+      "name": "bn::sprite_tiles_manager::update()",
+      "cyclesPerTick": 174.0
+    },
+    {
+      "name": "bn::sprites_manager::commit(bool)",
+      "cyclesPerTick": 172.0
+    },
+    {
+      "name": "bn::core::update()",
+      "cyclesPerTick": 164.0
+    },
+    {
+      "name": "bn::sprite_affine_mats_manager::update()",
+      "cyclesPerTick": 156.0
+    },
+    {
+      "name": "bn::sprites_manager::update()",
+      "cyclesPerTick": 142.0
+    }
+  ],
+  "cpuMetric": "non-wait instruction cycles; event advancement separate"
+}

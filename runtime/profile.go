@@ -128,16 +128,14 @@ func (c *Context) EndFrameProfile() {
 }
 
 // 30 Hz pacing. The GBA LCD always scans at 59.73 Hz; a stable 30 Hz game
-// flips its page on every second VBlank so each image is shown for exactly
-// two scans. The only way 30 Hz can look bad is cadence jitter: an
-// iteration that finishes fast and flips one VBlank early alternates
-// 1-frame/2-frame presentation. BeginFramePace anchors the free-running
-// TM2/TM3 cycle counter at VDraw start; PaceFrame30 burns until one whole
-// display frame has elapsed since that anchor, so the following
-// WaitForPresentWindow always lands in the second VBlank - never the
-// first - regardless of how fast update/draw ran.
+// presents on every second VBlank. The LCD event counter remains truthful
+// when a long audio IRQ delays the main loop past an entire visible interval.
+// BeginFramePace anchors the next presentation frame and the TM2/TM3 work
+// counter. PaceFrame30 sleeps until that LCD frame has begun; the following
+// WaitForPresentWindow selects its VBlank. Overloaded work can still miss a
+// presentation, but fast work cannot accidentally present one refresh early.
 func (c *Context) BeginFramePace() {
-	hw.StartFrameCycleCounter()
+	hw.BeginFramePace()
 }
 
 // PaceFrame30 samples the true work cost (everything since BeginFramePace:
@@ -157,7 +155,7 @@ func (c *Context) PaceFrame30() {
 			c.profileMisses++
 		}
 	}
-	hw.PaceWaitUntil(cyclesPerFrame)
+	hw.WaitFramePace()
 }
 
 // accountPostPaceWork folds renderer work that must run in the presentation
@@ -185,7 +183,7 @@ func (c *Context) accountPostPaceWork(work, elapsed uint32) {
 }
 
 // EndFramePace30 is kept as the loop's post-flip hook. Work-cost sampling
-// happens in PaceFrame30 (before the pace burn); nothing is left to record
+// happens in PaceFrame30 (before the event wait); nothing is left to record
 // here, but the generated loop calls it so future flip-timing diagnostics
 // have a stable place to live.
 func (c *Context) EndFramePace30() {
