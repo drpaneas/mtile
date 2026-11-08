@@ -28,11 +28,12 @@ const (
 	developWatches
 	developMemory
 	developGenerated
+	developPlaytest
 	developPanelCount
 )
 
 func (p developPanel) label() string {
-	return [...]string{"PROBLEMS", "LINT", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "MEMORY", "GENERATED GO"}[p]
+	return [...]string{"PROBLEMS", "LINT", "OUTPUT", "BUILD", "RUNTIME", "WATCHES", "MEMORY", "GENERATED GO", "PLAYTEST"}[p]
 }
 
 var developDiagnosticLocation = regexp.MustCompile(`(?:^|[ (])([^ :()]+\.lua):(\d+):(\d+)`)
@@ -164,6 +165,7 @@ func (g *Game) updateDevelopMode() {
 			g.developTextScrollDragging = false
 		}
 		switch {
+		case g.clickDevelopPlaytest(layout, mx, my):
 		case g.updateDevelopPanelClick(layout, mx, my):
 			g.releaseDevelopGameInput()
 		case rectContains(layout.Build, mx, my):
@@ -187,7 +189,7 @@ func (g *Game) updateDevelopMode() {
 			g.releaseDevelopGameInput()
 		}
 	}
-	if rectContains(layout.Code.Diagnostics, mx, my) {
+	if g.developPanel != developPlaytest && rectContains(layout.Code.Diagnostics, mx, my) {
 		_, wheelY := ebiten.Wheel()
 		if wheelY != 0 {
 			if g.developPanel == developMemory {
@@ -347,6 +349,9 @@ func (g *Game) developPreviewStatus() (string, color.Color) {
 	}
 	switch status {
 	case "RUNNING ON mGBA CORE":
+		if g.playtest.status.Paused {
+			return "PAUSED", colorHighlight
+		}
 		return "LIVE", colorRun
 	case "PLAYER STOPPED":
 		return "STOPPED", colorDim
@@ -854,16 +859,20 @@ func (g *Game) drawDevelopDiagnostics(screen *ebiten.Image, layout developLayout
 		g.drawDevelopMemory(screen, layout)
 		return
 	}
+	if g.developPanel == developPlaytest {
+		g.drawDevelopPlaytest(screen, layout)
+		return
+	}
 	g.drawDevelopPanelText(screen, layout)
 }
 
 func (g *Game) developPanelTabRects(layout developLayout) []editor.Rect {
 	r := layout.Code.Diagnostics
-	widths := [...]int{112, 68, 96, 92, 106, 112, 104, 150}
+	widths := [...]int{112, 68, 96, 92, 106, 112, 104, 150, 110}
 	tabs := make([]editor.Rect, 0, len(widths))
 	x := r.X + 1
 	available := r.W - 2
-	if g.developPanel != developMemory {
+	if g.developPanel != developMemory && g.developPanel != developPlaytest {
 		available -= 108
 	}
 	total := 0
@@ -886,7 +895,7 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 	if !rectContains(r, x, y) {
 		return false
 	}
-	if g.developPanel != developMemory && rectContains(g.developCopyRect(layout), x, y) {
+	if g.developPanel != developMemory && g.developPanel != developPlaytest && rectContains(g.developCopyRect(layout), x, y) {
 		g.developTextFocused = true
 		g.developTextDragging = false
 		g.developTextScrollDragging = false
@@ -897,13 +906,13 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 	for panel, tab := range g.developPanelTabRects(layout) {
 		if rectContains(tab, x, y) {
 			g.developPanel = developPanel(panel)
-			g.developTextFocused = g.developPanel != developMemory
+			g.developTextFocused = g.developPanel != developMemory && g.developPanel != developPlaytest
 			g.developTextDragging = false
 			g.developTextScrollDragging = false
 			return true
 		}
 	}
-	if g.developPanel != developMemory && y >= r.Y+35 {
+	if g.developPanel != developMemory && g.developPanel != developPlaytest && y >= r.Y+35 {
 		body := developTextBody(layout, g.developPanel)
 		g.developTextFocused = true
 		if x >= r.X+r.W-18 {

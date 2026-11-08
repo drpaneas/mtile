@@ -426,6 +426,17 @@ reruns the selected lesson, and **Back to My Game** reopens the project's main
 entry and restarts the game. Both use the current Lua buffers and saved assets.
 **Export .gba** builds the main game.
 
+Open **Playtest** under the source editor to pause the live cartridge or
+advance it by one GBA display frame. **Checkpoint** captures the current
+moment and pauses. **Restore** returns to that moment without advancing a
+frame. A replacement cartridge starts with its own checkpoint space.
+
+**Record Input** restarts from the preview's initial emulator state and gives
+the game keyboard focus. Play the sequence, then select **Stop Recording**.
+Recordings hold up to 3,600 display frames. **Replay from Start** applies the
+same sequence to the current ROM, including after **Build + Reload**, and
+pauses at the end. The recording stays in this editor session.
+
 The screenshot intentionally shows the state before a ROM has been built;
 **BUILD A CARTRIDGE TO PLAY** is an instruction, not a broken preview.
 

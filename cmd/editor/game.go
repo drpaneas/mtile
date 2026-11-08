@@ -259,6 +259,7 @@ type Game struct {
 	romExport                  developROMExport
 	lessonEntry                string
 	playLessonEntry            string
+	playtest                   developPlaytestUI
 	runROMSize                 int
 	runEWRAMUsed               uint64
 	runEWRAMFree               uint64
@@ -684,6 +685,7 @@ func (g *Game) persist() error {
 func (g *Game) Update() error {
 	g.dirty = false
 	g.pumpDevelopROMExport()
+	g.pumpDevelopPlaytest()
 	g.updateRenderDemand()
 	g.pollProjectCheck(time.Now())
 	g.updateTheme()
@@ -1007,8 +1009,8 @@ func (g *Game) dynamicSurfaceActivity() (active, everyTick bool) {
 		g.runMu.Unlock()
 		// A running, unpaused mGBA preview publishes a new frame at 59.73 Hz.
 		// Keep its visual surface smooth while allowing a stopped editor to idle.
-		playing := g.playStop != nil && !g.playPaused
-		return active || busy || playing || g.romExport.ready != nil, playing
+		playing := g.playStop != nil && !g.playPaused && !g.playtest.status.Paused
+		return active || busy || playing || g.romExport.ready != nil || g.playtest.pending, playing
 	}
 	return active, false
 }

@@ -70,7 +70,7 @@ func TestRetiredEmulatorCannotConsumeActivePreviewInput(t *testing.T) {
 			pcm := emulator.NewPCMStream(100)
 			frames := make(chan emulator.Frame, 1)
 
-			stepped, err := g.stepEmulator(stepper, pcm, frames, 1)
+			stepped, err := g.stepEmulator(stepper, pcm, frames, 1, nil)
 			if err != nil || stepped || stepper.calls != 0 {
 				t.Errorf("retired tick = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 			}
@@ -91,7 +91,7 @@ func TestActivePreviewKeepsRunningWhileReplacementBuilds(t *testing.T) {
 	pcm := emulator.NewPCMStream(100)
 	frames := make(chan emulator.Frame, 1)
 
-	stepped, err := g.stepEmulator(stepper, pcm, frames, 1)
+	stepped, err := g.stepEmulator(stepper, pcm, frames, 1, nil)
 	if err != nil || !stepped || stepper.calls != 1 {
 		t.Fatalf("active tick during build = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 	}

@@ -92,7 +92,7 @@ func TestEmulatorFailureDrainsLastDiagnostics(t *testing.T) {
 		g := &Game{}
 		session := &failingLogSession{}
 		failures := make(chan error, 1)
-		g.runEmulator(session, emulator.NewPCMStream(100), make(chan emulator.Frame, 1), failures, make(chan struct{}), 0)
+		g.runEmulator(session, emulator.NewPCMStream(100), make(chan emulator.Frame, 1), failures, make(chan struct{}), 0, nil)
 		if !session.closed || len(failures) != 1 || len(g.runRuntimeLog) != 1 || g.runRuntimeLog[0] != "final cartridge diagnostic" {
 			t.Fatalf("missing final diagnostic: %q", g.runRuntimeLog)
 		}
@@ -140,7 +140,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	pcm := emulator.NewPCMStream(100)
 	frames := make(chan emulator.Frame, 1)
 
-	stepped, err := g.stepEmulator(stepper, pcm, frames, g.runID)
+	stepped, err := g.stepEmulator(stepper, pcm, frames, g.runID, nil)
 	if err != nil || stepped || stepper.calls != 0 {
 		t.Fatalf("paused tick = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 	}
@@ -155,7 +155,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	g.playPaused = false
 	g.playKeys = emulator.KeyRight | emulator.KeyB
 	g.runMu.Unlock()
-	stepped, err = g.stepEmulator(stepper, pcm, frames, g.runID)
+	stepped, err = g.stepEmulator(stepper, pcm, frames, g.runID, nil)
 	if err != nil || !stepped || stepper.calls != 1 {
 		t.Fatalf("live tick = stepped %v, calls %d, err %v", stepped, stepper.calls, err)
 	}
@@ -177,7 +177,7 @@ func TestStepEmulatorPausesAndForwardsLiveInput(t *testing.T) {
 	if queued, _, _ := pcm.Stats(); queued != 1 {
 		t.Fatalf("queued PCM frames = %d, want 1", queued)
 	}
-	_, err = g.stepEmulator(stepper, pcm, frames, g.runID)
+	_, err = g.stepEmulator(stepper, pcm, frames, g.runID, nil)
 	if err != nil || g.playPendingTicks != 0 || g.playPendingKeys != 0 {
 		t.Fatalf("second live tick did not consume key latch: ticks=%d keys=%#x err=%v", g.playPendingTicks, g.playPendingKeys, err)
 	}

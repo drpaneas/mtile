@@ -196,6 +196,12 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 		if rectsOverlapIDE(export, reveal) {
 			t.Fatalf("%dx%d export controls overlap", size.width, size.height)
 		}
+		playtest := (&Game{}).developPlaytestControls(layout)
+		for i, control := range playtest {
+			if !rectInsideIDE(control.rect, layout.Code.Diagnostics) || i > 0 && rectsOverlapIDE(control.rect, playtest[i-1].rect) {
+				t.Fatalf("%dx%d playtest control does not fit: %s %#v", size.width, size.height, control.label, control.rect)
+			}
+		}
 		if layout.Code.Editor.W < 600 {
 			t.Fatalf("%dx%d code viewport is too narrow: %d", size.width, size.height, layout.Code.Editor.W)
 		}

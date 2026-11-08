@@ -93,6 +93,15 @@ func (g *Game) startRun() {
 }
 
 func (g *Game) startPreviewBuild(lesson string, overlay map[string]string, save bool) bool {
+	g.pumpDevelopPlaytest()
+	if g.playtest.pending {
+		g.statusMsg = "Wait for the current playtest action to finish."
+		return false
+	}
+	if g.playtest.status.Recording {
+		g.statusMsg = "Finish recording input before starting another build."
+		return false
+	}
 	g.runMu.Lock()
 	busy := g.runBusy
 	g.runMu.Unlock()
@@ -410,8 +419,9 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		player.Play()
 	}
 	pcm, frames, failures, stop := g.playPCM, g.playFrames, g.playErrors, g.playStop
+	playtest := g.beginDevelopPlaytest()
 	go func() {
-		g.runEmulator(launch.session, pcm, frames, failures, stop, launch.id)
+		g.runEmulator(launch.session, pcm, frames, failures, stop, launch.id, playtest)
 		if launch.romDir != "" {
 			_ = os.RemoveAll(launch.romDir)
 		}
@@ -441,8 +451,11 @@ func (g *Game) setPreviewBuildReport(launch playLaunch) {
 	g.runRendererText = result.RendererText
 }
 
-func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames chan emulator.Frame, failures chan error, stop <-chan struct{}, runID uint64) {
+func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames chan emulator.Frame, failures chan error, stop <-chan struct{}, runID uint64, playtest *developPlaytestWorker) {
 	defer func() { _ = session.Close() }()
+	if playtest != nil {
+		playtest.initialize(session)
+	}
 	ticker := time.NewTicker(time.Second / 60)
 	defer ticker.Stop()
 	for {
@@ -451,7 +464,22 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames 
 			return
 		case <-ticker.C:
 		}
-		_, err := g.stepEmulator(session, pcm, frames, runID)
+		if playtest != nil {
+			g.runMu.Lock()
+			active := g.playRunID == runID && !g.playPaused
+			g.runMu.Unlock()
+			if active && playtest.command(pcm, frames) {
+				g.runMu.Lock()
+				if g.playRunID == runID {
+					g.playReset = false
+				}
+				g.runMu.Unlock()
+			}
+		}
+		_, err := g.stepEmulator(session, pcm, frames, runID, playtest)
+		if playtest != nil {
+			playtest.publish("", false)
+		}
 		if err != nil {
 			// Wait for the helper's stderr pump before draining its final lines.
 			// A frame EOF can arrive before the diagnostic explaining the exit.
@@ -477,7 +505,7 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames 
 // stepEmulator performs one deterministic preview tick. Keeping the pause and
 // input hand-off here makes the live-player lifecycle directly testable without
 // launching a native helper process.
-func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames chan emulator.Frame, runID uint64) (bool, error) {
+func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames chan emulator.Frame, runID uint64, playtest *developPlaytestWorker) (bool, error) {
 	g.runMu.Lock()
 	// Closing playStop does not join the worker: its ticker can already be
 	// ready. Retired previews must not consume a replacement's input. Compare
@@ -488,6 +516,16 @@ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames
 	}
 	keys := g.playKeys | g.playPendingKeys
 	reset := g.playReset
+	muted := false
+	if playtest != nil {
+		var step bool
+		keys, reset, step = playtest.state.next(keys, reset)
+		if !step {
+			g.runMu.Unlock()
+			return false, nil
+		}
+		muted = playtest.state.status().Paused
+	}
 	g.playReset = false
 	if g.playPendingTicks > 0 {
 		g.playPendingTicks--
@@ -504,8 +542,19 @@ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames
 	if err != nil {
 		return false, err
 	}
-	_, _ = pcm.Write(frame.PCM)
+	if !muted {
+		_, _ = pcm.Write(frame.PCM)
+	}
 	frame.PCM = nil
+	if playtest != nil {
+		playtest.lastFrame = frame
+		playtest.state.stepped(keys)
+	}
+	publishPreviewFrame(frames, frame)
+	return true, nil
+}
+
+func publishPreviewFrame(frames chan emulator.Frame, frame emulator.Frame) {
 	select {
 	case frames <- frame:
 	default:
@@ -518,7 +567,6 @@ func (g *Game) stepEmulator(session playStepper, pcm *emulator.PCMStream, frames
 		default:
 		}
 	}
-	return true, nil
 }
 
 func (g *Game) acceptRuntimeLogs(runID uint64, lines []string) {
@@ -625,7 +673,7 @@ func (g *Game) resumePlaySession() {
 	if g.playPCM != nil {
 		g.playPCM.Discard()
 	}
-	if g.playAudio != nil {
+	if g.playAudio != nil && !g.playtest.status.Paused {
 		g.playAudio.Play()
 	}
 	if g.playStop == nil && !busy {
@@ -637,6 +685,7 @@ func (g *Game) resumePlaySession() {
 // from stopPlaySession so replacing a running cartridge cannot invalidate the
 // freshly completed build generation.
 func (g *Game) stopPlayback() {
+	g.clearDevelopPlaytest()
 	g.runMu.Lock()
 	g.playKeys = 0
 	g.playPendingKeys = 0

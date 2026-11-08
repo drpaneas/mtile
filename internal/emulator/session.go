@@ -16,15 +16,17 @@ const (
 	Width        = 240
 	Height       = 160
 	SampleRate   = 48000
-	protocol     = 2
+	protocol     = 3
 	maxAudio     = 4096
 	maxTelemetry = 1024
 )
 
 const (
-	commandStep  = 1
-	commandReset = 2
-	commandQuit  = 3
+	commandStep      = 1
+	commandReset     = 2
+	commandQuit      = 3
+	commandSaveState = 4
+	commandLoadState = 5
 )
 
 // GBA key bit positions, matching the hardware KEYINPUT register and mGBA.
@@ -110,12 +112,13 @@ type Telemetry struct {
 }
 
 type Session struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
-	stderr diagnosticLog
-	mu     sync.Mutex
-	closed bool
+	cmd     *exec.Cmd
+	stdin   io.WriteCloser
+	stdout  io.ReadCloser
+	stderr  diagnosticLog
+	mu      sync.Mutex
+	closed  bool
+	failure error // set when the stream is no longer framed
 }
 
 func Start(helperPath, romPath string) (*Session, error) {
@@ -176,15 +179,27 @@ func (s *Session) Step(keys uint16, reset bool) (Frame, error) {
 	if s.closed {
 		return Frame{}, errors.New("emulator session is closed")
 	}
+	if s.failure != nil {
+		return Frame{}, fmt.Errorf("emulator protocol is unusable: %w", s.failure)
+	}
 	op := byte(commandStep)
 	if reset {
 		op = commandReset
 	}
 	command := [4]byte{op, 0, byte(keys), byte(keys >> 8)}
-	if _, err := s.stdin.Write(command[:]); err != nil {
-		return Frame{}, s.withLog(fmt.Errorf("send emulator input: %w", err))
+	n, err := s.stdin.Write(command[:])
+	if err == nil && n != len(command) {
+		err = io.ErrShortWrite
 	}
-	return s.readFrame()
+	if err != nil {
+		s.failure = s.withLog(fmt.Errorf("send emulator input: %w", err))
+		return Frame{}, s.failure
+	}
+	frame, err := s.readFrame()
+	if err != nil {
+		s.failure = err
+	}
+	return frame, err
 }
 
 func (s *Session) readFrame() (Frame, error) {
