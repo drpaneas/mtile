@@ -102,11 +102,11 @@ func (g *Game) drawSpriteWorkspaceHeader(screen *ebiten.Image) {
 	r := spriteHeaderRect
 	titleX := r.X + 230
 	subtitle := "SHARED TILES · map / spr / sspr"
-	if g.objEditing {
+	switch {
+	case g.animationWorkspaceActive():
+		subtitle = "ANIMATIONS · CHOOSE POSES → PREVIEW → REGISTER CLIP"
+	case g.objEditing:
 		subtitle = "POSES · DRAW / PASTE → REGISTER POSE"
-		if g.animationWorkspaceActive() {
-			subtitle = "ANIMATIONS · CHOOSE POSES → PREVIEW → REGISTER CLIP"
-		}
 	}
 	bg, _, _ := spriteWorkspaceTabRects()
 	subtitle = truncateUIText(subtitle, bg.X-titleX-16)
@@ -130,9 +130,10 @@ func spriteWorkspaceTabRects() (shared, poses, animations editor.Rect) {
 
 func (g *Game) drawSpriteBankToggle(screen *ebiten.Image) {
 	bg, poses, animations := spriteWorkspaceTabRects()
-	drawBankToggle(screen, bg, "SHARED TILES", !g.objEditing)
-	drawBankToggle(screen, poses, "POSES", g.objEditing && !g.animationWorkspaceActive())
-	drawBankToggle(screen, animations, "ANIMATIONS", g.animationWorkspaceActive())
+	animationActive := g.animationWorkspaceActive()
+	drawBankToggle(screen, bg, "SHARED TILES", !g.objEditing && !animationActive)
+	drawBankToggle(screen, poses, "POSES", g.objEditing && !animationActive)
+	drawBankToggle(screen, animations, "ANIMATIONS", animationActive)
 }
 
 func drawBankToggle(screen *ebiten.Image, r editor.Rect, label string, active bool) {

@@ -232,7 +232,7 @@ type Game struct {
 	codeSearchMatches        []int
 	codeSearchIndex          int
 	codeCompletionOpen       bool
-	codeCompletions          []string
+	codeCompletions          []codeCompletion
 	codeCompletionIndex      int
 	codeDiagnostic           string
 	codeDiagnosticLine       int
@@ -713,7 +713,7 @@ func (g *Game) Update() error {
 		g.updateObjPageName()
 		return nil
 	}
-	if g.objEditing && g.updateAnimationNameTyping() {
+	if (g.objEditing || g.animationWorkspaceActive()) && g.updateAnimationNameTyping() {
 		return nil
 	}
 	if g.animationWorkspaceActive() && g.updateAnimationWorkspaceTyping() {

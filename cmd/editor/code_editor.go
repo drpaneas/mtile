@@ -52,6 +52,7 @@ type codeLayout struct {
 	Horizontal  editor.Rect
 	Vertical    editor.Rect
 	Format      editor.Rect
+	Asset       editor.Rect
 	Inspector   editor.Rect
 	Diagnostics editor.Rect
 	Search      editor.Rect
@@ -73,6 +74,11 @@ type codeTabHit struct {
 	Close editor.Rect
 }
 
+type codeCompletion struct {
+	name, kind string
+	id         int
+}
+
 func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 	if len(g.codeTabs) == 0 || layout.Tabs.W <= 0 {
 		return nil
@@ -81,6 +87,9 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 	available := layout.Tabs.W
 	if layout.Format.W > 0 {
 		available = max(1, layout.Format.X-layout.Tabs.X-6)
+	}
+	if layout.Asset.W > 0 {
+		available = max(1, layout.Asset.X-layout.Tabs.X-6)
 	}
 	count := max(1, available/preferredWidth)
 	count = min(count, len(g.codeTabs))
@@ -100,6 +109,10 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 }
 
 func (g *Game) updateCodeTabClick(layout codeLayout, x, y int) bool {
+	if rectContains(layout.Asset, x, y) {
+		g.openDevelopAssetAtCaret()
+		return true
+	}
 	if rectContains(layout.Format, x, y) {
 		g.formatCodeIndentation(layout)
 		return true
@@ -222,6 +235,9 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		switch {
+		case g.clickCodeCompletion(layout, mx, my):
+			revealCursor = true
+			return
 		case g.updateCodeTabClick(layout, mx, my):
 			return
 		case g.updateProjectExplorerClick(layout, mx, my):
@@ -312,7 +328,11 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 		g.updateCodeSearchInput()
 		return
 	}
-	if mod && ebiten.IsKeyPressed(ebiten.KeySpace) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
+		g.openDevelopAssetAtCaret()
+		return
+	}
+	if mod && inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		g.openCodeCompletions()
 		return
 	}
@@ -395,8 +415,10 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 		}
 	case codeKeyRepeat(ebiten.KeyBackspace):
 		g.code.DeleteBackward(word)
+		g.openDevelopAssetCompletions()
 	case codeKeyRepeat(ebiten.KeyDelete):
 		g.code.DeleteForward(word)
+		g.openDevelopAssetCompletions()
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter) || inpututil.IsKeyJustPressed(ebiten.KeyNumpadEnter):
 		g.code.Newline()
 	case inpututil.IsKeyJustPressed(ebiten.KeyTab):
@@ -406,6 +428,7 @@ func (g *Game) updateCodeWorkspace(layout codeLayout) {
 		if !mod && !alt {
 			if input := ebiten.AppendInputChars(nil); len(input) != 0 {
 				g.code.InsertTyped(string(input))
+				g.openDevelopAssetCompletions()
 				revealCursor = true
 			}
 		}
@@ -635,6 +658,9 @@ func (g *Game) activeCodeLayout() codeLayout {
 }
 
 func (g *Game) openCodeCompletions() {
+	if g.openDevelopAssetCompletions() {
+		return
+	}
 	prefix := g.codePrefix()
 	items := []string{"_init", "_update", "_draw"}
 	for _, entry := range language.Complete(prefix) {
@@ -644,7 +670,7 @@ func (g *Game) openCodeCompletions() {
 	g.codeCompletions = g.codeCompletions[:0]
 	for _, item := range items {
 		if prefix == "" || strings.HasPrefix(item, prefix) {
-			g.codeCompletions = append(g.codeCompletions, item)
+			g.codeCompletions = append(g.codeCompletions, codeCompletion{name: item})
 		}
 	}
 	g.codeCompletionIndex = 0
@@ -675,19 +701,29 @@ func (g *Game) updateCodeCompletionInput() bool {
 		return true
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) || inpututil.IsKeyJustPressed(ebiten.KeyTab) {
-		prefix := []rune(g.codePrefix())
-		at := g.code.Cursor()
-		g.code.SetCursor(at-len(prefix), false)
-		g.code.SetCursor(at, true)
-		name := g.codeCompletions[g.codeCompletionIndex]
-		if _, ok := transpiler.Builtins[name]; ok {
-			name += "()"
-		}
-		g.code.Insert(name)
-		g.codeCompletionOpen = false
+		g.applyCodeCompletion(g.codeCompletions[g.codeCompletionIndex])
 		return true
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) || inpututil.IsKeyJustPressed(ebiten.KeyHome) || inpututil.IsKeyJustPressed(ebiten.KeyEnd) {
+		g.codeCompletionOpen = false
+	}
 	return false
+}
+
+func (g *Game) applyCodeCompletion(item codeCompletion) {
+	g.codeCompletionOpen = false
+	if item.kind != "" {
+		g.applyDevelopAssetCompletion(item)
+		return
+	}
+	at := g.code.Cursor()
+	g.code.SetCursor(at-len([]rune(g.codePrefix())), false)
+	g.code.SetCursor(at, true)
+	name := item.name
+	if _, ok := transpiler.Builtins[name]; ok {
+		name += "()"
+	}
+	g.code.Insert(name)
 }
 
 func (g *Game) drawCodeOverlays(screen *ebiten.Image, layout codeLayout) {
@@ -775,6 +811,9 @@ func (g *Game) drawCodeTabs(screen *ebiten.Image, layout codeLayout) {
 	}
 	if layout.Format.W > 0 {
 		drawDevelopButton(screen, layout.Format, "INDENT", false, colorCode)
+	}
+	if layout.Asset.W > 0 {
+		drawDevelopTactileButton(screen, layout.Asset, "OPEN ASSET", false, colorSprite, true)
 	}
 }
 
@@ -1059,20 +1098,48 @@ func highlightGoLine(line string) []codeSegment {
 	return result
 }
 
-func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {
+func (g *Game) codeCompletionPopup(layout codeLayout) (box editor.Rect, rowHeight, start int) {
 	line, column := g.code.LineColumn(g.code.Cursor())
 	x := layout.Text.X + 8 + (column-g.codeScrollColumn)*codeCharWidth
 	y := layout.Text.Y + 7 + (line-g.codeScrollLine+1)*codeLineHeight
 	visible := min(8, len(g.codeCompletions))
-	box := editor.Rect{X: min(x, layout.Text.X+layout.Text.W-230), Y: min(y, layout.Text.Y+layout.Text.H-visible*24-8), W: 222, H: visible * 24}
+	rowHeight, width := 24, 222
+	if g.codeCompletions[0].kind != "" {
+		rowHeight, width = 34, 256
+	}
+	box = editor.Rect{X: max(layout.Text.X, min(x, layout.Text.X+layout.Text.W-width-8)), Y: max(layout.Text.Y, min(y, layout.Text.Y+layout.Text.H-visible*rowHeight-8)), W: width, H: visible * rowHeight}
+	start = min(max(0, g.codeCompletionIndex-visible+1), max(0, len(g.codeCompletions)-visible))
+	return box, rowHeight, start
+}
+
+func (g *Game) clickCodeCompletion(layout codeLayout, x, y int) bool {
+	if !g.codeCompletionOpen {
+		return false
+	}
+	box, rowHeight, start := g.codeCompletionPopup(layout)
+	if !rectContains(box, x, y) {
+		return false
+	}
+	g.applyCodeCompletion(g.codeCompletions[start+(y-box.Y)/rowHeight])
+	return true
+}
+
+func (g *Game) drawCodeCompletions(screen *ebiten.Image, layout codeLayout) {
+	box, rowHeight, start := g.codeCompletionPopup(layout)
 	fillRect(screen, box, colorInk)
 	strokeRect(screen, box, colorCode)
-	start := min(max(0, g.codeCompletionIndex-visible+1), max(0, len(g.codeCompletions)-visible))
-	for row := 0; row < visible; row++ {
+	for row := 0; row < box.H/rowHeight; row++ {
 		index := start + row
+		y := box.Y + row*rowHeight
 		if index == g.codeCompletionIndex {
-			fillRect(screen, editor.Rect{X: box.X + 1, Y: box.Y + row*24 + 1, W: box.W - 2, H: 22}, colorIndigo)
+			fillRect(screen, editor.Rect{X: box.X + 1, Y: y + 1, W: box.W - 2, H: rowHeight - 2}, colorIndigo)
 		}
-		drawDevelopText(screen, g.codeCompletions[index], box.X+10, box.Y+6+row*24, colorText)
+		item := g.codeCompletions[index]
+		x := box.X + 10
+		if item.kind != "" {
+			g.drawDevelopAssetThumbnail(screen, item.kind, item.id, editor.Rect{X: x, Y: y + 3, W: 28, H: 28})
+			x += 36
+		}
+		drawDevelopText(screen, truncateDevelopText(item.name, box.X+box.W-x-8), x, y+(rowHeight-developTextHeight)/2, colorText)
 	}
 }

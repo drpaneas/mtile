@@ -61,7 +61,9 @@ func newAnimationDockLayout(panel editor.Rect) animationDockLayout {
 	}
 }
 
-func (g *Game) animationWorkspaceActive() bool { return g.objEditing && g.animation.workspace }
+func (g *Game) animationWorkspaceActive() bool {
+	return g.animation.workspace && (g.objEditing || g.mode == modeSprites && g.model != nil && g.model.ObjSheet == nil)
+}
 
 func (g *Game) setAnimationWorkspaceActive(active bool) {
 	g.animation.workspace = active

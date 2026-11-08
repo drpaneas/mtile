@@ -140,6 +140,7 @@ func newDevelopPanelLayout(panel developPanel) developLayout {
 		Tabs: tabs, Editor: codeRect, Gutter: gutter, Text: textRect, Horizontal: horizontal, Vertical: vertical, Format: codeFormatRect(tabs),
 		Diagnostics: diagnostics, Search: search,
 	}
+	code.Asset = editor.Rect{X: code.Format.X - 118, Y: code.Format.Y, W: 112, H: code.Format.H}
 	play := playLayout{
 		Header: header, Reload: build, Reset: reset, Stop: stop,
 		Stage: stage, Bezel: bezel, Screen: screen, Inspector: telemetry,

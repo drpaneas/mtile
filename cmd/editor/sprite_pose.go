@@ -36,14 +36,17 @@ func (g *Game) poseUsage() string {
 	if name == "" {
 		return fmt.Sprintf("pspr(%d, x, y)", g.selectedPose)
 	}
+	return `pspr("` + escapeLuaAssetName(name, '"') + `", x, y)`
+}
+
+func escapeLuaAssetName(name string, quote byte) string {
 	// Asset JSON may contain names outside the editor's identifier alphabet.
 	// Use Lua decimal escapes for control bytes, rather than Go's \x escapes.
 	var literal strings.Builder
-	literal.WriteByte('"')
 	for i := 0; i < len(name); i++ {
 		c := name[i]
 		switch {
-		case c == '\\' || c == '"':
+		case c == '\\' || c == quote:
 			literal.WriteByte('\\')
 			literal.WriteByte(c)
 		case c < 32 || c == 127:
@@ -52,8 +55,7 @@ func (g *Game) poseUsage() string {
 			literal.WriteByte(c)
 		}
 	}
-	literal.WriteByte('"')
-	return "pspr(" + literal.String() + ", x, y)"
+	return literal.String()
 }
 
 func (g *Game) copyPoseUsage() {
@@ -224,10 +226,13 @@ func (g *Game) poseStripDelRect() editor.Rect { return g.poseStripControlRect(2)
 func (g *Game) poseStripCopyRect() editor.Rect { return g.poseStripControlRect(3) }
 
 func (g *Game) posePreview(id int) editor.PosePreview {
-	sheet := g.activeSheet()
 	poses := g.authoredPoses()
-	if sheet == nil || id < 0 || id >= len(poses) {
+	if id < 0 || id >= len(poses) {
 		return editor.PosePreview{}
+	}
+	sheet := g.model.ObjSheet
+	if sheet == nil {
+		sheet = &g.model.Sheet
 	}
 	return editor.ComposePose(*sheet, poses[id])
 }

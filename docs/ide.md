@@ -431,6 +431,7 @@ The screenshot intentionally shows the state before a ROM has been built;
 | Reload file changed on disk | Ctrl/Cmd+Shift+R |
 | Find | Ctrl/Cmd+F |
 | API completion | Ctrl/Cmd+Space |
+| Open the pose or clip at the cursor | Open Asset / F12 |
 | Undo / redo | Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z |
 | Copy / cut / paste / select all | platform-standard shortcuts |
 | Indent / outdent selection | Tab / Shift+Tab |
@@ -461,6 +462,11 @@ loop variables, and fields inside a state table do not consume global slots.
 Offsets are Unicode rune positions, so cursor movement and selection do not
 split UTF-8 characters. Parser diagnostics use the same Lua parser as the
 build, so a reported syntax error is not a separate linter's approximation.
+
+In the first quoted argument to `pspr` or `anim`, Develop suggests names from
+the current project with thumbnails. Choose one with the mouse or with the
+arrow keys and Enter. Place the cursor inside a complete name and select
+**Open Asset** to edit that pose or clip in Sprite Lab.
 
 Problems, Lint, Output, Build, Runtime, Watches, Memory, and Generated Go are real bounded views.
 Text panels wrap long messages without discarding their tails. Use the mouse
