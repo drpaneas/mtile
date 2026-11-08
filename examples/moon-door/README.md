@@ -39,9 +39,8 @@ You can stop here.
 
 ## 2. Optional: pause that clock
 
-Save any edits you want to keep, then copy the entire contents of
-[lessons/02-pause.lua](lessons/02-pause.lua) into `game.lua`. Save and rebuild;
-opening a lesson file alone does not make it the cartridge entry point.
+Open [lessons/02-pause.lua](lessons/02-pause.lua) in **Develop** and click
+**Run Lesson** beside the source tabs. The GBA preview shows the lesson name.
 
 Tap **Z** to open and quickly tap **Enter** (GBA Start) midway through the action.
 Tap Enter again to resume.
@@ -55,7 +54,8 @@ is what makes this pause work.
 The game owns `opening` and `paused`; the clip owns its frame order, FPS, and
 LOOP setting. A visual clip does not decide whether a door is passable.
 
-To restore the shipped game, copy `lessons/01-open.lua` back into `game.lua`.
+Choose **Back to My Game** to reopen `game.lua` and restart the game with your
+current Lua edits.
 
 ## Artwork and renderer
 

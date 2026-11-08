@@ -141,6 +141,7 @@ func newDevelopPanelLayout(panel developPanel) developLayout {
 		Diagnostics: diagnostics, Search: search,
 	}
 	code.Asset = editor.Rect{X: code.Format.X - 118, Y: code.Format.Y, W: 112, H: code.Format.H}
+	code.Lesson = editor.Rect{X: code.Asset.X - 118, Y: code.Asset.Y, W: 112, H: code.Asset.H}
 	play := playLayout{
 		Header: header, Reload: build, Reset: reset, Stop: stop,
 		Stage: stage, Bezel: bezel, Screen: screen, Inspector: telemetry,
@@ -176,6 +177,9 @@ func (g *Game) updateDevelopMode() {
 			g.stopPlaySession()
 		case g.clickDevelopROMExport(layout, mx, my):
 			g.releaseDevelopGameInput()
+		case (g.lessonEntry != "" || g.playLessonEntry != "") && rectContains(developBackToGameRect(layout), mx, my):
+			g.releaseDevelopGameInput()
+			g.backToMyGame()
 		case rectContains(layout.Play.Screen, mx, my):
 			g.developGameFocus = true
 			g.statusMsg = "game input active; press Esc to return to code"
@@ -306,9 +310,18 @@ func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 	if g.playStop == nil {
 		label = "GBA PREVIEW"
 	}
-	drawDevelopSmallText(screen, label, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
+	if g.lessonEntry != "" || g.playLessonEntry != "" {
+		drawDevelopTactileButton(screen, developBackToGameRect(layout), "BACK TO MY GAME", false, colorCode, true)
+	} else {
+		drawDevelopSmallText(screen, label, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
+	}
 	g.drawDevelopPreviewStatus(screen, layout)
 	g.drawGBABezel(screen, layout.Play)
+	if g.playLessonEntry != "" {
+		bezel := layout.Play.Bezel
+		label := truncateTextToWidth("LESSON  ·  "+filepath.Base(g.playLessonEntry), bezel.W-40, developSmallFace)
+		drawDevelopSmallText(screen, label, bezel.X+20, bezel.Y+17, colorLCD)
+	}
 	g.drawDevelopROMExport(screen, layout)
 	if g.developGameFocus {
 		strokeRoundedRect(screen, editor.Rect{X: layout.Play.Screen.X - 12, Y: layout.Play.Screen.Y - 12, W: layout.Play.Screen.W + 24, H: layout.Play.Screen.H + 24}, 5, rgba(colorRun, 210))

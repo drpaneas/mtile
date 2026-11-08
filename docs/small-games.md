@@ -18,10 +18,10 @@ Stop as soon as the idea makes sense.
 
 ![Actual Mode 0 ROM captures: Tidewalk and Moth Study above, Moon Door and Lantern Rooms below.](media/learning-games.png)
 
-You can inspect the included art in the editor without drawing anything
-first. Copy the selected lesson into `game.lua` and rebuild to run it; simply
-opening a lesson file does not select the cartridge entry point. Each README
-explains how to restore its shipped game and where to look up the exact API.
+Open a file under `lessons/` in **Develop** and click **Run Lesson** beside the
+source tabs. The GBA preview shows the lesson name. Choose **Back to My Game**
+to reopen the project's main source file and restart the game with your current
+Lua edits. Each README walks through the lessons and links to the relevant API.
 
 Need the tools first? Follow [getting started](getting-started.md).
 For movement, pickups, sound, and a win condition, start with

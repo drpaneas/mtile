@@ -148,7 +148,8 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 			"telemetry": layout.Play.Inspector, "diagnostics": layout.Code.Diagnostics,
 			"active file": layout.Code.File, "source mode": layout.SourceMode,
 			"open asset": layout.Code.Asset,
-			"build":      layout.Build, "reset": layout.Reset, "stop": layout.Stop,
+			"run lesson": layout.Code.Lesson, "back to my game": developBackToGameRect(layout),
+			"build": layout.Build, "reset": layout.Reset, "stop": layout.Stop,
 		} {
 			if name == "sidebar" && rect.W == 0 {
 				continue
@@ -169,6 +170,8 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 			{layout.Reset, layout.Stop},
 			{layout.Code.Text, layout.Code.Horizontal},
 			{layout.Code.Asset, layout.Code.Format},
+			{layout.Code.Lesson, layout.Code.Asset},
+			{developBackToGameRect(layout), developPreviewStatusRect(layout)},
 		} {
 			if rectsOverlapIDE(pair[0], pair[1]) {
 				t.Fatalf("%dx%d Develop panels overlap: %#v and %#v", size.width, size.height, pair[0], pair[1])

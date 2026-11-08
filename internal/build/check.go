@@ -67,8 +67,10 @@ func (s Service) CheckProject(projectDir string, overlay map[string]string) Proj
 		entry = "project.json"
 		return fail(err, "PROJECT")
 	}
-	if project.Entry != "" {
-		entry = project.Entry
+	entry, err = s.resolveEntry(project)
+	if err != nil {
+		entry = "project.json"
+		return fail(err, "SOURCE")
 	}
 	s.configureTileCanvasExperiment(root)
 	renderer, err := s.resolveRenderer(project)
@@ -143,8 +145,13 @@ func projectDiagnostic(root string, overlay map[string]string, fallback string, 
 	}
 	text, ok := overlay[d.Source]
 	if !ok {
-		data, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(d.Source)))
-		text = string(data)
+		// Resolver errors can name entries that failed its symlink boundary.
+		// Keep diagnostic range lookup inside the project as well.
+		if dir, err := os.OpenRoot(root); err == nil {
+			data, _ := dir.ReadFile(filepath.FromSlash(d.Source))
+			_ = dir.Close()
+			text = string(data)
+		}
 	}
 	d.EndLine, d.EndColumn = d.Line, d.Column
 	lines := strings.Split(text, "\n")

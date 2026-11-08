@@ -76,13 +76,15 @@ mTile's usual approximately 30 updates per second.
 
 ## 3. Learn movement from a working checkpoint
 
-The `lessons/` directory contains four complete Lua programs. To try a lesson,
-copy its entire contents into `game.lua`, replacing the previous contents,
-then build. Opening a lesson alone does not select it as the game entry point.
-Save your own changes in another file before replacing them. To return to the
-finished game, copy `lessons/04-complete.lua` into `game.lua`.
+The `lessons/` directory contains four complete Lua programs. Open one in
+**Develop** and click **Run Lesson** beside the source tabs. The GBA preview
+shows the lesson name and runs your current Lua edits with the project's saved
+assets. Use **Build + Reload** to try another edit in the selected lesson.
 
-Start with `lessons/01-movement.lua`:
+Choose **Back to My Game** to reopen `game.lua` and restart your own game
+with your current edits. Your lesson and game edits stay in their own tabs.
+
+Start with `lessons/01-movement.lua`.
 
 - `_update()` changes the game state; `_draw()` displays it.
 - `btn(0)` through `btn(3)` read left, right, up, and down.
@@ -95,8 +97,8 @@ play area. Change the speed and check that the boundaries still work.
 
 ## 4. Add coins and collision
 
-Copy `lessons/02-coins.lua` into `game.lua` and build. `collect_coin()` checks
-whether the two 8×8 sprite boxes overlap:
+Open `lessons/02-coins.lua` and click **Run Lesson**. `collect_coin()` checks
+whether the two 8×8 sprite boxes overlap.
 
 ```lua
 if abs(player_x - coin_x) < 8 and abs(player_y - coin_y) < 8 then
@@ -117,7 +119,7 @@ per pickup. This lesson intentionally has no win condition yet.
 
 ## 5. Give pickups a sound
 
-Copy `lessons/03-sound.lua` into `game.lua` and build. The new `sfx(0)` call
+Open `lessons/03-sound.lua` and click **Run Lesson**. The new `sfx(0)` call
 plays the project's **Collect a coin** effect. It contains two short notes
 using the **Coin sparkle** sound on hardware channel CH1.
 
@@ -130,7 +132,7 @@ Preview Audio volume in Preferences (Ctrl/Cmd+`,`) and your computer's audio out
 
 ## 6. Add a finish and restart
 
-Copy `lessons/04-complete.lua` into `game.lua` and build.
+Open `lessons/04-complete.lua` and click **Run Lesson**.
 
 - `score < goal` allows movement and pickups until you win.
 - `restart()` resets both sprites and the score.
@@ -142,9 +144,9 @@ then press Z. You can restart during play too.
 
 ## 7. Export and share
 
-Choose **Export .gba** and save `game.gba`. Share it with someone who has a GBA emulator;
-they do not need mTile or the source project to play. The same ROM can be
-copied to compatible GBA flash-cartridge hardware. Save the entire project
+Choose **Export .gba** and save `game.gba`. Export builds the main game even
+while a lesson is selected. Share the ROM with someone who has a GBA emulator,
+or copy it to compatible GBA flash-cartridge hardware. Save the entire project
 folder separately so you can continue editing it.
 
 Try a small extension: change the explorer's colors, design a different chime,
@@ -157,6 +159,6 @@ or increase the goal. Keep a working copy before making a larger change.
 | Build tools are missing | Run `mtile doctor` and follow its fixes. For source use, install Go before running the CLI. |
 | The source preview cannot start | Initialize submodules with `git submodule update --init --recursive`; check CMake and your C compiler. |
 | Keys do nothing | Click the GBA preview; Z is A. |
-| A lesson looks unchanged | Copy the lesson into `game.lua`, save, and select Build + Reload. |
+| The preview is still showing the main game | Open the lesson's tab and click **Run Lesson**. |
 | A code edit fails | Select the reported diagnostic; restore a working lesson if needed. |
 | You want to start over | Create a different directory with `mtile new -template coin-quest fresh-game`. Existing projects are never overwritten. |

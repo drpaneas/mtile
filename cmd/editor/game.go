@@ -257,6 +257,8 @@ type Game struct {
 	runROMPath                 string
 	runReportID                uint64
 	romExport                  developROMExport
+	lessonEntry                string
+	playLessonEntry            string
 	runROMSize                 int
 	runEWRAMUsed               uint64
 	runEWRAMFree               uint64

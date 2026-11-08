@@ -21,10 +21,10 @@ keys. Escape returns keyboard focus to the editor.
 ## Try one lesson at a time
 
 Each file in `lessons/` is a complete program using the included artwork.
-Save your own edits separately, then copy a lesson's entire contents into
-`game.lua`, save, and **Build + Reload**. Opening a lesson alone does not
-select it as the entry point. To restore the final example, copy
-`lessons/03-facing.lua` into `game.lua`.
+Open one in **Develop** and click **Run Lesson** beside the source tabs. The
+GBA preview shows the lesson name. **Build + Reload** tries edits to the
+selected lesson. Choose **Back to My Game** to reopen `game.lua` and restart
+the game with your current Lua edits.
 
 ### 1. One still picture
 

@@ -21,6 +21,7 @@ type playLaunch struct {
 	result  build.Result
 	helper  string
 	romDir  string
+	lesson  string
 	err     error
 }
 
@@ -84,23 +85,33 @@ func (g *Game) startRun() {
 	if g == nil {
 		return
 	}
+	if g.lessonEntry != "" {
+		g.startPreviewBuild(g.lessonEntry, g.projectSourceOverlay(), false)
+		return
+	}
+	g.startPreviewBuild("", nil, true)
+}
+
+func (g *Game) startPreviewBuild(lesson string, overlay map[string]string, save bool) bool {
 	g.runMu.Lock()
 	busy := g.runBusy
 	g.runMu.Unlock()
 	if busy || g.romExport.ready != nil {
-		return
+		return false
 	}
 	// A build request always opens its own log. This makes mouse and
 	// Cmd/Ctrl+R builds land in the same, predictable place.
 	g.developPanel = developBuild
 	g.developScroll[developBuild] = 0
-	if !g.prepareCodeForBuild() {
+	if save && !g.prepareCodeForBuild() {
 		g.blockPreviewBuild(build.PhaseSource)
-		return
+		return false
 	}
-	if err := g.persist(); err != nil {
-		g.blockPreviewBuild(build.PhaseAssets)
-		return
+	if save {
+		if err := g.persist(); err != nil {
+			g.blockPreviewBuild(build.PhaseAssets)
+			return false
+		}
 	}
 	g.runMu.Lock()
 	g.runBusy = true
@@ -109,6 +120,9 @@ func (g *Game) startRun() {
 	g.runError = ""
 	g.runStatus = "BUILDING CARTRIDGE..."
 	g.runBuildEvents = g.runBuildEvents[:0]
+	if lesson != "" {
+		g.runBuildEvents = append(g.runBuildEvents, build.Event{Phase: build.PhaseSource, Message: "Lesson: " + lesson})
+	}
 	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog[:0], "Build requested")
 	g.runEntry = ""
 	g.runSourceFiles = nil
@@ -127,6 +141,7 @@ func (g *Game) startRun() {
 		}
 		service.Debug = true
 		service.UseProjectRenderer = true
+		service.EntryOverride, service.SourceOverlay = lesson, overlay
 		outputPath, err := developPreviewROMPath(projectDir)
 		if err != nil {
 			g.deliverPlayLaunch(playLaunch{id: runID, err: err})
@@ -148,8 +163,9 @@ func (g *Game) startRun() {
 			return
 		}
 		session, err := emulator.Start(helper, result.ROMPath)
-		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, romDir: romDir, err: err})
+		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, romDir: romDir, lesson: lesson, err: err})
 	}()
+	return true
 }
 
 func (g *Game) blockPreviewBuild(phase build.Phase) {
@@ -386,6 +402,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	g.runStatus = "RUNNING ON mGBA CORE"
 	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, "mGBA helper started: "+filepath.Base(launch.helper))
 	g.playRunID = launch.id
+	g.playLessonEntry = launch.lesson
 	g.playPaused = g.mode != modeCode
 	paused := g.playPaused
 	g.runMu.Unlock()
@@ -628,6 +645,7 @@ func (g *Game) stopPlayback() {
 	g.playReset = false
 	g.playPaused = false
 	g.playRunID = 0
+	g.playLessonEntry = ""
 	g.runMu.Unlock()
 	g.playTelemetry = emulator.Telemetry{}
 	g.playTelemetrySeq = 0

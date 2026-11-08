@@ -50,8 +50,9 @@ func (g *Game) pollProjectCheck(now time.Time) {
 	g.codeAnalysisBusy = true
 	g.codeAnalysisDue = time.Time{}
 	root, revision, overlay, results := g.model.Dir, g.codeAnalysisRevision, g.projectSourceOverlay(), g.codeAnalysisResults
+	entry := g.lessonEntry
 	go func() {
-		analysis := (build.Service{UseProjectRenderer: true}).CheckProject(root, overlay)
+		analysis := (build.Service{UseProjectRenderer: true, EntryOverride: entry}).CheckProject(root, overlay)
 		results <- codeAnalysisResult{root, revision, analysis}
 	}()
 }

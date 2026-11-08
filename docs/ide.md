@@ -420,6 +420,12 @@ or sharing. Choose the destination, then use **Show in Folder** to find the
 result. Build + Reload uses its own temporary debug ROM, so testing changes
 does not replace your export.
 
+Open a Lua file directly under `lessons/` and choose **Run Lesson** in the
+source tab bar. The preview labels the lesson it is running. **Build + Reload**
+reruns the selected lesson, and **Back to My Game** reopens the project's main
+entry and restarts the game. Both use the current Lua buffers and saved assets.
+**Export .gba** builds the main game.
+
 The screenshot intentionally shows the state before a ROM has been built;
 **BUILD A CARTRIDGE TO PLAY** is an instruction, not a broken preview.
 

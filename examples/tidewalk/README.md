@@ -25,16 +25,14 @@ In **Develop**, click **Build + Reload**, then click the preview so it receives
 the arrow keys. Hold right to reach the lighthouse; hold left to return. The
 world ends at both edges. The camera stops there too.
 
+The GBA preview shows which lesson is running. Use **Build + Reload** to try
+edits to the selected lesson, or choose **Back to My Game** to reopen
+`game.lua` and restart the walk with your current Lua edits.
+
 ## 1. One map
 
-Close the editor before copying a lesson, then reopen it:
-
-```sh
-cp examples/tidewalk/lessons/01-map.lua examples/tidewalk/game.lua
-go run ./cmd/mtile edit examples/tidewalk
-```
-
-Build + Reload. Walk to the striped harbour marker on this first screen.
+Open `lessons/01-map.lua` in **Develop** and click **Run Lesson** beside the
+source tabs. Walk to the striped harbour marker on this first screen.
 
 The important line is `map(1)`. It draws the already authored **BG1** map.
 Each map cell refers to an 8×8 tile in the spritesheet; the scenery is stored
@@ -51,16 +49,10 @@ separate line that displays the sailor. You can stop here.
 
 ## 2. Follow the sailor with a camera
 
-Close the editor, select the next lesson, and reopen:
-
-```sh
-cp examples/tidewalk/lessons/02-camera.lua examples/tidewalk/game.lua
-go run ./cmd/mtile edit examples/tidewalk
-```
-
-Build + Reload, then walk right past the harbour marker. The map was already
-60 tiles wide: **480 pixels**, or two GBA screens. This lesson widens the
-sailor's allowed X range and adds these lines around the same map/sprite draws:
+Open `lessons/02-camera.lua` and click **Run Lesson**. Walk right past the
+harbour marker. The map is 60 tiles wide, or **480 pixels**, which spans two
+GBA screens. This lesson widens the sailor's allowed X range and adds three
+lines around the same map and sprite draws.
 
 ```lua
 local scroll = mid(0, x - 112, 240)
@@ -82,15 +74,8 @@ reveals space beyond the map. You can stop here.
 
 ## 3. Give the distant shore a slower camera
 
-Close the editor, restore the final lesson, and reopen:
-
-```sh
-cp examples/tidewalk/lessons/03-parallax.lua examples/tidewalk/game.lua
-go run ./cmd/mtile edit examples/tidewalk
-```
-
-Build + Reload and make the same walk. This lesson adds only two lines before
-the existing `camera(scroll, 0)`:
+Open `lessons/03-parallax.lua` and click **Run Lesson**. Make the same walk.
+This lesson adds two lines before the existing `camera(scroll, 0)`.
 
 ```lua
 camera(flr(scroll / 4), 0)

@@ -26,10 +26,10 @@ the illustration is scenery, so walking past furniture does not imply collision.
 
 ## Learn one step at a time
 
-Both files in `lessons/` are complete programs. Save any personal changes in a
-separate file, copy the selected lesson's entire contents into `game.lua`, save,
-then use **Build + Reload**. Opening a lesson alone does not run it. Restore the
-default game by copying `lessons/02-crossing.lua` back into `game.lua`.
+Both files in `lessons/` are complete programs. Open one in **Develop** and
+click **Run Lesson** beside the source tabs. The GBA preview shows the lesson
+name. Choose **Back to My Game** to reopen `game.lua` and restart the game with
+your current Lua edits.
 
 ### 1. Choose the room explicitly
 

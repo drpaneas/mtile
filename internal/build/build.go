@@ -31,6 +31,12 @@ type Service struct {
 	Trace      func(Event)
 	Debug      bool
 	Renderer   transpiler.Renderer
+	// EntryOverride selects a project-relative Lua entry for this operation.
+	// Empty uses the entry in project.json, or game.lua when none is configured.
+	EntryOverride string
+	// SourceOverlay supplies project-relative, unsaved Lua buffers to Build.
+	// The caller must keep this map unchanged for the duration of the build.
+	SourceOverlay map[string]string
 	// DisableStableTableFields is the reversible legacy path used for semantic
 	// comparison and performance A/B measurements.
 	DisableStableTableFields bool
@@ -81,6 +87,24 @@ type Service struct {
 	ExperimentalTileCanvas bool
 	// Set only for an explicit tile-canvas opt-in, never by AUTO.
 	tileCanvasExperiment bool
+}
+
+func (s Service) resolveEntry(project assetsync.Project) (string, error) {
+	if s.EntryOverride == "" {
+		if project.Entry != "" {
+			return project.Entry, nil
+		}
+		return GameFileName, nil
+	}
+	entry := filepath.FromSlash(s.EntryOverride)
+	if !filepath.IsLocal(entry) {
+		return "", fmt.Errorf("entry override %q must be project-relative and stay inside the project", s.EntryOverride)
+	}
+	entry = filepath.Clean(entry)
+	if filepath.Ext(entry) != ".lua" {
+		return "", fmt.Errorf("entry override %q must name a .lua file", s.EntryOverride)
+	}
+	return filepath.ToSlash(entry), nil
 }
 
 type Phase string
@@ -217,11 +241,11 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 	if err != nil {
 		return Result{}, err
 	}
-	entry := project.Entry
-	if entry == "" {
-		entry = GameFileName
+	entry, err := s.resolveEntry(project)
+	if err != nil {
+		return Result{}, err
 	}
-	bundle, err := sourcebundle.Resolve(projectDir, entry)
+	bundle, err := sourcebundle.ResolveWithOverlay(projectDir, entry, s.SourceOverlay)
 	if err != nil {
 		return Result{}, fmt.Errorf("resolve Lua sources: %w", err)
 	}

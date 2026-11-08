@@ -74,10 +74,14 @@ adds one idea; use the next one after its checkpoint makes sense.
 | `lessons/03-sound.lua` | Playing a hardware sound clip | Each pickup produces a rising chime |
 | `lessons/04-complete.lua` | Win condition and restart | Five coins win; A resets the game |
 
-Every checkpoint is a complete program. Save your own version separately,
-then copy a lesson's contents into `game.lua`, save, and rebuild to try it.
-Opening a lesson does not select it as the game entry point. To return to the
-finished game, copy `lessons/04-complete.lua` into `game.lua`.
+Open a lesson in **Develop** and click **Run Lesson** beside the source tabs.
+The GBA preview shows which lesson is running. **Build + Reload** tries your
+latest edits to the selected lesson. Choose **Back to My Game** to reopen the
+main source file and restart your own game.
+
+Lesson previews and **Back to My Game** build a temporary ROM using your
+current Lua buffers and the project's saved assets. Save either source tab
+when you want to keep its edits on disk.
 
 ## Choose one next step
 

@@ -53,6 +53,7 @@ type codeLayout struct {
 	Vertical    editor.Rect
 	Format      editor.Rect
 	Asset       editor.Rect
+	Lesson      editor.Rect
 	Inspector   editor.Rect
 	Diagnostics editor.Rect
 	Search      editor.Rect
@@ -91,6 +92,9 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 	if layout.Asset.W > 0 {
 		available = max(1, layout.Asset.X-layout.Tabs.X-6)
 	}
+	if layout.Lesson.W > 0 && g.activeLessonEntry() != "" {
+		available = max(1, layout.Lesson.X-layout.Tabs.X-6)
+	}
 	count := max(1, available/preferredWidth)
 	count = min(count, len(g.codeTabs))
 	start := 0
@@ -109,6 +113,10 @@ func (g *Game) visibleCodeTabs(layout codeLayout) []codeTabHit {
 }
 
 func (g *Game) updateCodeTabClick(layout codeLayout, x, y int) bool {
+	if rectContains(layout.Lesson, x, y) && g.activeLessonEntry() != "" {
+		g.runDevelopLesson()
+		return true
+	}
 	if rectContains(layout.Asset, x, y) {
 		g.openDevelopAssetAtCaret()
 		return true
@@ -814,6 +822,9 @@ func (g *Game) drawCodeTabs(screen *ebiten.Image, layout codeLayout) {
 	}
 	if layout.Asset.W > 0 {
 		drawDevelopTactileButton(screen, layout.Asset, "OPEN ASSET", false, colorSprite, true)
+	}
+	if layout.Lesson.W > 0 && g.activeLessonEntry() != "" {
+		drawDevelopTactileButton(screen, layout.Lesson, "RUN LESSON", false, colorRun, true)
 	}
 }
 
