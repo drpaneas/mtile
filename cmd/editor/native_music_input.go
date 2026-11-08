@@ -25,8 +25,9 @@ func (g *Game) updateMusicMode() {
 	if g.updateNativeNameEdit() {
 		return
 	}
-	performanceHandled := g.updateNativePerformanceKeyboard()
-	g.updateNativeMusicKeyboard(performanceHandled)
+	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
+	performanceHandled := g.updateNativePerformanceKeyboard(mod, inpututil.IsKeyJustPressed, inpututil.IsKeyJustReleased)
+	g.updateNativeMusicKeyboard(performanceHandled, mod, inpututil.IsKeyJustPressed)
 	g.updateNativeMusicMouse(newNativeMusicLayout())
 }
 
@@ -81,69 +82,68 @@ func (g *Game) updateNativeNameEdit() bool {
 	return true
 }
 
-func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
-	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
+func (g *Game) updateNativeMusicKeyboard(performanceHandled, mod bool, justPressed func(ebiten.Key) bool) {
 	shift := ebiten.IsKeyPressed(ebiten.KeyShift)
 	if g.nativePresetMenuOpen {
 		presets := editor.NativeSoundPresets(g.nativeChannel)
-		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		if justPressed(ebiten.KeyEscape) {
 			g.nativePresetMenuOpen = false
 			return
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
+		if justPressed(ebiten.KeyUp) {
 			g.nativePresetMenuCursor = max(0, g.nativePresetMenuCursor-1)
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
+		if justPressed(ebiten.KeyDown) {
 			g.nativePresetMenuCursor = min(len(presets)-1, g.nativePresetMenuCursor+1)
 		}
 		visible := nativePresetMenuVisibleCount(newNativeMusicLayout(), len(presets))
 		g.nativePresetMenuScroll = min(g.nativePresetMenuScroll, g.nativePresetMenuCursor)
 		g.nativePresetMenuScroll = max(g.nativePresetMenuScroll, g.nativePresetMenuCursor-visible+1)
-		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && len(presets) != 0 {
+		if justPressed(ebiten.KeyEnter) && len(presets) != 0 {
 			g.selectNativeSoundPreset(g.nativePresetMenuCursor)
 			g.nativePresetMenuOpen = false
 		}
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) && g.nativeRangeActive {
+	if justPressed(ebiten.KeyEscape) && g.nativeRangeActive {
 		g.nativeRangeActive = false
 		g.statusMsg = "Note selection cleared"
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+	if justPressed(ebiten.KeySpace) {
 		g.toggleNativeMusicPreview()
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyComma) {
+	if !mod && justPressed(ebiten.KeyComma) {
 		g.nudgeNativeOctave(newNativeMusicLayout(), -1)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyPeriod) {
+	if !mod && justPressed(ebiten.KeyPeriod) {
 		g.nudgeNativeOctave(newNativeMusicLayout(), 1)
 	}
-	if g.nativeFocus == nativeFocusArrangement && shift && inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+	if g.nativeFocus == nativeFocusArrangement && shift && justPressed(ebiten.KeyLeft) {
 		g.moveNativeSection(-1)
 		return
 	}
-	if g.nativeFocus == nativeFocusArrangement && shift && inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+	if g.nativeFocus == nativeFocusArrangement && shift && justPressed(ebiten.KeyRight) {
 		g.moveNativeSection(1)
 		return
 	}
 	if g.nativeFocus == nativeFocusComposer && shift && g.nativeRangeActive {
 		switch {
-		case inpututil.IsKeyJustPressed(ebiten.KeyLeft):
+		case justPressed(ebiten.KeyLeft):
 			g.moveNativeRange(-g.nativeGridSnapTicks(), 0)
 			return
-		case inpututil.IsKeyJustPressed(ebiten.KeyRight):
+		case justPressed(ebiten.KeyRight):
 			g.moveNativeRange(g.nativeGridSnapTicks(), 0)
 			return
-		case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		case justPressed(ebiten.KeyUp):
 			g.moveNativeRange(0, 1)
 			return
-		case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		case justPressed(ebiten.KeyDown):
 			g.moveNativeRange(0, -1)
 			return
 		}
 	}
-	if g.nativeFocus == nativeFocusArrangement && mod && inpututil.IsKeyJustPressed(ebiten.KeyD) {
+	if g.nativeFocus == nativeFocusArrangement && mod && justPressed(ebiten.KeyD) {
 		index, err := g.model.AddNativePart(g.nativeSequence)
 		if err != nil {
 			g.statusMsg = err.Error()
@@ -153,7 +153,7 @@ func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 		}
 		return
 	}
-	if g.nativeFocus == nativeFocusArrangement && shift && (inpututil.IsKeyJustPressed(ebiten.KeyDelete) || inpututil.IsKeyJustPressed(ebiten.KeyBackspace)) {
+	if g.nativeFocus == nativeFocusArrangement && shift && (justPressed(ebiten.KeyDelete) || justPressed(ebiten.KeyBackspace)) {
 		selected, err := g.model.DeleteNativePart(g.nativeSequence)
 		if err != nil {
 			g.statusMsg = err.Error()
@@ -163,28 +163,28 @@ func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 		}
 		return
 	}
-	if g.nativeFocus == nativeFocusArrangement && inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+	if g.nativeFocus == nativeFocusArrangement && justPressed(ebiten.KeyLeft) {
 		g.selectNativeSequence(max(0, g.nativeSequence-1))
-	} else if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+	} else if justPressed(ebiten.KeyLeft) {
 		g.nativeSelectedStep = max(0, g.nativeSelectedStep-1)
 	}
-	if g.nativeFocus == nativeFocusArrangement && inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+	if g.nativeFocus == nativeFocusArrangement && justPressed(ebiten.KeyRight) {
 		if song, ok := g.model.NativeSong(); ok {
 			g.selectNativeSequence(min(len(song.Sequence)-1, g.nativeSequence+1))
 		}
-	} else if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+	} else if justPressed(ebiten.KeyRight) {
 		_, _, _, _, partSteps, _ := g.nativePartView()
 		g.nativeSelectedStep = min(partSteps-1, g.nativeSelectedStep+1)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
+	if justPressed(ebiten.KeyUp) {
 		g.nativeChannel = max(0, g.nativeChannel-1)
 		g.nativeRangeActive = false
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
+	if justPressed(ebiten.KeyDown) {
 		g.nativeChannel = min(3, g.nativeChannel+1)
 		g.nativeRangeActive = false
 	}
-	if mod && inpututil.IsKeyJustPressed(ebiten.KeyC) {
+	if mod && justPressed(ebiten.KeyC) {
 		if g.nativeRangeActive && !g.nativeSFXMode {
 			events := g.nativeRangeEvents()
 			if len(events) == 0 {
@@ -204,7 +204,7 @@ func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 		}
 		return
 	}
-	if mod && inpututil.IsKeyJustPressed(ebiten.KeyV) && len(g.nativeNoteClipboard) != 0 {
+	if mod && justPressed(ebiten.KeyV) && len(g.nativeNoteClipboard) != 0 {
 		if g.nativeSFXMode || g.nativeNoteClipboardKind != g.nativeChannel {
 			g.statusMsg = "Paste notes into the same Game Boy hardware channel"
 			return
@@ -218,7 +218,7 @@ func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 		g.markNativeMusicEdit(fmt.Sprintf("%d note(s) pasted", len(g.nativeNoteClipboard)))
 		return
 	}
-	if mod && inpututil.IsKeyJustPressed(ebiten.KeyV) && g.nativeClipboardSet {
+	if mod && justPressed(ebiten.KeyV) && g.nativeClipboardSet {
 		if g.nativeSFXMode {
 			g.statusMsg = "Select MUSIC to paste a clip into a part"
 			return
@@ -230,14 +230,14 @@ func (g *Game) updateNativeMusicKeyboard(performanceHandled bool) {
 		}
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyDelete) || inpututil.IsKeyJustPressed(ebiten.KeyBackspace) {
+	if justPressed(ebiten.KeyDelete) || justPressed(ebiten.KeyBackspace) {
 		g.deleteNativeSelection()
 		return
 	}
-	if performanceHandled {
+	if mod || performanceHandled {
 		return
 	}
-	if note, ok := g.nativeKeyboardNote(); ok {
+	if note, ok := g.nativeKeyboardNote(justPressed); ok {
 		if !g.nativePitchValid(note) {
 			g.statusMsg = g.nativePitchRangeMessage()
 			return
@@ -338,11 +338,11 @@ func (g *Game) moveNativeSection(delta int) {
 	g.markNativeMusicEdit("Section moved")
 }
 
-func (g *Game) nativeKeyboardNote() (int, bool) {
+func (g *Game) nativeKeyboardNote(justPressed func(ebiten.Key) bool) (int, bool) {
 	if g.nativeChannel == 3 {
 		keys := [...]ebiten.Key{ebiten.KeyZ, ebiten.KeyX, ebiten.KeyC, ebiten.KeyV, ebiten.KeyB, ebiten.KeyN, ebiten.KeyM, ebiten.KeySlash}
 		for preset, key := range keys {
-			if inpututil.IsKeyJustPressed(key) {
+			if justPressed(key) {
 				return 36 + preset, true
 			}
 		}
@@ -350,7 +350,7 @@ func (g *Game) nativeKeyboardNote() (int, bool) {
 	}
 	keys := [...]ebiten.Key{ebiten.KeyZ, ebiten.KeyS, ebiten.KeyX, ebiten.KeyD, ebiten.KeyC, ebiten.KeyV, ebiten.KeyG, ebiten.KeyB, ebiten.KeyH, ebiten.KeyN, ebiten.KeyJ, ebiten.KeyM}
 	for semitone, key := range keys {
-		if inpututil.IsKeyJustPressed(key) {
+		if justPressed(key) {
 			return (g.nativeOctave+1)*12 + semitone, true
 		}
 	}

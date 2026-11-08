@@ -231,10 +231,10 @@ func (g *Game) reloadActiveCodeDocument() {
 		g.statusMsg = "reload code: " + err.Error()
 		return
 	}
-	document.Editor = codeeditor.New(string(source))
+	// Activation copies the live editor and viewport back into the tab.
+	g.code = codeeditor.New(string(source))
 	document.DiskSource = string(source)
-	document.ScrollLine, document.ScrollColumn = 0, 0
-	document.LastParsed = ""
+	g.codeScrollLine, g.codeScrollColumn = 0, 0
 	g.activateCodeDocument(document.Path)
 	g.refreshCodeDiagnostics()
 	// Diagnostics are displayed through sourceAnalysisError; keep the project open.

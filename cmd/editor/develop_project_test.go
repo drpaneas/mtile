@@ -49,6 +49,64 @@ func TestSaveCodeDocumentUpdatesDiskBaseline(t *testing.T) {
 	}
 }
 
+func TestReloadActiveCodeDocumentPreservesExternalEdit(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	t.Cleanup(g.closeNativePerformance)
+	g.code.Insert("local_edit = 1\n")
+	g.codeScrollLine, g.codeScrollColumn = 4, 8
+	const external = "external_edit = 2\n"
+	if err := os.WriteFile(g.codePath, []byte(external), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if g.saveCode() {
+		t.Fatal("save should report a conflict before reload")
+	}
+
+	g.reloadActiveCodeDocument()
+	if g.code.Text() != external || g.code.Dirty() {
+		t.Errorf("reloaded text = %q, dirty = %t", g.code.Text(), g.code.Dirty())
+	}
+	if g.code.Cursor() != 0 || g.codeScrollLine != 0 || g.codeScrollColumn != 0 {
+		t.Errorf("reload left the cursor or viewport at the previous position")
+	}
+	if !g.saveCode() {
+		t.Fatal(g.statusMsg)
+	}
+	data, err := os.ReadFile(g.codePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != external {
+		t.Fatalf("save after reload overwrote external text: %q", data)
+	}
+}
+
+func TestReloadActiveCodeDocumentClearsDiagnosticsForEmptyFile(t *testing.T) {
+	g := newTestGame(t, 16, 16, 2, 2)
+	t.Cleanup(g.closeNativePerformance)
+	g.code.SelectAll()
+	g.code.Insert("function _draw(\n")
+	g.refreshCodeDiagnostics()
+	if g.codeDiagnosticLine == 0 {
+		t.Fatal("expected a parser error before reload")
+	}
+	if err := os.WriteFile(g.codePath, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	g.reloadActiveCodeDocument()
+	if !g.code.Dirty() {
+		t.Fatal("reload discarded local changes before confirmation")
+	}
+	g.reloadActiveCodeDocument()
+	if g.code.Text() != "" || g.code.Dirty() {
+		t.Errorf("reloaded text = %q, dirty = %t", g.code.Text(), g.code.Dirty())
+	}
+	if g.codeDiagnosticLine != 0 || g.codeDiagnosticColumn != 0 {
+		t.Fatalf("reload retained the old diagnostic: %s", g.codeDiagnostic)
+	}
+}
+
 func TestProjectSourceAnalysisIncludesDirtyOpenModules(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {

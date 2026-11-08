@@ -161,6 +161,62 @@ end
 	}
 }
 
+func TestGenericForEvaluatesTrailingZeroResultArgument(t *testing.T) {
+	generated, err := Transpile("iterator-arguments.lua", `
+calls = 1
+function mark()
+  calls += 10
+  for i = 1, 1100 do
+    local garbage = {i, "garbage" .. i}
+  end
+end
+function probe_all()
+  local total = 0
+  for value in all({calls}, mark()) do total += value end
+  return total + calls
+end
+function probe_pairs()
+  local total = 0
+  for key, value in pairs({calls}, mark()) do total += value end
+  return total + calls
+end
+`, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	runGeneratedHarness(t, generated, `package main
+
+import (
+  "testing"
+
+  rt "github.com/drpaneas/mtile/runtime"
+)
+
+func TestIteratorArguments(t *testing.T) {
+  for _, test := range []struct {
+    name string
+    probe func(*Game, *rt.Context, ...rt.Value) rt.Number
+  }{
+    {"all", (*Game).__glu_call_probe_all},
+    {"pairs", (*Game).__glu_call_probe_pairs},
+  } {
+    t.Run(test.name, func(t *testing.T) {
+      var g Game
+      var c rt.Context
+      g.Init(&c)
+      c.SetProfiling(true)
+      if got := test.probe(&g, &c).Int(); got != 12 {
+        t.Fatalf("iterator returned %d, want 12 (original table value 1 + updated calls 11)", got)
+      }
+      if c.PerformanceStats().GCCount == 0 {
+        t.Fatal("mark did not trigger garbage collection")
+      }
+    })
+  }
+}
+`, "TestIteratorArguments")
+}
+
 func TestGenericNumericForDeclaresLimitBeforeRootedStepEvaluation(t *testing.T) {
 	generated, err := Transpile("generic-for-order.lua", `
 function limit_value() return 2 end

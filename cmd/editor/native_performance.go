@@ -11,7 +11,6 @@ import (
 	runtimeaudio "github.com/drpaneas/mtile/runtime/audio"
 	"github.com/drpaneas/mtile/runtime/hw"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 // Oto divides the requested device queue into four chunks on macOS and two
@@ -661,17 +660,17 @@ func (g *Game) nudgeNativePerformanceParameter(parameter performance.Parameter, 
 	g.statusMsg = fmt.Sprintf("%s %d", label, value)
 }
 
-func (g *Game) updateNativePerformanceKeyboard() bool {
+func (g *Game) updateNativePerformanceKeyboard(mod bool, justPressed, justReleased func(ebiten.Key) bool) bool {
 	if g == nil || g.nativeSession == nil || !g.nativeSession.Snapshot().Armed {
 		return false
 	}
 	handled := false
 	now := g.nativeSession.Now()
-	if inpututil.IsKeyJustPressed(ebiten.KeyZ) {
+	if !mod && justPressed(ebiten.KeyZ) {
 		g.nativeOctave = max(2, g.nativeOctave-1)
 		handled = true
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyX) {
+	if !mod && justPressed(ebiten.KeyX) {
 		g.nativeOctave = min(6, g.nativeOctave+1)
 		handled = true
 	}
@@ -680,12 +679,13 @@ func (g *Game) updateNativePerformanceKeyboard() bool {
 		if g.nativeVoiceMode == performance.ModeNoise {
 			note = uint8(36 + semitone%8)
 		}
-		if inpututil.IsKeyJustPressed(key) {
+		if !mod && justPressed(key) {
 			g.nativeKeyboardHeld[semitone] = true
 			g.nativeSession.Handle(performance.PerformanceEvent{At: now, Kind: performance.NoteOn, Source: performance.SourceKeyboard, Note: note})
 			handled = true
 		}
-		if inpututil.IsKeyJustReleased(key) && g.nativeKeyboardHeld[semitone] {
+		// A shortcut can begin while a note is held. Its release still stops the note.
+		if justReleased(key) && g.nativeKeyboardHeld[semitone] {
 			g.nativeKeyboardHeld[semitone] = false
 			g.nativeSession.Handle(performance.PerformanceEvent{At: now, Kind: performance.NoteOff, Source: performance.SourceKeyboard, Note: note})
 			handled = true

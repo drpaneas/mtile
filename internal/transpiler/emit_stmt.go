@@ -705,8 +705,8 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 		return
 	}
 	table := "gluIter" + g.next("t")
-	tableExpr := g.emitExprFlush(b, indent, firstArg(call))
-	b.line(pad + table + " := " + tableExpr)
+	values := g.emitAdjustedValues(b, call.Args, 1, indent)
+	b.line(pad + table + " := " + adjustedLuaValue(values[0]))
 	root := g.next("iterRoot")
 	g.requireActiveRootSlots(1, s.Pos())
 	b.line(pad + root + " := gluPushRoots(c, " + table + ")")
@@ -767,13 +767,6 @@ func (g *generator) emitGenericFor(b *sourceBuilder, s *luaparser.GenericForStmt
 	g.activeRootSlots = rootSlots
 	b.line(pad + "\tgluPopRoots(c, " + root + ")")
 	b.line(pad + "}")
-}
-
-func firstArg(c *luaparser.CallExpr) luaparser.Expr {
-	if len(c.Args) == 0 {
-		return &luaparser.NilExpr{}
-	}
-	return c.Args[0]
 }
 
 // fixedNumberLiteral mirrors runtime.Number's signed 16:16 conversion. The

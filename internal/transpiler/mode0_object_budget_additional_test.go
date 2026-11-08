@@ -2,8 +2,11 @@ package transpiler
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/drpaneas/mtile/internal/luaparser"
 )
 
 func mode0BudgetTestSource(calls ...string) string {
@@ -190,6 +193,59 @@ func TestMode0ObjectBudgetRejectsCameraRebaseThroughHelper(t *testing.T) {
 	}
 }
 
+func TestMode0ObjectBudgetIncludesCameraRebasesInLoops(t *testing.T) {
+	const helper = "function rebase() camera(0,32) end\n"
+	const firstBand = "for i=1,36 do spr(32,0,0,4,4) end"
+	const secondBand = "for i=1,36 do spr(32,0,32,4,4) end"
+	for _, tc := range []struct{ name, loop string }{
+		{"while", "while btn(0) do rebase() break end"},
+		{"repeat", "repeat camera(0,32) until true"},
+		{"numeric-for", "for i=1,flr(t()) do camera(0,32) end"},
+		{"generic-for", "for v in all({1}) do camera(0,32) end"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := helper + mode0BudgetTestSource(firstBand, tc.loop, secondBand)
+			requireMode0ObjectBudgetFallback(t, tc.name+".lua", source, "2304 rendering cycles")
+		})
+	}
+
+	for _, tc := range []struct{ name, source string }{
+		{"loop-before-objects", helper + mode0BudgetTestSource("while btn(0) do rebase() break end", firstBand, secondBand)},
+		{"empty-loop", mode0BudgetTestSource(firstBand, "for i=1,0 do camera(0,32) end", secondBand)},
+	} {
+		report := requireMode0BudgetReport(t, tc.name+".lua", tc.source)
+		if report.Mode0OAMEntries != 72 || report.Mode0OBJLineCycles != 1152 {
+			t.Fatalf("%s: budget = %+v, want shared camera translation of both bands", tc.name, report)
+		}
+	}
+}
+
+func TestMode0LoopCameraTraceOnlyRecordsPossibleRebase(t *testing.T) {
+	const helper = "function rebase() camera(8,32) return true end\n"
+	for _, loop := range []string{
+		"while btn(0) do rebase() break end",
+		"repeat if btn(0) then break end until rebase()",
+	} {
+		chunk, err := luaparser.ParseString("loop-camera-text.lua", helper+mode0BudgetTestSource("camera()", loop, `print("A",8,32,7)`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		draw := chunk.Body[1].(*luaparser.FunctionDeclStmt)
+		ops, unbounded, err := mode0WalkDraw(chunk, draw, newMode0SpriteIDAnalysis(chunk), Options{})
+		if err != nil || unbounded {
+			t.Fatalf("%s: unbounded object count %t, error %v", loop, unbounded, err)
+		}
+		if len(ops) < 3 || ops[len(ops)-1].name != "print" {
+			t.Fatalf("%s: missing loop and print trace", loop)
+		}
+		change := ops[len(ops)-2]
+		want := mode0DrawOp{name: "camera", call: change.call, copies: change.copies}
+		if change.call == nil || len(change.call.Args) != 2 || !reflect.DeepEqual(change, want) {
+			t.Fatalf("%s: want a possible camera rebase before print, got %+v", loop, change)
+		}
+	}
+}
+
 func TestMode0CallGraphUsesGeneratorBuiltinPrecedence(t *testing.T) {
 	calls := mode0BudgetRepeatedCall(36, "spr(32,0,0,4,4)")
 	calls = append(calls, "abs(1)", "spr(1,0,32)", "spr(1,8,32)")
@@ -295,5 +351,45 @@ end
 	}
 	if report.Selected != RendererMode4 || !strings.Contains(report.Diagnostic, "[M0_OBJ_BUDGET]") {
 		t.Fatalf("AUTO report = %+v, want Mode 4 fallback", report)
+	}
+}
+
+func TestMode0ObjectBudgetProvesEveryNumericLoopBound(t *testing.T) {
+	for _, tc := range []struct{ name, setup, bounds, diagnostic string }{
+		{"mixed-count", "local n=1 if btn(0) then n=129 end", "1,n", "unproven object count"},
+		{"mixed-wrap", "local n=32766 if btn(0) then n=32767 end", "32766,n", "unproven object count"},
+		{"positive-wrap", "", "32767,32767", "unproven object count"},
+		{"negative-wrap", "", "-32768,-32768,-1", "unproven object count"},
+		{"literal-count", "", "1,129", "129 OAM entries"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			source := mode0BudgetTestSource(tc.setup, "for i="+tc.bounds+" do spr(1,0,0) end")
+			requireMode0ObjectBudgetFallback(t, tc.name+".lua", source, tc.diagnostic)
+		})
+	}
+
+	source := mode0BudgetTestSource("local n=0 if btn(0) then n=1 end", "for i=1,n do spr(1,0,0) end")
+	report := requireMode0BudgetReport(t, "empty-loop-alternative.lua", source)
+	if report.Mode0OAMEntries != 1 {
+		t.Fatalf("budget = %+v, want one entry with a valid zero-trip alternative", report)
+	}
+}
+
+func requireMode0ObjectBudgetFallback(t *testing.T, name, source, detail string) {
+	t.Helper()
+	opts := Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160}
+	_, _, err := TranspileWithReport(name, source, opts)
+	if err == nil || !strings.Contains(err.Error(), name+":") || !strings.Contains(err.Error(), "[M0_OBJ_BUDGET]") || !strings.Contains(err.Error(), detail) {
+		t.Fatalf("forced Mode 0 error = %v, want source-positioned M0_OBJ_BUDGET with %q", err, detail)
+	}
+
+	opts.Renderer = RendererAuto
+	_, report, err := TranspileWithReport(name, source, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Selected != RendererMode4 || report.Reason != reasonAutoMode0Ineligible || !strings.Contains(report.Diagnostic, name+":") ||
+		!strings.Contains(report.Diagnostic, "[M0_OBJ_BUDGET]") || !strings.Contains(report.Diagnostic, detail) {
+		t.Fatalf("AUTO report = %+v, want Mode 4 fallback with source-positioned M0_OBJ_BUDGET and %q", report, detail)
 	}
 }

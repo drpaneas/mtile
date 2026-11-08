@@ -127,8 +127,11 @@ prove all of these conditions:
   and the logical map size may be dynamic/large;
 - all `spr`, supported `sspr`, `pspr`, `anim`, and `print` calls run from `_draw`, including
   through user helpers (including helpers used inside expressions), `if`
-  branches, and numeric `for` loops with a proven finite trip count. Generic
-  `for`, `while`, and `repeat` loops that reach
+  branches, and numeric `for` loops with a proven finite trip count. Every
+  possible bound and step must allow termination without signed 16:16 wrap.
+  The finite-set proof rejects any combination over 128 trips. Fixed literal
+  loops with a known larger count still have that count charged to the budget.
+  Generic `for`, `while`, and `repeat` loops that reach
   `spr`/`sspr`/`pspr`/`anim`/`print` cannot prove an object count, so forced Mode 0 fails
   with `M0_OBJ_BUDGET` ("unproven object count") and AUTO falls back to Mode 4.
   They are not required to be top-level statements in `_draw`. `cls` and `map`
@@ -157,10 +160,11 @@ prove all of these conditions:
   first quantized exactly like the runtime's signed 16:16 numbers, then compose
   as circular 8-bit hardware intervals; independently dynamic Y positions and
   object groups separated by a `_draw` camera change are conservatively assumed
-  to coincide. This analysis follows user helper calls, so a helper-reachable
-  camera rebase cannot bypass the scanline proof. Static text X positions
-  include the runtime's six-pixel wrapping; dynamic text X/camera phases use a
-  conservative coincident-glyph bound;
+  to coincide. The analysis includes camera changes in loop bodies and
+  conditions, including calls through user helpers. A camera change in a loop
+  with unproven bounds leaves the camera position unknown after the loop.
+  Static text X positions include the runtime's six-pixel wrapping. Dynamic
+  text X positions and camera phases use a conservative coincident-glyph bound.
 - `spr` uses a source ID whose complete integer set is statically proven:
   an integer literal, a scalar assigned from an explicit finite integer set,
   a helper/local/parameter/field expression built from those values, or a

@@ -104,12 +104,13 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 			return err
 		}
 		trips, ok := w.numericTrips(s, env)
-		if !ok {
-			if w.blockHasDrawOp(s.Body) {
-				w.unbounded = true
-				return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
+		if !ok || trips == 0 {
+			// Preserve the object-call restriction for empty loops, while
+			// keeping unreachable camera changes out of the trace.
+			if ok && !w.blockHasDrawOp(s.Body) {
+				return nil
 			}
-			return nil
+			return w.walkUnprovenLoopBody(s.Body, env, copies, visiting, names)
 		}
 		values, okVals := w.loopValues(s, env, trips)
 		if !okVals {
@@ -127,42 +128,40 @@ func (w *mode0DrawWalker) walkStmt(stmt luaparser.Stmt, env mode0NumEnv, copies 
 		if err := w.walkExprs(s.Values, env, copies, visiting, names); err != nil {
 			return err
 		}
-		if w.blockHasDrawOp(s.Body) {
-			w.unbounded = true
-			return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
-		}
-		return nil
+		return w.walkUnprovenLoopBody(s.Body, env, copies, visiting, names)
 	case *luaparser.WhileStmt:
 		start := len(w.ops)
 		if err := w.walkExpr(s.Condition, env, copies, visiting, names); err != nil {
 			return err
 		}
-		if mode0OpsHaveObjects(w.ops[start:]) {
-			w.unbounded = true
-		}
-		if w.blockHasDrawOp(s.Body) {
-			w.unbounded = true
-			return w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names)
-		}
-		return nil
+		w.recordLoopConditionEffects(w.ops[start:])
+		return w.walkUnprovenLoopBody(s.Body, env, copies, visiting, names)
 	case *luaparser.RepeatStmt:
-		if w.blockHasDrawOp(s.Body) {
-			w.unbounded = true
-			if err := w.walkBlock(s.Body, cloneMode0NumEnv(env), copies, visiting, false, names); err != nil {
-				return err
-			}
+		if err := w.walkUnprovenLoopBody(s.Body, env, copies, visiting, names); err != nil {
+			return err
 		}
 		start := len(w.ops)
 		if err := w.walkExpr(s.Condition, env, copies, visiting, names); err != nil {
 			return err
 		}
-		if mode0OpsHaveObjects(w.ops[start:]) {
-			w.unbounded = true
-		}
+		w.recordLoopConditionEffects(w.ops[start:])
 		return nil
 	default:
 		return nil
 	}
+}
+
+func (w *mode0DrawWalker) walkUnprovenLoopBody(body *luaparser.Block, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, names map[string]bool) error {
+	if w.blockHasDrawOp(body) {
+		w.unbounded = true
+		return w.walkBlock(body, cloneMode0NumEnv(env), copies, visiting, false, names)
+	}
+	if call := w.graph.firstBuiltinFromBlock(body, map[string]bool{"camera": true}, make(map[*luaparser.FunctionDeclStmt]bool)); call != nil {
+		// The loop can rebase later objects without drawing any of its own.
+		// Its exit camera is unknown even when an individual call uses constants.
+		w.ops = append(w.ops, mode0DrawOp{name: "camera", call: call})
+	}
+	return nil
 }
 
 func (w *mode0DrawWalker) walkIf(s *luaparser.IfStmt, env mode0NumEnv, copies int, visiting map[*luaparser.FunctionDeclStmt]bool, names map[string]bool) error {
@@ -357,14 +356,16 @@ func (w *mode0DrawWalker) walkExprs(exprs []luaparser.Expr, env mode0NumEnv, cop
 	return nil
 }
 
-func mode0OpsHaveObjects(ops []mode0DrawOp) bool {
-	for _, op := range ops {
-		switch op.name {
+func (w *mode0DrawWalker) recordLoopConditionEffects(ops []mode0DrawOp) {
+	for i := range ops {
+		switch ops[i].name {
 		case "spr", "sspr", "pspr", "anim", "print":
-			return true
+			w.unbounded = true
+		case "camera":
+			// Only the possible rebase is known at the loop exit.
+			ops[i] = mode0DrawOp{name: "camera", call: ops[i].call, copies: ops[i].copies}
 		}
 	}
-	return false
 }
 
 func (w *mode0DrawWalker) callEnv(fn *luaparser.FunctionDeclStmt, call *luaparser.CallExpr, parent mode0NumEnv) mode0NumEnv {
@@ -410,21 +411,16 @@ func (w *mode0DrawWalker) numericTrips(loop *luaparser.NumericForStmt, env mode0
 	for _, start := range init {
 		for _, end := range limit {
 			for _, delta := range step {
-				if delta == 0 || !isMode0Int(start) || !isMode0Int(end) || !isMode0Int(delta) {
+				if !isMode0Int(start) || !isMode0Int(end) || !isMode0Int(delta) {
 					return 0, false
 				}
-				count := mode0TripCount(int64(start), int64(end), int64(delta))
-				if count <= 0 {
-					continue
+				count, proven := mode0TripCount(int64(start), int64(end), int64(delta))
+				if !proven {
+					return 0, false
 				}
-				if count > maxTrips {
-					maxTrips = count
-				}
+				maxTrips = max(maxTrips, count)
 			}
 		}
-	}
-	if maxTrips < 1 || maxTrips > 128 {
-		return 0, false
 	}
 	return maxTrips, true
 }
@@ -433,15 +429,21 @@ func isMode0Int(value float64) bool {
 	return value == float64(int64(value))
 }
 
-func mode0TripCount(init, limit, step int64) int {
-	if step == 0 || (step > 0 && init > limit) || (step < 0 && init < limit) {
-		return 0
+func mode0TripCount(init, limit, step int64) (int, bool) {
+	if step == 0 {
+		return 0, false
+	}
+	if (step > 0 && init > limit) || (step < 0 && init < limit) {
+		return 0, true
 	}
 	count := (limit-init)/step + 1
-	if count < 1 || count > 128 {
-		return 0
+	// The runtime increments before its next limit check, so a wrap can
+	// reenter the loop instead of terminating it.
+	next := init + count*step
+	if count > 128 || next < -32768 || next > 32767 {
+		return 0, false
 	}
-	return int(count)
+	return int(count), true
 }
 
 func (w *mode0DrawWalker) loopValues(loop *luaparser.NumericForStmt, env mode0NumEnv, trips int) ([]float64, bool) {
