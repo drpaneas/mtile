@@ -1,10 +1,52 @@
 package main
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/emulator"
 )
+
+func TestPreviewBuildStopsWhenAssetsCannotBeSaved(t *testing.T) {
+	g := newTestGame(t, 16, 16, 8, 8)
+	t.Cleanup(g.closeNativePerformance)
+	// A directory cannot be replaced by the file Model.Save writes here.
+	projectFile := filepath.Join(g.model.Dir, "project.json")
+	if err := os.RemoveAll(projectFile); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(projectFile, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	g.runID, g.playRunID, g.runReportID = 1, 1, 1
+	g.startRun()
+	status, _ := g.developPreviewStatus()
+	log := strings.Join(g.developPanelLines(developBuild), "\n")
+	if g.runBusy || g.runStatus != "BUILD BLOCKED" || status != "PREVIOUS BUILD" || !strings.Contains(log, "project.json") {
+		t.Fatalf("busy %v, preview %q, build log %q", g.runBusy, status, log)
+	}
+}
+
+func TestFailedReplacementKeepsMatchingPreviewReport(t *testing.T) {
+	g := memoryTestGame()
+	g.runID, g.runBusy = 2, true
+	g.acceptPlayLaunch(playLaunch{id: 2, result: build.Result{ROMPath: "replacement.gba", ROMSize: 512}, err: errors.New("mGBA could not launch")})
+	status, _ := g.developPreviewStatus()
+	memory := strings.Join(g.developMemoryLines(), "\n")
+	if status != "PREVIOUS BUILD" || g.runStatus != "PLAYER FAILED" || g.runROMSize != 32768 || !strings.Contains(memory, "idle_2 (#2)") {
+		t.Fatalf("preview %q, run %q, memory %q", status, g.runStatus, memory)
+	}
+	g.playErrors = make(chan error, 1)
+	g.playErrors <- errors.New("previous preview exited")
+	g.pumpPlaySession()
+	if g.playRunID != 0 || g.runError != "mGBA could not launch" {
+		t.Fatalf("failed old preview remained active or replaced the build error: %d, %q", g.playRunID, g.runError)
+	}
+}
 
 func TestRetiredEmulatorCannotConsumeActivePreviewInput(t *testing.T) {
 	for _, activeRunID := range []uint64{0, 2} {

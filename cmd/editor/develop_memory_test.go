@@ -11,7 +11,7 @@ import (
 
 func memoryTestGame() *Game {
 	return &Game{
-		runID: 1, playRunID: 1,
+		runID: 1, playRunID: 1, runReportID: 1,
 		runMemoryReady: true, runROMSize: 32768, runEWRAMUsed: 12236, runEWRAMFree: 249396, runIWRAMUsed: 10416,
 		runRendererSelected: "mode0",
 		runPoseMemory: build.PoseMemoryReport{
@@ -48,7 +48,7 @@ func TestDevelopMemoryNeverInventsZeroLiveUsage(t *testing.T) {
 		change     func(*Game)
 	}{
 		{"before build", "Build + Reload", func(g *Game) { g.runMemoryReady = false }},
-		{"building", "report is pending", func(g *Game) { g.runBusy = true }},
+		{"building without preview", "report is pending", func(g *Game) { g.runBusy, g.playRunID = true, 0 }},
 		{"failed build", "Build failed", func(g *Game) { g.runMemoryReady, g.runError = false, "link failed" }},
 		{"stopped", "Waiting for live preview", func(g *Game) { g.playTelemetry.Valid = false }},
 		{"stale preview", "Waiting for this build's preview", func(g *Game) { g.playRunID = 0 }},

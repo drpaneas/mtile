@@ -411,6 +411,10 @@ sound may take a shared hardware channel.
 5. **RESET** restarts the loaded cartridge; **STOP** ends it. Building again
    compiles the current saved project and replaces the preview.
 
+The build stops if source or asset changes cannot be saved. While a replacement
+build is pending or has failed, the running cartridge is marked **PREVIOUS BUILD**.
+The Build panel shows the latest attempt and its error separately.
+
 The screenshot intentionally shows the state before a ROM has been built;
 **BUILD A CARTRIDGE TO PLAY** is an instruction, not a broken preview.
 
@@ -533,7 +537,7 @@ unique artwork in a RAM buffer would require 7,936 more bytes than that staging
 buffer. Separately, merging identical source cells saves 64 bytes of pixel ROM.
 These savings concern different memory pools and must not be added together.
 
-Build figures belong to the last successful build, not unsaved artwork. Live
+Build figures belong to the running preview or the last successful build, not unsaved artwork. Live
 pose names are matched only to that same preview generation. Missing/older
 telemetry and pending uploads are labeled unavailable rather than shown as
 zero. Mode 4 explains that poses draw from ROM into the bitmap framebuffer;

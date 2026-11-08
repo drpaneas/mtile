@@ -294,17 +294,17 @@ func (g *Game) drawDevelopHeader(screen *ebiten.Image, layout developLayout) {
 func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 	fillRect(screen, layout.Play.Stage, colorBackground)
 	border := colorBorder
-	label := "CLICK SCREEN TO PLAY"
+	label := "CLICK TO PLAY"
 	if g.developGameFocus {
 		border = colorRun
-		label = "GAME INPUT ACTIVE  /  ESC RELEASE"
+		label = "ESC RELEASES INPUT"
 	}
 	strokeRect(screen, layout.Play.Stage, border)
-	left := truncateTextToWidth("GBA PREVIEW  /  mGBA CORE", layout.Play.Stage.W/2-20, developSmallFace)
-	right := truncateTextToWidth(label, layout.Play.Stage.W/2-20, developSmallFace)
-	drawDevelopSmallText(screen, left, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
-	drawDevelopSmallText(screen, right, layout.Play.Stage.X+layout.Play.Stage.W-12-developSmallTextWidth(right), layout.Play.Stage.Y+10, border)
-	g.drawDevelopPreviewStatus(screen, layout, left, right)
+	if g.playStop == nil {
+		label = "GBA PREVIEW"
+	}
+	drawDevelopSmallText(screen, label, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
+	g.drawDevelopPreviewStatus(screen, layout)
 	g.drawGBABezel(screen, layout.Play)
 	if g.developGameFocus {
 		strokeRoundedRect(screen, editor.Rect{X: layout.Play.Screen.X - 12, Y: layout.Play.Screen.Y - 12, W: layout.Play.Screen.W + 24, H: layout.Play.Screen.H + 24}, 5, rgba(colorRun, 210))
@@ -314,7 +314,14 @@ func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 func (g *Game) developPreviewStatus() (string, color.Color) {
 	g.runMu.Lock()
 	busy, status, runError := g.runBusy, g.runStatus, g.runError
+	active, previous := g.playRunID != 0, g.playRunID != g.runID
 	g.runMu.Unlock()
+	if active && previous {
+		return "PREVIOUS BUILD", colorHighlight
+	}
+	if status == "BUILD BLOCKED" {
+		return "BLOCKED", colorHighlight
+	}
 	if busy {
 		return "BUILDING", colorHighlight
 	}
@@ -324,8 +331,6 @@ func (g *Game) developPreviewStatus() (string, color.Color) {
 	switch status {
 	case "RUNNING ON mGBA CORE":
 		return "LIVE", colorRun
-	case "BUILD BLOCKED":
-		return "BLOCKED", colorHighlight
 	case "PLAYER STOPPED":
 		return "STOPPED", colorDim
 	default:
@@ -333,21 +338,17 @@ func (g *Game) developPreviewStatus() (string, color.Color) {
 	}
 }
 
-func developPreviewStatusRect(layout developLayout, left, right string) editor.Rect {
-	leftEdge := layout.Play.Stage.X + 28 + developSmallTextWidth(left)
-	rightEdge := layout.Play.Stage.X + layout.Play.Stage.W - 28 - developSmallTextWidth(right)
-	return editor.Rect{X: leftEdge, Y: layout.Play.Stage.Y + 5, W: max(0, rightEdge-leftEdge), H: 20}
+func developPreviewStatusRect(layout developLayout) editor.Rect {
+	stage := layout.Play.Stage
+	return editor.Rect{X: stage.X + stage.W/2, Y: stage.Y + 5, W: stage.W/2 - 12, H: 20}
 }
 
-func (g *Game) drawDevelopPreviewStatus(screen *ebiten.Image, layout developLayout, left, right string) {
-	available := developPreviewStatusRect(layout, left, right)
-	if available.W < 64 {
-		return
-	}
+func (g *Game) drawDevelopPreviewStatus(screen *ebiten.Image, layout developLayout) {
+	available := developPreviewStatusRect(layout)
 	label, accent := g.developPreviewStatus()
 	label = truncateTextToWidth(label, available.W-30, developSmallFace)
 	w := min(available.W, developSmallTextWidth(label)+30)
-	r := editor.Rect{X: available.X + (available.W-w)/2, Y: available.Y, W: w, H: available.H}
+	r := editor.Rect{X: available.X + available.W - w, Y: available.Y, W: w, H: available.H}
 	fillRoundedRect(screen, r, 5, color.RGBA{R: 11, G: 12, B: 25, A: 238})
 	strokeRoundedRect(screen, r, 5, rgba(accent, 150))
 	fillRect(screen, editor.Rect{X: r.X + 8, Y: r.Y + 7, W: 6, H: 6}, accent)
@@ -1015,10 +1016,11 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 		}
 		return lines
 	case developBuild:
-		if len(events) == 0 && runError == "" {
+		if len(events) == 0 && runError == "" && status == "" {
 			return []string{"Build log is empty. Press Build + Reload."}
 		}
-		lines := make([]string, 0, len(events)+1)
+		previewStatus, _ := g.developPreviewStatus()
+		lines := []string{"STATUS  " + status, "PREVIEW  " + previewStatus}
 		for _, event := range events {
 			lines = append(lines, fmt.Sprintf("[%s] %s", event.Phase, event.Message))
 		}

@@ -73,24 +73,25 @@ func (g *Game) startRun() {
 	if g == nil {
 		return
 	}
+	g.runMu.Lock()
+	busy := g.runBusy
+	g.runMu.Unlock()
+	if busy {
+		return
+	}
 	// A build request always opens its own log. This makes mouse and
 	// Cmd/Ctrl+R builds land in the same, predictable place.
 	g.developPanel = developBuild
 	g.developScroll[developBuild] = 0
 	if !g.prepareCodeForBuild() {
-		g.runMu.Lock()
-		g.runError = ""
-		g.runStatus = "BUILD BLOCKED"
-		g.runBuildEvents = []build.Event{{Phase: build.PhaseSource, Message: g.statusMsg}}
-		g.runMu.Unlock()
+		g.blockPreviewBuild(build.PhaseSource)
 		return
 	}
-	g.persist()
+	if err := g.persist(); err != nil {
+		g.blockPreviewBuild(build.PhaseAssets)
+		return
+	}
 	g.runMu.Lock()
-	if g.runBusy {
-		g.runMu.Unlock()
-		return
-	}
 	g.runBusy = true
 	g.runID++
 	runID := g.runID
@@ -98,24 +99,10 @@ func (g *Game) startRun() {
 	g.runStatus = "BUILDING CARTRIDGE..."
 	g.runBuildEvents = g.runBuildEvents[:0]
 	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog[:0], "Build requested")
-	g.runGeneratedGo = ""
 	g.runEntry = ""
 	g.runSourceFiles = nil
 	g.runGlobalUsage = build.GlobalUsage{}
 	g.sourceAnalysisError = ""
-	g.runRendererRequested = ""
-	g.runRendererSelected = ""
-	g.runRendererReason = ""
-	g.runRendererProfile = ""
-	g.runRendererDiagnostic = ""
-	g.runRendererLayers = 0
-	g.runRendererObjects = false
-	g.runRendererText = false
-	g.runEWRAMUsed = 0
-	g.runEWRAMFree = 0
-	g.runIWRAMUsed = 0
-	g.runMemoryReady = false
-	g.runPoseMemory = build.PoseMemoryReport{}
 	g.runMu.Unlock()
 	projectDir := g.model.Dir
 	go func() {
@@ -145,6 +132,15 @@ func (g *Game) startRun() {
 		session, err := emulator.Start(helper, result.ROMPath)
 		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, err: err})
 	}()
+}
+
+func (g *Game) blockPreviewBuild(phase build.Phase) {
+	g.runMu.Lock()
+	defer g.runMu.Unlock()
+	g.runID++
+	g.runError = g.statusMsg
+	g.runStatus = "BUILD BLOCKED"
+	g.runBuildEvents = []build.Event{{Phase: phase, Message: "Could not save changes before build."}}
 }
 
 func appendBoundedLog(log []string, message string) []string {
@@ -222,8 +218,10 @@ framesDone:
 		select {
 		case err := <-g.playErrors:
 			g.runMu.Lock()
-			g.runError = err.Error()
-			g.runStatus = "PLAYER STOPPED"
+			if g.playRunID == g.runID {
+				g.runError = err.Error()
+				g.runStatus = "PLAYER STOPPED"
+			}
 			g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, "mGBA: "+err.Error())
 			g.runMu.Unlock()
 			g.stopPlayback()
@@ -316,24 +314,8 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		g.runGlobalUsage = cloneGlobalUsage(launch.result.GlobalUsage)
 		g.sourceAnalysisError = ""
 	}
-	if launch.result.ROMPath != "" {
-		g.runROMPath = launch.result.ROMPath
-		g.runROMSize = launch.result.ROMSize
-		g.runEWRAMUsed = launch.result.EWRAMUsed
-		g.runEWRAMFree = launch.result.EWRAMFree
-		g.runIWRAMUsed = launch.result.IWRAMUsed
-		g.runMemoryReady = true
-		g.runPoseMemory = launch.result.PoseMemory
-		g.runPoseMemory.PoseNames = append([]string(nil), launch.result.PoseMemory.PoseNames...)
-		g.runGeneratedGo = launch.result.GeneratedGo
-		g.runRendererRequested = launch.result.RendererRequested.String()
-		g.runRendererSelected = launch.result.Renderer.String()
-		g.runRendererReason = launch.result.RendererReason
-		g.runRendererProfile = launch.result.RendererProfile
-		g.runRendererDiagnostic = launch.result.RendererDiagnostic
-		g.runRendererLayers = launch.result.RendererLayers
-		g.runRendererObjects = launch.result.RendererObjects
-		g.runRendererText = launch.result.RendererText
+	if launch.result.ROMPath != "" && g.playRunID == 0 {
+		g.setPreviewBuildReport(launch)
 	}
 	if launch.err != nil {
 		g.runError = launch.err.Error()
@@ -345,11 +327,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		g.runMu.Unlock()
 		return
 	}
-	g.runError = ""
-	g.runStatus = "RUNNING ON mGBA CORE"
-	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, "mGBA helper started: "+filepath.Base(launch.helper))
 	g.runMu.Unlock()
-	g.stopPlayback()
 
 	stream := emulator.NewPCMStream(500)
 	context, err := editorAudioContext()
@@ -373,6 +351,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		return
 	}
 	player.SetBufferSize(cartridgePlaybackBufferSize)
+	g.stopPlayback()
 	g.playPCM = stream
 	g.playAudio = player
 	g.setPreviewPlayerVolume(g.playAudio)
@@ -387,6 +366,10 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	g.playAudioBaselineUnderruns = 0
 	g.playAudioBaselineOverruns = 0
 	g.runMu.Lock()
+	g.setPreviewBuildReport(launch)
+	g.runError = ""
+	g.runStatus = "RUNNING ON mGBA CORE"
+	g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, "mGBA helper started: "+filepath.Base(launch.helper))
 	g.playRunID = launch.id
 	g.playPaused = g.mode != modeCode
 	paused := g.playPaused
@@ -395,6 +378,29 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		player.Play()
 	}
 	go g.runEmulator(launch.session, g.playPCM, g.playFrames, g.playErrors, g.playStop, launch.id)
+}
+
+// Hold runMu while publishing the report that belongs to a built ROM.
+func (g *Game) setPreviewBuildReport(launch playLaunch) {
+	result := launch.result
+	g.runReportID = launch.id
+	g.runROMPath = result.ROMPath
+	g.runROMSize = result.ROMSize
+	g.runEWRAMUsed = result.EWRAMUsed
+	g.runEWRAMFree = result.EWRAMFree
+	g.runIWRAMUsed = result.IWRAMUsed
+	g.runMemoryReady = true
+	g.runPoseMemory = result.PoseMemory
+	g.runPoseMemory.PoseNames = append([]string(nil), result.PoseMemory.PoseNames...)
+	g.runGeneratedGo = result.GeneratedGo
+	g.runRendererRequested = result.RendererRequested.String()
+	g.runRendererSelected = result.Renderer.String()
+	g.runRendererReason = result.RendererReason
+	g.runRendererProfile = result.RendererProfile
+	g.runRendererDiagnostic = result.RendererDiagnostic
+	g.runRendererLayers = result.RendererLayers
+	g.runRendererObjects = result.RendererObjects
+	g.runRendererText = result.RendererText
 }
 
 func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames chan emulator.Frame, failures chan error, stop <-chan struct{}, runID uint64) {
@@ -415,7 +421,10 @@ func (g *Game) runEmulator(session playSession, pcm *emulator.PCMStream, frames 
 			if source, ok := session.(interface{ DrainLogs() []string }); ok {
 				g.acceptRuntimeLogs(runID, source.DrainLogs())
 			}
-			if !g.currentRun(runID) {
+			g.runMu.Lock()
+			active := g.playRunID == runID
+			g.runMu.Unlock()
+			if !active {
 				return
 			}
 			select {

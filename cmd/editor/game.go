@@ -255,6 +255,7 @@ type Game struct {
 	runBusy                    bool
 	runID                      uint64
 	runROMPath                 string
+	runReportID                uint64
 	runROMSize                 int
 	runEWRAMUsed               uint64
 	runEWRAMFree               uint64
@@ -665,15 +666,16 @@ func (g *Game) restore(s undoSnapshot) {
 // mode switch, not continuously while dragging pixels/tiles. Failures are
 // surfaced in the status bar rather than treated as fatal, since an editing
 // session should not be lost over a transient disk error.
-func (g *Game) persist() {
+func (g *Game) persist() error {
 	if err := g.model.Save(); err != nil {
 		g.statusMsg = "save failed: " + err.Error()
 		log.Printf("save failed: %v", err)
-		return
+		return err
 	}
 	g.markAnimationClipsSaved()
 	g.queueProjectCheck()
 	g.statusMsg = ""
+	return nil
 }
 
 func (g *Game) Update() error {

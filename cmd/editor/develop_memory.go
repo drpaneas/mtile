@@ -43,12 +43,13 @@ func (g *Game) developMemorySections() [4][]developMemoryLine {
 	romBytes := uint64(max(0, g.runROMSize))
 	ewram, free, iwram := g.runEWRAMUsed, g.runEWRAMFree, g.runIWRAMUsed
 	report, renderer := g.runPoseMemory, g.runRendererSelected
-	currentPreview := g.runID != 0 && g.playRunID == g.runID
+	currentPreview := g.runReportID != 0 && g.playRunID == g.runReportID
+	previousPreview := currentPreview && g.runReportID != g.runID
 	g.runMu.Unlock()
 	columns := [4][]developMemoryLine{}
 	left, right := &columns[0], &columns[1]
 	ram, comparison := &columns[2], &columns[3]
-	if !ready || busy {
+	if !ready || busy && !currentPreview {
 		state := "Build + Reload to inspect cartridge memory."
 		if busy {
 			state = "Building cartridge; memory report is pending."
@@ -67,9 +68,11 @@ func (g *Game) developMemorySections() [4][]developMemoryLine {
 		memoryHeading("CARTRIDGE / ROM"),
 		memoryLine(fmt.Sprintf("%s used / %s available", formatMemoryBytes(romBytes), formatMemoryBytes(romFree))),
 		memoryNote("32 MiB build limit; includes code and all assets."),
-		memoryLine(""),
-		memoryHeading("POSE LIBRARY / "+memoryCount(report.PoseCount, "pose")+" / "+memoryCount(report.ClipCount, "clip")),
 	)
+	if previousPreview {
+		*left = append(*left, memoryNote("Showing the previous build running in the preview."))
+	}
+	*left = append(*left, memoryLine(""), memoryHeading("POSE LIBRARY / "+memoryCount(report.PoseCount, "pose")+" / "+memoryCount(report.ClipCount, "clip")))
 	switch {
 	case report.Source == "none":
 		*left = append(*left, memoryLine("No pose artwork in this build."))

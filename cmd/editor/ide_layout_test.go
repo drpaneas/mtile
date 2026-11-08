@@ -178,10 +178,8 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 		if !rectInsideIDE(layout.Play.Screen, layout.Play.Bezel) || !rectInsideIDE(layout.Play.Bezel, layout.Play.Stage) {
 			t.Fatalf("%dx%d live GBA screen/bezel escapes preview", size.width, size.height)
 		}
-		left := truncateTextToWidth("GBA PREVIEW  /  mGBA CORE", layout.Play.Stage.W/2-20, developSmallFace)
-		right := truncateTextToWidth("CLICK SCREEN TO PLAY", layout.Play.Stage.W/2-20, developSmallFace)
-		status := developPreviewStatusRect(layout, left, right)
-		if status.W > 0 && (!rectInsideIDE(status, layout.Play.Stage) || rectsOverlapIDE(status, layout.Play.Bezel)) {
+		status := developPreviewStatusRect(layout)
+		if status.W < developSmallTextWidth("PREVIOUS BUILD")+30 || !rectInsideIDE(status, layout.Play.Stage) || rectsOverlapIDE(status, layout.Play.Bezel) {
 			t.Fatalf("%dx%d preview status does not fit its header: %#v", size.width, size.height, status)
 		}
 		if layout.Code.Editor.W < 600 {

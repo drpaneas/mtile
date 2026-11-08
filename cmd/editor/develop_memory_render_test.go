@@ -79,7 +79,7 @@ func TestDevelopMemoryRender(t *testing.T) {
 			setInterfaceTextSize(size.font)
 			g.Layout(size.w, size.h)
 			g.mode, g.developPanel = modeCode, developMemory
-			g.runID, g.playRunID = 1, 1
+			g.runID, g.playRunID, g.runReportID = 1, 1, 1
 			g.runMemoryReady = true
 			g.runRendererSelected, g.runRendererRequested = "mode0", "auto"
 			g.runROMSize = report.Debug.ROMBytes
