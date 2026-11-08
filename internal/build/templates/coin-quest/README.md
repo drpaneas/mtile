@@ -39,7 +39,7 @@ commands from the repository root. A project path containing spaces needs quotes
 
 Choose **Develop**, then **Build + Reload** (Ctrl/Cmd+R). Click the game preview
 before using the keyboard. The arrow keys move; **Z is GBA A**, which restarts.
-Escape returns focus to the code editor. The finished ROM is `game.gba`.
+Escape returns focus to the code editor. Use **Export .gba** to write the release ROM.
 
 **Checkpoint:** collect five coins. The counter stops at 5/5 and shows
 “You win” Press Z to reset the counter and position.
@@ -142,7 +142,7 @@ then press Z. You can restart during play too.
 
 ## 7. Export and share
 
-Build one last time. Share `game.gba` with someone who has a GBA emulator;
+Choose **Export .gba** and save `game.gba`. Share it with someone who has a GBA emulator;
 they do not need mTile or the source project to play. The same ROM can be
 copied to compatible GBA flash-cartridge hardware. Save the entire project
 folder separately so you can continue editing it.

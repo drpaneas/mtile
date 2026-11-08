@@ -53,8 +53,8 @@ In **Develop**, open `game.lua`. Find `speed = 2` near the top and change it to
 edit → build → play loop you will use for every new feature. Change it back
 to `2` if you prefer the original pace.
 
-**You can stop here.** Your modified game is ready to play or share as
-`mygame/game.gba`. Keep the project folder so you can edit it later.
+**You can stop here.** To share your modified game, select **Export .gba** and
+choose `mygame/game.gba`. Keep the project folder so you can edit it later.
 
 For another small change, recolor sprite **1**, the explorer, in **Sprites**.
 Save and rebuild to see the new artwork. The generated `mygame/README.md`

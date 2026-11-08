@@ -173,6 +173,8 @@ func (g *Game) updateDevelopMode() {
 		case rectContains(layout.Stop, mx, my):
 			g.releaseDevelopGameInput()
 			g.stopPlaySession()
+		case g.clickDevelopROMExport(layout, mx, my):
+			g.releaseDevelopGameInput()
 		case rectContains(layout.Play.Screen, mx, my):
 			g.developGameFocus = true
 			g.statusMsg = "game input active; press Esc to return to code"
@@ -306,6 +308,7 @@ func (g *Game) drawDevelopPreview(screen *ebiten.Image, layout developLayout) {
 	drawDevelopSmallText(screen, label, layout.Play.Stage.X+12, layout.Play.Stage.Y+10, colorCode)
 	g.drawDevelopPreviewStatus(screen, layout)
 	g.drawGBABezel(screen, layout.Play)
+	g.drawDevelopROMExport(screen, layout)
 	if g.developGameFocus {
 		strokeRoundedRect(screen, editor.Rect{X: layout.Play.Screen.X - 12, Y: layout.Play.Screen.Y - 12, W: layout.Play.Screen.W + 24, H: layout.Play.Screen.H + 24}, 5, rgba(colorRun, 210))
 	}
@@ -984,6 +987,9 @@ func (g *Game) developPanelLines(panel developPanel) []string {
 			status = "READY TO BUILD"
 		}
 		lines := []string{"STATUS  " + status}
+		if g.romExport.message != "" {
+			lines = append(lines, "EXPORT  "+g.romExport.message)
+		}
 		if entry != "" {
 			lines = append(lines, "ENTRY   "+entry, fmt.Sprintf("SOURCES %d  %s", len(sources), strings.Join(sources, ", ")))
 		}

@@ -415,6 +415,11 @@ The build stops if source or asset changes cannot be saved. While a replacement
 build is pending or has failed, the running cartridge is marked **PREVIOUS BUILD**.
 The Build panel shows the latest attempt and its error separately.
 
+Use **Export .gba** under the preview to build a release cartridge for hardware
+or sharing. Choose the destination, then use **Show in Folder** to find the
+result. Build + Reload uses its own temporary debug ROM, so testing changes
+does not replace your export.
+
 The screenshot intentionally shows the state before a ROM has been built;
 **BUILD A CARTRIDGE TO PLAY** is an instruction, not a broken preview.
 

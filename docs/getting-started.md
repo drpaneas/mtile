@@ -97,8 +97,9 @@ and see the result. That is enough setup to begin making the game your own.
 For readable text, open Preferences with Ctrl/Cmd+`,` and choose COMFORT or
 LARGE, or use Ctrl/Cmd+`+`/`-`. Ctrl/Cmd+`0` restores COMFORT.
 
-You can also load `mygame/game.gba` in a separately installed emulator or
-transfer it to compatible GBA flash-cartridge hardware.
+After making changes in the editor, use **Export .gba** to build an updated
+release ROM. You can load that file in another emulator or transfer it to
+compatible GBA flash-cartridge hardware.
 
 ## When you are ready to change the artwork
 

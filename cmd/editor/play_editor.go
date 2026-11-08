@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"image/color"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -19,7 +20,17 @@ type playLaunch struct {
 	session *emulator.Session
 	result  build.Result
 	helper  string
+	romDir  string
 	err     error
+}
+
+func (launch playLaunch) discard() {
+	if launch.session != nil {
+		_ = launch.session.Close()
+	}
+	if launch.romDir != "" {
+		_ = os.RemoveAll(launch.romDir)
+	}
 }
 
 type playStepper interface {
@@ -76,7 +87,7 @@ func (g *Game) startRun() {
 	g.runMu.Lock()
 	busy := g.runBusy
 	g.runMu.Unlock()
-	if busy {
+	if busy || g.romExport.ready != nil {
 		return
 	}
 	// A build request always opens its own log. This makes mouse and
@@ -116,21 +127,28 @@ func (g *Game) startRun() {
 		}
 		service.Debug = true
 		service.UseProjectRenderer = true
-		result, err := service.Build(projectDir, "")
+		outputPath, err := developPreviewROMPath(projectDir)
 		if err != nil {
 			g.deliverPlayLaunch(playLaunch{id: runID, err: err})
 			return
 		}
+		romDir := filepath.Dir(outputPath)
+		result, err := service.Build(projectDir, outputPath)
+		if err != nil {
+			g.deliverPlayLaunch(playLaunch{id: runID, romDir: romDir, err: err})
+			return
+		}
 		if !g.currentRun(runID) {
+			_ = os.RemoveAll(romDir)
 			return
 		}
 		helper, err := emulator.ResolveHelper()
 		if err != nil {
-			g.deliverPlayLaunch(playLaunch{id: runID, result: result, err: err})
+			g.deliverPlayLaunch(playLaunch{id: runID, result: result, romDir: romDir, err: err})
 			return
 		}
 		session, err := emulator.Start(helper, result.ROMPath)
-		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, err: err})
+		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, romDir: romDir, err: err})
 	}()
 }
 
@@ -179,9 +197,7 @@ func (g *Game) currentRun(id uint64) bool {
 
 func (g *Game) deliverPlayLaunch(launch playLaunch) {
 	if !g.currentRun(launch.id) {
-		if launch.session != nil {
-			_ = launch.session.Close()
-		}
+		launch.discard()
 		return
 	}
 	g.runReady <- launch
@@ -302,9 +318,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	g.runMu.Lock()
 	if launch.id != g.runID {
 		g.runMu.Unlock()
-		if launch.session != nil {
-			_ = launch.session.Close()
-		}
+		launch.discard()
 		return
 	}
 	g.runBusy = false
@@ -325,6 +339,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 		}
 		g.runRuntimeLog = appendBoundedLog(g.runRuntimeLog, g.runStatus+": "+launch.err.Error())
 		g.runMu.Unlock()
+		launch.discard()
 		return
 	}
 	g.runMu.Unlock()
@@ -332,7 +347,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	stream := emulator.NewPCMStream(500)
 	context, err := editorAudioContext()
 	if err != nil {
-		_ = launch.session.Close()
+		launch.discard()
 		g.runMu.Lock()
 		g.runError = err.Error()
 		g.runStatus = "AUDIO DEVICE ERROR"
@@ -342,7 +357,7 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	}
 	player, err := context.NewPlayer(stream)
 	if err != nil {
-		_ = launch.session.Close()
+		launch.discard()
 		g.runMu.Lock()
 		g.runError = err.Error()
 		g.runStatus = "AUDIO STREAM ERROR"
@@ -377,7 +392,13 @@ func (g *Game) acceptPlayLaunch(launch playLaunch) {
 	if !paused {
 		player.Play()
 	}
-	go g.runEmulator(launch.session, g.playPCM, g.playFrames, g.playErrors, g.playStop, launch.id)
+	pcm, frames, failures, stop := g.playPCM, g.playFrames, g.playErrors, g.playStop
+	go func() {
+		g.runEmulator(launch.session, pcm, frames, failures, stop, launch.id)
+		if launch.romDir != "" {
+			_ = os.RemoveAll(launch.romDir)
+		}
+	}()
 }
 
 // Hold runMu while publishing the report that belongs to a built ROM.
@@ -631,7 +652,12 @@ func (g *Game) stopPlayback() {
 	g.playAudioBaselineOverruns = 0
 }
 
-func (g *Game) closePlayMode() { g.stopPlaySession() }
+func (g *Game) closePlayMode() {
+	if g.romExport.cancel != nil {
+		g.romExport.cancel()
+	}
+	g.stopPlaySession()
+}
 
 func playInputColor(keys uint16) color.Color {
 	if keys == 0 {
@@ -678,12 +704,6 @@ func (g *Game) drawGBABezel(screen *ebiten.Image, layout playLayout) {
 		fillRect(screen, layout.Screen, color.RGBA{R: 33, G: 45, B: 39, A: 255})
 		drawTextScale(screen, "MTILE", layout.Screen.X+layout.Screen.W/2-56, layout.Screen.Y+layout.Screen.H/2-22, 2, colorLCD)
 		drawText(screen, "BUILD A CARTRIDGE TO PLAY", layout.Screen.X+layout.Screen.W/2-94, layout.Screen.Y+layout.Screen.H/2+18, colorCommentMuted())
-	}
-	drawText(screen, "NATIVE 240 x 160  /  STEREO SOUND", layout.Bezel.X+24, layout.Bezel.Y+layout.Bezel.H-24, colorLCD)
-	fillRect(screen, editor.Rect{X: layout.Bezel.X + layout.Bezel.W - 44, Y: layout.Bezel.Y + layout.Bezel.H - 30, W: 10, H: 10}, colorRun)
-	for index := 0; index < 7; index++ {
-		x := layout.Bezel.X + layout.Bezel.W - 118 + index*10
-		drawLine(screen, x, layout.Bezel.Y+layout.Bezel.H-28, x+5, layout.Bezel.Y+layout.Bezel.H-33, colorShellBorder)
 	}
 }
 

@@ -182,6 +182,15 @@ func TestDevelopWorkspaceCombinesCodeAndLiveGBAWithoutOverlap(t *testing.T) {
 		if status.W < developSmallTextWidth("PREVIOUS BUILD")+30 || !rectInsideIDE(status, layout.Play.Stage) || rectsOverlapIDE(status, layout.Play.Bezel) {
 			t.Fatalf("%dx%d preview status does not fit its header: %#v", size.width, size.height, status)
 		}
+		export, reveal := developROMExportRects(layout)
+		for _, control := range []editor.Rect{export, reveal} {
+			if !rectInsideIDE(control, layout.Play.Bezel) || rectsOverlapIDE(control, layout.Play.Screen) {
+				t.Fatalf("%dx%d export control overlaps preview: %#v", size.width, size.height, control)
+			}
+		}
+		if rectsOverlapIDE(export, reveal) {
+			t.Fatalf("%dx%d export controls overlap", size.width, size.height)
+		}
 		if layout.Code.Editor.W < 600 {
 			t.Fatalf("%dx%d code viewport is too narrow: %d", size.width, size.height, layout.Code.Editor.W)
 		}
