@@ -66,7 +66,7 @@ python3 examples/smb3/tools/verify_native.py examples/smb3/game.gba \
   /path/to/workdir/game.elf build/player/mtile-player --output /tmp/smb3-verification
 ```
 
-The replay uses GBA buttons to finish 1-1, receive a card and move in 1-2. It reads those checkpoints from the running game's memory, captures six screenshots, checks that Mario is visible in both courses and confirms that the cartridge produces PCM.
+The replay uses GBA buttons to finish 1-1, receive a card and move in 1-2. It times jumps to game ticks so builds can miss different display deadlines. It reads those checkpoints from the running game's memory, captures six screenshots, checks that Mario is visible in both courses and confirms that the cartridge produces PCM.
 
 The mushroom regression uses the same ROM, ELF and helper. It hits the first World 1-1 power-up block through controller input and checks that Mario grows on pickup and that his larger sprite is visible.
 

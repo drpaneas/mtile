@@ -115,47 +115,64 @@ def replay(preview, route, output):
     captured = set()
     previous = None
 
-    def apply(segments):
+    def step(mask):
         nonlocal previous
+        frame, rgba, audible, state = preview.step(mask)
+        state['display_frame'] = frame
+        evidence['nonzero_pcm_frames'] += audible
+        if (previous is not None and previous['stage'] == state['stage'] == 2
+                and previous['course'] == state['course']):
+            delta = state['cam_y'] - previous['cam_y']
+            elapsed = state['tick'] - previous['tick']
+            # The emulator can sample between the tick counter and the camera write.
+            if not -3 * (elapsed + 1) <= delta <= 4 * (elapsed + 1):
+                raise ValueError(f'vertical camera snapped {delta} pixels in {elapsed} ticks: {state}')
+        previous = state
+        label = names.get((state['course'], state['stage']))
+        if label and label not in captured:
+            pending.setdefault(label, frame + 5)
+        if state['stage'] == 2 and state['course'] == 1 and state['player_y'] < 350:
+            if 'jump' not in captured:
+                pending.setdefault('jump', frame)
+        ready = [name for name, due in pending.items() if frame >= due]
+        for name in ready:
+            if name in ('world1-1', 'world1-2'):
+                evidence['mario_sprite_pixels'][name] = mario_sprite_pixels(rgba, state)
+            evidence['screens'][name] = hashlib.sha256(rgba).hexdigest()
+            if output is not None:
+                write_png(output / f'{name}.png', rgba)
+            del pending[name]
+            captured.add(name)
+        return state
+
+    def apply(segments):
         for duration, mask in segments:
             for _ in range(duration):
-                frame, rgba, audible, state = preview.step(mask)
-                state['display_frame'] = frame
-                evidence['nonzero_pcm_frames'] += audible
-                if (previous is not None and previous['stage'] == state['stage'] == 2
-                        and previous['course'] == state['course']):
-                    delta = state['cam_y'] - previous['cam_y']
-                    elapsed = state['tick'] - previous['tick']
-                    # The emulator can sample between the tick counter and the camera write.
-                    if not -3 * (elapsed + 1) <= delta <= 4 * (elapsed + 1):
-                        raise ValueError(f'vertical camera snapped {delta} pixels in {elapsed} ticks: {state}')
-                previous = state
-                label = names.get((state['course'], state['stage']))
-                if label and label not in captured:
-                    pending.setdefault(label, frame + 5)
-                if state['stage'] == 2 and state['course'] == 1 and state['player_y'] < 350:
-                    if 'jump' not in captured:
-                        pending.setdefault('jump', frame)
-                ready = [name for name, due in pending.items() if frame >= due]
-                for name in ready:
-                    if name in ('world1-1', 'world1-2'):
-                        evidence['mario_sprite_pixels'][name] = mario_sprite_pixels(rgba, state)
-                    evidence['screens'][name] = hashlib.sha256(rgba).hexdigest()
-                    if output is not None:
-                        write_png(output / f'{name}.png', rgba)
-                    del pending[name]
-                    captured.add(name)
+                state = step(mask)
         return state
 
     entered = apply(route['boot'])
     if entered['stage'] != 2 or entered['course'] != 1 or entered['player_x'] != 24:
         raise ValueError(f'failed to enter World 1-1: {entered}')
     evidence['checkpoints']['entered_1_1'] = entered
-    clear = apply(route['course'])
+    if 'course_ticks' in route:
+        # Hardware can miss a presentation without taking another input sample.
+        # Change inputs at the same physics tick across builds.
+        schedule = route['course_ticks']
+        cursor = 0
+        clear = entered
+        for _ in range(1600):
+            while cursor + 1 < len(schedule) and clear['tick'] >= schedule[cursor + 1][0]:
+                cursor += 1
+            clear = step(schedule[cursor][1])
+            if clear['stage'] != 2:
+                break
+    else:
+        clear = apply(route['course'])
     if clear['stage'] != 4 or clear['course'] != 1 or not 1 <= clear['card'] <= 3:
         raise ValueError(f'World 1-1 did not award a card: {clear}')
     evidence['checkpoints']['cleared_1_1'] = clear
-    after_clear = apply(((90, 0), (8, 8), (16, 0)))
+    after_clear = apply(((114, 0), (8, 8), (16, 0)))
     if after_clear['stage'] != 1 or after_clear['course'] != 1:
         raise ValueError(f'did not return to World 1 map after the clear: {after_clear}')
     next_course = apply(((8, 16), (48, 0), (8, 16), (48, 0), (8, 1), (10, 0), (50, 18)))
