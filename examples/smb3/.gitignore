@@ -1,0 +1,6 @@
+*.gba
+*.sav
+__pycache__/
+artifacts/
+studies/
+/assets/palettes/aurora.json
