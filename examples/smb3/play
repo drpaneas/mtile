@@ -1,33 +1,6 @@
 #!/bin/sh
 set -eu
-
 example=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 root=$(CDPATH='' cd -- "$example/../.." && pwd -P)
-mode=play
-if [ "${1:-}" = "--learn" ]; then
-    mode=learn
-    shift
-fi
-if [ "$#" -gt 1 ] || [ "${1:-}" = "--help" ]; then
-    printf '%s\n' "Usage: $0 [--learn] [path/to/game.gba]"
-    [ "$#" -le 1 ]
-    exit
-fi
-rom=${1:-"$example/game.gba"}
-if [ ! -f "$rom" ]; then
-    printf '%s\n' "Cartridge not found: $rom" "Run python3 \"$example/build.py\" /path/to/mario3.nes first." >&2
-    exit 1
-fi
-rom="$(CDPATH='' cd -- "$(dirname -- "$rom")" && pwd -P)/$(basename -- "$rom")"
-
 cd "$root"
-if [ -z "${MTILE_PLAYER:-}" ] && [ -x "$root/build/player/mtile-player" ]; then
-    export MTILE_PLAYER="$root/build/player/mtile-player"
-fi
-if [ "$mode" = learn ]; then
-    if [ -n "${MTILE_EDITOR:-}" ]; then
-        exec "$MTILE_EDITOR" -project "$example" -workspace learn -rom "$rom"
-    fi
-    exec go run ./cmd/editor -project "$example" -workspace learn -rom "$rom"
-fi
-exec go run ./examples/smb3/playcmd "$rom"
+exec go run ./cmd/mtile edit "$example"

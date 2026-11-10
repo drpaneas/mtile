@@ -1,50 +1,54 @@
-# Super Mario Bros. 3 · mTile
+# Super Mario Bros. 3 · native mTile
 
-This example plays the original **Super Mario Bros. 3** through mTile's GBA player, with an option to open it inside the **Learn** workspace. The generated GBA cartridge runs the complete, unmodified NES ROM through PocketNES on the ARM7. The Lua file is a launch card for the editor; the original NES program runs the game.
+An editable mTile project for the first two World 1 courses. The project builds a Game Boy Advance ROM with mTile and TinyGo. The GBA runs the compiled Lua game logic, draws backgrounds and sprites using the Mode 0 hardware, and plays the soundtrack through the four PSG channels.
 
-## Build and play
+The title, World 1 map, courses, sprites, HUD and sound data are generated locally from the matching NTSC NES cartridge. The importer uses Python 3.10 or newer and works offline. The generated assets and GBA ROM stay local.
 
-From the mTile checkout, with Python 3.9+ and your own matching NES ROM:
+## Open and build
+
+From the mTile checkout, import the assets once:
 
 ```sh
-python3 examples/smb3/build.py "/path/to/mario3.nes"
-./examples/smb3/play
+python3 examples/smb3/build.py "/path/to/mario3.nes" --assets-only
+go run ./cmd/mtile edit examples/smb3
 ```
 
-The build downloads the [pinned PocketNES release](https://github.com/Dwedit/PocketNES/releases/tag/1-4-2020-B) and verifies its SHA-256 before use. The NES ROM never leaves your computer. To build offline, pass the official release ZIP or its extracted `pocketnes.gba` as `--core /path/to/file`. The builder accepts the 393,232-byte NES revision identified by SHA-256 `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`.
+Choose **Develop** and press **Run** to build and play the game in the editor. To build the same GBA ROM from the terminal:
 
-`play` opens the game in its own window using mTile's `mtile-player`. Set `MTILE_PLAYER` to the full path of the helper if the launcher cannot find it. Press **Esc** to close the game. The same cartridge also opens directly in a GBA emulator.
+```sh
+go run ./cmd/mtile build examples/smb3
+```
 
-To inspect the cartridge in the mTile editor, run `./examples/smb3/play --learn`. This requires a checkout or editor that supports the Learn workspace. Set `MTILE_EDITOR` to an already built Learn editor if desired; otherwise the script runs the editor from source.
+The output is `examples/smb3/game.gba`. Omitting `--assets-only` from the import command runs the same build after importing.
 
-In **Learn**, click the original preview to play and give it keyboard focus (or press **⌘P** on macOS, **Ctrl+P** elsewhere). In either window, wait for the title, then press **Enter** to open the player menu and **Enter** to choose 1 Player. After the World 1 introduction clears, press **Right**, then **Up** to reach **1**, and **Z** to enter.
+At the title, press **Start**. On the map, go **Right**, then **Up**, then press **A** to enter 1-1. Clear the course, then go **Right** twice and press **A** to enter 1-2.
 
-| Keyboard | Original control |
+| GBA controls | Editor keyboard |
 | --- | --- |
-| Arrow keys | D-pad |
-| Z | A (jump, confirm) |
-| X | B (run, action) |
-| Enter | Start |
-| Backspace | Select |
+| D-pad | Arrow keys |
+| A, jump or enter | Z |
+| B, run or tail attack | X |
+| Start, menu or pause | Enter |
 
-## Fidelity and build boundary
+## Source
 
-The build writes the verified PocketNES GBA executable, one 48-byte menu entry, and every byte of the original iNES file. It uses the [upstream pack format](https://github.com/Dwedit/PocketNES/blob/f7e7cbbda8b605b940979155fa618de514ec84b4/src/rommenu.c) so the sole game starts automatically. It does not extract or redistribute a separate copy of the game's maps, sprites, audio, or code. Keep the generated `game.gba` private: it contains your NES ROM.
+- `game.lua` handles the title, world map, stage progression, camera and HUD.
+- `player.lua` handles the fixed-point simulation, controller edges, collision probes, poses and power states.
+- `terrain.lua` uses the original 16-pixel metatiles for collision and updates the corresponding 8-pixel display tiles.
+- `actors.lua` handles course objects, enemy contact and powerups.
+- `tools/` imports ROM data before compilation. The course and sound extractors evaluate isolated NES data-loading routines locally during import. The GBA cartridge executes the native mTile game.
 
-Mario's movement, collisions, enemies, levels and progression are driven by the original code. The GBA display is 240×160; PocketNES scales the NES picture and maps sound and timing to the GBA. Picture, audio and timing are therefore not bit-identical to the desktop NES reference. The editor's local controls cover one GBA keypad. The original game is not editable as mTile Lua.
+The two main-course terrain grids, object placements and palettes were checked against the NES reference. Separate movement tests matched 360 reference ticks for normal walking, running, reversing and jumping. The current project covers single-player World 1-1 and the main area of 1-2. Enemy timing, some interactive tiles and the soundtrack's percussion differ. The other courses, pipe bonus areas and two-player mode remain unimplemented. The GBA viewport is 240×160. The game schedules two simulation steps for each keypad sample and presentation. The measured 1-1 replay averaged about 56 simulation updates per second, below the nominal rate.
 
-Expected SHA-256 of the generated cartridge: `8df99dded49916e382814272833d947c513040bd244084d5f3193033255491ff`.
+## Replay the verification
 
-
-## Verify the replay
+Build with `go run ./cmd/mtile build -keep-work examples/smb3`. The output prints a work directory containing the matching `game.elf`. With the native player helper and the ARM/LLVM symbol tools on your path:
 
 ```sh
-python3 examples/smb3/verify.py examples/smb3/game.gba build/player/mtile-player \
-  --output /tmp/smb3-verification
+python3 examples/smb3/tools/verify_native.py examples/smb3/game.gba \
+  /path/to/workdir/game.elf build/player/mtile-player --output /tmp/smb3-verification
 ```
 
-Use a current `mtile-player` with memory-read support; replace the helper path above if yours is installed elsewhere. The optional output directory receives local PNG checkpoints and a JSON report.
+The replay uses GBA buttons to finish 1-1, receive a card and move in 1-2. It reads those checkpoints from the running game's memory, captures six screenshots and checks that the cartridge produces PCM.
 
-The replay drives the cartridge through the same mTile player used by Learn. It reads the NES game state from inside the PocketNES session: title, map, World 1-1, running and jumping, the goal card, return to the map and the grounded slope in World 1-2. Running the same input twice also checks that the output is repeatable.
-
-These are sampled milestones, not an exhaustive certification of every world or emulator edge case. The compatibility cartridge and desktop reference return to the map with the same goal card. Three sampled grounded slope positions in World 1-2 also match when the starts of the replays are aligned. They already differ in Mario's coordinates on one sampled goal frame: (2684, 342) in the GBA run and (2685, 351) in the NES run. The replay input is timed for the GBA version.
+ROM labels and behavior were cross-checked against [Southbird's SMB3 disassembly](http://www.sonicepoch.com/sm3mix/).

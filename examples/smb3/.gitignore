@@ -1,6 +1,16 @@
 *.gba
 *.sav
 __pycache__/
+/course_data.lua
+/assets/map.json
+/assets/spritesheet.json
+/assets/objsheet.json
+/assets/poses.json
+/assets/palettes/smb3.json
+/assets/palettes/aurora.json
+/assets/audio/music.json
+/assets/audio/settings.json
+/assets/audio/sounds.json
+/.smb3-import-*/
 artifacts/
 studies/
-/assets/palettes/aurora.json
