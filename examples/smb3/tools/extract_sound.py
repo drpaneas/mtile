@@ -12,7 +12,8 @@ from rom_layout import check_rom
 NES_CPU_CLOCK = 1_789_773
 NES_FPS = 60.0988
 TEMPO = 120
-TICKS_PER_FRAME = TEMPO * 96 / (60 * NES_FPS)
+PPQN = 96
+TICKS_PER_FRAME = TEMPO * PPQN / (60 * NES_FPS)
 LENGTH = (10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14,
           12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30)
 NES_NOISE = (4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068)
@@ -36,6 +37,14 @@ EFFECTS = (
     ('Power up', QUEUE_LEVEL, 0x20, 1), ('Extra life', QUEUE_LEVEL, 0x40, 1),
     ('Map step', QUEUE_MAP, 0x02, 0),
 )
+
+
+def song_game_updates(song_id):
+    """Duration of an imported song sequence in nominal 30 Hz game updates."""
+    boundaries = SONGS[song_id][3]
+    ticks = sum(round((end - start) * TICKS_PER_FRAME)
+                for start, end in zip(boundaries, boundaries[1:]))
+    return math.ceil(ticks * 60 * 30 / (TEMPO * PPQN))
 
 
 def note_for(period, channel):
@@ -216,7 +225,7 @@ class PSGAssets:
     def write(self, output):
         output.mkdir(parents=True, exist_ok=True)
         settings = {'version': 2, 'profile': 'gameboy-psg', 'leftLevel': 7, 'rightLevel': 7, 'psgRatio': 100}
-        music = {'version': 2, 'ppqn': 96, 'clips': self.clips, 'parts': self.parts, 'songs': self.songs}
+        music = {'version': 2, 'ppqn': PPQN, 'clips': self.clips, 'parts': self.parts, 'songs': self.songs}
         for name, content in [('settings', settings), ('sounds', {'version': 2, 'sounds': self.sounds}), ('music', music)]:
             (output / f'{name}.json').write_text(json.dumps(content, separators=(',', ':')) + '\n')
 

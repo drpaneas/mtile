@@ -5,6 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
+from extract_sound import song_game_updates
+
 from extract_assets import COIN_REMOVED_TILE, SPENT_TILE
 
 
@@ -84,6 +86,8 @@ def write_courses(levels, graphics, output):
         lines.extend(["    },", "  },"])
         row += height * 2
     lines.append("}")
+    lines.append(f"art_scene_fade = {lua(graphics['fade_maps'])}")
+    lines.append(f"art_death_jingle_updates = {song_game_updates(4)}")
     lines.append(f"art_title_row = {graphics['title_row']}")
     lines.append(f"art_world_map_row = {graphics['world_map_row']}")
     board = graphics["world_map"]

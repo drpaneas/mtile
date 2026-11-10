@@ -14,7 +14,7 @@ import zlib
 WIDTH, HEIGHT = 240, 160
 WATCHES = (
     'stage', 'course', 'tick', 'player_x', 'player_y', 'player_vx',
-    'player_vy', 'lives', 'card', 'cam_x', 'coins',
+    'player_vy', 'lives', 'card', 'cam_x', 'cam_y', 'coins',
 )
 
 
@@ -50,6 +50,21 @@ def write_png(path, rgba):
     header = struct.pack('>2I5B', WIDTH, HEIGHT, 8, 6, 0, 0, 0)
     path.write_bytes(b'\x89PNG\r\n\x1a\n' + png_chunk(b'IHDR', header)
                      + png_chunk(b'IDAT', zlib.compress(rows)) + png_chunk(b'IEND', b''))
+
+
+def mario_sprite_pixels(rgba, state, powered=False):
+    """Count Mario's dark red pixels in the expected small or super sprite."""
+    left = state['player_x'] - state['cam_x']
+    top = state['player_y'] - state['cam_y'] + (0 if powered else 16)
+    red = bytes((148, 33, 33))  # Imported Mario palette after GBA RGB conversion.
+    count = 0
+    for y in range(max(0, top), min(HEIGHT, top + (32 if powered else 16))):
+        for x in range(max(0, left), min(WIDTH, left + 16)):
+            pixel = (y * WIDTH + x) * 4
+            count += rgba[pixel:pixel + 3] == red
+    if count < 8:
+        raise ValueError(f"Mario's {'super' if powered else 'small'} sprite is missing: {state}")
+    return count
 
 
 class Preview:
@@ -92,18 +107,29 @@ class Preview:
 
 
 def replay(preview, route, output):
-    evidence = {'nonzero_pcm_frames': 0, 'checkpoints': {}, 'screens': {}}
+    evidence = {'nonzero_pcm_frames': 0, 'checkpoints': {}, 'screens': {},
+                'mario_sprite_pixels': {}}
     names = {(1, 0): 'title', (1, 1): 'world-map', (1, 2): 'world1-1',
              (1, 4): 'course-clear', (2, 2): 'world1-2'}
     pending = {}
     captured = set()
+    previous = None
 
     def apply(segments):
+        nonlocal previous
         for duration, mask in segments:
             for _ in range(duration):
                 frame, rgba, audible, state = preview.step(mask)
                 state['display_frame'] = frame
                 evidence['nonzero_pcm_frames'] += audible
+                if (previous is not None and previous['stage'] == state['stage'] == 2
+                        and previous['course'] == state['course']):
+                    delta = state['cam_y'] - previous['cam_y']
+                    elapsed = state['tick'] - previous['tick']
+                    # The emulator can sample between the tick counter and the camera write.
+                    if not -3 * (elapsed + 1) <= delta <= 4 * (elapsed + 1):
+                        raise ValueError(f'vertical camera snapped {delta} pixels in {elapsed} ticks: {state}')
+                previous = state
                 label = names.get((state['course'], state['stage']))
                 if label and label not in captured:
                     pending.setdefault(label, frame + 5)
@@ -112,6 +138,8 @@ def replay(preview, route, output):
                         pending.setdefault('jump', frame)
                 ready = [name for name, due in pending.items() if frame >= due]
                 for name in ready:
+                    if name in ('world1-1', 'world1-2'):
+                        evidence['mario_sprite_pixels'][name] = mario_sprite_pixels(rgba, state)
                     evidence['screens'][name] = hashlib.sha256(rgba).hexdigest()
                     if output is not None:
                         write_png(output / f'{name}.png', rgba)

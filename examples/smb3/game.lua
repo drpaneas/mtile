@@ -22,6 +22,12 @@ local map_node = 1
 local unlocked_course = 1
 local map_anim = 0
 local card = 0
+local hud_lives = -1
+local hud_score = -1
+local hud_coins = -1
+local hud_timer = -1
+local screen_fade = 0
+local reveal_updates = 0
 
 function game_add_score(amount)
   score = min(30000, score + amount)
@@ -94,11 +100,21 @@ function smb3_camera_follow()
     cam_x = max(player_x - 64, 0)
   end
   local ground_y = smb3_camera_ground_y()
+  local target_y = cam_y
   if player_grounded or cam_y < ground_y then
-    cam_y = ground_y
+    target_y = ground_y
   elseif player_y - cam_y < 20 then
-    cam_y = max(player_y - 20, 0)
+    target_y = max(player_y - 20, 0)
   end
+  -- Show a power-up emerging near the top without putting Mario's feet
+  -- behind the HUD. On level ground the normal framing has ten spare pixels.
+  local reward_top = actors_reward_top(cam_x)
+  if reward_top ~= nil then
+    target_y = min(target_y, max(max(0, ground_y - 8), reward_top))
+  end
+  -- Landing on a high ledge can change the target by most of the viewport.
+  -- Limit the upward change just as the original camera did.
+  cam_y = cam_y + mid(-3, target_y - cam_y, 4)
 end
 
 function smb3_update_course()
@@ -127,10 +143,46 @@ function smb3_update_course()
   actors_update(cam_x)
 end
 
-function smb3_hud_digits(field, value)
+function smb3_hud_digits(field, value, previous)
+  if value == previous then return value end
+  local remaining = value
   for digit = field[3] - 1, 0, -1 do
-    mset(1, field[1] + digit, field[2], art_hud_digit_art[value % 10 + 1])
-    value = flr(value / 10)
+    local digit_value = remaining % 10
+    -- Rewriting an unchanged digit can reload the evicted HUD map chunk.
+    if previous < 0 or digit_value ~= previous % 10 then
+      mset(1, field[1] + digit, field[2], art_hud_digit_art[digit_value + 1])
+    end
+    remaining = flr(remaining / 10)
+    previous = flr(previous / 10)
+  end
+  return value
+end
+
+function smb3_fade_to(shade)
+  if shade == screen_fade then return end
+  screen_fade = shade
+  if shade == 0 then
+    pal(1)
+  else
+    local colors = art_scene_fade[shade]
+    for index = 0, 64 do pal(index, colors[index + 1], 1) end
+  end
+end
+
+function smb3_return_after_death()
+  reveal_updates = 12
+  if lives <= 0 then
+    lives = 4
+    score = 0
+    coins = 0
+    card = 0
+    course = 1
+    unlocked_course = 1
+    map_node = 1
+    stage = 0
+  else
+    stage = 1
+    music(1)
   end
 end
 
@@ -141,6 +193,12 @@ function _update()
   local jump_pressed = jump and not menu_jump_held
   start_held = start
   menu_jump_held = jump
+
+  if reveal_updates > 0 then
+    reveal_updates = reveal_updates - 1
+    smb3_fade_to(flr((reveal_updates + 2) / 3))
+    return
+  end
 
   if stage == 0 then
     if start_pressed or jump_pressed then
@@ -177,21 +235,11 @@ function _update()
     player_update()
     player_update()
     clear_delay = clear_delay + 1
-    if player_death_ticks >= 88 or start_pressed then
-      if lives <= 0 then
-        lives = 4
-        score = 0
-        coins = 0
-        card = 0
-        course = 1
-        unlocked_course = 1
-        map_node = 1
-        stage = 0
-      else
-        stage = 1
-        music(1)
-      end
-    end
+    local fade_out = clear_delay - (art_death_jingle_updates - 12)
+    if fade_out > 0 then smb3_fade_to(min(4, flr((fade_out + 2) / 3))) end
+    -- The imported song advances on the audio timer. Two extra game updates
+    -- cover the phase between starting the song and its first audio tick.
+    if clear_delay >= art_death_jingle_updates + 2 then smb3_return_after_death() end
   elseif stage == 4 then
     clear_delay = clear_delay + 1
     if time_left > 0 and clear_delay > 20 then
@@ -221,33 +269,34 @@ function _update()
     end
   end
   if stage == 2 or stage == 3 or stage == 4 then
-    smb3_hud_digits(art_hud_lives, max(0, lives))
-    smb3_hud_digits(art_hud_score, score)
-    smb3_hud_digits(art_hud_coins, coins)
-    smb3_hud_digits(art_hud_timer, time_left)
+    hud_lives = smb3_hud_digits(art_hud_lives, max(0, lives), hud_lives)
+    hud_score = smb3_hud_digits(art_hud_score, score, hud_score)
+    hud_coins = smb3_hud_digits(art_hud_coins, coins, hud_coins)
+    hud_timer = smb3_hud_digits(art_hud_timer, time_left, hud_timer)
   end
 end
 
 function smb3_draw_player()
-  local poses = art_small
   if player_flash > 0 and flr(player_flash / 3) % 2 == 1 then return end
-  local y = player_y + 16
-  if player_power > 0 then
-    poses = art_super
-    y = player_y
-  end
-  local x = player_x
+  local x, y = player_x, player_y + 16
   local flip = not player_left
-  local pose = poses[player_pose + 1]
+  local frame = player_pose % 9 + 1
+  local pose = art_small[frame]
+  if player_power > 0 then
+    y = player_y
+    pose = art_super[frame]
+  end
   if player_power == 2 then
     if flip then x = x - 8 end
-    pose = art_raccoon[player_pose + 1]
+    pose = art_raccoon[frame]
     if player_tail_ticks > 0 then
-      pose = art_tail[min(3, flr((18 - player_tail_ticks) / 4) + 1)]
+      if player_tail_ticks >= 15 then pose = art_tail[1]
+      elseif player_tail_ticks >= 11 then pose = art_tail[2]
+      else pose = art_tail[3] end
     elseif player_wag_ticks > 0 then
-      local frame = flr(player_wag_ticks / 3) % 3 + 1
-      if player_fly_ticks > 0 then pose = art_fly[frame]
-      else pose = art_flutter[frame] end
+      local wag_frame = flr(player_wag_ticks / 3) % 3 + 1
+      if player_fly_ticks > 0 then pose = art_fly[wag_frame]
+      else pose = art_flutter[wag_frame] end
     end
   end
   pspr(pose, x, y, flip)
@@ -267,7 +316,9 @@ function _draw()
   if stage == 0 then bg_x = 0 bg_y = art_title_row * 8 end
   if stage == 1 or stage == 5 then bg_x = 0 bg_y = art_world_map_row * 8 end
   camera(bg_x, bg_y)
-  map(0)
+  -- Include one guard tile for sub-tile scrolling, without materializing
+  -- the hidden rows and columns between the map origin and camera.
+  map(0, flr(bg_x / 8), flr(bg_y / 8), 0, 0, 31, 21)
   local hud_y = 0
   if stage == 0 or stage == 1 or stage == 5 then hud_y = -160 end
   camera(0, hud_y)

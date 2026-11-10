@@ -575,8 +575,23 @@ def extract(rom, courses, output, include_status_bar=False, include_title=False,
     write_json(output / "poses.json", {"version": 1, "poses": poses})
     write_json(output / "animation.json", workspace)
     write_json(output / "map.json", map_data)
-    write_json(output / "tile-ids.json", graphics)
     palette = [rgb15(backdrop)] + [rgb15(code) for code in range(64)]
+    base_colors = tuple(palette)
+    color_ids = {tuple(color[k] for k in "rgb"): index for index, color in enumerate(palette)}
+    fade_maps = []
+    for brightness in (3, 2, 1, 0):
+        remap = []
+        for color in base_colors:
+            rgb = tuple((color[channel] * brightness + 2) // 4 for channel in "rgb")
+            if rgb not in color_ids:
+                color_ids[rgb] = len(palette)
+                palette.append(dict(zip("rgb", rgb)))
+            remap.append(color_ids[rgb])
+        fade_maps.append(remap)
+    if len(palette) > 256:
+        raise ValueError("SMB3 fade colors exceed the GBA palette")
+    graphics["fade_maps"] = fade_maps
+    write_json(output / "tile-ids.json", graphics)
     palette += [palette[0]] * (256 - len(palette))
     write_json(output / "palettes" / "smb3.json", {"name": "smb3", "colors": palette})
 

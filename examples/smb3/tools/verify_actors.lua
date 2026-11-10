@@ -52,15 +52,32 @@ local slots = captured(actors_update,'slots')
 local items = captured(actors_update,'items')
 local fireballs = captured(actors_update,'fireballs')
 
-reset({{109,160,400}}, 10, 200)
-for _ = 1,32 do
-  actors_update(0)
-  assert(slots[1].y == 400, 'Grounded Koopa y must be stable')
-  draws = {}
-  actors_draw()
-  local pose, y = draws[1][1],draws[1][3]
-  local height = pose == art_red_koopa_1 and 34 or 35
-  assert(y + height == 416, 'Koopa pose must meet the terrain')
+local foot_rows = {}
+local rows = assert(io.popen("python3 tools/koopa_foot_rows.py"))
+for line in rows:lines() do
+  local pose, row = line:match("^(%d+) (%d+)$")
+  foot_rows[assert(tonumber(pose))] = assert(tonumber(row))
+end
+assert(rows:close(), 'Could not read the imported Koopa poses')
+
+local variants = {
+  {108, art_koopa_1, art_koopa_2},
+  {109, art_red_koopa_1, art_red_koopa_2},
+  {110, art_para_koopa_1, art_para_koopa_2},
+}
+for _, variant in ipairs(variants) do
+  reset({{variant[1],160,400}}, 10, 200)
+  local seen_poses = {}
+  for _ = 1,32 do
+    actors_update(0)
+    assert(slots[1].y == 400, 'Grounded Koopa y must be stable')
+    draws = {}
+    actors_draw()
+    local pose, y = draws[1][1], draws[1][3]
+    assert(y + assert(foot_rows[pose]) == 415, 'Opaque Koopa feet must meet the terrain')
+    seen_poses[pose] = true
+  end
+  assert(seen_poses[variant[2]] and seen_poses[variant[3]], 'Both walk poses must be verified')
 end
 
 reset({{108,48,400}, {114,98,400}}, 0, 220)
@@ -137,4 +154,37 @@ for _=1,24 do actors_update(0) end
 player_x,player_y = shot.x-5,shot.y-24
 actors_update(0)
 assert(damage == 1, 'Projectile must damage Mario on contact')
+-- Check the actual World 1-1 ledges using its imported terrain and spawn.
+ord = string.byte
+function band(a, b) return a & b end
+dofile("terrain.lua")
+local plains = courses[1]
+course_rows, course_columns, course_tile_flags = plains.rows, plains.columns, plains.flags
+course_slopes = plains.slopes
+local koopa_spawn
+for _, object in ipairs(plains.objects) do
+  if object[1] == 109 and object[2] == 576 then koopa_spawn = object end
+end
+assert(koopa_spawn, 'Missing World 1-1 red Koopa')
+reset({koopa_spawn}, 450, 200)
+course_height = plains.height
+local koopa = slots[1]
+local grounded, turns = false, 0
+for _ = 1,450 do
+  local previous_vx = koopa.vx
+  actors_update(400)
+  local bottom = flr(koopa.y) + 16
+  if bottom == 384 and koopa.vy == 0 then grounded = true end
+  if grounded then
+    if koopa.vx ~= previous_vx then turns = turns + 1 end
+    local floor = level_floor(flr(koopa.x) + 7, bottom, bottom, false)
+    assert(floor == 384 and koopa.vy == 0, 'Red Koopa walked off its World 1-1 platform')
+    draws = {}
+    actors_draw()
+    local pose, y = draws[1][1], draws[1][3]
+    assert(y + foot_rows[pose] == floor - 1, 'Red Koopa feet floated above the World 1-1 platform')
+  end
+end
+assert(turns >= 2, 'Red Koopa must turn at both World 1-1 platform edges')
+
 print('Actors verified: support and pose anchors, shell hits, spawn lifecycle, moving mushrooms, clipped fire plant and aimed fireball')

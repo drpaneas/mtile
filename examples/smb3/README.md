@@ -19,7 +19,7 @@ Choose **Develop** and press **Run** to build and play the game in the editor. T
 go run ./cmd/mtile build examples/smb3
 ```
 
-The output is `examples/smb3/game.gba`. Omitting `--assets-only` from the import command runs the same build after importing.
+The output is `examples/smb3/game.gba`. Omitting `--assets-only` from the import command runs the same build after importing. Run the ROM import again when updating from an older revision so the new death fade colors are available.
 
 At the title, press **Start**. On the map, go **Right**, then **Up**, then press **A** to enter 1-1. Clear the course, then go **Right** twice and press **A** to enter 1-2.
 
@@ -48,7 +48,7 @@ smaller table saves 28 KiB of EWRAM compared with the normal 4,096-slot setting.
 - `actors.lua` handles course objects, enemy contact and powerups.
 - `tools/` imports ROM data before compilation. The course and sound extractors evaluate isolated NES data-loading routines locally during import. The GBA cartridge executes the native mTile game.
 
-The two main-course terrain grids, object placements and palettes were checked against the NES reference. Separate movement tests matched 360 reference ticks for normal walking, running, reversing and jumping. The current project covers single-player World 1-1 and the main area of 1-2. Enemy timing, some interactive tiles and the soundtrack's percussion differ. The other courses, pipe bonus areas and two-player mode remain unimplemented. The GBA viewport is 240×160. The game schedules two simulation steps for each keypad sample and presentation. The measured 1-1 replay averaged about 56 simulation updates per second, below the nominal rate.
+The two main-course terrain grids, object placements and palettes were checked against the NES reference. Separate movement tests matched 360 reference ticks for normal walking, running, reversing and jumping. The current project covers single-player World 1-1 and the main area of 1-2. Enemy timing, some interactive tiles and the soundtrack's percussion differ. The other courses, pipe bonus areas and two-player mode remain unimplemented. The GBA viewport is 240×160. The game schedules two simulation steps for each keypad sample and presentation. The actual rate depends on whether updates meet the display deadline.
 
 ## Replay the verification
 
@@ -66,6 +66,13 @@ python3 examples/smb3/tools/verify_native.py examples/smb3/game.gba \
   /path/to/workdir/game.elf build/player/mtile-player --output /tmp/smb3-verification
 ```
 
-The replay uses GBA buttons to finish 1-1, receive a card and move in 1-2. It reads those checkpoints from the running game's memory, captures six screenshots and checks that the cartridge produces PCM.
+The replay uses GBA buttons to finish 1-1, receive a card and move in 1-2. It reads those checkpoints from the running game's memory, captures six screenshots, checks that Mario is visible in both courses and confirms that the cartridge produces PCM.
+
+The mushroom regression uses the same ROM, ELF and helper. It hits the first World 1-1 power-up block through controller input and checks that Mario grows on pickup and that his larger sprite is visible.
+
+```sh
+python3 examples/smb3/tools/verify_world1_mushroom.py examples/smb3/game.gba \
+  /path/to/workdir/game.elf build/player/mtile-player
+```
 
 ROM labels and behavior were cross-checked against [Southbird's SMB3 disassembly](http://www.sonicepoch.com/sm3mix/).

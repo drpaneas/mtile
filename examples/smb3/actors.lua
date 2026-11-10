@@ -17,15 +17,21 @@ function actor_object_kind(id)
   return 0
 end
 
+function actor_body()
+  -- Ground enemies and powerups share the compiled movement helpers. Give
+  -- both records one layout so their cached field offsets remain valid.
+  return {kind = 0, id = 0, x = 0, y = 0, base_y = 0, vx = 0, vy = 0,
+          age = 0, timer = 0, home = 0, visible = false, crushed = 0,
+          knocked = false, shell_grace = 0, plant_phase = 0, plant_height = 0}
+end
+
 function actors_reset()
   spawned = {}
   for index = 1, slot_count do
-    slots[index] = {kind = 0, id = 0, x = 0, y = 0, base_y = 0, vx = 0, vy = 0,
-                    age = 0, timer = 0, home = 0, visible = false, crushed = 0,
-                    knocked = false, shell_grace = 0, plant_phase = 0, plant_height = 0}
+    slots[index] = actor_body()
   end
   for index = 1, item_count do
-    items[index] = {kind = 0, x = 0, y = 0, vx = 0, vy = 0, age = 0}
+    items[index] = actor_body()
   end
   for index = 1, fireball_count do
     fireballs[index] = {active = false, x = 0, y = 0, vx = 0, vy = 0, age = 0}
@@ -296,6 +302,20 @@ function actor_spawn_powerup(x, y, one_up)
   return false
 end
 
+function actors_reward_top(scroll)
+  local top = nil
+  for index = 1, item_count do
+    local item = items[index]
+    if (item.kind == 1 or item.kind == 2) and item.age >= 26
+        and item.x + 16 > scroll and item.x < scroll + 240
+        and item.y < player_y + player_height then
+      local y = flr(item.y)
+      if top == nil or y < top then top = y end
+    end
+  end
+  return top
+end
+
 function actor_update_item(item, scroll)
   item.age = item.age + 1
   if item.x < scroll - 48 or item.x > scroll + 296 or item.y > course_height * 16 + 32 then
@@ -386,17 +406,18 @@ function actors_update(scroll)
 end
 
 function actor_plant_pose(actor, alternate)
-  local heights = art_piranha_heights
+  -- Bound the runtime height lookup so Mode 0 retains all eight clips.
+  local rows = (min(8, flr(actor["plant_height"] / 4)) - 1) % 8 + 1
   if actor.id == 166 then
-    if alternate then heights = art_venus_open_heights else heights = art_venus_heights end
+    if alternate then return art_venus_open_heights[rows] end
+    return art_venus_heights[rows]
   elseif actor.id == 164 then
-    if alternate then heights = art_green_fire_open_heights else heights = art_green_fire_heights end
+    if alternate then return art_green_fire_open_heights[rows] end
+    return art_green_fire_heights[rows]
   elseif alternate then
-    heights = art_piranha_open_heights
+    return art_piranha_open_heights[rows]
   end
-  local rows = min(8, flr(actor.plant_height / 4))
-  if rows > 0 then return heights[rows] end
-  return nil
+  return art_piranha_heights[rows]
 end
 
 function actors_draw()
@@ -420,9 +441,9 @@ function actors_draw()
           if actor.id == 109 then pose = art_red_koopa_shell
           else pose = art_koopa_shell end
         else
-          -- The imported Koopa frames span 34 and 35 pixels respectively.
-          y = y - 18
-          if alternate then y = y - 1 end
+          -- All standing Koopa poses end their opaque feet at row 31.
+          -- The trailing transparent rows do not count toward ground contact.
+          y = y - 16
           if actor.id == 109 then
             if alternate then pose = art_red_koopa_2 else pose = art_red_koopa_1 end
           elseif actor.id == 110 then
@@ -432,7 +453,8 @@ function actors_draw()
         end
       elseif actor.kind == 3 then
         if actor.plant_phase == 2 and actor.id ~= 160 then alternate = actor.timer <= 40 and actor.timer > 28 end
-        pose = actor_plant_pose(actor, alternate)
+        if actor.plant_height >= 4 then pose = actor_plant_pose(actor, alternate)
+        else pose = nil end
         flip = player_x > actor.x
       elseif actor.kind == 4 then
         local card = flr(actor.age / 8) % 3
@@ -461,20 +483,18 @@ function actors_draw()
   for index = 1, 2 do
     local item = items[index]
     if item.kind ~= 0 and item.age >= 17 then
-      local pose = art_mushroom
-      local heights = art_mushroom_heights
-      if item.kind == 2 then
-        pose = art_one_up
-        heights = art_one_up_heights
-      elseif item.kind == 3 then
-        pose = art_leaf
-        heights = art_leaf_heights
+      local rows = 4
+      if item.age < 61 then rows = flr((flr((item.age - 17) / 3) + 1) / 4) % 4 end
+      if rows > 0 then
+        local height_index = (rows - 1) % 4 + 1
+        local pose = art_mushroom_heights[height_index]
+        if item.kind == 2 then
+          pose = art_one_up_heights[height_index]
+        elseif item.kind == 3 then
+          pose = art_leaf_heights[height_index]
+        end
+        pspr(pose, flr(item.x), flr(item.y))
       end
-      if item.age < 61 and heights ~= nil then
-        local rows = flr((flr((item.age - 17) / 3) + 1) / 4)
-        if rows > 0 then pose = heights[rows] else pose = nil end
-      end
-      if pose ~= nil then pspr(pose, flr(item.x), flr(item.y)) end
     end
   end
 end
