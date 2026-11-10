@@ -98,6 +98,13 @@ preview to a review.
 
 ## Project layout
 
+`project.json` can set `"mapEditCapacity": 512` for a streamed map with
+a known edit bound. The default is 4,096 sparse slots. The smaller overlay
+uses 4 KiB of EWRAM and admits up to 384 distinct edited cells, subject to
+the same probe limit. Existing cells can still be updated at capacity.
+This setting has no effect on maps stored fully in EWRAM.
+
+
 ```
 mygame/
 ├── game.lua

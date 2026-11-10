@@ -78,32 +78,48 @@ function level_restore_tiles()
   changes_count = 0
 end
 
+function terrain_activate_block(cx, cy, id, from_shell)
+  local action = course_block_actions[id + 1]
+  local replacement = course_block_replacements[id + 1]
+  if action == nil or replacement == nil then return false end
+  if action == 1 and player_power == 0 and not from_shell then
+    sfx(2)
+    return false
+  end
+  if action == 3 or action == 4 then
+    if not actor_spawn_powerup(cx * 16, cy * 16, action == 4) then return false end
+  end
+  terrain_change_cell(cx, cy, id, replacement)
+  if action == 2 then game_add_coin() end
+  if action == 1 then game_add_score(50) end
+  return true
+end
+
+function terrain_collect_coin_cell(cx, cy, id)
+  if band(course_tile_flags[id + 1], 8) == 0 then return false end
+  local replacement = course_block_replacements[id + 1]
+  if replacement == nil then return false end
+  terrain_change_cell(cx, cy, id, replacement)
+  game_add_coin()
+  return true
+end
+
 function level_bump(x, y)
   local cx = flr(x / 16)
   local cy = flr(y / 16)
+  terrain_activate_block(cx, cy, level_metatile(cx, cy), false)
+end
+
+function level_shell_hit(x, y)
+  local cx = flr(x / 16)
+  local cy = flr(y / 16)
   local id = level_metatile(cx, cy)
-  local action = course_block_actions[id + 1]
-  if action == nil then return end
-  if action == 1 and player_power == 0 then sfx(2) return end
-  local replacement = course_block_replacements[id + 1]
-  if replacement == nil then return end
-  terrain_change_cell(cx, cy, id, replacement)
-  if action == 2 then
-    game_add_coin()
-  elseif action == 3 or action == 4 then
-    actor_spawn_powerup(cx * 16, cy * 16, action == 4)
-  else
-    game_add_score(50)
-  end
+  if terrain_collect_coin_cell(cx, cy, id) then return true end
+  return terrain_activate_block(cx, cy, id, true)
 end
 
 function level_collect_coin(x, y)
   local cx = flr(x / 16)
   local cy = flr(y / 16)
-  local id = level_metatile(cx, cy)
-  if band(course_tile_flags[id + 1], 8) == 0 then return end
-  local replacement = course_block_replacements[id + 1]
-  if replacement == nil then return end
-  terrain_change_cell(cx, cy, id, replacement)
-  game_add_coin()
+  return terrain_collect_coin_cell(cx, cy, level_metatile(cx, cy))
 end

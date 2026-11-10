@@ -572,6 +572,11 @@ sampler. These build choices do not change either API's semantics.
 | `mget` | Both | `mget(x,y)` reads legacy BG0; `mget(bg,x,y)` reads logical BG0..BG3. Invalid layers/coordinates and sparse absent planes return 0. Both forms read the authoritative compact or streamed map plus its edit overlay, independently of renderer. Compact maps lower implicit BG0 and proven-constant layers directly to their dense storage slot; dynamic layers and streaming maps retain logical lookup. |
 | `mset` | Mode 0 conditional | `mset(x,y,id)` updates legacy BG0; `mset(bg,x,y,id)` updates logical BG0..BG3. Invalid inputs are no-ops. Mode 0 patches or invalidates only visible passes whose logical source matches the target, preserving draw-call order exactly. A literal target retains that plane in compact generated storage; a dynamic target retains all logical planes. Compact-map constant layers use their proven dense slot while retaining the logical BG for invalidation. With linked tiles, Mode 0 requires explicit arguments and a literal or enumerated finite tile-ID set containing no linked ID, because linked-object allocations come from authored map cells; unproven IDs, linked writes, or expanded multi-results fail with source-positioned `M0_TILE_LINKS`, and AUTO falls back to Mode 4. Without linked tiles, expanded arguments remain supported. AUTO additionally requires a literal layer and the bounded placement/count rule, while forced Mode 0 supports dynamic layers exactly. |
 
+For streamed maps in either renderer, the optional `mapEditCapacity`
+project setting selects 512 sparse slots instead of the default 4,096. This
+lowers the distinct-edit admission limit from 3,072 cells to 384, subject
+to the same probe bound. The setting does not alter compact maps.
+
 ## Renderer-independent API
 
 The following calls do not choose a renderer. Their normal CPU and memory

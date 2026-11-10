@@ -87,6 +87,7 @@ type Service struct {
 	ExperimentalTileCanvas bool
 	// Set only for an explicit tile-canvas opt-in, never by AUTO.
 	tileCanvasExperiment bool
+	compactMapEdits      bool
 }
 
 func (s Service) resolveEntry(project assetsync.Project) (string, error) {
@@ -237,6 +238,7 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		return Result{}, err
 	}
 	s.configureTileCanvasExperiment(projectDir)
+	s.compactMapEdits = project.MapEditCapacity == 512
 	renderer, err := s.resolveRenderer(project)
 	if err != nil {
 		return Result{}, err
@@ -654,7 +656,14 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	// ROM cap; -opt=2 keeps the per-VBlank _update/_draw/cls path in the
 	// speed-optimized LLVM pipeline instead of the size one.
 	args := []string{"build", "-gc=none", "-opt=2", "-target=" + targetPath}
-	if tags := s.runtimeBuildTags(report); tags != "" {
+	tags := s.runtimeBuildTags(report)
+	if s.compactMapEdits && report.MapStreaming {
+		if tags != "" {
+			tags += ","
+		}
+		tags += "mtile_map_edits_512"
+	}
+	if tags != "" {
 		args = append(args, "-tags="+tags)
 	}
 	if mapPath != "" {

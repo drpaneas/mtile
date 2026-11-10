@@ -26,7 +26,10 @@ def import_assets(rom_path):
     with tempfile.TemporaryDirectory(prefix=".smb3-import-", dir=PROJECT) as work:
         work = Path(work)
         assets = work / "assets"
-        extract(rom, courses, assets, include_status_bar=True, include_title=True, include_world_map=True)
+        animation = PROJECT / "assets" / "animation.json"
+        existing_animation = json.loads(animation.read_text(encoding="utf-8")) if animation.exists() else None
+        extract(rom, courses, assets, include_status_bar=True, include_title=True,
+                include_world_map=True, existing_animation=existing_animation)
         extract_sound(rom, assets / "audio")
         graphics = json.loads((assets / "tile-ids.json").read_text())
         write_courses(courses, graphics, work / "course_data.lua")

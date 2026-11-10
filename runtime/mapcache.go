@@ -15,7 +15,7 @@ const (
 	// deliberately covers the original Mtile 128x64 map (8192 cells), so
 	// its mset() behavior is not reduced by the sparse streaming edit budget.
 	MapStreamingThresholdCells = 16384
-	MapEditCapacity            = 4096
+	MapEditCapacity            = 1 << mapEditBits
 	// MapEditProbeLimit bounds the number of slots a lookup or insertion
 	// may inspect. A new edit that cannot be found or placed within this
 	// budget fails closed as MapEditFull; existing edits are always stored
@@ -347,7 +347,7 @@ func (c *Context) mapEditInsert(index uint32, value uint16) int {
 }
 
 func mapEditHash(index uint32) int {
-	return int((index * 2654435761) >> 20)
+	return int((index * 2654435761) >> (32 - mapEditBits))
 }
 
 func (c *Context) mapChunkSlotByIndex(index uint32) int {

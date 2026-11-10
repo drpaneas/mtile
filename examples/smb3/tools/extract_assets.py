@@ -29,6 +29,13 @@ BG_PAGES = {1: 8, 3: 28, 19: 108}
 ANIM_BG = (96, 98, 100, 102)
 QUADRANTS = (0, 2, 1, 3)
 EMPTY = (0,) * 64
+SPENT_TILE = 0x5F
+COIN_REMOVED_TILE = 0x41
+PLANT_POSES = {
+    "piranha": "piranha",
+    "green_fire": "green_fire_plant",
+    "venus": "venus_fire_trap",
+}
 PLAIN_POSES = {
     "idle": 14, "walk_1": 12, "walk_2": 13, "jump": 79,
     "fall": 6, "skid": 48, "duck": 15, "kick": 45,
@@ -137,8 +144,8 @@ def level_art(rom, course, sheet):
         return pieces
 
     # Mode 0 keeps the mutable shared sheet in EWRAM. Allocate tiles for the
-    # placed metatiles and the two possible runtime replacements only.
-    used_metatiles = set(course["tiles"]) | {0x62, 0x80}
+    # placed metatiles and the possible runtime replacements only.
+    used_metatiles = set(course["tiles"]) | {SPENT_TILE, COIN_REMOVED_TILE, 0x80}
     if any(not 0 <= tile < 256 for tile in used_metatiles):
         raise ValueError("invalid original metatile ID")
     tile_ids = [metatile_pieces(tile) if tile in used_metatiles else [0] * 4
@@ -267,6 +274,99 @@ def enemy_art(rom, sheet, obj_colors):
                 piece(0xE3, 0, 16, 2), piece(0xE3, 8, 16, 2, True),
             ])
     return poses
+
+
+def fireball_art(rom, sheet, obj_colors):
+    # PRG07 Fireball_Patterns/Attributes use these two sprites in four
+    # orientations. CHR bank 4 is the shared gameplay spritesheet.
+    poses = []
+    colors = [0] + [code + 1 for code in obj_colors[5:8]]
+    for i, pattern in enumerate((0x65, 0x67), 1):
+        pose = new_pose(f"enemy_fireball_{i}")
+        add_chr_piece(rom, sheet, pose, 4, pattern, colors, 0, 0)
+        if not any(part["y"] == 8 for part in pose["parts"]):
+            pose["parts"].append({"tile": 0, "x": 0, "y": 8})
+        poses.append(pose)
+    return poses
+
+
+def height_variants(sheet, poses):
+    """Mask the last partial tile row of plants and emerging powerups."""
+    source = {pose["name"]: pose for pose in poses}
+    pixels_by_id = {tile: pixels for pixels, tile in sheet.ids.items()}
+    targets = {name: (name, 16) for name in ("mushroom", "one_up", "leaf")}
+    for alias, plant in PLANT_POSES.items():
+        targets[alias] = (f"{plant}_1", 32)
+        targets[alias + "_open"] = (f"{plant}_2", 32)
+    variants = []
+    heights = {}
+    for alias, (name, full_height) in targets.items():
+        full = source[name]
+        names = []
+        for height in range(4, full_height, 4):
+            pose = new_pose(f"{name}_h{height:02}")
+            for part in full["parts"]:
+                rows = min(8, height - part["y"])
+                if rows <= 0:
+                    continue
+                clipped = part.copy()
+                if rows < 8:
+                    pixels = pixels_by_id[part["tile"]]
+                    visible = pixels[:rows * 8] + (0,) * ((8 - rows) * 8)
+                    if visible == EMPTY:
+                        continue
+                    clipped["tile"] = sheet.add(visible)
+                pose["parts"].append(clipped)
+            include_width(pose, 16)
+            variants.append(pose)
+            names.append(pose["name"])
+        heights[alias] = names + [name]
+    return variants, heights
+
+
+def animation_workspace(poses, sheet, previous=None):
+    """Seed named editor clips while keeping existing page and clip edits."""
+    clip_specs = [
+        ("mario_small_stride", 10, True, ("mario_small_idle", "mario_small_walk")),
+        ("mario_super_stride", 10, True, ("mario_super_walk_1", "mario_super_walk_2",
+                                         "mario_super_idle", "mario_super_walk_2")),
+        ("mario_raccoon_stride", 10, True, ("mario_raccoon_walk_1", "mario_raccoon_walk_2",
+                                           "mario_raccoon_idle", "mario_raccoon_walk_2")),
+        ("mario_raccoon_tail", 15, False, ("mario_raccoon_tail_1", "mario_raccoon_tail_3",
+                                          "mario_raccoon_tail_1", "mario_raccoon_tail_2",
+                                          "mario_raccoon_tail_1")),
+        ("mario_raccoon_flight", 20, True, tuple(f"mario_raccoon_fly_{i}" for i in (1, 2, 3))),
+        ("mario_raccoon_flutter", 20, True, tuple(f"mario_raccoon_flutter_{i}" for i in (1, 2, 3))),
+        ("mario_fire_throw", 15, False, ("mario_fire_throw_1", "mario_fire_throw_2", "mario_fire_idle")),
+        ("goal_card_cycle", 15, True, ("goal_mushroom", "goal_flower", "goal_star")),
+        ("goomba_cycle", 15, True, ("goomba_1", "goomba_1", "goomba_2", "goomba_2")),
+    ]
+    for enemy in ("para_goomba", "green_koopa", "red_koopa",
+                  "green_paratroopa", *PLANT_POSES.values()):
+        clip_specs.append((enemy + "_cycle", 15, True, (enemy + "_1", enemy + "_2")))
+    if "map_mario_1" in poses:
+        # The NES alternates every eight 60 Hz ticks. A 15 FPS authored clip
+        # with two copies of each pose reproduces that interval.
+        clip_specs.append(("world_map_mario", 15, True,
+                           ("map_mario_1", "map_mario_1", "map_mario_2", "map_mario_2")))
+
+    sheet["height"] = max(sheet["height"], 320)
+    default_page = {"name": "OBJ 1", "x": 0, "y": 0, "width": sheet["width"], "height": 320}
+    workspace = dict(previous or {"version": 1, "pages": [default_page]})
+    if workspace.get("version") != 1:
+        raise ValueError("unsupported existing animation workspace version")
+    for page in workspace.get("pages") or []:
+        if page["x"] + page["width"] > sheet["width"]:
+            raise ValueError(f"animation page {page['name']!r} exceeds the SMB3 OBJ sheet width")
+        sheet["height"] = max(sheet["height"], page["y"] + page["height"])
+    clips = list(workspace.get("clips") or [])
+    names = {clip["name"] for clip in clips}
+    for name, fps, loop, frames in clip_specs:
+        if name not in names:
+            clips.append({"name": name, "frames": [poses[frame] for frame in frames],
+                          "fps": fps, "loop": loop})
+    workspace["clips"] = clips
+    return workspace
 
 
 def title_art(rom, sheet):
@@ -398,7 +498,7 @@ def write_json(path, data):
 
 
 def extract(rom, courses, output, include_status_bar=False, include_title=False,
-            include_world_map=False):
+            include_world_map=False, existing_animation=None):
     shared = Sheet(30, reserve_text_tiles=True)
     objects = Sheet(64)
     width = courses[0]["width"] * 2
@@ -426,6 +526,7 @@ def extract(rom, courses, output, include_status_bar=False, include_title=False,
         height += course["height"] * 2
 
     poses = mario_art(rom, objects) + enemy_art(rom, objects, object_palette)
+
     def append_scene(rows):
         nonlocal height
         scene_row = height
@@ -447,7 +548,14 @@ def extract(rom, courses, output, include_status_bar=False, include_title=False,
             "completed_tile": completed_tile,
         }
         poses.extend(map_poses)
+    poses.extend(fireball_art(rom, objects, object_palette))
+    variants, pose_heights = height_variants(objects, poses)
+    poses.extend(variants)
     graphics["poses"] = {pose["name"]: i for i, pose in enumerate(poses)}
+    graphics["pose_heights"] = {
+        name: [graphics["poses"][frame] for frame in frames]
+        for name, frames in pose_heights.items()
+    }
     map_data = {"width": width, "height": height}
     if include_status_bar:
         status_cells = [0] * (width * height)
@@ -461,8 +569,11 @@ def extract(rom, courses, output, include_status_bar=False, include_title=False,
     else:
         map_data["cells"] = course_cells
     write_json(output / "spritesheet.json", shared.data())
-    write_json(output / "objsheet.json", objects.data())
+    object_sheet = objects.data()
+    workspace = animation_workspace(graphics["poses"], object_sheet, existing_animation)
+    write_json(output / "objsheet.json", object_sheet)
     write_json(output / "poses.json", {"version": 1, "poses": poses})
+    write_json(output / "animation.json", workspace)
     write_json(output / "map.json", map_data)
     write_json(output / "tile-ids.json", graphics)
     palette = [rgb15(backdrop)] + [rgb15(code) for code in range(64)]

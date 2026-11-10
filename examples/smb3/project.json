@@ -1,4 +1,5 @@
 {
   "activePalette": "smb3",
-  "renderer": "mode0"
+  "renderer": "mode0",
+  "mapEditCapacity": 512
 }

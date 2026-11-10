@@ -5,6 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
+from extract_assets import COIN_REMOVED_TILE, SPENT_TILE
+
 
 def lua(value, indent=""):
     if isinstance(value, int):
@@ -40,26 +42,27 @@ def write_courses(levels, graphics, output):
                 continue
             reward = level["rewards"].get(key)
             if name == "coin":
-                replacements[tile + 1] = 0x80
+                replacements[tile + 1] = COIN_REMOVED_TILE
             if name == "brick" and reward is None:
                 replacements[tile + 1] = 0x80
                 actions[tile + 1] = 1
             if reward == "coin":
-                replacements[tile + 1] = 0x62
+                replacements[tile + 1] = SPENT_TILE
                 actions[tile + 1] = 2
             if reward == "leaf":
-                replacements[tile + 1] = 0x62
+                replacements[tile + 1] = SPENT_TILE
                 actions[tile + 1] = 3
             if reward == "one_up":
-                replacements[tile + 1] = 0x62
+                replacements[tile + 1] = SPENT_TILE
                 actions[tile + 1] = 4
         art.setdefault(0, [0] * 4)
         edited_tiles = {key - 1 for key in replacements} | set(replacements.values())
         art = {key: value for key, value in art.items() if key in edited_tiles}
-        # A spent block is ROM tile $62. Require art for the replacement when
-        # the original map contains a block that can produce it.
-        if 0x62 in replacements.values() and 0x62 not in art:
-            raise ValueError("the background exporter did not include used block tile 98")
+        # TILEA_BLOCKEMPTY is a solid metal plate in Plains and Hills.
+        if SPENT_TILE in replacements.values() and (
+            not any(art.get(SPENT_TILE, ())) or level["flags"][SPENT_TILE] & 1 == 0
+        ):
+            raise ValueError("spent block requires visible art and a solid floor flag")
         objects = [[obj["id"], obj["x"], obj["y"]] for obj in level["objects"]]
         slopes = {
             int(key) + 1: level["slope_heights"][shape]
@@ -129,9 +132,13 @@ def write_courses(levels, graphics, output):
         "green_fire_open": "green_fire_plant_2",
         "venus": "venus_fire_trap_1",
         "venus_open": "venus_fire_trap_2",
+        "enemy_fireball": "enemy_fireball_1",
+        "enemy_fireball_alt": "enemy_fireball_2",
     }
     for variable, pose in names.items():
-        lines.append(f"art_{variable} = {poses.get(pose, 0)}")
+        lines.append(f"art_{variable} = {poses[pose]}")
+    for actor, heights in graphics["pose_heights"].items():
+        lines.append(f"art_{actor}_heights = {lua(heights)}")
     output.write_text("\n".join(lines) + "\n", encoding="ascii")
 
 

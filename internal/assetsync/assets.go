@@ -120,6 +120,9 @@ func LoadProject(projectDir string) (Project, error) {
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return Project{}, fmt.Errorf("project renderer: %w", err)
 	}
+	if err := validateMapEditCapacity(project.MapEditCapacity); err != nil {
+		return Project{}, fmt.Errorf("project mapEditCapacity: %w", err)
+	}
 	if project.Font != "" {
 		if err := validatePaletteName(project.Font); err != nil {
 			return Project{}, fmt.Errorf("project font: %w", err)
@@ -147,6 +150,9 @@ func SaveProject(projectDir string, project Project) error {
 	if err := validateProjectRenderer(project.Renderer); err != nil {
 		return fmt.Errorf("project renderer: %w", err)
 	}
+	if err := validateMapEditCapacity(project.MapEditCapacity); err != nil {
+		return fmt.Errorf("project mapEditCapacity: %w", err)
+	}
 	if project.Font != "" {
 		if err := validatePaletteName(project.Font); err != nil {
 			return fmt.Errorf("project font: %w", err)
@@ -164,6 +170,15 @@ func validateProjectRenderer(renderer string) error {
 		return nil
 	default:
 		return fmt.Errorf("must be mode4, mode0, or auto, got %q", renderer)
+	}
+}
+
+func validateMapEditCapacity(capacity int) error {
+	switch capacity {
+	case 0, 512, 4096:
+		return nil
+	default:
+		return fmt.Errorf("must be 512 or 4096, got %d", capacity)
 	}
 }
 

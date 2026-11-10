@@ -30,6 +30,16 @@ At the title, press **Start**. On the map, go **Right**, then **Up**, then press
 | B, run or tail attack | X |
 | Start, menu or pause | Enter |
 
+The ROM import also fills **Sprite Lab → Animations** with 17 clips and
+preserves clips already saved in the project. The world-map marker and Goomba
+walk use their clips directly during gameplay. Other states choose poses in Lua
+to match gameplay conditions such as a shell changing state or a plant being
+partly hidden by a pipe.
+
+This example uses 512 streamed map edit slots. That leaves room for 384 edited
+cells, and the two courses, HUD and map markers can write at most 270. The
+smaller table saves 28 KiB of EWRAM compared with the normal 4,096-slot setting.
+
 ## Source
 
 - `game.lua` handles the title, world map, stage progression, camera and HUD.
@@ -41,6 +51,13 @@ At the title, press **Start**. On the map, go **Right**, then **Up**, then press
 The two main-course terrain grids, object placements and palettes were checked against the NES reference. Separate movement tests matched 360 reference ticks for normal walking, running, reversing and jumping. The current project covers single-player World 1-1 and the main area of 1-2. Enemy timing, some interactive tiles and the soundtrack's percussion differ. The other courses, pipe bonus areas and two-player mode remain unimplemented. The GBA viewport is 240×160. The game schedules two simulation steps for each keypad sample and presentation. The measured 1-1 replay averaged about 56 simulation updates per second, below the nominal rate.
 
 ## Replay the verification
+
+After importing the ROM, the focused Lua checks can run from the example directory.
+
+```sh
+lua tools/verify_mechanics.lua
+lua tools/verify_actors.lua
+```
 
 Build with `go run ./cmd/mtile build -keep-work examples/smb3`. The output prints a work directory containing the matching `game.elf`. With the native player helper and the ARM/LLVM symbol tools on your path:
 

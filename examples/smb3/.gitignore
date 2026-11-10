@@ -6,6 +6,7 @@ __pycache__/
 /assets/spritesheet.json
 /assets/objsheet.json
 /assets/poses.json
+/assets/animation.json
 /assets/palettes/smb3.json
 /assets/palettes/aurora.json
 /assets/audio/music.json

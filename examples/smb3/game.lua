@@ -71,13 +71,19 @@ function smb3_select_course(index)
   time_left = data.timer
   timer_phase = 0
   cam_x = 0
-  cam_y = min(course_height * 16 - 128, data.spawn_y - 86)
+  cam_y = smb3_camera_ground_y()
 end
 
 function _init()
   -- Start belongs to the title, course selector and pause controls.
   pause(false)
   smb3_select_course(1)
+end
+
+-- Keep the feet ten pixels above the HUD when standing on level ground.
+-- In the air the viewport follows only after Mario crosses its scroll band.
+function smb3_camera_ground_y()
+  return mid(0, player_y + player_height - 118, course_height * 16 - 128)
 end
 
 function smb3_camera_follow()
@@ -87,9 +93,12 @@ function smb3_camera_follow()
   elseif relative < 64 then
     cam_x = max(player_x - 64, 0)
   end
-  local relative_y = player_y - cam_y
-  if relative_y < 20 then cam_y = max(player_y - 20, 0) end
-  if relative_y > 96 then cam_y = min(player_y - 96, course_height * 16 - 128) end
+  local ground_y = smb3_camera_ground_y()
+  if player_grounded or cam_y < ground_y then
+    cam_y = ground_y
+  elseif player_y - cam_y < 20 then
+    cam_y = max(player_y - 20, 0)
+  end
 end
 
 function smb3_update_course()
@@ -266,7 +275,7 @@ function _draw()
   camera(0, 0)
   if stage == 1 then
     local position = art_map_positions[map_node]
-    pspr(art_map_mario[flr(map_anim / 8) % 2 + 1], position[1], position[2])
+    anim("world_map_mario", position[1], position[2], false, false, (map_anim + 0.25) / 30)
   elseif stage == 5 then
     print("WORLD 1-2 CLEAR", 76, 59, 16)
     print("START TO REPLAY", 76, 85, 16)
