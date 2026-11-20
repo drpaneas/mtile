@@ -45,7 +45,7 @@ func main() {
 		check(e)
 		b, e := audioimport.PrepareBatch(a[5:], nil, audioimport.PrepareOptions{Quality: audioimport.Quality(a[3]), TrimSilence: trim}, nil)
 		check(e)
-		defer b.Close()
+		defer func() { check(b.Close()) }()
 		var names []string
 		for _, item := range b.Items {
 			names = append(names, item.Name)
@@ -66,7 +66,7 @@ func main() {
 		check(e)
 		r, e := s.Build(a[1], a[3])
 		check(e)
-		defer os.RemoveAll(r.WorkDir)
+		defer func(dir string) { check(os.RemoveAll(dir)) }(r.WorkDir)
 		for _, n := range []string{"main.go", "game.elf", "game.map", "target-gba.json"} {
 			b, e := os.ReadFile(filepath.Join(r.WorkDir, n))
 			check(e)
@@ -82,7 +82,7 @@ func main() {
 		check(e)
 		s, e := emulator.Start(a[1], a[2])
 		check(e)
-		defer s.Close()
+		defer func() { check(s.Close()) }()
 		var rows []observation
 		var sum, leftSum, rightSum float64
 		var n, nonzero, clips, peak, overflows int

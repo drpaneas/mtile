@@ -164,10 +164,11 @@ func (g *Game) updateDevelopTextInput(layout developLayout) bool {
 		g.developTextFocused = false
 		g.requestRender()
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
-		if g.developPanel == developProblems {
+		switch g.developPanel {
+		case developProblems:
 			g.openDevelopDiagnostic()
 			g.developTextFocused = false
-		} else if g.developPanel == developLint {
+		case developLint:
 			g.openDevelopLintRow()
 		}
 	default:

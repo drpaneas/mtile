@@ -25,8 +25,12 @@ func fakeConverter() {
 		if err != nil {
 			panic(err)
 		}
-		f.WriteString("convert\n")
-		f.Close()
+		if _, err := f.WriteString("convert\n"); err != nil {
+			panic(err)
+		}
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
 	}
 	var songs, samples []string
 	for _, arg := range os.Args[1:] {

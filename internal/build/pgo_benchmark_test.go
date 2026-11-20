@@ -298,7 +298,11 @@ func TestPGOTraining(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 	if err := pprof.StartCPUProfile(file); err != nil {
 		t.Fatal(err)
 	}

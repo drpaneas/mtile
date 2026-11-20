@@ -63,8 +63,8 @@ func TestEditorDisplayFontRasterAndLogicalMetrics(t *testing.T) {
 			for _, scale := range []float64{1, 1.25, 1.5, 2, 1} {
 				physical := displayFont(logical, scale).(*text.GoXFace)
 				for _, value := range []string{"M", "i", "local value = 1", "()[]{};., /\\ != ->"} {
-					want := text.Advance(value, logical) * scale
-					if got := text.Advance(value, physical); math.Abs(got-want) > 0.02 {
+					want := text.AdvanceAt(value, len(value), logical) * scale
+					if got := text.AdvanceAt(value, len(value), physical); math.Abs(got-want) > 0.02 {
 						t.Fatalf("%q at %gx: advance %g, want %g", value, scale, got, want)
 					}
 				}

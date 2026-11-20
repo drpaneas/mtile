@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/drpaneas/mtile/internal/audioimport"
 	"io"
 	"strings"
+
+	"github.com/drpaneas/mtile/internal/audioimport"
 )
 
 func runImportAudio(args []string, out, errOut io.Writer) error {
@@ -23,21 +24,29 @@ func runImportAudio(args []string, out, errOut io.Writer) error {
 	for _, line := range strings.Split(result.ConverterOutput, "\n") {
 		lower := strings.ToLower(line)
 		if strings.Contains(lower, "warning") || strings.Contains(lower, "unsupported") || strings.Contains(lower, "truncat") {
-			fmt.Fprintln(errOut, line)
+			if _, err := fmt.Fprintln(errOut, line); err != nil {
+				return err
+			}
 		}
 	}
-	fmt.Fprintln(out, "Imported Direct Sound audio (Maxmod, 16 kHz stereo output).")
+	if _, err := fmt.Fprintln(out, "Imported Direct Sound audio (Maxmod, 16 kHz stereo output)."); err != nil {
+		return err
+	}
 	for id, item := range result.Manifest.Music {
 		if item.Deleted {
 			continue
 		}
-		fmt.Fprintf(out, "  pcm_music(%d)  %s\n", id, item.Name)
+		if _, err := fmt.Fprintf(out, "  pcm_music(%d)  %s\n", id, item.Name); err != nil {
+			return err
+		}
 	}
 	for id, item := range result.Manifest.Samples {
 		if item.Deleted {
 			continue
 		}
-		fmt.Fprintf(out, "  sample(%d)     %s\n", id, item.Name)
+		if _, err := fmt.Fprintf(out, "  sample(%d)     %s\n", id, item.Name); err != nil {
+			return err
+		}
 	}
 	return nil
 }

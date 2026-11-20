@@ -266,7 +266,7 @@ func (g *Game) updatePreferences() {
 			g.preferences.TextSize = interfaceTextSize((int(g.preferences.TextSize) + delta + int(interfaceTextSizeCount)) % int(interfaceTextSizeCount))
 		case 3:
 			g.cycleProjectRenderer(delta)
-			g.persist()
+			_ = g.persist()
 			return
 		}
 		g.savePreferences()

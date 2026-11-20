@@ -89,7 +89,7 @@ return (POSIX path of chosenFile) & (character id 0)`
 		if errors.As(err, &exit) && (runtime.GOOS != "darwin" && exit.ExitCode() == 1 || strings.Contains(string(exit.Stderr), "(-128)")) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Browse failed: %w; paste a file path instead", err)
+		return nil, fmt.Errorf("browse failed: %w; paste a file path instead", err)
 	}
 	return parsePickerPaths(out, separator), nil
 }

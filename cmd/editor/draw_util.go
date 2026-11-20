@@ -20,20 +20,6 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-func truncateMusicEditText(value string, limit int) string {
-	if limit <= 0 {
-		return ""
-	}
-	runes := []rune(strings.TrimSpace(value))
-	if len(runes) <= limit {
-		return string(runes)
-	}
-	if limit <= 3 {
-		return string(runes[:limit])
-	}
-	return string(runes[:limit-3]) + "..."
-}
-
 // UI chrome colors. These are the tool's own interface colors, independent
 // of the project's active palette, so the editor stays readable no matter
 // which game palette is selected.
@@ -81,13 +67,11 @@ type uiFontStyle struct {
 	charWidth              int
 	textHeight             int
 	smallTextHeight        int
-	titleHeight            int
 	codeCharWidth          int
 	codeTextHeight         int
 	developCharWidth       int
 	developTextHeight      int
 	developSmallTextHeight int
-	developTitleHeight     int
 	lineHeight             int
 }
 
@@ -103,12 +87,10 @@ var (
 	uiCharWidth            = uiFontStyles[textComfort].charWidth
 	uiTextHeight           = uiFontStyles[textComfort].textHeight
 	uiSmallTextHeight      = uiFontStyles[textComfort].smallTextHeight
-	uiTitleHeight          = uiFontStyles[textComfort].titleHeight
 	codeTextHeight         = uiFontStyles[textComfort].codeTextHeight
 	developCharWidth       = uiFontStyles[textComfort].developCharWidth
 	developTextHeight      = uiFontStyles[textComfort].developTextHeight
 	developSmallTextHeight = uiFontStyles[textComfort].developSmallTextHeight
-	developTitleHeight     = uiFontStyles[textComfort].developTitleHeight
 )
 
 // loadUIFonts gives each typography role its own measured face. Application
@@ -139,11 +121,11 @@ func loadUIFonts() [interfaceTextSizeCount]uiFontStyle {
 	for index, spec := range specs {
 		face, charWidth, textHeight := newCleanUIFontFace(uiFont, spec.uiSize)
 		smallFace, _, smallTextHeight := newCleanUIFontFace(uiFont, spec.smallSize)
-		titleFace, _, titleHeight := newCleanUIFontFace(uiBoldFont, spec.titleSize)
+		titleFace, _, _ := newCleanUIFontFace(uiBoldFont, spec.titleSize)
 		codeFace, codeCharWidth, codeTextHeight := newHintedMonoFace(codeFont, spec.codeSize)
 		developFace, developCharWidth, developTextHeight := newCleanUIFontFace(uiFont, spec.uiSize)
 		developSmallFace, _, developSmallTextHeight := newCleanUIFontFace(uiFont, spec.smallSize)
-		developTitleFace, _, developTitleHeight := newCleanUIFontFace(uiBoldFont, spec.titleSize)
+		developTitleFace, _, _ := newCleanUIFontFace(uiBoldFont, spec.titleSize)
 		styles[index] = uiFontStyle{
 			face:                   face,
 			smallFace:              smallFace,
@@ -159,13 +141,11 @@ func loadUIFonts() [interfaceTextSizeCount]uiFontStyle {
 			charWidth:              charWidth,
 			textHeight:             textHeight,
 			smallTextHeight:        smallTextHeight,
-			titleHeight:            titleHeight,
 			codeCharWidth:          codeCharWidth,
 			codeTextHeight:         codeTextHeight,
 			developCharWidth:       developCharWidth,
 			developTextHeight:      developTextHeight,
 			developSmallTextHeight: developSmallTextHeight,
-			developTitleHeight:     developTitleHeight,
 			lineHeight:             spec.lineHeight,
 		}
 	}
@@ -243,12 +223,10 @@ func setInterfaceTextSize(size interfaceTextSize) {
 	uiCharWidth = style.charWidth
 	uiTextHeight = style.textHeight
 	uiSmallTextHeight = style.smallTextHeight
-	uiTitleHeight = style.titleHeight
 	codeTextHeight = style.codeTextHeight
 	developCharWidth = style.developCharWidth
 	developTextHeight = style.developTextHeight
 	developSmallTextHeight = style.developSmallTextHeight
-	developTitleHeight = style.developTitleHeight
 	codeLineHeight = style.lineHeight
 	codeCharWidth = style.codeCharWidth
 	setEditorLayout(screenWidth, screenHeight)
@@ -289,32 +267,24 @@ func drawTextScale(screen *ebiten.Image, s string, x, y, scale int, clr color.Co
 	drawTextFace(screen, s, x, y, uiTitleFace, clr)
 }
 
-func drawDevelopTextScale(screen *ebiten.Image, s string, x, y, scale int, clr color.Color) {
-	if scale <= 1 {
-		drawDevelopText(screen, s, x, y, clr)
-		return
-	}
-	drawTextFace(screen, s, x, y, developTitleFace, clr)
-}
-
 func uiTextWidth(value string) int {
-	return int(math.Ceil(text.Advance(value, uiFace)))
+	return int(math.Ceil(text.AdvanceAt(value, len(value), uiFace)))
 }
 
 func codeTextWidth(value string) int {
-	return int(math.Ceil(text.Advance(value, codeFace)))
+	return int(math.Ceil(text.AdvanceAt(value, len(value), codeFace)))
 }
 
 func developTextWidth(value string) int {
-	return int(math.Ceil(text.Advance(value, developFace)))
+	return int(math.Ceil(text.AdvanceAt(value, len(value), developFace)))
 }
 
 func developSmallTextWidth(value string) int {
-	return int(math.Ceil(text.Advance(value, developSmallFace)))
+	return int(math.Ceil(text.AdvanceAt(value, len(value), developSmallFace)))
 }
 
 func smallTextWidth(value string) int {
-	return int(math.Ceil(text.Advance(value, uiSmallFace)))
+	return int(math.Ceil(text.AdvanceAt(value, len(value), uiSmallFace)))
 }
 
 func drawTextCentered(screen *ebiten.Image, value string, rect editor.Rect, clr color.Color) {
@@ -337,10 +307,6 @@ func truncateUIText(value string, width int) string {
 	return truncateTextToWidth(value, width, uiFace)
 }
 
-func truncateCodeText(value string, width int) string {
-	return truncateTextToWidth(value, width, codeFace)
-}
-
 func truncateDevelopText(value string, width int) string {
 	return truncateTextToWidth(value, width, developFace)
 }
@@ -350,13 +316,13 @@ func truncateTextToWidth(value string, width int, face text.Face) string {
 	if width <= 0 {
 		return ""
 	}
-	if text.Advance(value, face) <= float64(width) {
+	if text.AdvanceAt(value, len(value), face) <= float64(width) {
 		return value
 	}
 	runes := []rune(value)
 	for len(runes) > 0 {
 		candidate := string(runes) + "..."
-		if text.Advance(candidate, face) <= float64(width) {
+		if text.AdvanceAt(candidate, len(candidate), face) <= float64(width) {
 			return candidate
 		}
 		runes = runes[:len(runes)-1]

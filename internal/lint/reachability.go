@@ -121,7 +121,8 @@ func (a *analyzer) scanPoolBlock(body []p.Stmt) {
 		}
 		isNil := func(e p.Expr) bool { _, ok := unparen(e).(*p.NilExpr); return ok }
 		name := local.Names[0]
-		if !(variable(condition.Left) == name && isNil(condition.Right) || variable(condition.Right) == name && isNil(condition.Left)) {
+		comparesWithNil := variable(condition.Left) == name && isNil(condition.Right) || variable(condition.Right) == name && isNil(condition.Left)
+		if !comparesWithNil {
 			continue
 		}
 		assign, ok := branch.Then.Body[0].(*p.AssignStmt)

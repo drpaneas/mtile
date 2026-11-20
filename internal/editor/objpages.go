@@ -108,8 +108,7 @@ func (m *Model) NormalizeObjPages() error {
 	for id := range parents {
 		parents[id] = -1
 	}
-	var find func(int) int
-	find = func(id int) int {
+	find := func(id int) int {
 		for parents[id] != id {
 			parents[id] = parents[parents[id]]
 			id = parents[id]
@@ -379,7 +378,7 @@ func (m *Model) AddObjPage() (int, error) {
 	sheet.Height += height
 	work.ObjSheet = &sheet
 	index := len(work.Animation.Pages)
-	name := fmt.Sprintf("OBJ %d", index+1)
+	var name string
 	for suffix := index + 1; ; suffix++ {
 		name = fmt.Sprintf("OBJ %d", suffix)
 		used := false

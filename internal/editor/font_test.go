@@ -63,7 +63,9 @@ func TestFontEditingCannotBypassContract(t *testing.T) {
 	if err := m.CreateFont("copy", false); err != nil {
 		t.Fatal(err)
 	}
-	m.SetFontPixel('Ω', 0, 0, true)
+	if err := m.SetFontPixel('Ω', 0, 0, true); err != nil {
+		t.Fatal(err)
+	}
 	if copied.Glyphs[0].Columns[0] != 0 {
 		t.Fatal("copy aliased source")
 	}

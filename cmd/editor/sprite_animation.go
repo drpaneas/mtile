@@ -431,8 +431,6 @@ func (g *Game) clickAnimationDock(layout animationDockLayout, mx, my int) {
 	g.requestRender()
 }
 
-func (g *Game) animationNameEditing() bool { return g.animation.nameEditing }
-
 func (g *Game) beginAnimationNameEdit() {
 	if clip := g.activeAnimationClip(); clip != nil {
 		g.cancelPoseNameEdit()

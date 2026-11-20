@@ -150,7 +150,6 @@ func analyzeELF(r io.ReaderAt, path string) (imageSize, error) {
 	if err != nil {
 		return imageSize{}, fmt.Errorf("read ELF: %w", err)
 	}
-	defer f.Close()
 	for _, p := range f.Progs {
 		if p.Type != elf.PT_LOAD || p.Filesz == 0 {
 			continue

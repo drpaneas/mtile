@@ -43,7 +43,10 @@ func newTestClientWithCheck(t *testing.T, root string, check projectCheck) *test
 	output, writer := io.Pipe()
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &testClient{t, input, make(chan testMessage, 64), make(chan error, 1), make(chan error, 1)}
-	go func() { c.done <- serve(ctx, reader, writer, root, check); writer.Close() }()
+	go func() {
+		c.done <- serve(ctx, reader, writer, root, check)
+		_ = writer.Close()
+	}()
 	go func() {
 		buffer := bufio.NewReader(output)
 		for {
@@ -64,7 +67,13 @@ func newTestClientWithCheck(t *testing.T, root string, check projectCheck) *test
 			}
 		}
 	}()
-	t.Cleanup(func() { cancel(); input.Close(); reader.Close(); writer.Close(); output.Close() })
+	t.Cleanup(func() {
+		cancel()
+		_ = input.Close()
+		_ = reader.Close()
+		_ = writer.Close()
+		_ = output.Close()
+	})
 	return c
 }
 

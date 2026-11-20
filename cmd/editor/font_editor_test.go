@@ -76,10 +76,14 @@ func TestFontEditorSwitchResetsUnavailableSelection(t *testing.T) {
 	g := newTestGame(t, 8, 8, 1, 1)
 	defer g.closeNativePerformance()
 	g.openFontEditor()
-	g.model.SelectFont("greek")
+	if err := g.model.SelectFont("greek"); err != nil {
+		t.Fatal(err)
+	}
 	g.fontEditor.selected = 'Ω'
 	g.fontChanged()
-	g.model.SelectFont("german")
+	if err := g.model.SelectFont("german"); err != nil {
+		t.Fatal(err)
+	}
 	g.fontChanged()
 	if g.fontEditor.selected != 'A' {
 		t.Fatal("selection points to missing glyph")

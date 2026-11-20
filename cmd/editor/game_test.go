@@ -575,12 +575,16 @@ func TestUndoRestorePersistsPaletteAndProjectTogether(t *testing.T) {
 	if err := g.model.SetActiveColor(1, edited); err != nil {
 		t.Fatal(err)
 	}
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	if g.statusMsg != "" {
 		t.Fatalf("persist of edited palette failed: %s", g.statusMsg)
 	}
 	g.restore(before)
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	if g.statusMsg != "" {
 		t.Fatalf("persist after palette undo failed: %s", g.statusMsg)
 	}
@@ -608,7 +612,9 @@ func TestPersistWritesEditedPaletteFileAndReloadsIt(t *testing.T) {
 		t.Fatal("color edit wrote a palette file before persist")
 	}
 
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	if g.statusMsg != "" {
 		t.Fatalf("persist after color edit failed: %s", g.statusMsg)
 	}
@@ -642,7 +648,9 @@ func TestFlagToggleDoesNotWriteSheetUntilPersist(t *testing.T) {
 	if len(sheet.Sprites) != 0 {
 		t.Fatal("toggleFlag wrote spritesheet.json before persist")
 	}
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	sheet, err = assetsync.LoadSpritesheet(g.model.Dir)
 	if err != nil {
 		t.Fatal(err)
@@ -1701,7 +1709,9 @@ func TestObjEditingPaintsTileZeroAndPersists(t *testing.T) {
 	if !g.paintPixel(0, 0, 0, 3) {
 		t.Fatal("object tile 0 should be paintable")
 	}
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	reloaded, err := editor.Open(g.model.Dir)
 	if err != nil {
 		t.Fatal(err)

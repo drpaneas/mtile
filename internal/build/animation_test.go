@@ -68,7 +68,7 @@ func TestBuildAnimationAllocationProofMatchesLinkedMemory(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(result.WorkDir)
+			defer func() { _ = os.RemoveAll(result.WorkDir) }()
 			if result.HeapLinked != tc.heap {
 				t.Fatalf("HeapLinked=%t want%t", result.HeapLinked, tc.heap)
 			}

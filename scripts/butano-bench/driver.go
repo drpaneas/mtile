@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -73,7 +74,7 @@ func run() error {
 		if e != nil {
 			return e
 		}
-		defer os.RemoveAll(r.WorkDir)
+		defer func(dir string) { _ = os.RemoveAll(dir) }(r.WorkDir)
 		for _, n := range []string{"main.go", "game.elf", "game.map", "target-gba.json"} {
 			b, e := os.ReadFile(filepath.Join(r.WorkDir, n))
 			if e == nil {
@@ -105,7 +106,7 @@ func run() error {
 	if e != nil {
 		return e
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 	samples := make([]sample, 0, count)
 	var pending *sample
 	var pixels []byte
@@ -167,6 +168,6 @@ func run() error {
 	if e != nil {
 		return e
 	}
-	defer out.Close()
-	return png.Encode(out, &image.RGBA{Pix: lastPixels, Stride: 240 * 4, Rect: image.Rect(0, 0, 240, 160)})
+	e = png.Encode(out, &image.RGBA{Pix: lastPixels, Stride: 240 * 4, Rect: image.Rect(0, 0, 240, 160)})
+	return errors.Join(e, out.Close())
 }

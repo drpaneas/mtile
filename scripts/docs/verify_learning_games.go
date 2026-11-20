@@ -132,7 +132,7 @@ func verify(service build.Service, helper, output string, l lesson, publish bool
 	if err != nil {
 		return p.report, err
 	}
-	defer os.RemoveAll(stage)
+	defer func() { _ = os.RemoveAll(stage) }()
 	source := filepath.Join("examples", l.project)
 	if err := os.CopyFS(stage, os.DirFS(source)); err != nil {
 		return p.report, err
@@ -172,7 +172,7 @@ func verify(service build.Service, helper, output string, l lesson, publish bool
 		if err != nil {
 			return p.report, err
 		}
-		defer s.Close()
+		defer func() { _ = s.Close() }()
 		if i == 0 {
 			p.left.session = s
 		} else {

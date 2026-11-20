@@ -8,7 +8,9 @@ const MapRoomHeight = 20
 // AddMapRoomEdge grows the rectangular map by one room-wide column or
 // room-high row. Left/top additions shift every stored background together.
 func (m *Model) AddMapRoomEdge(dx, dy int) error {
-	if m == nil || !((dx == -1 || dx == 1) && dy == 0 || (dy == -1 || dy == 1) && dx == 0) {
+	horizontal := (dx == -1 || dx == 1) && dy == 0
+	vertical := (dy == -1 || dy == 1) && dx == 0
+	if m == nil || (!horizontal && !vertical) {
 		return fmt.Errorf("choose one map edge")
 	}
 	old := m.Map

@@ -919,9 +919,10 @@ func (g *Game) updateDevelopPanelClick(layout developLayout, x, y int) bool {
 			g.developTextScrollDragging = true
 		} else {
 			g.beginDevelopTextSelection(layout, x, max(body.Y, y), ebiten.IsKeyPressed(ebiten.KeyShift))
-			if g.developPanel == developProblems {
+			switch g.developPanel {
+			case developProblems:
 				g.openDevelopDiagnostic()
-			} else if g.developPanel == developLint {
+			case developLint:
 				g.openDevelopLintRow()
 			}
 		}

@@ -81,7 +81,11 @@ func TestPCMEditorPreparedAudioROMConformance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer batch.Close()
+	defer func() {
+		if err := batch.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 	p, err := batch.Load(0)
 	if err != nil || !p.Trimmed || math.Abs(p.After.Seconds()-.29) > .001 {
 		t.Fatalf("trimmed batch fixture: %.4f %v", p.After.Seconds(), err)
@@ -127,7 +131,11 @@ function _draw() cls(1) end
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer session.Close()
+			defer func() {
+				if err := session.Close(); err != nil {
+					t.Error(err)
+				}
+			}()
 			var early, wav, song, tail []float64
 			var pixels []byte
 			updates := uint32(0)
@@ -219,7 +227,11 @@ function _draw() cls(1) end
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer session.Close()
+		defer func() {
+			if err := session.Close(); err != nil {
+				t.Error(err)
+			}
+		}()
 		last := uint32(0)
 		for i := 0; i < 60; i++ {
 			frame, err := session.Step(0, false)

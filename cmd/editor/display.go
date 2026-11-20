@@ -59,7 +59,7 @@ func (w *editorWindow) layoutAtScale(width, height, scale float64) (float64, flo
 }
 
 func (w *editorWindow) Draw(screen *ebiten.Image) {
-	w.Game.drawAtScale(screen, w.scale)
+	w.drawAtScale(screen, w.scale)
 }
 
 func (g *Game) drawAtScale(screen *ebiten.Image, scale float64) {

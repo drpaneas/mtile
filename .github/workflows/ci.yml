@@ -169,12 +169,12 @@ jobs:
       - name: golangci-lint (CLI module)
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.13.2
+          version: v2.14.0
 
       - name: golangci-lint (runtime module)
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.13.2
+          version: v2.14.0
           working-directory: runtime
 
       # Built with the go.mod toolchain so it can load this module's packages.

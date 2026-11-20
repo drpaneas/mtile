@@ -41,7 +41,7 @@ func LoadDirectAudio(project string) (*DirectAudioAssets, error) {
 		return nil, err
 	}
 	if manifest.Bank != "bank-"+manifest.SHA256+".bin" || len(manifest.SHA256) != 64 {
-		return nil, errors.New("Direct Sound bank must use its SHA256 filename")
+		return nil, errors.New("invalid Direct Sound bank filename: expected its SHA256")
 	}
 	bank, err := os.ReadFile(filepath.Join(project, "assets", "audio", "direct", manifest.Bank))
 	if err != nil {
@@ -65,7 +65,7 @@ func ValidateDirectAudio(m DirectAudioManifest, bank []byte) error {
 	}
 	hash := sha256.Sum256(bank)
 	if hex.EncodeToString(hash[:]) != m.SHA256 {
-		return errors.New("Direct Sound bank checksum mismatch; run mtile import-audio again")
+		return errors.New("invalid Direct Sound bank checksum; run mtile import-audio again")
 	}
 	ns, nm := int(binary.LittleEndian.Uint16(bank)), int(binary.LittleEndian.Uint16(bank[2:]))
 	activeMusic := 0
@@ -114,7 +114,7 @@ func ValidateDirectAudio(m DirectAudioManifest, bank []byte) error {
 				return errors.New("invalid Direct Sound bank ID")
 			}
 			if item.Source == "" || filepath.Base(item.Source) != item.Source || item.Source == "." {
-				return errors.New("Direct Sound source must be one filename")
+				return errors.New("expected a single Direct Sound source filename")
 			}
 		}
 	}

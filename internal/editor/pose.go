@@ -52,7 +52,8 @@ func NormalizePoseName(name string) (string, error) {
 		return "", fmt.Errorf("pose name is %d bytes (maximum %d)", len(name), assetsync.MaxPoseNameBytes)
 	}
 	for _, r := range name {
-		if r > unicode.MaxASCII || unicode.IsControl(r) || !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-') {
+		valid := unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-'
+		if r > unicode.MaxASCII || !valid {
 			return "", fmt.Errorf("pose name must be letters, numbers, _ or -")
 		}
 	}
@@ -264,18 +265,6 @@ func CapturePose(sheet assetsync.Spritesheet, col, row, width, height int) (asse
 		return assetsync.PoseRecord{}, fmt.Errorf("pose selection has %d painted tiles (maximum %d parts)", len(parts), assetsync.MaxPoseParts)
 	}
 	return assetsync.PoseRecord{Parts: parts}, nil
-}
-
-func sheetTileHasInk(sheet assetsync.Spritesheet, col, row int) bool {
-	baseX, baseY := col*8, row*8
-	for y := 0; y < 8; y++ {
-		for x := 0; x < 8; x++ {
-			if sheetPixel(sheet, baseX+x, baseY+y) != 0 {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func TogglePosePart(pose assetsync.PoseRecord, tile, sheetCols int) (assetsync.PoseRecord, error) {

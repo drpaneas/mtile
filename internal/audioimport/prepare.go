@@ -86,10 +86,10 @@ func prepareWithOptions(path string, opts PrepareOptions, trimEligible bool) (Pr
 	p.Analysis = analyzeWave(info, samples, raw)
 	if quality == QualitySource {
 		if opts.TrimSilence {
-			return p, fmt.Errorf("Keep source preserves timing and metadata; choose Balanced or Smallest to trim quiet edges")
+			return p, fmt.Errorf("the Keep source preset preserves timing and metadata; choose Balanced or Smallest to trim quiet edges")
 		}
 		if info.Float || (info.Bits != 8 && info.Bits != 16) {
-			return p, fmt.Errorf("Keep source requires 8/16-bit integer PCM WAV; choose GBA balanced to convert this file")
+			return p, fmt.Errorf("the Keep source preset requires 8/16-bit integer PCM WAV; choose GBA balanced to convert this file")
 		}
 		p.Data, p.After = raw, info
 		return p, nil
@@ -309,7 +309,7 @@ func ImportPrepared(project string, p Prepared, name, converter string) (Result,
 	if err != nil {
 		return Result{}, err
 	}
-	defer os.RemoveAll(work)
+	defer func() { _ = os.RemoveAll(work) }()
 	path := filepath.Join(work, name+p.Extension)
 	if err := os.WriteFile(path, p.Data, 0o644); err != nil {
 		return Result{}, err

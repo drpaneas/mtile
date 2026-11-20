@@ -21,29 +21,6 @@ var nerdoIdleRects = [4][4]int{
 
 var nerdoIdlePoseNames = [4]string{"idle_0", "idle_1", "idle_2", "idle_3"}
 
-// buildNerdoPoses rebuilds the four idle poses from the flattened nerdo
-// spritesheet using the omit-all-zero-cells algorithm: for every 8x8 cell in
-// a rectangle, compute its spritesheet cell ID from the sheet's column
-// count, and keep it as a PosePart only if any of its 64 pixels is nonzero.
-func buildNerdoPoses(assets *Assets) PoseFile {
-	cols := assets.SpriteCols
-	file := PoseFile{Version: 1}
-	for i, rect := range nerdoIdleRects {
-		sx, sy, sw, sh := rect[0], rect[1], rect[2], rect[3]
-		var parts []PosePartRecord
-		for ty := sy; ty < sy+sh; ty += 8 {
-			for tx := sx; tx < sx+sw; tx += 8 {
-				id := (ty/8)*cols + (tx / 8)
-				if cellHasNonZero(assets, tx, ty) {
-					parts = append(parts, PosePartRecord{Tile: id, X: tx - sx, Y: ty - sy})
-				}
-			}
-		}
-		file.Poses = append(file.Poses, PoseRecord{Name: nerdoIdlePoseNames[i], Parts: parts})
-	}
-	return file
-}
-
 func packNerdoObjectBank(assets *Assets) (Spritesheet, PoseFile) {
 	sheet := Spritesheet{Width: DefaultObjSheetW, Height: DefaultObjSheetH}
 	cols := DefaultObjSheetW / 8
@@ -192,9 +169,10 @@ func syntheticNerdoPackingProject(t *testing.T) (string, *Assets) {
 				}
 				px, py := rect[0]+x*8, rect[1]+y*8
 				sprite := testSprite(py/8*30+px/8, px, py, 8, 8, 0, 0)
-				if kind == 2 {
+				switch kind {
+				case 2:
 					sprite.Pixels[7][7] = 1 + (frame+x+y)%15
-				} else if kind == 3 {
+				case 3:
 					for row := 0; row < 8; row++ {
 						for col := 0; col < 8; col++ {
 							if (row+col)%3 != 0 {

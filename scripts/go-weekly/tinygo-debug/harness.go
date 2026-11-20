@@ -73,7 +73,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		defer session.Close()
+		defer func() { _ = session.Close() }()
 		type row struct {
 			Tick     uint32              `json:"tick"`
 			RGBA     string              `json:"rgbaSHA256"`

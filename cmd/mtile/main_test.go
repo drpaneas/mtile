@@ -192,6 +192,7 @@ func TestRunBuildRejectsBadFlag(t *testing.T) {
 }
 
 func TestRunBuildRejectsUnknownRenderer(t *testing.T) {
+	t.Setenv("MTILE_TINYGO", filepath.Join(t.TempDir(), "missing-tinygo"))
 	err := run([]string{"build", "-renderer", "adaptive", t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
 	if err == nil || !strings.Contains(err.Error(), "mode4, mode0, or auto") {
 		t.Fatalf("run([build -renderer adaptive]) error = %v", err)
@@ -209,7 +210,19 @@ func TestRunBuildHelpListsExperimentalTileCanvas(t *testing.T) {
 	}
 }
 
+// These validation tests stop before the compiler runs. Provide a local
+// executable so toolchain discovery is independent of the host's PATH.
+func stubBuildCompiler(t *testing.T) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "tinygo")
+	if err := os.WriteFile(path, []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("MTILE_TINYGO", path)
+}
+
 func TestRunBuildAcceptsExperimentalTileCanvas(t *testing.T) {
+	stubBuildCompiler(t)
 	const key = "MTILE_EXPERIMENTAL_TILECANVAS_PROJECT"
 	t.Setenv(key, "/previous/project")
 	for _, name := range []string{"-experimental-tilecanvas", "-experimental-tilecanvas-objects"} {
@@ -232,9 +245,10 @@ func TestRunBuildAcceptsExperimentalTileCanvas(t *testing.T) {
 // build.NewService: this is the only test that would catch a regression
 // where a bad -runtime flag was silently ignored instead of failing fast.
 func TestRunBuildPropagatesNewServiceError(t *testing.T) {
+	stubBuildCompiler(t)
 	err := run([]string{"build", "-runtime", t.TempDir(), t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
-	if err == nil {
-		t.Fatal("run([build -runtime <empty dir>]) should fail NewService's runtime check")
+	if err == nil || !strings.Contains(err.Error(), "runtime crt0 input") {
+		t.Fatalf("run([build -runtime <empty dir>]) error = %v, want missing crt0 input", err)
 	}
 }
 
@@ -243,6 +257,7 @@ func TestRunBuildPropagatesNewServiceError(t *testing.T) {
 // that would catch a regression where a missing project directory was
 // silently ignored instead of failing.
 func TestRunBuildPropagatesServiceBuildError(t *testing.T) {
+	stubBuildCompiler(t)
 	err := run([]string{"build", filepath.Join(t.TempDir(), "does-not-exist")}, &bytes.Buffer{}, &bytes.Buffer{})
 	if err == nil || !strings.Contains(err.Error(), "project directory") {
 		t.Fatalf("run([build <missing dir>]) error = %v, want Service.Build's project directory error", err)

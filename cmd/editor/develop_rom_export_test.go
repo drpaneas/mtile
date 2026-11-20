@@ -64,7 +64,11 @@ func TestDevelopROMExportMatchesCLI(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer session.Close()
+		defer func() {
+			if err := session.Close(); err != nil {
+				t.Error(err)
+			}
+		}()
 		var frame emulator.Frame
 		for range 12 {
 			frame, err = session.Step(0, false)

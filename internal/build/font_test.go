@@ -56,12 +56,12 @@ func TestBuildLinksExactlyOneSelectedFontInROM(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(result.WorkDir)
+			defer func() { _ = os.RemoveAll(result.WorkDir) }()
 			binary, err := elf.Open(filepath.Join(result.WorkDir, "game.elf"))
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer binary.Close()
+			defer func() { _ = binary.Close() }()
 			symbols, err := binary.Symbols()
 			if err != nil {
 				t.Fatal(err)

@@ -186,7 +186,7 @@ func (g *Game) updatePoseVariants() {
 				s.message = "Deleted " + name + " · update any pvariant calls; unknown literal names fail builds"
 			}
 		case "SAVE":
-			g.persist()
+			_ = g.persist()
 			s.message = g.statusMsg
 			if s.message == "" {
 				s.message = "Saved color variants"

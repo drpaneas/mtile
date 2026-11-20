@@ -3,7 +3,6 @@ package build
 import (
 	"bytes"
 	"debug/elf"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -66,12 +65,12 @@ func TestBuildObjectPixelsHaveWordAlignedROMStorage(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(result.WorkDir)
+			defer func() { _ = os.RemoveAll(result.WorkDir) }()
 			binary, err := elf.Open(filepath.Join(result.WorkDir, "game.elf"))
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer binary.Close()
+			defer func() { _ = binary.Close() }()
 			symbols, err := binary.Symbols()
 			if err != nil {
 				t.Fatal(err)
@@ -97,7 +96,7 @@ func TestBuildObjectPixelsHaveWordAlignedROMStorage(t *testing.T) {
 				}
 				return
 			}
-			t.Fatal(fmt.Sprintf("%s ELF omitted OBJ pixels", renderer))
+			t.Fatalf("%s ELF omitted OBJ pixels", renderer)
 		})
 	}
 }

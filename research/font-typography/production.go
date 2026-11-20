@@ -67,7 +67,9 @@ func runProduction(root, out string) error {
 			if err = copyFile(filepath.Join(result.WorkDir, "game.elf"), filepath.Join(dir, name+".elf")); err != nil {
 				return err
 			}
-			os.RemoveAll(result.WorkDir)
+			if err := os.RemoveAll(result.WorkDir); err != nil {
+				return err
+			}
 			var targets []uint32
 			if mode == transpiler.RendererMode0 {
 				targets = reference.Frames

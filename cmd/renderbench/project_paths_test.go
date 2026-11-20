@@ -1,3 +1,5 @@
+//go:build runtimeperfdiagnostic
+
 package main
 
 import "path/filepath"

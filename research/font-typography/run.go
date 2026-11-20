@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"debug/elf"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -101,7 +102,9 @@ func runExperiment(root, out, selected string) error {
 
 	var results []measurement
 	if previous, err := os.ReadFile(filepath.Join(out, "measurements.json")); err == nil {
-		json.Unmarshal(previous, &results)
+		if err := json.Unmarshal(previous, &results); err != nil {
+			return fmt.Errorf("read prior measurements: %w", err)
+		}
 	}
 	for _, variant := range cases {
 		if selected != "" && !slices.Contains(strings.Split(selected, ","), variant.name) {
@@ -182,7 +185,9 @@ func runExperiment(root, out, selected string) error {
 				if err = copyFile(filepath.Join(result.WorkDir, "game.map"), filepath.Join(dir, name+".map")); err != nil {
 					return err
 				}
-				os.RemoveAll(result.WorkDir)
+				if err := os.RemoveAll(result.WorkDir); err != nil {
+					return err
+				}
 				var targets []uint32
 				if mode == transpiler.RendererMode0 {
 					targets = previous.Frames
@@ -276,19 +281,19 @@ func hostProbe(runtimeDir, out string) error {
 	cmd.Dir = runtimeDir
 	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/mtile-font-go-cache", "TYPOGRAPHY_OUT="+out)
 	raw, err := cmd.CombinedOutput()
-	os.WriteFile(filepath.Join(out, "host-tests.txt"), raw, 0644)
+	writeErr := os.WriteFile(filepath.Join(out, "host-tests.txt"), raw, 0644)
 	if err != nil {
 		return fmt.Errorf("host API/edge probe: %w\n%s", err, raw)
 	}
 	fmt.Print(string(raw))
-	return nil
+	return writeErr
 }
 func fontROMSize(path string) (uint64, error) {
 	file, err := elf.Open(path)
 	if err != nil {
 		return 0, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	symbols, err := file.Symbols()
 	if err != nil {
 		return 0, err
@@ -321,7 +326,7 @@ func captureROM(helper, rom string, targets []uint32) (capture, error) {
 	if err != nil {
 		return capture{}, err
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 	var c capture
 	var sequence, last uint32
 	var misses uint32
@@ -392,6 +397,6 @@ func writePNG(path string, pixels []byte) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-	return png.Encode(file, &image.RGBA{Pix: pixels, Stride: 240 * 4, Rect: image.Rect(0, 0, 240, 160)})
+	err = png.Encode(file, &image.RGBA{Pix: pixels, Stride: 240 * 4, Rect: image.Rect(0, 0, 240, 160)})
+	return errors.Join(err, file.Close())
 }

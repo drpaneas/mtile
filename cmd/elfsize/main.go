@@ -23,9 +23,8 @@ func readImage(path string) (imageSize, error) {
 	if err != nil {
 		return imageSize{}, err
 	}
-	defer f.Close()
 	size, err := analyzeELF(f, path)
-	if err != nil {
+	if err := errors.Join(err, f.Close()); err != nil {
 		return imageSize{}, fmt.Errorf("%s: %w", path, err)
 	}
 	return size, nil
@@ -86,12 +85,18 @@ func run(args []string, stdout, stderr io.Writer) error {
 
 func writeText(w io.Writer, r report) error {
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
+	var writeErr error
+	linef := func(format string, args ...any) {
+		if writeErr == nil {
+			_, writeErr = fmt.Fprintf(tw, format+"\n", args...)
+		}
+	}
 	if r.Before != nil {
-		fmt.Fprintf(tw, "%s -> %s\n", r.Before.Path, r.After.Path)
-		fmt.Fprintln(tw, "BYTES\tBEFORE\tAFTER\tDELTA")
+		linef("%s -> %s", r.Before.Path, r.After.Path)
+		linef("BYTES\tBEFORE\tAFTER\tDELTA")
 	} else {
-		fmt.Fprintln(tw, r.After.Path)
-		fmt.Fprintln(tw, "BYTES\tVALUE")
+		linef("%s", r.After.Path)
+		linef("BYTES\tVALUE")
 	}
 	after := r.After
 	before := imageSize{}
@@ -111,9 +116,9 @@ func writeText(w io.Writer, r report) error {
 		{"Other allocated", before.Totals.Other, after.Totals.Other},
 	} {
 		if r.Before != nil {
-			fmt.Fprintf(tw, "%s\t%d\t%d\t%+d\n", row.name, row.before, row.after, int64(row.after)-int64(row.before))
+			linef("%s\t%d\t%d\t%+d", row.name, row.before, row.after, int64(row.after)-int64(row.before))
 		} else {
-			fmt.Fprintf(tw, "%s\t%d\n", row.name, row.after)
+			linef("%s\t%d", row.name, row.after)
 		}
 	}
 	if r.Comparison != nil {
@@ -121,33 +126,36 @@ func writeText(w io.Writer, r report) error {
 			name string
 			rows []sizeDelta
 		}{{"SECTION CHANGES", r.Comparison.Sections}, {"SYMBOL CHANGES (aliases grouped)", r.Comparison.Symbols}} {
-			fmt.Fprintf(tw, "\n%s\nNAME\tSECTION\tBEFORE\tAFTER\tDELTA\tROM\tIWRAM\tEWRAM\tUNATTRIBUTED\n", table.name)
+			linef("\n%s\nNAME\tSECTION\tBEFORE\tAFTER\tDELTA\tROM\tIWRAM\tEWRAM\tUNATTRIBUTED", table.name)
 			for _, row := range table.rows {
-				fmt.Fprintf(tw, "%s\t%s\t%d\t%d\t%+d\t%+d\t%+d\t%+d\t%+d\n", row.Name, row.Section, row.Before, row.After, row.Delta, row.Cost.ROM, row.Cost.IWRAM, row.Cost.EWRAM, row.Unattributed)
+				linef("%s\t%s\t%d\t%d\t%+d\t%+d\t%+d\t%+d\t%+d", row.Name, row.Section, row.Before, row.After, row.Delta, row.Cost.ROM, row.Cost.IWRAM, row.Cost.EWRAM, row.Unattributed)
 			}
 		}
 		if !r.Comparison.SymbolsComparable {
-			fmt.Fprintln(tw, "Symbol comparison unavailable: at least one ELF has no symbol table.")
+			linef("Symbol comparison unavailable: at least one ELF has no symbol table.")
 		}
 	} else {
-		fmt.Fprintln(tw, "\nALLOCATED SECTIONS\nNAME\tTYPE\tVMA\tLMA\tSIZE\tROM\tIWRAM\tEWRAM\tUNATTRIBUTED")
+		linef("\nALLOCATED SECTIONS\nNAME\tTYPE\tVMA\tLMA\tSIZE\tROM\tIWRAM\tEWRAM\tUNATTRIBUTED")
 		for _, s := range r.After.Sections {
 			lma := "-"
 			if s.LMA != nil {
 				lma = fmt.Sprintf("%#x", *s.LMA)
 			}
-			fmt.Fprintf(tw, "%s\t%s\t%#x\t%s\t%d\t%d\t%d\t%d\t%d\n", s.Name, s.Type, s.VMA, lma, s.Size, s.Cost.ROM, s.Cost.IWRAM, s.Cost.EWRAM, s.Unattributed)
+			linef("%s\t%s\t%#x\t%s\t%d\t%d\t%d\t%d\t%d", s.Name, s.Type, s.VMA, lma, s.Size, s.Cost.ROM, s.Cost.IWRAM, s.Cost.EWRAM, s.Unattributed)
 		}
-		fmt.Fprintln(tw, "\nLARGEST SYMBOLS (aliases grouped)\nNAME\tSECTION\tSIZE\tROM\tIWRAM\tEWRAM")
+		linef("\nLARGEST SYMBOLS (aliases grouped)\nNAME\tSECTION\tSIZE\tROM\tIWRAM\tEWRAM")
 		for _, s := range r.After.Symbols {
-			fmt.Fprintf(tw, "%s\t%s\t%d\t%d\t%d\t%d\n", strings.Join(s.Names, " = "), s.Section, s.Size, s.Cost.ROM, s.Cost.IWRAM, s.Cost.EWRAM)
+			linef("%s\t%s\t%d\t%d\t%d\t%d", strings.Join(s.Names, " = "), s.Section, s.Size, s.Cost.ROM, s.Cost.IWRAM, s.Cost.EWRAM)
 		}
 		if !r.After.SymbolsAvailable {
-			fmt.Fprintln(tw, "No symbol table; section totals remain available.")
+			linef("No symbol table; section totals remain available.")
 		}
 	}
-	fmt.Fprintln(tw, "\nROM and RAM are separate costs: initialized IWRAM occupies both. NOBITS occupies RAM only.")
-	fmt.Fprintln(tw, "Totals use range unions. Section/symbol rows can overlap and are not additive; symbols omit padding and unsized assembly.")
+	linef("\nROM and RAM are separate costs: initialized IWRAM occupies both. NOBITS occupies RAM only.")
+	linef("Totals use range unions. Section/symbol rows can overlap and are not additive; symbols omit padding and unsized assembly.")
+	if writeErr != nil {
+		return writeErr
+	}
 	return tw.Flush()
 }
 

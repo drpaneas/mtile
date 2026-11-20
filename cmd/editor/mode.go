@@ -133,7 +133,7 @@ func (g *Game) setMode(mode editorMode) {
 			g.undo.reset(g.snapshot())
 		}
 	}
-	g.persist()
+	_ = g.persist()
 	g.mode = mode
 	if mode == modeMap {
 		if g.objEditing {

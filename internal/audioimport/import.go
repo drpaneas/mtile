@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -134,7 +135,7 @@ func compileBank(project string, manifest assetsync.DirectAudioManifest, sources
 	if err != nil {
 		return result, err
 	}
-	defer os.RemoveAll(work)
+	defer func() { _ = os.RemoveAll(work) }()
 	args := []string{}
 	for _, group := range [][]assetsync.DirectAudioItem{manifest.Music, manifest.Samples} {
 		for _, item := range group {
@@ -246,7 +247,7 @@ func readSource(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	info, err := f.Stat()
 	if err != nil {
 		return nil, err
@@ -254,17 +255,16 @@ func readSource(path string) ([]byte, error) {
 	if !info.Mode().IsRegular() || info.Size() > 24<<20 {
 		return nil, fmt.Errorf("audio source %s must be a regular file up to 24 MiB", path)
 	}
-	return os.ReadFile(path)
+	return io.ReadAll(f)
 }
 func writeAtomic(path string, data []byte) error {
 	f, err := os.CreateTemp(filepath.Dir(path), ".audio-*")
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
+	defer func() { _ = os.Remove(f.Name()) }()
 	if _, err = f.Write(data); err != nil {
-		f.Close()
-		return err
+		return errors.Join(err, f.Close())
 	}
 	if err = f.Close(); err != nil {
 		return err

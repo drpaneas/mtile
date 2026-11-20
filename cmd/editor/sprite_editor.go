@@ -1250,8 +1250,6 @@ func spritesheetSelectionOutlineRect(selection, canvas editor.Rect) (editor.Rect
 	return editor.Rect{X: visible.X + 1, Y: visible.Y + 1, W: visible.W - 2, H: visible.H - 2}, true
 }
 
-func cycleGridCells(n, delta int) int { return cycleGridCellsLimit(n, delta, gridCellsMax) }
-
 func cycleGridCellsLimit(n, delta, limit int) int {
 	span := limit - gridCellsMin + 1
 	if n < gridCellsMin || n > limit {

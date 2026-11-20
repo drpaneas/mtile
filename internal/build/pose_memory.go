@@ -45,7 +45,7 @@ func summarizePoseMemory(assets *assetsync.Assets, elfPath string) PoseMemoryRep
 	if err != nil {
 		return report
 	}
-	defer binary.Close()
+	defer func() { _ = binary.Close() }()
 	symbols, err := binary.Symbols()
 	if err != nil {
 		return report

@@ -88,7 +88,11 @@ function _draw() cls(1) spr(1,px,60) end
 					if err != nil {
 						t.Fatal(err)
 					}
-					defer session.Close()
+					defer func() {
+						if err := session.Close(); err != nil {
+							t.Error(err)
+						}
+					}()
 					pixels := map[uint32][32]byte{}
 					var previousTick, previousRefresh uint32
 					var intervals, pcmSamples, nonzero int
@@ -227,7 +231,11 @@ func main() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer session.Close()
+	defer func() {
+		if err := session.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 	var messages []string
 	for i := 0; i < 64; i++ {
 		if _, err := session.Step(0, false); err != nil {

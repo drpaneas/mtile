@@ -176,11 +176,12 @@ func TestPauseOverlayContainsOnlyCenteredSpacedLabel(t *testing.T) {
 			if x < 7 || x > 57 || y < 28 || y > 35 {
 				t.Fatalf("ink outside centered message: %d,%d", x, y)
 			}
-			if v == 4 {
+			switch v {
+			case 4:
 				ink++
-			} else if v == 1 {
+			case 1:
 				shadow++
-			} else {
+			default:
 				t.Fatal("unexpected panel or highlight")
 			}
 		}

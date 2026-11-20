@@ -1,6 +1,7 @@
 package audioimport
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -41,8 +42,7 @@ func PrepareBatch(paths []string, names []string, opts PrepareOptions, progress 
 	for i, path := range paths {
 		absolute, err := filepath.Abs(path)
 		if err != nil {
-			b.Close()
-			return nil, err
+			return nil, errors.Join(err, b.Close())
 		}
 		if seenPaths[absolute] {
 			continue
@@ -71,8 +71,7 @@ func PrepareBatch(paths []string, names []string, opts PrepareOptions, progress 
 		} else {
 			item.staged = fmt.Sprintf("%03d%s", len(b.Items), p.Extension)
 			if err := os.WriteFile(filepath.Join(dir, item.staged), p.Data, 0600); err != nil {
-				b.Close()
-				return nil, err
+				return nil, errors.Join(err, b.Close())
 			}
 		}
 		item.Prepared.Data = nil
@@ -155,7 +154,7 @@ func (b *Batch) Import(project string, names []string, converter string) (Result
 	if err != nil {
 		return Result{}, err
 	}
-	defer os.RemoveAll(export)
+	defer func() { _ = os.RemoveAll(export) }()
 	paths := make([]string, 0, len(b.Items))
 	for i, item := range b.Items {
 		path := filepath.Join(export, names[i]+item.Prepared.Extension)
@@ -195,7 +194,7 @@ func copyBatchFile(source, target string) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 	out, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err

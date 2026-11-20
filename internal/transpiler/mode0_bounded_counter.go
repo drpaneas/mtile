@@ -128,11 +128,11 @@ type counterInterp struct {
 
 func (c *counterInterp) initialSet() ([]int, bool) {
 	set := []int{}
-	ok := true
 	for _, stmt := range c.analysis.chunk.Body {
 		if _, isFn := stmt.(*luaparser.FunctionDeclStmt); isFn {
 			continue
 		}
+		var ok bool
 		set, ok = c.execStmt(stmt, set)
 		if !ok {
 			return nil, false
@@ -182,8 +182,8 @@ func (c *counterInterp) execBlock(block *luaparser.Block, in []int) ([]int, bool
 		return in, true
 	}
 	set := in
-	ok := true
 	for _, stmt := range block.Body {
+		var ok bool
 		set, ok = c.execStmt(stmt, set)
 		if !ok {
 			return nil, false

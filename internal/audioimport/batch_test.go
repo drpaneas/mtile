@@ -8,6 +8,13 @@ import (
 	"testing"
 )
 
+func closeTestBatch(t *testing.T, b *Batch) {
+	t.Helper()
+	if err := b.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestBatchStagesSequentiallyAppliesSharedSettingsAndCompilesOnce(t *testing.T) {
 	t.Setenv("MTILE_IMPORT_HELPER", "1")
 	tool, _ := os.Executable()
@@ -22,13 +29,15 @@ func TestBatchStagesSequentiallyAppliesSharedSettingsAndCompilesOnce(t *testing.
 	})
 	two := testWave(t, 1, 16, 8000, 1, func(i, ch int) float64 { return .5 })
 	module := filepath.Join(t.TempDir(), "theme.mod")
-	os.WriteFile(module, []byte("ok"), 0600)
+	if err := os.WriteFile(module, []byte("ok"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	progress := 0
 	b, err := PrepareBatch([]string{one, two, module}, nil, PrepareOptions{Quality: QualitySmall, TrimSilence: true}, func(string) { progress++ })
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer b.Close()
+	defer closeTestBatch(t, b)
 	if len(b.Items) != 3 || b.ErrorCount() != 0 || progress != 3 {
 		t.Fatalf("batch: %+v", b.Items)
 	}
@@ -67,7 +76,7 @@ func TestBatchStagesSequentiallyAppliesSharedSettingsAndCompilesOnce(t *testing.
 		t.Fatal("invalid names invoked converter")
 	}
 	dir := b.dir
-	b.Close()
+	closeTestBatch(t, b)
 	if _, err := os.Stat(dir); !os.IsNotExist(err) {
 		t.Fatal("batch workspace retained", err)
 	}
@@ -88,12 +97,14 @@ func TestBatchErrorsCannotPartiallyPublishAndCanBeRemoved(t *testing.T) {
 	manifest := filepath.Join(project, "assets/audio/direct/manifest.json")
 	before, _ := os.ReadFile(manifest)
 	bad := filepath.Join(t.TempDir(), "bad.wav")
-	os.WriteFile(bad, []byte("bad"), 0600)
+	if err := os.WriteFile(bad, []byte("bad"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	b, err := PrepareBatch([]string{wave, bad}, nil, PrepareOptions{Quality: QualityBalanced}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer b.Close()
+	defer closeTestBatch(t, b)
 	if b.ErrorCount() != 1 {
 		t.Fatal("bad file not retained for review")
 	}
@@ -111,12 +122,14 @@ func TestBatchErrorsCannotPartiallyPublishAndCanBeRemoved(t *testing.T) {
 		t.Fatal(err)
 	}
 	module := filepath.Join(t.TempDir(), "broken.mod")
-	os.WriteFile(module, []byte("FAIL"), 0600)
+	if err := os.WriteFile(module, []byte("FAIL"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	fail, err := PrepareBatch([]string{wave, module}, nil, PrepareOptions{Quality: QualityBalanced}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer fail.Close()
+	defer closeTestBatch(t, fail)
 	before, _ = os.ReadFile(manifest)
 	if _, err := fail.Import(project, []string{"replacement", "broken"}, tool); err == nil || !strings.Contains(err.Error(), "mmutil") {
 		t.Fatal("conversion error ignored", err)
@@ -133,7 +146,7 @@ func TestBatchDeduplicatesPathsAndPreservesExplicitEditedNames(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer b.Close()
+	defer closeTestBatch(t, b)
 	if len(b.Items) != 1 || b.Items[0].Name != "my_sound" {
 		t.Fatal("path duplication or edited name lost")
 	}

@@ -70,7 +70,9 @@ func TestPCMBatchBadRowsBlockImportAndRemovalKeepsSurvivingNames(t *testing.T) {
 	defer g.closePCMEditor()
 	first, second := pcmQuietFixture(t), pcmQuietFixture(t)
 	bad := filepath.Join(t.TempDir(), "bad.wav")
-	os.WriteFile(bad, []byte("bad"), 0600)
+	if err := os.WriteFile(bad, []byte("bad"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	g.pcmChooseFiles([]string{first, bad, second}, false)
 	waitPCM(t, g)
 	if g.pcm.batch.ErrorCount() != 1 {
@@ -243,7 +245,11 @@ func TestPCMBatchShutdownRetiresUnacceptedPreparation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer b.Close()
+	defer func() {
+		if err := b.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 	release := make(chan struct{})
 	g.pcmStartProgressJob("Preparing", func(progress func(string)) pcmJobResult {
 		progress("First file")

@@ -128,7 +128,9 @@ func TestFontBLegacyMetadataSurvivesRoundTrip(t *testing.T) {
 	f.Name = "legacy"
 	raw, _ := json.Marshal(f)
 	var document map[string]any
-	json.Unmarshal(raw, &document)
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatal(err)
+	}
 	document["designerNote"] = "keep this"
 	document["glyphs"].([]any)[1].(map[string]any)["provenance"] = "original"
 	raw, _ = json.Marshal(document)
@@ -148,7 +150,9 @@ func TestFontBLegacyMetadataSurvivesRoundTrip(t *testing.T) {
 	}
 	saved, _ := os.ReadFile(path)
 	var result map[string]any
-	json.Unmarshal(saved, &result)
+	if err := json.Unmarshal(saved, &result); err != nil {
+		t.Fatal(err)
+	}
 	if result["designerNote"] != "keep this" || result["glyphs"].([]any)[1].(map[string]any)["provenance"] != "original" {
 		t.Fatal("font metadata lost during migration/read/save")
 	}

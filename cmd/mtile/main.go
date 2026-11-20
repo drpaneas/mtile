@@ -199,21 +199,22 @@ func runBuild(args []string, out io.Writer) error {
 	if flags.NArg() != 1 {
 		return errors.New("build requires exactly one project directory")
 	}
+	useProjectRenderer := strings.TrimSpace(*rendererName) == ""
+	var renderer transpiler.Renderer
+	if !useProjectRenderer {
+		renderer, err = transpiler.ParseRenderer(*rendererName)
+		if err != nil {
+			return err
+		}
+	}
 	service, err := build.NewService(*tinygo, *runtimeDir)
 	if err != nil {
 		return err
 	}
 	service.KeepWork = *keepWork
 	service.ExperimentalTileCanvas = *tileCanvas || *tileObjects
-	if strings.TrimSpace(*rendererName) == "" {
-		service.UseProjectRenderer = true
-	} else {
-		renderer, parseErr := transpiler.ParseRenderer(*rendererName)
-		if parseErr != nil {
-			return parseErr
-		}
-		service.Renderer = renderer
-	}
+	service.UseProjectRenderer = useProjectRenderer
+	service.Renderer = renderer
 	result, err := service.Build(flags.Arg(0), *output)
 	if err != nil {
 		return err

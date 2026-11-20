@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"log"
 	"path/filepath"
@@ -37,8 +38,7 @@ func main() {
 	// immediately, so an unconditional persist-then-check is the only order
 	// that does not risk losing an editing session to whatever triggered
 	// RunGame's error return.
-	g.persist()
-	if runErr != nil {
-		log.Fatalf("editor: %v", runErr)
+	if err := errors.Join(runErr, g.persist()); err != nil {
+		log.Fatalf("editor: %v", err)
 	}
 }

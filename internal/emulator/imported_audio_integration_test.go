@@ -61,7 +61,11 @@ function _draw() cls(1) end
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer session.Close()
+			defer func() {
+				if err := session.Close(); err != nil {
+					t.Error(err)
+				}
+			}()
 			var early, wav, psg, tail []float64
 			previousTick, lastChange := -1, -1
 			events, psgActive := 0, false

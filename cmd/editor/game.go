@@ -759,7 +759,7 @@ func (g *Game) Update() error {
 func (g *Game) handleSaveKey() {
 	mod := ebiten.IsKeyPressed(ebiten.KeyMeta) || ebiten.IsKeyPressed(ebiten.KeyControl)
 	if mod && inpututil.IsKeyJustPressed(ebiten.KeyS) {
-		g.persist()
+		_ = g.persist()
 	}
 }
 

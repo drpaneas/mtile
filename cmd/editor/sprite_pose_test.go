@@ -134,7 +134,9 @@ func TestCaptureAndDeletePoseFromSelection(t *testing.T) {
 	if len(parts) != 4 || parts[0].Tile != 2 || parts[1].Tile != 3 || parts[2].X != 0 || parts[2].Y != 8 {
 		t.Fatalf("captured parts = %+v", parts)
 	}
-	g.persist()
+	if err := g.persist(); err != nil {
+		t.Fatal(err)
+	}
 	reloaded, err := editor.Open(g.model.Dir)
 	if err != nil {
 		t.Fatal(err)

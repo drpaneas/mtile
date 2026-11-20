@@ -24,7 +24,7 @@ func addDirectAudioTarget(tinygoRoot, runtimeDir, targetPath string, format int)
 	for _, file := range files {
 		path := filepath.Join(root, filepath.FromSlash(file))
 		if _, err = os.Stat(path); err != nil {
-			return fmt.Errorf("Maxmod source: %w", err)
+			return fmt.Errorf("locate Maxmod source: %w", err)
 		}
 		rel, err := filepath.Rel(tinygoRoot, path)
 		if err != nil {

@@ -699,14 +699,14 @@ func (p *player) advance(keys uint16) error {
 		p.report.Samples = append(p.report.Samples, sample{p.systemPause, stats.Frames, p.current.State, stats.LastFrame, stats.LastUpdate, stats.LastDraw, stats.LastBlit, stats.MissedFrames})
 		if p.reference != nil {
 			if err := p.reference.advance(keys); err != nil {
-				return fmt.Errorf("Mode 4 reference: %w", err)
+				return fmt.Errorf("advance Mode 4 reference: %w", err)
 			}
 			if err := p.compare(); err != nil {
 				return err
 			}
 		}
 		if p.strictDeadlines && stats.MissedFrames != p.report.StartupMissedFrames+p.report.SystemPauseMissedFrames {
-			return fmt.Errorf("Mode 0 missed a poststartup deadline at game frame %d: total %d, startup %d; state %+v, cycles %d", stats.Frames, stats.MissedFrames, p.report.StartupMissedFrames, p.current, stats.LastFrame)
+			return fmt.Errorf("missed a Mode 0 poststartup deadline at game frame %d: total %d, startup %d; state %+v, cycles %d", stats.Frames, stats.MissedFrames, p.report.StartupMissedFrames, p.current, stats.LastFrame)
 		}
 		return nil
 	}
@@ -1213,7 +1213,7 @@ func (p *player) compare() error {
 		if err := p.screenshot(name); err != nil {
 			return err
 		}
-		return fmt.Errorf("Mode 0/4 pixel parity failed at game frame %d: %d differing pixels; see %s and mode4-%s", p.current.Frame, different, name, name)
+		return fmt.Errorf("pixel parity between Mode 0 and Mode 4 failed at game frame %d: %d differing pixels; see %s and mode4-%s", p.current.Frame, different, name, name)
 	}
 	return nil
 }

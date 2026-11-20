@@ -12,6 +12,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"errors"
 	"flag"
 	"fmt"
 	"image"
@@ -93,11 +94,13 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", project, r.err)
 		}
 	}
-	print(reports)
+	if err := print(reports); err != nil {
+		fatal(err)
+	}
 }
 
-func survey(service build.Service, helper, project, rom string, frames int, spikes uint32) report {
-	r := report{project: project}
+func survey(service build.Service, helper, project, rom string, frames int, spikes uint32) (r report) {
+	r.project = project
 	result, err := service.Build(project, rom)
 	if err != nil {
 		r.err = err
@@ -111,14 +114,14 @@ func survey(service build.Service, helper, project, rom string, frames int, spik
 		r.err = err
 		return r
 	}
-	defer session.Close()
+	defer func() { r.err = errors.Join(r.err, session.Close()) }()
 	var hashes *os.File
 	if hashDir != "" {
 		if hashes, err = os.Create(filepath.Join(hashDir, filepath.Base(project)+".txt")); err != nil {
 			r.err = err
 			return r
 		}
-		defer hashes.Close()
+		defer func() { r.err = errors.Join(r.err, hashes.Close()) }()
 	}
 
 	var lastFrames, missedAtStart uint32
@@ -133,13 +136,20 @@ func survey(service build.Service, helper, project, rom string, frames int, spik
 			return r
 		}
 		if hashes != nil {
-			fmt.Fprintf(hashes, "%x\n", sha256.Sum256(frame.RGBA))
+			if _, err := fmt.Fprintf(hashes, "%x\n", sha256.Sum256(frame.RGBA)); err != nil {
+				r.err = err
+				return r
+			}
 			if slices.Contains(dumpFrames, i) {
 				img := &image.RGBA{Pix: frame.RGBA, Stride: 4 * 240, Rect: image.Rect(0, 0, 240, 160)}
 				f, err := os.Create(filepath.Join(hashDir, fmt.Sprintf("%s-%d.png", filepath.Base(project), i)))
-				if err == nil {
-					png.Encode(f, img)
-					f.Close()
+				if err != nil {
+					r.err = err
+					return r
+				}
+				if err := errors.Join(png.Encode(f, img), f.Close()); err != nil {
+					r.err = fmt.Errorf("write frame %d: %w", i, err)
+					return r
 				}
 			}
 		}
@@ -226,22 +236,28 @@ func percentile(values []uint32, p float64) uint32 {
 	return sorted[int(float64(len(sorted)-1)*p)]
 }
 
-func print(reports []report) {
+func print(reports []report) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
-	fmt.Fprintln(w, "project\trenderer\tticks\tmissed\tmedian\tp95\tmax\tbudget%\tupd p95\tdraw p95\tgc max\theap peak\tiwram\trom\t")
+	if _, err := fmt.Fprintln(w, "project\trenderer\tticks\tmissed\tmedian\tp95\tmax\tbudget%\tupd p95\tdraw p95\tgc max\theap peak\tiwram\trom\t"); err != nil {
+		return err
+	}
 	for _, r := range reports {
 		if r.err != nil {
-			fmt.Fprintf(w, "%s\terror\t\t\t\t\t\t\t\t\t\t\t\t\t\n", filepath.Base(r.project))
+			if _, err := fmt.Fprintf(w, "%s\terror\t\t\t\t\t\t\t\t\t\t\t\t\t\n", filepath.Base(r.project)); err != nil {
+				return err
+			}
 			continue
 		}
 		p95 := percentile(r.frame, 0.95)
-		fmt.Fprintf(w, "%s\t%s\t%d\t%d\t%d\t%d\t%d\t%.0f%%\t%d\t%d\t%d\t%s\t%d\t%d\t\n",
+		if _, err := fmt.Fprintf(w, "%s\t%s\t%d\t%d\t%d\t%d\t%d\t%.0f%%\t%d\t%d\t%d\t%s\t%d\t%d\t\n",
 			filepath.Base(r.project), r.renderer, r.ticks, r.missed,
 			percentile(r.frame, 0.5), p95, r.maxFrame, 100*float64(p95)/tickBudget,
 			percentile(r.update, 0.95), percentile(r.draw, 0.95), slices.Max(append(r.gc, 0)),
-			fmt.Sprintf("%d/%d", r.heapPeak, r.heapCap), r.iwram, r.rom)
+			fmt.Sprintf("%d/%d", r.heapPeak, r.heapCap), r.iwram, r.rom); err != nil {
+			return err
+		}
 	}
-	w.Flush()
+	return w.Flush()
 }
 
 func fatal(err error) {

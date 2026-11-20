@@ -36,7 +36,7 @@ func TestBuildCartridgeSaveSignatureAndWRAMReader(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(result.WorkDir)
+			defer func() { _ = os.RemoveAll(result.WorkDir) }()
 			rom, err := os.ReadFile(result.ROMPath)
 			if err != nil {
 				t.Fatal(err)
@@ -49,7 +49,7 @@ func TestBuildCartridgeSaveSignatureAndWRAMReader(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer binary.Close()
+			defer func() { _ = binary.Close() }()
 			syms, err := binary.Symbols()
 			if err != nil {
 				t.Fatal(err)
@@ -75,7 +75,7 @@ func TestBuildCartridgeSaveSignatureAndWRAMReader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(plain.WorkDir)
+	defer func() { _ = os.RemoveAll(plain.WorkDir) }()
 	rom, err := os.ReadFile(plain.ROMPath)
 	if err != nil {
 		t.Fatal(err)

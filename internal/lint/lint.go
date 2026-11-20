@@ -388,7 +388,8 @@ func (a *analyzer) rectangle(outer *p.NumericForStmt) {
 		return
 	}
 	x, y := variable(stmt.Call.Args[0]), variable(stmt.Call.Args[1])
-	if !(x == inner.Name && y == outer.Name || x == outer.Name && y == inner.Name) {
+	usesBothIndices := x == inner.Name && y == outer.Name || x == outer.Name && y == inner.Name
+	if !usesBothIndices {
 		return
 	}
 	if _, ok := integer(stmt.Call.Args[2]); !ok {

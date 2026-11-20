@@ -70,7 +70,9 @@ func TestFailedDeleteKeepsOldManifestBankAndSources(t *testing.T) {
 	var files []string
 	for _, name := range []string{"first.wav", "second.wav"} {
 		path := filepath.Join(input, name)
-		os.WriteFile(path, []byte("ok"), 0600)
+		if err := os.WriteFile(path, []byte("ok"), 0600); err != nil {
+			t.Fatal(err)
+		}
 		files = append(files, path)
 	}
 	if _, err := Import(project, files, tool); err != nil {
