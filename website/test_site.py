@@ -5,6 +5,7 @@ import importlib.util
 from pathlib import Path
 import unittest
 from urllib.parse import unquote, urljoin, urlsplit
+from xml.etree import ElementTree
 
 import build
 
@@ -62,6 +63,36 @@ class SiteTests(unittest.TestCase):
         self.assertIn('imported Direct Sound audio', (self.output / 'api.html').read_text())
         self.assertIn('Mode 4 drawing', (self.output / 'api/rectfill.html').read_text())
         self.assertIn('Mode 0 with conditions', (self.output / 'api/spr.html').read_text())
+
+    def test_syntax_highlighting_in_guide_and_api_pages(self):
+        for route in ('guides/first-game.html', 'api/btn.html'):
+            with self.subTest(route=route):
+                page = self.pages[(self.output / route).resolve()]
+                styles = {attrs.get('class') for tag, attrs in page.elements if tag == 'span'}
+                self.assertTrue({'tok-keyword', 'tok-function', 'tok-number'} <= styles)
+
+        api = (self.output / 'api/btn.html').read_text()
+        self.assertIn('<span class="tok-function">btn</span>(index)', api)
+        install = (self.output / 'guides/install.html').read_text()
+        self.assertIn('<span class="tok-function">mtile</span> doctor', install)
+
+    def test_highlighting_preserves_copyable_text_and_escaping(self):
+        examples = {
+            'lua': ('-- compare\nif x < 2 then print("<tag>&amp;") end', 'tok-comment'),
+            'sh': ('\n  echo "$HOME"\n\n', 'tok-string'),
+            'json': ('{"limit": 3, "valid": true}', 'tok-key'),
+            'text': ('a plain <diagram> & its labels', None),
+        }
+        for language, (source, style) in examples.items():
+            with self.subTest(language=language):
+                block = f'<pre><code class="language-{language}">{build.esc(source)}</code></pre>'
+                code = ElementTree.fromstring(build.CODE_BLOCK.sub(build.highlight_block, block)).find('code')
+                self.assertEqual(''.join(code.itertext()), source)
+                self.assertTrue(all(child.tag == 'span' for child in code))
+                if style:
+                    self.assertIsNotNone(code.find(f"span[@class='{style}']"))
+                else:
+                    self.assertEqual(len(code), 0)
 
     def test_generated_lua_guide_matches_shared_api_data(self):
         script = build.ROOT / 'scripts/docs/generate_lua_api.py'

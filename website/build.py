@@ -14,6 +14,8 @@ import shutil
 from urllib.parse import quote, unquote, urlsplit
 
 import markdown
+from pygments.lexers import BashLexer, JsonLexer, LuaLexer
+from pygments.token import Comment, Keyword, Name, Number, Operator, String, Text
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "website"
@@ -60,6 +62,7 @@ SEARCH_VERSION = hashlib.sha256(
     json.dumps([CATEGORIES, APIS, GUIDES], sort_keys=True).encode()
     + b''.join((ROOT / source).read_bytes() for _, _, _, source, _ in GUIDES)
 ).hexdigest()[:12]
+STYLESHEET_VERSION = hashlib.sha256((SITE / 'assets/site.css').read_bytes()).hexdigest()[:12]
 DOC_ROUTES = {(ROOT / src).resolve(): f"guides/{slug}.html" for slug, _, _, src, _ in GUIDES}
 DOC_ROUTES[(ROOT / "docs/README.md").resolve()] = "guide.html"
 DOC_ROUTES[(ROOT / "examples/README.md").resolve()] = "examples.html"
@@ -87,6 +90,38 @@ ICON_PATHS = {
 
 def esc(value):
     return html.escape(str(value), quote=True)
+
+
+# Markdown fences and generated API examples both emit this escaped HTML.
+CODE_BLOCK = re.compile(r'<pre><code class="language-([\w+-]+)">([^<]*)</code></pre>')
+SHELL_COMMAND = re.compile(r'(?:\A|(?<!\\)\n)[ \t]*([\w./][\w./-]*)(?=\s|$)')
+CODE_LEXERS = {'lua': LuaLexer(), 'sh': BashLexer(), 'json': JsonLexer()}
+TOKEN_CLASSES = {
+    Comment: 'comment', Keyword: 'keyword', Number: 'number', String: 'string',
+    Name.Function: 'function', Name.Builtin: 'function', Name.Tag: 'key', Operator: 'operator',
+}
+
+
+def highlight_block(match):
+    language, content = match.groups()
+    lexer = CODE_LEXERS.get(language)
+    if lexer is None:
+        return match.group()
+
+    source = html.unescape(content)
+    # BashLexer leaves external commands such as mtile and go as plain text.
+    command_starts = set()
+    if language == 'sh':
+        command_starts = {m.start(1) for m in SHELL_COMMAND.finditer(source)}
+
+    parts = []
+    for offset, token, value in lexer.get_tokens_unprocessed(source):
+        if token is Text and offset in command_starts:
+            token = Name.Function
+        text = html.escape(value, quote=False)
+        style = next((cls for category, cls in TOKEN_CLASSES.items() if token in category), None)
+        parts.append(f'<span class="tok-{style}">{text}</span>' if style else text)
+    return f'<pre><code class="language-{language}">{"".join(parts)}</code></pre>'
 
 
 def icon(name):
@@ -199,7 +234,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)} · mTile Guide</title><meta name="description" content="{esc(description)}">
 <meta name="theme-color" content="#71609b"><meta property="og:title" content="{esc(title)} · mTile Guide"><meta property="og:description" content="{esc(description)}"><meta property="og:type" content="website">
-<link rel="icon" href="{url('assets/mtile-logo.png')}" type="image/png"><link rel="stylesheet" href="{url('assets/site.css')}">{article_styles}
+<link rel="icon" href="{url('assets/mtile-logo.png')}" type="image/png"><link rel="stylesheet" href="{url('assets/site.css')}?v={STYLESHEET_VERSION}">{article_styles}
 <script src="{url('search-index.js')}?v={SEARCH_VERSION}" defer></script><script src="{url('assets/site.js')}" defer></script></head>
 <body data-root="{url('index.html')[:-10]}">{contract}<a class="skip-link" href="#main">Skip to content</a>
 <header class="topbar"><a class="brand" href="{url('index.html')}" aria-label="mTile title screen"><img class="brand-logo" src="{url('assets/mtile-logo.png')}" width="220" height="48" alt="mTile"></a>
@@ -267,7 +302,8 @@ def build(output):
     def write(page, title, description, body, active='', toc='', section='guide'):
         target = output / page
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(layout(page, title, description, body, active, toc, section), encoding='utf-8')
+        highlighted = CODE_BLOCK.sub(highlight_block, body)
+        target.write_text(layout(page, title, description, highlighted, active, toc, section), encoding='utf-8')
         written.add(page)
         searchable = re.sub(r'<[^>]+>', ' ', body)
         search.append({'title': title, 'description': description, 'url': page, 'category': active,

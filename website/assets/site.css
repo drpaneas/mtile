@@ -870,6 +870,16 @@ kbd {
   color:#f0e9fa
 }
 
+@media screen {
+  .prose pre .tok-keyword {color:#e4b4ff}
+  .prose pre .tok-function {color:#93e3e0}
+  .prose pre .tok-string {color:#c0e6a7}
+  .prose pre .tok-number {color:#ffca92}
+  .prose pre .tok-key {color:#aaceff}
+  .prose pre .tok-operator {color:#edb7d6}
+  .prose pre .tok-comment {color:#b8afc5;font-style:italic}
+}
+
 .code-wrap {
   position:relative;
   min-width:0
