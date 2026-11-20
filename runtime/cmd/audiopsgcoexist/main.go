@@ -40,6 +40,13 @@ var mapROM = [1]uint16{}
 //go:section .rodata
 var flagROM = [1]byte{}
 
+var image = rt.AssetImage{
+	SheetW: 8, SheetH: 8,
+	SpriteCols: 1, SpriteRows: 1, SpriteN: 1,
+	MapW: 1, MapH: 1,
+	Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
+}
+
 //go:section .ewram
 var sheetRAM [64]byte
 
@@ -165,7 +172,6 @@ func resetTelemetry() {
 }
 
 func initRuntime() bool {
-	image := rt.AssetImage{SheetW: 8, SheetH: 8, SpriteCols: 1, SpriteRows: 1, SpriteN: 1, MapW: 1, MapH: 1, Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:]}
 	cartData.SheetW, cartData.SheetH = 8, 8
 	cartData.SpriteCols, cartData.SpriteRows, cartData.SpriteN = 1, 1, 1
 	cartData.MapW, cartData.MapH = 1, 1

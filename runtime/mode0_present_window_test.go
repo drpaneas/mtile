@@ -31,7 +31,7 @@ func TestMode0PresentRequiresCompleteCommitWindow(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := mode0PresentWindowFits(tc.line, tc.cycles); got != tc.want {
+			if got := presentWindowFits(tc.line, tc.cycles); got != tc.want {
 				t.Fatalf("line %d, %d cycles: fits = %t, want %t", tc.line, tc.cycles, got, tc.want)
 			}
 		})

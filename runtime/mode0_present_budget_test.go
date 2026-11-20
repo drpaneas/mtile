@@ -54,7 +54,7 @@ func TestMode0CommitBudgetAddsBoundedNativeAudioIRQReserve(t *testing.T) {
 	if warmIRQ >= mode0CommitReserve {
 		t.Fatal("one native audio IRQ already fills the complete VBlank window")
 	}
-	if !mode0PresentWindowFits(161, warmIRQ) {
+	if !presentWindowFits(161, warmIRQ) {
 		t.Fatal("warm native-audio commit must still fit one line into VBlank")
 	}
 	c := &Context{paletteReady: true, nativeAudio: new(audio.Controller)}

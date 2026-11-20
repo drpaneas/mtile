@@ -30,6 +30,24 @@ type RendererUploadStats struct {
 	LastOBJTileBytes uint32
 }
 
+// Only complete scanlines after VCOUNT are available to finish visible writes.
+// A late caller can keep the current image for one more scan and commit in
+// the next VBlank.
+func presentWindowFits(line uint16, cycles uint32) bool {
+	if line < ScreenHeight || line >= scanlinesPerFrame {
+		return false
+	}
+	completeLines := scanlinesPerFrame - int(line) - 1
+	return cycles <= uint32(completeLines*cyclesPerScanline)
+}
+
+func waitForPresentCycles(cycles uint32) {
+	if !presentWindowFits(hw.GetReg16(hw.VCOUNT), cycles) {
+		hw.WaitVDraw()
+		hw.WaitForPresentWindow()
+	}
+}
+
 // WaitForPresentWindow uses the current VBlank if the caller is already in
 // it. This is deliberately different from helpers that always wait for the
 // next VBlank and would waste the remaining presentation window.

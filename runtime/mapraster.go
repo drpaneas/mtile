@@ -43,22 +43,38 @@ func (c *Context) buildMapRaster(bg, storageBG int) bool {
 	for y := 0; y < cart.MapH; y++ {
 		for x := 0; x < cart.MapW; x++ {
 			id := int(cart.Map[storageBG*cart.MapW*cart.MapH+y*cart.MapW+x])
-			if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) || id < len(cart.TileLinkOf) && cart.TileLinkOf[id] != 0 {
-				continue
-			}
-			slot := int(cart.SheetIndex[id])
-			if slot == 0 {
-				continue
-			}
-			source := (slot - 1) * 64
-			for row := 0; row < 8; row++ {
-				dest := (y*8+row)*w + x*8
-				copy(pixels[dest:dest+8], cart.Sheet[source+row*8:source+row*8+8])
+			tile := c.mapRasterTile(id)
+			if tile != nil {
+				for row := 0; row < 8; row++ {
+					dest := (y*8+row)*w + x*8
+					copy(pixels[dest:dest+8], tile[row*8:row*8+8])
+				}
 			}
 		}
 	}
+	count, ok := indexMapRasterRows(pixels, w, 0, h, cart.MapRasterSpans)
+	c.mapRasterFailed = !ok
+	c.mapRasterReady = ok
+	c.mapRasterSpanCount = count
+	c.mapRasterBG = bg
+	return ok
+}
+
+func (c *Context) mapRasterTile(id int) []byte {
+	cart := c.cart
+	if id == 0 || id >= cart.SpriteN || id >= len(cart.SheetIndex) || id < len(cart.TileLinkOf) && cart.TileLinkOf[id] != 0 {
+		return nil
+	}
+	slot := int(cart.SheetIndex[id])
+	if slot == 0 {
+		return nil
+	}
+	return cart.Sheet[(slot-1)*64 : slot*64]
+}
+
+func indexMapRasterRows(pixels []byte, w, firstRow, endRow int, spans []MapRasterSpan) (int, bool) {
 	count := 0
-	for y := 0; y < h; y++ {
+	for y := firstRow; y < endRow; y++ {
 		for x := 0; x < w; {
 			if pixels[y*w+x] == 0 {
 				x++
@@ -68,18 +84,61 @@ func (c *Context) buildMapRaster(bg, storageBG int) bool {
 			for x < w && pixels[y*w+x] != 0 {
 				x++
 			}
-			if count == len(cart.MapRasterSpans) {
-				c.mapRasterFailed = true
-				return false
+			if count == len(spans) {
+				return 0, false
 			}
-			cart.MapRasterSpans[count] = MapRasterSpan{uint16(y*w + start), uint8(x - start), uint8(y)}
+			spans[count] = MapRasterSpan{uint16(y*w + start), uint8(x - start), uint8(y)}
 			count++
 		}
 	}
-	c.mapRasterBG = bg
-	c.mapRasterSpanCount = count
-	c.mapRasterReady = true
-	return true
+	return count, true
+}
+
+// A cell edit can split or join opaque runs on its eight scanlines. Preserve
+// the runs on all other lines while the edited tile fits in the span buffer.
+func (c *Context) updateMapRasterCell(bg, x, y int, id uint16) {
+	if !c.mapRasterReady {
+		c.invalidateMapRaster()
+		return
+	}
+	if c.mapRasterBG != bg {
+		return
+	}
+	cart := c.cart
+	w := cart.MapW * 8
+	firstRow := y * 8
+	tile := c.mapRasterTile(int(id))
+	for row := 0; row < 8; row++ {
+		offset := (firstRow+row)*w + x*8
+		dst := cart.MapRasterPixels[offset : offset+8]
+		if tile == nil {
+			clear(dst)
+		} else {
+			copy(dst, tile[row*8:row*8+8])
+		}
+	}
+	spans := cart.MapRasterSpans
+	first := 0
+	for first < c.mapRasterSpanCount && int(spans[first].Y) < firstRow {
+		first++
+	}
+	end := first
+	for end < c.mapRasterSpanCount && int(spans[end].Y) < firstRow+8 {
+		end++
+	}
+	// Move later rows to the end of the buffer so the edited rows can gain
+	// or lose spans without overwriting them.
+	tail := c.mapRasterSpanCount - end
+	freeEnd := len(spans) - tail
+	copy(spans[freeEnd:], spans[end:end+tail])
+	count, ok := indexMapRasterRows(cart.MapRasterPixels, w, firstRow, firstRow+8, spans[first:freeEnd])
+	if !ok {
+		c.invalidateMapRaster()
+		c.mapRasterFailed = true
+		return
+	}
+	copy(spans[first+count:], spans[freeEnd:])
+	c.mapRasterSpanCount = first + count + tail
 }
 
 // drawMapRaster accepts only identity-palette/key-zero calls (checked by its

@@ -133,8 +133,8 @@ func TestMapRasterMutationReinitAndOverflow(t *testing.T) {
 	for _, c := range []*Context{cached, plain} {
 		c.Mset(1, 1, 2)
 	}
-	if cached.mapRasterReady {
-		t.Fatal("Mset retained stale pixels")
+	if !cached.mapRasterReady {
+		t.Fatal("Mset discarded the raster for a one-cell edit")
 	}
 	draw()
 	cached.Mset(1, 1, 2)
@@ -168,6 +168,41 @@ func TestMapRasterMutationReinitAndOverflow(t *testing.T) {
 	crowded.Mset(0, 0, 0)
 	if crowded.mapRasterFailed {
 		t.Fatal("edit did not reset failed-cache state")
+	}
+}
+
+func TestMapRasterCellEditsPreserveOtherRowsAndFallBackOnOverflow(t *testing.T) {
+	cached, _, ram := rasterFixture(t, true, false, 3)
+	plain, _, _ := rasterFixture(t, false, false, 3)
+	cached.PrepareMapRaster()
+	// Cell (0,0) starts empty. An opaque five-pixel run in each row needs
+	// eight additional spans, which this deliberately full buffer cannot fit.
+	ram.MapRasterSpans = ram.MapRasterSpans[:cached.mapRasterSpanCount]
+	edit := func(x, y, tile int) {
+		t.Helper()
+		for _, c := range []*Context{cached, plain} {
+			c.MsetLayer(3, x, y, tile)
+			c.Cls(200)
+			c.MapBG(3, 0, 0, 0, 0, 0, 0, 0)
+		}
+		assertFramesMatch(t, cached, plain, "cell edit on sparse BG3")
+	}
+	edit(0, 0, 2)
+	if !cached.mapRasterFailed || cached.mapRasterReady {
+		t.Fatal("span overflow should use live cells")
+	}
+	edit(0, 0, 0)
+	if !cached.mapRasterReady {
+		t.Fatal("removing the extra runs should recover the raster")
+	}
+	ram.MapRasterSpans = ram.MapRasterSpans[:cap(ram.MapRasterSpans)]
+	for _, cell := range [][2]int{{0, 0}, {15, 9}, {29, 19}} {
+		for _, tile := range []int{1, 2, 3, 0} {
+			edit(cell[0], cell[1], tile)
+			if !cached.mapRasterReady {
+				t.Fatal("in-bounds tile edit discarded the raster")
+			}
+		}
 	}
 }
 

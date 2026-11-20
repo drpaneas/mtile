@@ -31,14 +31,6 @@ func mode0LayerDisplay(seen uint8) uint16 {
 	return uint16(seen)<<8 | mode0ObjectDisplayBits()
 }
 
-func mode0PresentWindowFits(line uint16, cycles uint32) bool {
-	if line < ScreenHeight || line >= scanlinesPerFrame {
-		return false
-	}
-	completeLines := scanlinesPerFrame - int(line) - 1
-	return cycles <= uint32(completeLines*cyclesPerScanline)
-}
-
 // InitHardware materializes the cartridge sheet in tile VRAM. Immutable
 // sheets use the transpiler's compact cell table; a cartridge that calls
 // sset() uses its full row-major sheet and stages each 8x8 cell once.
@@ -148,10 +140,7 @@ func (c *Context) PresentRender() {
 	// enough complete scanlines for the pending commit is available. The host
 	// waits are inert; native first-scan fixtures verify the work bounds too.
 	reserve := c.mode0RequiredCommitCycles()
-	if !mode0PresentWindowFits(hw.GetReg16(hw.VCOUNT), reserve) {
-		hw.WaitVDraw()
-		hw.WaitForPresentWindow()
-	}
+	waitForPresentCycles(reserve)
 	c.lastBlitStart = hw.GetReg16(hw.VCOUNT)
 	commitStart := hw.ReadFrameCycleCounter()
 	// Commit scroll first. A frame that changes several 4 KiB screen blocks

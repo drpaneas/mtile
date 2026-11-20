@@ -2,7 +2,10 @@
 
 package runtime
 
-import "github.com/drpaneas/mtile/runtime/hw"
+import (
+	"github.com/drpaneas/mtile/runtime/audio"
+	"github.com/drpaneas/mtile/runtime/hw"
+)
 
 // The public API's Mode 0/Mode 4 compatibility contract lives in internal/transpiler/render_modes.go and
 // docs/render-modes.md; CPU telemetry must never switch this hardware state
@@ -128,6 +131,21 @@ func (c *Context) PrepareRender() {
 }
 
 func (c *Context) PresentRender() {
+	c.ensurePaletteState()
+	if !c.paletteDirty && !c.pageDirty {
+		return
+	}
+	// A page flip fits in one complete scanline. Publishing all 256 palette
+	// entries and flipping takes up to seven lines in the native map/sprite
+	// parity fixture. Allow ten for changes in code layout and bus timing.
+	reserve := uint32(cyclesPerScanline)
+	if c.paletteDirty {
+		reserve = 10 * cyclesPerScanline
+	}
+	if c.nativeAudio != nil {
+		reserve += audio.NativeServiceCycleBudget
+	}
+	waitForPresentCycles(reserve)
 	c.ApplyDisplayPalette()
 	c.FlipPage()
 }
