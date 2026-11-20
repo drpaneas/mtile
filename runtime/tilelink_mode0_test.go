@@ -1,4 +1,4 @@
-//go:build mtile_mode0 && mtile_mode0_obj
+//go:build mtile_mode0 && mtile_mode0_obj && !mtile_mode0_no_pspr
 
 package runtime
 

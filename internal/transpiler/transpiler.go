@@ -316,6 +316,7 @@ func TranspileWithReport(sourceName, source string, opts Options) (string, Rende
 	report.MapRasterDisabled = metadata.mapRasterDisabled
 	report.StaticStrings = metadata.staticStrings
 	report.Mode0TextKeys = metadata.mode0TextKeys
+	report.Mode0PoseUnused = metadata.mode0PoseUnused
 	return generated, report, err
 }
 
@@ -368,6 +369,7 @@ type generationMetadata struct {
 	mapRasterDisabled bool
 	staticStrings     int
 	mode0TextKeys     []uint16
+	mode0PoseUnused   bool
 }
 
 func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generationMetadata, error) {
@@ -424,7 +426,11 @@ func generateWithMetadata(chunk *luaparser.Chunk, opts Options) (string, generat
 	if err := g.validateTransitiveRootBudget(); err != nil {
 		return "", generationMetadata{}, err
 	}
-	return source, generationMetadata{heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, mapRasterDisabled: !g.mapRasterEligible(), staticStrings: len(g.statics), mode0TextKeys: g.mode0TextKeys}, nil
+	return source, generationMetadata{
+		heapLinked: g.heapEnabled, sheetReadOnly: !g.sheetMutable, mapRasterDisabled: !g.mapRasterEligible(),
+		staticStrings: len(g.statics), mode0TextKeys: g.mode0TextKeys,
+		mode0PoseUnused: g.opts.Renderer == RendererMode0 && len(g.psprPlan) == 0 && g.poseOBJResident == nil,
+	}, nil
 }
 
 func newGenerator(chunk *luaparser.Chunk, opts Options) *generator {

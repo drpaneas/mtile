@@ -295,8 +295,10 @@ func TestMode0BuildTagsKeepObjectBackendDependencies(t *testing.T) {
 		want   string
 	}{
 		{name: "empty", report: transpiler.RendererReport{Mode0Layers: 0}, want: "mtile_mode0,mtile_mode0_layers0"},
-		{name: "text", report: transpiler.RendererReport{Mode0Layers: 1, Mode0Text: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_text"},
-		{name: "packing", report: transpiler.RendererReport{Mode0Layers: 1, Mode0ObjectPacking: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_objpack"},
+		{name: "generic objects", report: transpiler.RendererReport{Mode0Layers: 1, Mode0Objects: true}, want: "mtile_mode0,mtile_mode0_obj"},
+		{name: "sprites", report: transpiler.RendererReport{Mode0Layers: 1, Mode0Objects: true, Mode0PoseUnused: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_no_pspr"},
+		{name: "text", report: transpiler.RendererReport{Mode0Layers: 1, Mode0Text: true, Mode0PoseUnused: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_no_pspr,mtile_mode0_text"},
+		{name: "packing", report: transpiler.RendererReport{Mode0Layers: 1, Mode0ObjectPacking: true, Mode0PoseUnused: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_no_pspr,mtile_mode0_objpack"},
 		{name: "pose streaming", report: transpiler.RendererReport{Mode0Layers: 1, Mode0PoseStreaming: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_pspr"},
 		{name: "resident poses", report: transpiler.RendererReport{Mode0Layers: 1, Mode0PoseResident: true}, want: "mtile_mode0,mtile_mode0_obj,mtile_mode0_pspr"},
 	}

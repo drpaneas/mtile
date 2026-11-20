@@ -8,11 +8,6 @@ import (
 	"github.com/drpaneas/mtile/runtime/hw"
 )
 
-const (
-	mode0PsprWindowLimit = Mode0ObjectTileLimit
-	mode0PsprSiteLimit   = 128
-)
-
 type mode0PsprPending struct {
 	dirty       bool
 	prepared    bool

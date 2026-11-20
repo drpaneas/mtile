@@ -211,7 +211,7 @@ func TestPack32WorkloadEnablesMode0PackedObjectCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || !report.Mode0ObjectPacking ||
+	if report.Selected != transpiler.RendererMode0 || !report.Mode0Objects || !report.Mode0PoseUnused || !report.Mode0ObjectPacking ||
 		report.Mode0OAMEntries != 2 || report.Mode0OBJLineCycles != 64 {
 		t.Fatalf("renderer report = %+v, want packed Mode 0 objects", report)
 	}
@@ -225,6 +225,7 @@ func TestFullOAMBudgetWorkloadsRespectSystemReservation(t *testing.T) {
 		packing    bool
 	}{
 		{name: "oam64", oamEntries: 64, lineCycles: 64},
+		{name: "scanline36", oamEntries: 36, lineCycles: 1152, packing: true},
 		{name: "scanline38", oamEntries: 38, lineCycles: 1216, packing: true},
 	}
 	for _, test := range tests {

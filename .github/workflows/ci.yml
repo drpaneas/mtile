@@ -118,6 +118,7 @@ jobs:
           go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text .
           go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_objpack .
           go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text,mtile_mode0_objpack .
+          go test -tags=mtile_mode0,mtile_mode0_obj,mtile_mode0_text,mtile_mode0_objpack,mtile_mode0_no_pspr .
           go test -tags=mtile_mode0,mtile_mode0_layers2,mtile_mode0_obj,mtile_mode0_objpack .
 
       # One-second fuzz smoke for the strict PSG-only asset/runtime boundaries.
@@ -288,8 +289,12 @@ jobs:
       - name: Paired Mode 0 workload matrix
         run: |
           for workload in zero_bg_text camera composite layers2 dynamic_sprite_frames inactive_sprite_slots pack16 pack32 oam64 sset16 mset16; do
+            project=testdata/projects/testio
+            if [[ "$workload" == layers2 ]]; then
+              project=examples/background-layers
+            fi
             go run ./cmd/renderbench \
-              -project testdata/projects/testio \
+              -project "$project" \
               -source "cmd/renderbench/testdata/workloads/${workload}.lua" \
               -player /tmp/mtile-player-build/mtile-player \
               -out "/tmp/renderer-report-${workload}" \
@@ -297,20 +302,23 @@ jobs:
               -samples 30
           done
 
-      # Boundary characterization: Mode 4 cannot deliver this deliberately
-      # overloaded 38x32px-OBJ frame, while Mode 0 remains comfortably within
-      # its frame budget. Keep exact pixels as the live gate and lock the
-      # measured speedup/headroom with performance_evidence_test.go.
+      # After reserving 64 line cycles for the system pause overlay, 36
+      # overlapping 32px objects fit (1,152 of 1,162 game cycles). Mode 4
+      # misses frames at this boundary, so check delivery on Mode 0.
       - name: Paired Mode 0 scanline boundary
-        run: >-
-          go run ./cmd/renderbench
-          -project testdata/projects/testio
-          -source cmd/renderbench/testdata/workloads/scanline38.lua
-          -player /tmp/mtile-player-build/mtile-player
-          -out /tmp/renderer-characterization-scanline38
-          -warmup 8
-          -samples 30
-          -gate parity
+        run: |
+          go run ./cmd/renderbench \
+            -project testdata/projects/testio \
+            -source cmd/renderbench/testdata/workloads/scanline36.lua \
+            -player /tmp/mtile-player-build/mtile-player \
+            -out /tmp/renderer-characterization-scanline36 \
+            -warmup 8 \
+            -samples 30 \
+            -gate parity
+          jq -e '.memoryPass and .mode0.missedFrames == 0 and
+            .mode0.mode0OBJLineCycles == 1152 and .mode0.mode0OAMEntries == 36 and
+            .mode0MedianSavingPercent >= 90 and .mode0P95Headroom >= 400000' \
+            /tmp/renderer-characterization-scanline36/report.json
 
       # Migration baselines need exact pixels. Frame delivery and resource
       # measurements remain in each report but do not widen AUTO's separately

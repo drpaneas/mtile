@@ -755,9 +755,11 @@ func mode0BuildTags(report transpiler.RendererReport) string {
 	// dependency explicit here as a defense against an inconsistent report.
 	if report.Mode0Objects || report.Mode0ObjectPacking || report.Mode0Text || report.Mode0PoseStreaming || report.Mode0PoseResident {
 		tags += ",mtile_mode0_obj"
-	}
-	if report.Mode0PoseStreaming || report.Mode0PoseResident {
-		tags += ",mtile_mode0_pspr"
+		if report.Mode0PoseStreaming || report.Mode0PoseResident {
+			tags += ",mtile_mode0_pspr"
+		} else if report.Mode0PoseUnused {
+			tags += ",mtile_mode0_no_pspr"
+		}
 	}
 	if report.Mode0ObjectPacking {
 		tags += ",mtile_mode0_objpack"

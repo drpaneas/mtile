@@ -79,7 +79,7 @@ func TestMode0TileLinksAllocateObjectSites(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Selected != RendererMode0 || !report.Mode0Objects {
+	if report.Selected != RendererMode0 || !report.Mode0Objects || report.Mode0PoseUnused {
 		t.Fatalf("report = %+v, want Mode 0 with objects", report)
 	}
 	sites, mapCall := strings.Index(got, "c.SetTileLinkSites("), strings.Index(got, "c.MapAll(")

@@ -73,7 +73,10 @@ type RendererReport struct {
 	// Resident libraries upload all reachable layouts once during force-blanked
 	// initialization, sharing exact packed pixel runs between poses and sites.
 	Mode0PoseResident bool
-	Mode0Text         bool
+	// Mode0PoseUnused means code generation emitted neither pose sites
+	// (including linked map tiles) nor a resident pose bank.
+	Mode0PoseUnused bool
+	Mode0Text       bool
 	// Mode0ObjectPacking enables the internal 16x16/32x32 OBJ cache. Packed
 	// shapes consume one OAM entry while retaining their true pixel-width cost
 	// in the scanline-cycle proof.

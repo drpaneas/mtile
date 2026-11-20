@@ -210,9 +210,11 @@ renderer proof retains its true 32-cycle scanline width.
 `oam64.lua` draws 64 distinct 8x8 sprites in eight separated rows. It is the
 pixel-parity and throughput fixture for the expanded 128-entry OAM allocator.
 
-`scanline38.lua` overlaps 38 cached 32x32 OBJs on the same lines, consuming
-1,216 of the 1,226 available normal-OBJ rendering cycles. It is the accepted
-boundary fixture paired with the unit-level 39-object/1,248-cycle rejection.
+`scanline36.lua` overlaps 36 cached 32x32 OBJs on the same lines, consuming
+1,152 of the 1,162 game cycles available after reserving 64 for the system
+pause overlay. CI checks its pixels, memory, speed and Mode 0 frame delivery.
+The earlier `scanline38.lua` fixture requires 1,216 cycles and now exercises
+the compiler's fallback to Mode 4.
 
 `dynamic_sprite_frames.lua` cycles sixteen draw slots through the explicit,
 non-contiguous frame set `{1, 32, 35}`. The sprite ID variable is initialized
