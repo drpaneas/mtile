@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-commit-assets
+        name: Check staged assets
+        entry: python3 scripts/check_commit_assets.py
+        language: system
+        pass_filenames: false
+        always_run: true

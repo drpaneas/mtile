@@ -1,9 +1,10 @@
 package build
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
+
+	"github.com/drpaneas/mtile/runtime/gbatarget"
 )
 
 const (
@@ -26,7 +27,7 @@ func ValidateROM(rom []byte) error {
 	if rom[3] != 0xea {
 		return fmt.Errorf("GBA entry point is not an ARM branch (byte 3 is 0x%02x)", rom[3])
 	}
-	if fmt.Sprintf("%x", sha256.Sum256(rom[4:0xa0])) != "08a0153cfd6b0ea54b938f7d209933fa849da0d56f5a34c481060c9ff2fad818" {
+	if !gbatarget.ValidLogo(rom[4:0xa0]) {
 		return errors.New("GBA Nintendo logo is missing or corrupt")
 	}
 	if rom[0xb2] != 0x96 {

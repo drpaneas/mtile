@@ -11,6 +11,7 @@ on:
       - 'internal/transpiler/transpiler.go'
       - 'internal/transpiler/render_modes.go'
       - 'fonts/JetBrainsMono/**'
+      - 'runtime/third_party/aurora/**'
       - 'cmd/editor/assets/mtile-header.png'
       - '.github/workflows/website.yml'
   pull_request:
@@ -22,6 +23,7 @@ on:
       - 'internal/transpiler/transpiler.go'
       - 'internal/transpiler/render_modes.go'
       - 'fonts/JetBrainsMono/**'
+      - 'runtime/third_party/aurora/**'
       - 'cmd/editor/assets/mtile-header.png'
       - '.github/workflows/website.yml'
   workflow_dispatch:

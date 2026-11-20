@@ -23,6 +23,14 @@ var mapROM = [smokeMapW * smokeMapH]uint16{0: 0x0056}
 //go:section .rodata
 var flagROM = [smokeSpriteN]byte{0: 0x78}
 
+// The context retains this descriptor for the lifetime of the cartridge.
+var img = rt.AssetImage{
+	SheetW: smokeSheetW, SheetH: smokeSheetH,
+	SpriteCols: smokeSheetW / 8, SpriteRows: smokeSheetH / 8,
+	MapW: smokeMapW, MapH: smokeMapH, SpriteN: smokeSpriteN,
+	Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
+}
+
 //go:section .ewram_begin
 var ewramBegin uint32 // first .ewram object; proves zero loop started
 
@@ -90,12 +98,6 @@ func main() {
 	cartData.Sheet = sheetRAM[:]
 	cartData.Map = mapRAM[:]
 	cartData.Flags = flagRAM[:]
-	img := rt.AssetImage{
-		SheetW: smokeSheetW, SheetH: smokeSheetH,
-		SpriteCols: smokeSheetW / 8, SpriteRows: smokeSheetH / 8,
-		MapW: smokeMapW, MapH: smokeMapH, SpriteN: smokeSpriteN,
-		Sheet: sheetROM[:], Map: mapROM[:], Flags: flagROM[:],
-	}
 	if !ctx.Init(&img, &cartData) {
 		smokeStatus.Set(smokeFailCopy)
 		halt()

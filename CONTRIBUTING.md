@@ -195,5 +195,24 @@ go test ./internal/transpiler -run 'TestEveryBuiltinHasRendererCompatibility|Tes
 
 ## License
 
-By contributing you agree that your contributions are licensed under the
-[MIT License](LICENSE).
+Contribute original work under the [MIT License](LICENSE). For third-party
+code, artwork, fonts, sounds and captures, document the source, the applicable
+redistribution terms, and any required notices alongside the contribution.
+Keep cartridge dumps, extracted assets, derived ports, and recordings from
+private studies in their ignored local paths.
+
+After staging changes, run the same asset check as CI.
+
+```sh
+python3 scripts/check_commit_assets.py
+```
+
+The repository's pre-commit configuration runs this check before each commit.
+Contributors using the pre-commit framework can install it with
+`pre-commit install`. If your organization manages the Git hook, enable the
+repository configuration through that hook's supported settings.
+
+The checker reads the Git index, applies its staged ignore rules, and inspects
+file headers and ZIP and TAR contents for cartridge images, ELF binaries and
+exact copies of retired assets. It rejects RAR and 7z archives. Review the
+provenance of new graphics, music and other assets separately.

@@ -2,8 +2,8 @@ package runtime
 
 // defaultPalette is the built-in aurora 256-color table, quantized
 // from 8-bit RGB with r8>>3 / g8>>3 / b8>>3 and packed as BGR555.
-// Aurora was created by DawnBringer as part of the GrafX2 Toolbox:
-// https://lospec.com/palette-list/aurora
+// Richard “DawnBringer” Fhager's original Aurora 1.1 palette script,
+// GPLv2 license and notice are in third_party/aurora.
 // Projects may replace all 256 entries via assetsync LoadPalette.
 var defaultPalette = [256]uint16{
 	0x0000, 0x0842, 0x1084, 0x18C6, 0x2108, 0x294A, 0x318C, 0x39CE,

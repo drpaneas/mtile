@@ -5,12 +5,6 @@ active implementation order is the
 [graphics evolution roadmap](../graphics-model.md#graphics-evolution-roadmap).
 Do not treat the delivery slices below as the next engineering milestones.
 
-![Sprite Lab concept](tile-types-sprite-lab-concept.png)
-
-![Map Lab concept](tile-types-map-lab-concept.png)
-
-![Scene Layers and parallax concept](scene-layers-parallax-concept-v2.png)
-
 ## Goal
 
 Let an author work with named concepts such as `Grass Top`, `Coin Block`,

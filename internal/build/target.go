@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/drpaneas/mtile/runtime/gbatarget"
 )
 
 // GenerateTarget writes the project-specific TinyGo target used by the
@@ -60,6 +62,25 @@ func generateTarget(tinygoRoot, runtimeDir, startupName, outputPath string) erro
 				err = errors.New("is a directory")
 			}
 			return fmt.Errorf("target input %q: %w", path, err)
+		}
+	}
+	asm, err := os.ReadFile(startup)
+	if err != nil {
+		return err
+	}
+	bound, err := gbatarget.Startup(tinygoRoot, asm)
+	if err != nil {
+		return fmt.Errorf("prepare GBA startup: %w", err)
+	}
+	if !bytes.Equal(asm, bound) {
+		// TinyGo also builds ELF files directly from this target. Bind the
+		// cartridge header before linking so every output gets the same bytes.
+		startup, err = filepath.Abs(filepath.Join(filepath.Dir(outputPath), ".mtile-crt0", filepath.Base(outputPath)+".s"))
+		if err != nil {
+			return err
+		}
+		if err := atomicWrite(startup, bound, 0o644); err != nil {
+			return err
 		}
 	}
 	relStartup, err := filepath.Rel(tinygoRoot, startup)

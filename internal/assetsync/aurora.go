@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// aurora.hex is the Aurora 256-color palette, created by DawnBringer as
-// part of the GrafX2 Toolbox: https://lospec.com/palette-list/aurora
+// aurora.hex contains the RGB values from Richard “DawnBringer” Fhager's
+// Aurora 1.1 palette. See runtime/third_party/aurora for its GPLv2 source and notice.
 //
 //go:embed aurora.hex
 var auroraHex string

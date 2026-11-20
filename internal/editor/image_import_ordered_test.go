@@ -81,12 +81,14 @@ func TestOrderedImportBayerCoverageAndTilePhase(t *testing.T) {
 }
 
 func TestOrderedImportPreservesAuthoredPixelArt(t *testing.T) {
-	for _, project := range []string{"loop", "testio"} {
-		base := filepath.Join("testdata", "projects")
-		if project == "loop" {
-			base = "research"
-		}
-		dir := filepath.Join("..", "..", base, project)
+	for _, fixture := range []struct {
+		project string
+		colors  int
+	}{
+		{"examples/lantern-rooms", 16},
+		{"testdata/projects/testio", 256},
+	} {
+		dir := filepath.Join("..", "..", fixture.project)
 		p, err := assetsync.LoadProject(dir)
 		if err != nil {
 			t.Fatal(err)
@@ -95,10 +97,8 @@ func TestOrderedImportPreservesAuthoredPixelArt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// Loop stores an expanded palette but its art uses only the first
-		// sixteen entries. Exercise that art with the native 16-color form.
-		if project == "loop" {
-			palette.Colors = palette.Colors[:16]
+		if len(palette.Colors) != fixture.colors {
+			t.Fatalf("%s palette has %d colors, want %d", fixture.project, len(palette.Colors), fixture.colors)
 		}
 		sheet, err := assetsync.LoadSpritesheet(dir)
 		if err != nil {
@@ -117,10 +117,10 @@ func TestOrderedImportPreservesAuthoredPixelArt(t *testing.T) {
 			}
 		}
 		if visible == 0 {
-			t.Fatalf("%s authored-art fixture has no visible pixels", project)
+			t.Fatalf("%s authored-art fixture has no visible pixels", fixture.project)
 		}
 		if !slices.Equal(QuantizeImageToPaletteOrdered(img, palette.Colors), QuantizeImageToPalette(img, palette.Colors)) {
-			t.Fatalf("%s authored pixel art changed", project)
+			t.Fatalf("%s authored pixel art changed", fixture.project)
 		}
 	}
 }

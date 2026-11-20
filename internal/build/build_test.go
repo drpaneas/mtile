@@ -1,7 +1,6 @@
 package build
 
 import (
-	"github.com/drpaneas/mtile/runtime/gbatarget"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 	"github.com/drpaneas/mtile/internal/assetsync"
 	"github.com/drpaneas/mtile/internal/transpiler"
 	"github.com/drpaneas/mtile/runtime/audio"
+	"github.com/drpaneas/mtile/runtime/gbatarget"
 )
 
 func TestGenerateTargetRemovesInheritanceAndUsesProjectStartup(t *testing.T) {
@@ -392,27 +392,33 @@ func TestSetEnvReplacesExistingEntry(t *testing.T) {
 	}
 }
 
-func validGBAHeader() []byte {
+func validGBAHeader(t *testing.T) []byte {
+	t.Helper()
+	tinygo, err := exec.LookPath("tinygo")
+	if err != nil {
+		t.Skip("GBA header fixture requires the TinyGo GBA target")
+	}
+	root, err := discoverTinyGoRoot(tinygo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logo, err := gbatarget.ToolchainLogo(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	rom := make([]byte, 0xc0)
 	rom[3] = 0xea
-	command := exec.Command("tinygo", "env", "TINYGOROOT")
-	output, err := command.Output()
-	if err == nil {
-		logo, err := gbatarget.ToolchainLogo(strings.TrimSpace(string(output)))
-		if err == nil {
-			copy(rom[4:0xa0], logo)
-		}
-	}
+	copy(rom[4:0xa0], logo)
 	rom[0xb2] = 0x96
 	rom[0xbd] = headerComplementCheck(rom)
 	return rom
 }
 
 func TestValidateROM(t *testing.T) {
-	if err := ValidateROM(validGBAHeader()); err != nil {
+	if err := ValidateROM(validGBAHeader(t)); err != nil {
 		t.Fatal(err)
 	}
-	rom := validGBAHeader()
+	rom := validGBAHeader(t)
 	rom[3] = 0
 	if err := ValidateROM(rom); err == nil {
 		t.Fatal("expected invalid entry point")
@@ -420,7 +426,7 @@ func TestValidateROM(t *testing.T) {
 }
 
 func TestValidateROMRejectsTooShortInput(t *testing.T) {
-	if err := ValidateROM(validGBAHeader()[:0xc0-1]); err == nil {
+	if err := ValidateROM(make([]byte, gbaHeaderSize-1)); err == nil {
 		t.Fatal("expected a ROM shorter than the header to be rejected")
 	}
 	if err := ValidateROM(nil); err == nil {
@@ -429,7 +435,7 @@ func TestValidateROMRejectsTooShortInput(t *testing.T) {
 }
 
 func TestValidateROMRejectsCorruptLogo(t *testing.T) {
-	rom := validGBAHeader()
+	rom := validGBAHeader(t)
 	rom[0x9f] ^= 0xff
 	if err := ValidateROM(rom); err == nil {
 		t.Fatal("expected a corrupt Nintendo logo to be rejected")
@@ -437,7 +443,7 @@ func TestValidateROMRejectsCorruptLogo(t *testing.T) {
 }
 
 func TestValidateROMRejectsWrongFixedHeaderValue(t *testing.T) {
-	rom := validGBAHeader()
+	rom := validGBAHeader(t)
 	rom[0xb2] = 0
 	if err := ValidateROM(rom); err == nil {
 		t.Fatal("expected the GBA fixed header value to be checked")
@@ -445,7 +451,7 @@ func TestValidateROMRejectsWrongFixedHeaderValue(t *testing.T) {
 }
 
 func TestValidateROMRejectsWrongComplementCheck(t *testing.T) {
-	rom := validGBAHeader()
+	rom := validGBAHeader(t)
 	rom[0xbd] ^= 0xff
 	if err := ValidateROM(rom); err == nil {
 		t.Fatal("expected the GBA header complement check to be validated")
@@ -465,7 +471,7 @@ func TestHeaderComplementCheckMatchesHandAssembledConstant(t *testing.T) {
 }
 
 func TestValidateROMRejectsOversizedCartridge(t *testing.T) {
-	rom := append(validGBAHeader(), make([]byte, maxGBAROMSize)...)
+	rom := make([]byte, maxGBAROMSize+1)
 	if err := ValidateROM(rom); err == nil {
 		t.Fatal("expected a ROM larger than 32 MiB to be rejected")
 	}

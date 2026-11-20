@@ -1,6 +1,8 @@
 # Celeste με απλή φάση parallax
 
-Αντίγραφο του `examples/celeste` για το ιδιωτικό experimental renderer:
+Το πείραμα χρησιμοποίησε τοπικό αντίγραφο του `examples/celeste` για τον
+experimental renderer. Η εντολή προϋποθέτει ότι έχεις τον κώδικα Lua
+και τα assets της έκδοσης στον ίδιο φάκελο.
 
 ```sh
 go run ./cmd/mtile edit -experimental-tilecanvas research/celeste-parallax

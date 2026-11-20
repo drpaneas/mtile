@@ -5,7 +5,8 @@
 > οι τρέχουσες μετρήσεις είναι στις
 > [σημειώσεις βελτιστοποίησης](mode0-general-optimizations-2026-09-06.md).
 
-Η έκδοση βρίσκεται στο `research/celeste-mode0`. Χρησιμοποιεί τον κανονικό
+Η μέτρηση έγινε με τοπική έκδοση στο `research/celeste-mode0`. Για την αναπαραγωγή
+χρειάζονται χωριστά ο κώδικας Lua και τα assets. Η έκδοση χρησιμοποιεί τον κανονικό
 δημόσιο renderer με `project.json: {"renderer":"mode0"}`. Δεν απαιτεί
 `-experimental-tilecanvas`, ιδιωτικά build tags ή εξαιρέσεις στον transpiler.
 Το `examples/celeste` παραμένει χωριστό.

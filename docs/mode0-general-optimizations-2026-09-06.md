@@ -1,6 +1,7 @@
 # General mtile optimizations measured with Celeste Mode 0
 
-The optimized game is `research/celeste-mode0`, using ordinary public Mode 0.
+The benchmark used a locally supplied port in `research/celeste-mode0` with
+the public Mode 0 renderer. The reproduction commands require its Lua and assets.
 The compiler and runtime changes below apply by types, dimensions and rendering
 state, without checking game names, source identifiers or particular sprite IDs.
 The original `examples/celeste` is separate. No new Lua builtin, renderer

@@ -29,7 +29,9 @@ class BundleTest(unittest.TestCase):
                      "docs/third-party/mgba.md", "cmd/mtile-player/mgba_halt_compat.cmake", "docs/third-party/tinygo.md",
                      "docs/third-party/TinyGo-LICENSE.txt", "runtime/maxmod/COPYING",
                      "docs/third-party/maxmod.md", "fonts/JetBrainsMono/OFL.txt",
-                     "fonts/OpenDyslexic/LICENSE.txt", "fonts/pico-8-wide.otf/license.txt"):
+                     "fonts/OpenDyslexic/LICENSE.txt", "fonts/pico-8-wide.otf/license.txt",
+                     "runtime/third_party/aurora/README.md", "runtime/third_party/aurora/COPYING",
+                     "runtime/third_party/aurora/pfunc_pal_Aurora11.lua"):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("fixture notice: " + name + "\n")
@@ -95,6 +97,7 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         compiler.chmod(0o755)
         (tinygo / "src/device/asm.go").touch()
         (tinygo / "targets/gameboy-advance.json").write_text("{}")
+        (tinygo / "targets/gameboy-advance.s").write_text("fixture GBA startup")
         work = output / (".build-" + platform + "-amd64")
         work.mkdir(parents=True)
         suffix = "zip" if platform == "windows" else "tar.gz"
@@ -139,8 +142,10 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         bundle = output / "mtile-linux-amd64"
         self.assertIn("Working tree: clean", (bundle / "BUILD-INFO.txt").read_text())
+        self.assertEqual((bundle / "toolchains/tinygo/targets/gameboy-advance.s").read_text(), "fixture GBA startup")
         self.assertIn("BUNDLE-README.md", (bundle / "README.md").read_text())
-        for name in ("MGBA-HALT-COMPAT.cmake", "JETBRAINS-MONO-OFL.txt", "OPENDYSLEXIC-LICENSE.txt", "PICO-8-WIDE-CC0.txt"):
+        for name in ("MGBA-HALT-COMPAT.cmake", "JETBRAINS-MONO-OFL.txt", "OPENDYSLEXIC-LICENSE.txt", "PICO-8-WIDE-CC0.txt",
+                     "aurora/README.md", "aurora/COPYING", "aurora/pfunc_pal_Aurora11.lua"):
             self.assertTrue((bundle / "licenses" / name).is_file())
         smoke_line = next(line for line in result.stdout.splitlines() if line.startswith("SMOKE: "))
         smoke = Path(smoke_line.removeprefix("SMOKE: "))

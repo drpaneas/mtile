@@ -98,10 +98,9 @@ index follow in the reading flow. Article pages keep their section table of
 contents when space permits; API identifiers and examples retain their
 monospace treatment.
 
-There is no separate Nintendo character rail, character backdrop, or mobile
-character frieze. The console and mTile's own game/editor captures carry the
-visual story. Screenshots may include third-party game content and retain its
-ownership notes.
+Use the console illustration and captures of mTile projects. Coin Quest
+appears inside the console
+and Nerdo supplies the clockwork surveyor for the editor's pose examples.
 
 ## Color, type, and depth
 
@@ -148,13 +147,10 @@ with the generated site. Original CSS illustrations, SVG icons, site
 code, and original project artwork follow the repository license; third-party
 material keeps its own rights and notices.
 
-Retain the credits link and a concise Nintendo trademark/non-affiliation notice
-on the title screen and guide pages. Game Boy Advance is a Nintendo trademark;
-mTile is an independent project and is not affiliated with or endorsed by
-Nintendo. The credits page also identifies third-party content present in game
-captures. Do not claim that attribution or a disclaimer grants a license or
-permission. Decorative Nintendo character artwork from the earlier previews
-is not part of this production design.
+Retain the credits link and the notice identifying mTile as an independent
+project and Game Boy Advance as a Nintendo trademark. Credit DawnBringer for
+the Aurora palette, keep the bundled font licenses with the site, and document
+the source project for each capture in the [media notes](../docs/media/README.md).
 
 ## Verification
 

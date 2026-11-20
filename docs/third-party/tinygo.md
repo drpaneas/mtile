@@ -11,7 +11,7 @@ target:
 
 - the TinyGo executable;
 - common TinyGo source overlays plus `device/arm` and `device/gba`;
-- `targets/gameboy-advance.json`;
+- `targets/gameboy-advance.json` and `targets/gameboy-advance.s`, which supplies the cartridge header during linking;
 - Clang resource headers, compiler-rt builtins, and picolibc inputs.
 
 TinyGo is distributed under the BSD 3-Clause license. Its complete notice is

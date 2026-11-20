@@ -1,7 +1,8 @@
 # Celeste με κανονικό Mode 0
 
-Ξεχωριστή έκδοση του `examples/celeste`, με τα τέσσερα tile backgrounds και
-προκατασκευασμένα sprite frames. Άνοιξέ την από τη ρίζα του mtile:
+Οι σημειώσεις αφορούν μια τοπική έκδοση του `examples/celeste`, με τέσσερα
+tile backgrounds και προκατασκευασμένα sprite frames. Οι εντολές προϋποθέτουν
+ότι διαθέτεις τον κώδικα Lua και τα assets της έκδοσης στον ίδιο φάκελο.
 
 ```sh
 go run ./cmd/mtile edit research/celeste-mode0

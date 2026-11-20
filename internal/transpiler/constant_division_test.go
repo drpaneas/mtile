@@ -2,12 +2,8 @@ package transpiler
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/drpaneas/mtile/internal/sourcebundle"
 )
 
 func TestConstantDivisionExactSignedRangeSamples(t *testing.T) {
@@ -213,48 +209,53 @@ func TestPow2DivisionAndModulo(t *testing.T) {
 	runGeneratedHarness(t, generated, harness, "TestPow2DivisionAndModulo")
 }
 
-func TestCelesteMode0SpecializesTileDivision(t *testing.T) {
-	dir := filepath.Join("..", "..", "research", "celeste-mode0")
-	if _, err := os.Stat(filepath.Join(dir, "game.lua")); err != nil {
-		t.Skip("celeste-mode0 example is not present")
-	}
-	bundle, err := sourcebundle.Resolve(dir, "game.lua")
-	if err != nil {
-		t.Fatal(err)
-	}
-	generated, err := Transpile(bundle.Entry, bundle.Source, Options{
-		Renderer: RendererMode0, MapW: 60, MapH: 20, MapLayers: 4, Map: make([]uint16, 60*20*4),
-		SheetW: 240, SheetH: 160,
-	})
+func TestMode0SpecializesTileAndClockArithmetic(t *testing.T) {
+	const source = `
+tick = 0
+results = {}
+function tile(n) return n / 8 + n / 32 + n % 8 end
+function sweep(n) return n % 240 end
+function seconds(n) return n / 30 + n / 60 end
+function read_value(v) return v / 8 + v % 8 + v / 1.5 end
+function _init()
+ add(results, {value=read_value(12)})
+ add(results, {value=read_value(false)})
+end
+function _update() tick += 1 end
+function _draw()
+ cls(0)
+ spr(1, tile(tick) + sweep(tick), seconds(tick))
+end`
+	generated, err := Transpile("tile-clock.lua", source, Options{Renderer: RendererMode0, SheetW: 240, SheetH: 160})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(generated, "gluNumberDivPow2(") {
-		t.Fatal("celeste-mode0 still uses generic division for integer powers of two")
+		t.Fatal("tile coordinates lost power-of-two division")
 	}
 	if !strings.Contains(generated, "gluNumberModPow2(") {
-		t.Fatal("celeste-mode0 still uses generic modulo for integer powers of two")
+		t.Fatal("tile coordinates lost power-of-two modulo")
 	}
 	if strings.Contains(generated, ").Div(rt.Number(524288))") || strings.Contains(generated, ").Div(rt.Number(2097152))") {
-		t.Fatal("celeste-mode0 left a literal /8 or /32 on the generic 64-bit path")
+		t.Fatal("literal /8 or /32 uses generic division")
 	}
 	if !strings.Contains(generated, "gluValueDivPow2(") {
-		t.Fatal("celeste-mode0 tile /8 still uses boxed Value.Div")
+		t.Fatal("boxed tile coordinate lost power-of-two division")
 	}
 	if !strings.Contains(generated, "gluValueModPow2(") {
-		t.Fatal("celeste-mode0 tile %8 still uses boxed gluMod")
+		t.Fatal("boxed tile coordinate lost power-of-two modulo")
 	}
 	if !strings.Contains(generated, "gluValueDivThreeHalves(") {
-		t.Fatal("celeste-mode0 hair /1.5 still uses boxed Value.Div")
+		t.Fatal("boxed /1.5 uses generic division")
 	}
 	if strings.Contains(generated, ").Div(rt.Number(1966080))") || strings.Contains(generated, ").Div(rt.Number(3932160))") {
-		t.Fatal("celeste-mode0 left a literal /30 or /60 on the generic 64-bit path")
+		t.Fatal("literal /30 or /60 uses generic division")
 	}
 	if !strings.Contains(generated, "int32(") || (!strings.Contains(generated, "/ 30)") && !strings.Contains(generated, "gluValueDivInt(")) {
-		t.Fatal("celeste-mode0 HUD /30 still uses generic division")
+		t.Fatal("clock /30 uses generic division")
 	}
 	if !strings.Contains(generated, "gluNumberModLit(") || !strings.Contains(generated, "15728640") {
-		t.Fatal("celeste-mode0 camera %240 still uses generic modulo")
+		t.Fatal("screen wrap %240 uses generic modulo")
 	}
 }
 

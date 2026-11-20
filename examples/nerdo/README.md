@@ -1,6 +1,6 @@
 # Poses, animation, and facing
 
-This small example draws one character using two saved clips: `idle` (four
+This small example draws a clockwork surveyor using two saved clips: `idle` (four
 poses) and `walk` (five poses), both at 6 FPS. It demonstrates animation rather
 than movement or collision: the character stays at `(100, 60)`.
 
@@ -52,5 +52,6 @@ resource and API-combination restrictions; AUTO can fall back to Mode 4.
 See [color variants](../../docs/ide.md#color-variants) and
 [the renderer contract](../../docs/render-modes.md#pose-color-variants-pvariant).
 
-This is a technical animation example, not a complete game. No additional
-rights to underlying artwork are granted by this tutorial.
+The surveyor's original artwork and its generator use the [repository's MIT
+license](../../LICENSE). To restore the supplied object tiles and poses, run
+`python3 examples/nerdo/gen_assets.py` from the repository root.

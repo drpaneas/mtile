@@ -17,6 +17,8 @@ import markdown
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "website"
+AURORA_SOURCE = ROOT / 'runtime/third_party/aurora'
+AURORA_FILES = ('README.md', 'COPYING', 'pfunc_pal_Aurora11.lua')
 REPO = "https://github.com/drpaneas/mtile"
 CATEGORIES = json.loads((SITE / "categories.json").read_text())
 APIS = json.loads((SITE / "api.json").read_text())
@@ -209,7 +211,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <div class="search-wrap"><label for="guide-search" class="sr-only">Search the guide</label>{icon('search')}<input id="guide-search" type="search" placeholder="Search a topic or function…" autocomplete="off" aria-controls="search-results"><kbd aria-hidden="true">/</kbd></div></div>
 <section id="search-results" class="search-results" hidden aria-label="Search results"><div class="search-heading"><h2>Search results</h2><button id="close-search" type="button">Close</button></div><p id="search-status" role="status" aria-live="polite"></p><ul id="search-list"></ul></section>
 <div class="page-layout{' with-toc' if rail else ''}"><main id="main" tabindex="-1">{body}</main>{rail}</div>
-<footer class="footer"><span>Made for curious game makers.</span><span>mTile is in early development. <a href="{url('guides/renderers.html')}">Know the limits.</a></span><a href="{REPO}/blob/main/LICENSE">MIT license</a><a href="{url('art-credits.html')}">Artwork credits</a></footer><p class="artwork-notice">mTile is independent and is not affiliated with, sponsored by, or endorsed by Nintendo. Game Boy Advance is a trademark of Nintendo. Third-party artwork belongs to its respective owners and is excluded from the MIT license. <a href="{url('art-credits.html')}">Sources &amp; rights</a>.</p></div>
+<footer class="footer"><span>Made for curious game makers.</span><span>mTile is in early development. <a href="{url('guides/renderers.html')}">Know the limits.</a></span><a href="{REPO}/blob/main/LICENSE">MIT license</a><a href="{url('art-credits.html')}">Artwork credits</a></footer><p class="artwork-notice">mTile is independent and is not affiliated with, sponsored by, or endorsed by Nintendo. Game Boy Advance is a trademark of Nintendo. The palette and bundled fonts have separate licenses. <a href="{url('art-credits.html')}">Sources &amp; rights</a>.</p></div>
 </body></html>'''
 
 
@@ -254,6 +256,9 @@ def build(output):
     shutil.copyfile(ROOT / 'fonts/JetBrainsMono/JetBrainsMono-Regular.ttf', output / 'assets/JetBrainsMono-Regular.ttf')
     shutil.copyfile(ROOT / 'fonts/JetBrainsMono/OFL.txt', output / 'assets/FONT-LICENSE.txt')
     media = output / 'assets'
+    (media / 'aurora').mkdir()
+    for filename in AURORA_FILES:
+        shutil.copyfile(AURORA_SOURCE / filename, media / 'aurora' / filename)
     shutil.copyfile(ROOT / 'docs/media/coin-quest/preview.png', media / 'coin-quest.png')
     shutil.copyfile(ROOT / 'docs/media/background-layers.png', media / 'background-layers.png')
     search = []
@@ -313,7 +318,22 @@ def build(output):
         toc = '<ul><li><a href="#common-use">Common use</a></li><li><a href="#example">Example</a></li><li><a href="#remember">Keep in mind</a></li><li><a href="#next">Keep exploring</a></li></ul>'
         write(page, api['name'] + '()', api['summary'], body, api['category'], toc, 'api')
     credits = page_heading('Credits & rights', 'The tools, type, captures, and names behind this little world.')
-    credits += '<article class="prose"><h2 id="mtile">mTile</h2><p>The application and website use the same mTile logo. The title-screen handheld is a CSS illustration; Coin Quest captures show an actual mTile ROM. Original project code and artwork are covered by the <a href="' + REPO + '/blob/main/LICENSE">project MIT license</a>, except where separate notices identify third-party material.</p><h2 id="fonts">Fonts</h2><ul><li><a href="https://github.com/google/fonts/tree/main/ofl/rubik">Rubik</a>: <a href="assets/RUBIK-OFL.txt">SIL Open Font License</a>.</li><li><a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono</a>: <a href="assets/FONT-LICENSE.txt">SIL Open Font License</a>.</li></ul><h2 id="third-party">Nintendo &amp; other third-party material</h2><p>mTile is an independent project and is not affiliated with, sponsored by, or endorsed by Nintendo. Nintendo and Game Boy Advance are trademarks of Nintendo. Nintendo characters and artwork visible within documented example games or editor captures remain © Nintendo; other third-party artwork belongs to its respective owners. These materials are excluded from mTile’s MIT license.</p><p>The title screen and guide decoration do not use Nintendo character illustrations. Attribution is not a license or permission to reuse third-party artwork. No permission from Nintendo is claimed.</p><p>See the <a href="' + REPO + '/blob/main/docs/third-party/README.md">project third-party notices</a> and the source documentation accompanying individual examples for additional ownership and license information.</p></article>'
+    credits += f'''<article class="prose">
+        <h2 id="mtile">mTile artwork</h2>
+        <p>The handheld on the title screen is a CSS illustration carrying the editor’s mTile logo.
+        Its screen shows <a href="guides/first-game.html">Coin Quest</a>. The Sprite Lab examples
+        show the clockwork surveyor drawn by the <a href="{REPO}/blob/main/examples/nerdo/gen_assets.py">Nerdo generator</a>.
+        These original project assets use the <a href="{REPO}/blob/main/LICENSE">mTile MIT license</a>.</p>
+        <p>The editor uses <a href="https://lospec.com/palette-list/aurora">Aurora by DawnBringer</a>.
+        The palette’s <a href="assets/aurora/pfunc_pal_Aurora11.lua">original source</a> and
+        <a href="assets/aurora/COPYING">GPLv2 license</a> accompany the site.
+        The <a href="{REPO}/blob/main/docs/media/README.md">capture notes</a> identify the games and editor views on the guide pages.</p>
+        <h2 id="fonts">Fonts</h2>
+        <ul><li><a href="https://github.com/google/fonts/tree/main/ofl/rubik">Rubik</a> · <a href="assets/RUBIK-OFL.txt">SIL Open Font License</a></li>
+        <li><a href="https://www.jetbrains.com/lp/mono/">JetBrains Mono</a> · <a href="assets/FONT-LICENSE.txt">SIL Open Font License</a></li></ul>
+        <h2 id="third-party">Names and project notices</h2>
+        <p>mTile is an independent homebrew project. Nintendo and Game Boy Advance are trademarks of Nintendo.
+        The <a href="{REPO}/blob/main/docs/third-party/README.md">component notices</a> credit the tools and libraries used by mTile.</p></article>'''
     write('art-credits.html', 'Credits & rights', 'Sources and licenses for mTile artwork, fonts, captures, and third-party names.', credits)
 
     learn = page_heading('Small steps. A real game.', 'Start with something playable, then learn how each piece works.')

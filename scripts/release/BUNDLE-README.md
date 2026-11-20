@@ -43,4 +43,6 @@ reporting a problem. A bundle marked “modified” was built from a development
 working tree rather than a clean revision.
 
 Mtile's own code is MIT licensed; see `LICENSE`. Third-party notices, including
-the compiler, emulator, and embedded fonts, are in `licenses/`.
+the compiler, emulator, and embedded fonts, are in `licenses/`. When sharing
+a ROM containing the Aurora palette, include its source, notice and GPLv2
+license from `licenses/aurora/`.

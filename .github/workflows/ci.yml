@@ -23,6 +23,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Check committed assets
+        run: |
+          python3 scripts/check_commit_assets.py
+          python3 scripts/check_commit_assets_test.py
       - name: Check documentation links and checker regressions
         run: |
           python3 scripts/docs/check_links.py

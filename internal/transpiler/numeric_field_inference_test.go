@@ -354,7 +354,7 @@ func TestCelesteExamplesDropNumericCoercionWrappers(t *testing.T) {
 	}
 	found := false
 	for _, root := range roots {
-		if _, err := os.Stat(root); err != nil {
+		if _, err := os.Stat(filepath.Join(root, "game.lua")); err != nil {
 			continue
 		}
 		found = true

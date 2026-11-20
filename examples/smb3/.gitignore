@@ -2,16 +2,8 @@
 *.sav
 __pycache__/
 /course_data.lua
-/assets/map.json
-/assets/spritesheet.json
-/assets/objsheet.json
-/assets/poses.json
-/assets/animation.json
-/assets/palettes/smb3.json
-/assets/palettes/aurora.json
-/assets/audio/music.json
-/assets/audio/settings.json
-/assets/audio/sounds.json
+# Every asset in this project is produced by a local cartridge import.
+/assets/
 /.smb3-import-*/
 artifacts/
 studies/

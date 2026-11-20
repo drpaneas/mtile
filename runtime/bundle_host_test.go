@@ -14,7 +14,10 @@ func TestMaterializeSource(t *testing.T) {
 	if err := MaterializeSource(directory); err != nil {
 		t.Fatal(err)
 	}
-	for _, path := range []string{"go.mod", "context.go", "audio/native_controller.go", "hw/psg.go", "crt0/gba.s", "crt0/gba.ld"} {
+	for _, path := range []string{
+		"go.mod", "context.go", "audio/native_controller.go", "hw/psg.go", "crt0/gba.s", "crt0/gba.ld",
+		"third_party/aurora/README.md", "third_party/aurora/COPYING", "third_party/aurora/pfunc_pal_Aurora11.lua",
+	} {
 		info, err := os.Stat(filepath.Join(directory, path))
 		if err != nil || info.IsDir() {
 			t.Fatalf("materialized %s: info=%v err=%v", path, info, err)

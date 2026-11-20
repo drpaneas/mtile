@@ -143,3 +143,5 @@ The frozen runtime copies, linked ROMs, ELF files and maps are retained under
 `/tmp/mtile-go-weekly-loop/hash-fingerprint/`; large binaries are not checked in.
 In particular, `native/collision-mode0/{baseline,candidate}/game.{elf,map}` is
 the real code-change pair reserved for the subsequent ELF attribution experiment.
+
+The camera timings and frame checksums describe the original test fixture. Its screenshots are omitted from the public record. The current test fixture uses original geometric tiles.

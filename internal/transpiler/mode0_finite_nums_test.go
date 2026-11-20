@@ -1,12 +1,11 @@
 package transpiler
 
 import (
-	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/luaparser"
-	"github.com/drpaneas/mtile/internal/sourcebundle"
 )
 
 func TestMode0FiniteNumsProvePublicBuiltinAndUserHelpers(t *testing.T) {
@@ -177,37 +176,37 @@ end
 	}
 }
 
-func TestMode0FiniteNumsProveCelesteSpriteFields(t *testing.T) {
-	dir := filepath.Join("..", "..", "research", "celeste-mode0")
-	bundle, err := sourcebundle.Resolve(dir, "game.lua")
-	if err != nil {
-		t.Fatal(err)
-	}
-	chunk, err := luaparser.ParseString(bundle.Entry, bundle.Source)
+func TestMode0FiniteNumsProveSpriteFieldWrites(t *testing.T) {
+	const source = `
+marker = {sprite=2}
+function _update()
+  if btn(0) then marker.sprite=5 else marker.sprite=7 end
+end
+function _draw()
+  cls(0)
+  spr(marker.sprite, 16, 24)
+end`
+	chunk, err := luaparser.ParseString("marker.lua", source)
 	if err != nil {
 		t.Fatal(err)
 	}
 	eval := newMode0NumEval(chunk, newMode0SpriteIDAnalysis(chunk))
 	sprite, ok := eval.field("sprite")
-	if !ok {
-		t.Fatalf("field sprite was not a finite set")
+	slices.Sort(sprite)
+	if !ok || !slices.Equal(sprite, []float64{2, 5, 7}) {
+		t.Fatalf("field sprite = %v, proven=%v, want exactly 2, 5 and 7", sprite, ok)
 	}
-	_, report, err := TranspileWithReport(bundle.Entry, bundle.Source, Options{
-		Renderer:  RendererMode0,
-		SheetW:    240,
-		SheetH:    160,
-		MapW:      60,
-		MapH:      20,
-		MapLayers: 4,
-		Map:       nonEmptyMap(60, 20, 4, 0, 1, 2, 3),
+	_, report, err := TranspileWithReport("marker.lua", source, Options{
+		Renderer: RendererMode0,
+		SheetW:   240,
+		SheetH:   160,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if report.Selected != RendererMode0 || !report.Mode0Objects {
-		t.Fatalf("celeste-mode0 report = %+v, want Mode 0 objects", report)
+		t.Fatalf("report = %+v, want Mode 0 objects", report)
 	}
-	t.Logf("sprite=%v celeste-mode0 OAM=%d line=%d", sprite, report.Mode0OAMEntries, report.Mode0OBJLineCycles)
 }
 
 func TestMode0HelperSprShapes(t *testing.T) {

@@ -23,8 +23,8 @@
 _start:
     b       start_vector
 
-    // Supply the 156-byte GBA header field from your local toolchain.
-    .incbin "mtile-gba-logo.bin"
+    // The target generator fills this field from the installed TinyGo toolchain.
+    .error "generate the GBA target before assembling this startup"
 
     // Game title
     .byte 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00

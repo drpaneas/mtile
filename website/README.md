@@ -5,8 +5,8 @@ course, full-text search, and links back to the project's maintained guides.
 The category-first navigation is inspired by the
 [Nerdy Teachers guide](https://nerdyteachers.com/PICO-8/Guide/); its text,
 images, icons, and CSS are not copied. mTile keeps its own identity and actual
-game/editor captures. An indigo handheld title screen opens into the guide;
-third-party game content in captures is credited separately.
+game/editor captures. An indigo handheld title screen opens into the guide.
+The credits page identifies the artwork, palette and fonts used on the site.
 
 ## Build and preview
 
@@ -124,8 +124,8 @@ There is one logo: the application asset at
 `cmd/editor/assets/mtile-header.png`, copied into the website at build time. Do
 not create a separate menu or website wordmark. The console illustration is
 CSS, the topic icons are original SVG, and the demo screen contains an actual
-Coin Quest ROM capture. The production theme does not use the decorative
-Nintendo character artwork from earlier style previews.
+Coin Quest ROM capture. The Sprite Lab
+captures use the original [clockwork surveyor generator](../examples/nerdo/gen_assets.py).
 
 Rubik supplies title-screen body text and guide display headings; guide prose
 and controls use Trebuchet MS / Segoe UI / system sans-serif. JetBrains Mono
@@ -135,12 +135,10 @@ SIL Open Font License notice are copied from the repository during the build.
 No external font service is required.
 
 Original site code and original project artwork follow the repository's
-[MIT license](../LICENSE). Third-party content retains its own rights; the
-project license does not cover Nintendo characters or other third-party game
-artwork present in screenshots. The title screen and guide pages retain a
-credits link and a Nintendo trademark/non-affiliation notice. Attribution and
-disclaimers do not grant permission to reuse third-party material. Additional
-component attribution remains in the [project notices](../docs/third-party/README.md).
+[MIT license](../LICENSE). The editor uses [DawnBringer's Aurora palette](https://lospec.com/palette-list/aurora).
+The [capture notes](../docs/media/README.md) identify the projects shown in the editor.
+The title screen and guide pages link to credits and identify Game Boy Advance as a Nintendo trademark.
+The [project notices](../docs/third-party/README.md) cover bundled components.
 
 The [content review](../docs/website-content-review.md) records factual corrections,
 implementation evidence, and the limits of automated verification. Run the

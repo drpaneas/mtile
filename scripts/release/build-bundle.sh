@@ -92,6 +92,7 @@ done
 cp "$TINYGO_FULL/src/device/asm.go" "$TINYGO_GBA/src/device/asm.go"
 cp -R "$TINYGO_FULL/src/device/arm" "$TINYGO_GBA/src/device/arm"
 cp -R "$TINYGO_FULL/src/device/gba" "$TINYGO_GBA/src/device/gba"
+cp "$TINYGO_FULL/targets/gameboy-advance.s" "$TINYGO_GBA/targets/gameboy-advance.s"
 cp "$TINYGO_FULL/targets/gameboy-advance.json" "$TINYGO_GBA/targets/gameboy-advance.json"
 mv "$TINYGO_GBA" "$BUNDLE/toolchains/tinygo"
 "$BUNDLE/toolchains/tinygo/bin/tinygo$EXE" version | grep "tinygo version $TINYGO_VERSION"
@@ -107,6 +108,10 @@ cp "$ROOT/docs/third-party/maxmod.md" "$BUNDLE/licenses/MAXMOD-NOTICE.md"
 cp "$ROOT/fonts/JetBrainsMono/OFL.txt" "$BUNDLE/licenses/JETBRAINS-MONO-OFL.txt"
 cp "$ROOT/fonts/OpenDyslexic/LICENSE.txt" "$BUNDLE/licenses/OPENDYSLEXIC-LICENSE.txt"
 cp "$ROOT/fonts/pico-8-wide.otf/license.txt" "$BUNDLE/licenses/PICO-8-WIDE-CC0.txt"
+mkdir -p "$BUNDLE/licenses/aurora"
+for name in README.md COPYING pfunc_pal_Aurora11.lua; do
+  cp "$ROOT/runtime/third_party/aurora/$name" "$BUNDLE/licenses/aurora/"
+done
 cp "$ROOT/scripts/release/BUNDLE-README.md" "$BUNDLE/README.md"
 cp "$ROOT/LICENSE" "$BUNDLE/LICENSE"
 

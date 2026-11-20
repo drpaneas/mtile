@@ -15,6 +15,7 @@ import (
 // relying on the original Mtile source checkout.
 //
 //go:embed go.mod LICENSE crt0/gba.s crt0/gba.ld *.go audio/*.go hw/*.go maxmod
+//go:embed third_party/aurora/README.md third_party/aurora/COPYING third_party/aurora/pfunc_pal_Aurora11.lua
 var runtimeSource embed.FS
 
 // MaterializeSource writes the embedded runtime module below destination.

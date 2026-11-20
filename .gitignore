@@ -2,13 +2,57 @@
 runtime/target-gba.json
 runtime/target-gba-smoke.json
 runtime/crt0/gba-smoke.s
+.mtile-crt0/
 
 # Local research checkouts (not part of the published tree)
 /celeste
 /BPCore-Engine
 /gb-studio
 /Pico-8
+/research/nerdy-teachers-guide/
 /examples/celeste
+/examples/smb4/
+/examples/celeste-mode0/
+/examples/celeste-parallax/
+/examples/loop/
+/examples/audio-zelda-fortune-teller/
+/examples/audio-zelda-underworld/
+/examples/gb-studio-music-study/
+/examples/alexandra/
+/research/celeste-mode0/assets/
+/research/celeste-mode0/src/
+/research/celeste-mode0/game.lua
+/research/celeste-parallax/assets/
+/research/celeste-parallax/src/
+/research/celeste-parallax/game.lua
+/research/loop/
+/docs/benchmarks/celeste-parallax-2026-09-08/*.png
+/docs/benchmarks/celeste-parallax-2026-09-08/source-change.diff
+/docs/benchmarks/fonts/mode0-text/packed/*.png
+/docs/benchmarks/fonts/mode0-text/pico8/*.png
+/docs/design/scene-layers-parallax-concept-v2.png
+/docs/design/tile-types-map-lab-concept.png
+/docs/design/tile-types-sprite-lab-concept.png
+
+/docs/benchmarks/go-weekly/hash-fingerprint/native/camera-mode[04]/*.png
+mtile-gba-logo.bin
+
+# Cartridge dumps, BIOS images, save states and Learn recordings
+*.[gG][bB][aA]
+*.[gG][bB]
+*.[gG][bB][cC]
+*.[nN][eE][sS]
+*.[sS][fF][cC]
+*.[sS][mM][cC]
+*.[nN][dD][sS]
+*.[rR][oO][mM]
+*.[pP]8
+*.[pP]8.[pP][nN][gG]
+*.[bB][iI][oO][sS]
+*.[sS][sS][0-9]
+*_[bB][iI][oO][sS].[bB][iI][nN]
+[bB][iI][oO][sS].[bB][iI][nN]
+studies/
 
 # Locally built binaries
 /mtile
@@ -17,7 +61,6 @@ runtime/crt0/gba-smoke.s
 /editor.test
 
 # Build artifacts
-*.gba
 *.elf
 *.map
 *.sav
@@ -35,6 +78,8 @@ __pycache__/
 .qodo/
 .superpowers/
 .agents/
+/.impeccable/
+/script.sh
 
 # Static guide build and local Python environment
 /website/_site/

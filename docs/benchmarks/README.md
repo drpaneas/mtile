@@ -35,9 +35,9 @@ record names one of the old paths, use the current location below.
 | `examples/multi-return-physics-stress` | [`testdata/projects/multi-return-physics-stress`](../../testdata/projects/multi-return-physics-stress) |
 | `examples/noalloc-call-stress` | [`testdata/projects/noalloc-call-stress`](../../testdata/projects/noalloc-call-stress) |
 | `examples/parallax-rectangles` | [`testdata/projects/parallax-rectangles`](../../testdata/projects/parallax-rectangles) |
-| `examples/celeste-mode0` | [`research/celeste-mode0`](../../research/celeste-mode0) |
-| `examples/celeste-parallax` | [`research/celeste-parallax`](../../research/celeste-parallax) |
-| `examples/loop` | [`research/loop`](../../research/loop) |
+| `examples/celeste-mode0` | [Research notes](../../research/celeste-mode0/README.md), port supplied locally |
+| `examples/celeste-parallax` | [Research notes](../../research/celeste-parallax/README.md), port supplied locally |
+| `examples/loop` | Local input for the historical image-import measurement |
 | `examples/multimap`, `examples/print` | Removed; recover from git history if needed |
 
 See [engineering fixtures](../../testdata/projects/README.md) and
