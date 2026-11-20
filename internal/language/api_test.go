@@ -9,9 +9,6 @@ import (
 
 func TestReferenceCoversSupportedBuiltins(t *testing.T) {
 	for name := range transpiler.Builtins {
-		if name == "sample" { // Removed Audio v1 API, kept for its diagnostic.
-			continue
-		}
 		entry, ok := Lookup(name)
 		if !ok || entry.Signature == "" || entry.Summary == "" {
 			t.Errorf("missing help for builtin %s", name)
@@ -21,8 +18,8 @@ func TestReferenceCoversSupportedBuiltins(t *testing.T) {
 	if len(entries) != 2 || entries[0].Name != "sset" || entries[1].Name != "sspr" {
 		t.Fatalf("completion = %+v", entries)
 	}
-	if _, ok := Lookup("sample"); ok {
-		t.Fatal("removed PCM API is suggested")
+	if got := Complete("samp"); len(got) != 1 || got[0].Name != "sample" {
+		t.Errorf("completion for samp = %+v, want sample", got)
 	}
 }
 

@@ -32,8 +32,7 @@ func loadReference() map[string]Entry {
 }
 
 // Complete intentionally offers supported builtins, without depending on a
-// successful parse of the buffer being edited. sample is retained by the
-// compiler only to diagnose removed PCM audio and must not be suggested.
+// successful parse of the buffer being edited.
 func Complete(prefix string) []Entry {
 	result := []Entry{}
 	for name := range transpiler.Builtins {
