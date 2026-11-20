@@ -6,7 +6,7 @@ on:
     paths:
       - 'website/**'
       - 'docs/**'
-      - 'examples/README.md'
+      - 'examples/**'
       - 'internal/build/templates/**'
       - 'internal/transpiler/transpiler.go'
       - 'internal/transpiler/render_modes.go'
@@ -18,7 +18,7 @@ on:
     paths:
       - 'website/**'
       - 'docs/**'
-      - 'examples/README.md'
+      - 'examples/**'
       - 'internal/build/templates/**'
       - 'internal/transpiler/transpiler.go'
       - 'internal/transpiler/render_modes.go'
@@ -30,6 +30,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -52,3 +56,25 @@ jobs:
           path: website/_site/
           include-hidden-files: true
           if-no-files-found: error
+      - name: Package site for GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/_site
+          include-hidden-files: true
+
+  deploy:
+    name: Deploy guide to GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish site
+        id: deployment
+        uses: actions/deploy-pages@v5

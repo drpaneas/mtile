@@ -129,9 +129,8 @@ benchmarks and research projects.
 
 ## Documentation and contributions
 
-The [static guide website](website/README.md) brings the tutorials and API
-reference together with category browsing and search. Build it locally or host
-the generated files on any static host.
+Browse the tutorials and search the Lua API in the [mTile guide](https://drpaneas.com/mtile/).
+The [website README](website/README.md) explains how to build and preview it locally.
 
 - [Getting started](docs/getting-started.md): installation, first ROM, and editor preview.
 - [IDE guide](docs/ide.md): sprite, map, audio, and code controls.

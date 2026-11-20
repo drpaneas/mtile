@@ -99,18 +99,13 @@ changes, and exercise title-menu selection, direct guide entry, search, copy,
 and the topic menu with the keyboard. Menu links work without JavaScript; its
 script adds Arrow Up/Down and Home/End focus navigation.
 
-The **Website** GitHub Actions workflow builds and tests the site and uploads
-an `mtile-guide` artifact. It does not publish it automatically.
-
 ## Hosting
 
-Upload the **contents** of `website/_site/` to any static host, including GitHub
-Pages. Keep `.nojekyll` if using GitHub Pages. The build has no host-specific
-configuration, routing rewrites, or backend endpoint requirements.
-
-A real domain, canonical URL, sitemap, and public deployment can be configured
-once the publishing destination is chosen. The local preview is not a public
-release, and no repository Pages settings are changed by this build.
+The [live mTile guide](https://drpaneas.com/mtile/) is hosted on GitHub Pages.
+The **Website** workflow builds and tests changes to the site and its inputs.
+Pull requests produce a downloadable `mtile-guide` preview. On `main`, a
+successful build also publishes `website/_site/` to the `github-pages`
+environment. To republish, run the workflow manually on `main`.
 
 ## Design and licensing
 
