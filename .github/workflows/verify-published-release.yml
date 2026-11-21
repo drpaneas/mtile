@@ -1,0 +1,99 @@
+name: Verify published desktop release
+run-name: Verify public downloads for ${{ github.event.release.tag_name || inputs.release_tag }}
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published release tag to verify
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+
+jobs:
+  verify:
+    name: Public download (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {target: windows-amd64, runner: windows-2022, ext: zip}
+          - {target: linux-amd64, runner: ubuntu-24.04, ext: tar.gz}
+          - {target: linux-arm64, runner: ubuntu-24.04-arm, ext: tar.gz}
+          - {target: darwin-amd64, runner: macos-15-intel, ext: zip}
+          - {target: darwin-arm64, runner: macos-15, ext: zip}
+    env:
+      TARGET: ${{ matrix.target }}
+      ARCHIVE: mtile-${{ matrix.target }}.${{ matrix.ext }}
+    steps:
+      - &checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          sparse-checkout: scripts/release
+          persist-credentials: false
+      - &python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - &download
+        name: Download public release assets
+        shell: bash
+        run: |
+          case "$RELEASE_TAG" in ''|.|..) echo 'Expected a release tag' >&2; exit 1 ;; esac
+          tag=$(python -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["RELEASE_TAG"], safe=""))')
+          base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$tag"
+          files=(examples.sha256)
+          if [[ -n "${ARCHIVE:-}" ]]; then files+=("$ARCHIVE" "$ARCHIVE.sha256"); fi
+          mkdir -p downloads
+          for file in "${files[@]}"; do
+            echo "Downloading $base/$file"
+            curl -q --fail --silent --show-error --location --retry 3 --retry-all-errors \
+              --output "downloads/$file" "$base/$file"
+          done
+      - name: Enable Windows Firewall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
+      - name: Build offline and check each ROM with the bundle guide
+        shell: bash
+        run: |
+          args=(scripts/release/verify_published.py "downloads/$ARCHIVE" --target "$TARGET"
+                --manifest downloads/examples.sha256 --output "results/$TARGET.json")
+          case "$RUNNER_OS" in
+            Linux) sudo unshare --net -- sudo -u "$(id -un)" "$(command -v python)" "${args[@]}" ;;
+            macOS) sandbox-exec -p '(version 1) (allow default) (deny network*)' python "${args[@]}" ;;
+            Windows) python "${args[@]}" --block-windows-network ;;
+            *) exit 1 ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: measured-${{ matrix.target }}
+          path: results/${{ matrix.target }}.json
+          if-no-files-found: error
+          overwrite: true
+
+  compare:
+    name: Compare all 100 ROMs with the published checksums
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - *checkout
+      - *python
+      - *download
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: measured-*
+          path: results
+      - name: Report the SHA-256 for each example
+        run: |
+          python scripts/release/published_checksums.py results downloads/examples.sha256 --summary "$GITHUB_STEP_SUMMARY"

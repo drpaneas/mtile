@@ -116,6 +116,20 @@ project with an edited Lua file to exercise returning players' changes.
 Both use the editor's **Export .gba** button and verify the new speed by
 playing the exported ROM.
 
+## Verify a published release
+
+Publishing a GitHub release starts [Verify published desktop release](../../.github/workflows/verify-published-release.yml).
+Each of the five native runners downloads its desktop archive, the matching
+archive checksum and `examples.sha256` from that tag's public release page.
+It checks the archive, puts the bundled CLI on PATH and builds all 20 standalone
+examples offline from the extracted folder. Each ROM is checked with the
+[commands in the bundle guide](BUNDLE-README.md#verify-a-built-example).
+
+The final job compares all 100 results with the public manifest and lists the
+size and SHA-256 of each ROM in the run summary. To repeat the check for an
+existing release with an `examples.sha256` asset, choose **Run workflow** on
+`main` and enter its tag.
+
 ## Before distributing a bundle
 
 Use a clean revision and run the project's [release checklist](../../docs/launch-checklist.md).

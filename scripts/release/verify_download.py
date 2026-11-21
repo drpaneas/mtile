@@ -58,23 +58,30 @@ def desktop_env(home):
 
 
 @contextmanager
-def windows_offline(install, enabled):
+def windows_offline(install, enabled, shell_programs=()):
     if not enabled:
         yield
         return
     if os.name != "nt":
         raise ValueError("--block-windows-network requires Windows")
     # Restrict the extracted programs. The Actions runner keeps its own connection.
-    env = dict(os.environ, MTILE_TEST_INSTALL=str(install), MTILE_FIREWALL_GROUP=install.parent.name)
+    env = dict(os.environ, MTILE_TEST_INSTALL=str(install), MTILE_FIREWALL_GROUP=install.parent.name,
+               MTILE_TEST_SHELLS=os.pathsep.join(map(str, shell_programs)))
     shell = ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command"]
     add = """
 $ErrorActionPreference = 'Stop'
-if (Get-NetFirewallProfile | Where-Object { -not $_.Enabled }) {
+if (Get-NetFirewallProfile -PolicyStore ActiveStore | Where-Object { $_.Enabled -ne 'True' }) {
     throw 'The offline test requires Windows Firewall to be enabled'
 }
-Get-ChildItem -LiteralPath $env:MTILE_TEST_INSTALL -Recurse -File -Filter '*.exe' | ForEach-Object {
-    New-NetFirewallRule -DisplayName $_.Name -Group $env:MTILE_FIREWALL_GROUP -Program $_.FullName -Direction Outbound -Action Block -Profile Any | Out-Null
+$programs = @(Get-ChildItem -LiteralPath $env:MTILE_TEST_INSTALL -Recurse -File -Filter '*.exe' | ForEach-Object { $_.FullName })
+if ($env:MTILE_TEST_SHELLS) { $programs += $env:MTILE_TEST_SHELLS.Split(';') }
+foreach ($program in $programs) {
+    New-NetFirewallRule -DisplayName ([IO.Path]::GetFileName($program)) -Group $env:MTILE_FIREWALL_GROUP -Program $program -Direction Outbound -Action Block -Profile Any | Out-Null
 }
+$active = @(Get-NetFirewallRule -PolicyStore ActiveStore -Group $env:MTILE_FIREWALL_GROUP | Where-Object {
+    $_.Enabled -eq 'True' -and $_.Direction -eq 'Outbound' -and $_.Action -eq 'Block'
+})
+if ($active.Count -ne $programs.Count) { throw 'Incomplete outbound firewall rules' }
 """
     remove = "Get-NetFirewallRule -Group $env:MTILE_FIREWALL_GROUP -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction Stop"
     try:
