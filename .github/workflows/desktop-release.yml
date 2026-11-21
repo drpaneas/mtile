@@ -86,7 +86,15 @@ jobs:
           sudo unshare --net -- sudo -u "$(id -un)" xvfb-run -a \
             "$(command -v python3)" scripts/release/verify_download.py "$ARCHIVE" --launch
           sudo unshare --net -- sudo -u "$(id -un)" \
-            "$(command -v python3)" scripts/release/verify_linux_gui.py "$ARCHIVE"
+            "$(command -v python3)" scripts/release/verify_linux_gui.py "$ARCHIVE" --failure-frame "$RUNNER_TEMP/coin-quest.xwd"
+      - name: Save the Linux editor screen if its GUI check fails
+        if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui-failure-${{ matrix.target }}
+          path: ${{ runner.temp }}/coin-quest.xwd
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Enable outbound firewall rules on the disposable Windows runner
         if: runner.os == 'Windows'
         shell: pwsh
@@ -119,6 +127,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: downloads
+          pattern: mtile-*
           merge-multiple: true
       - name: Verify and attach downloads to a draft
         working-directory: downloads

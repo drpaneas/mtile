@@ -2,9 +2,11 @@
 
 import argparse
 from contextlib import contextmanager, suppress
+from difflib import unified_diff
 import os
 from pathlib import Path
 import select
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -14,11 +16,11 @@ from verify_download import desktop_env, explorer_position, player_started, unpa
 
 
 @contextmanager
-def private_display():
+def private_display(frame_dir):
     # Xvfb chooses a free display and writes its number when it is ready.
     # The editor and xdotool only see this test's server.
     with subprocess.Popen(["Xvfb", "-displayfd", "1", "-screen", "0", "1920x1200x24",
-                           "-dpi", "96", "-nolisten", "tcp"], stdout=subprocess.PIPE) as server:
+                           "-dpi", "96", "-nolisten", "tcp", "-fbdir", str(frame_dir)], stdout=subprocess.PIPE) as server:
         try:
             if not select.select([server.stdout], [], [], 20)[0]:
                 raise RuntimeError("Xvfb did not start")
@@ -30,7 +32,7 @@ def private_display():
             server.terminate()
 
 
-def verify(archive, work, display):
+def verify(archive, work, display, failure_frame=None):
     install = work / "Moved Desktop Download"
     install.mkdir()
     launcher, tools, rom = unpack(archive, install)
@@ -59,22 +61,22 @@ def verify(archive, work, display):
         result.check_returncode()
         return next(iter(result.stdout.splitlines()), None)
 
-    def key(name, ctrl=False):
-        if ctrl:
-            xdo("keydown", "Control_L")
-            time.sleep(0.1)
+    def key(name, modifier=None):
+        if modifier:
+            xdo("keydown", modifier)
+            time.sleep(0.2)
         xdo("keydown", name)
         time.sleep(0.13)
         xdo("keyup", name)
-        if ctrl:
-            xdo("keyup", "Control_L")
+        if modifier:
+            xdo("keyup", modifier)
         time.sleep(0.15)
 
     def click(window, x, y):
         xdo("mousemove", "--window", window, x, y)
         time.sleep(0.15)
         xdo("mousedown", "1")
-        time.sleep(0.14)
+        time.sleep(0.35)
         xdo("mouseup", "1")
         time.sleep(0.2)
 
@@ -95,25 +97,35 @@ def verify(archive, work, display):
         try:
             wait_for("starter preview", lambda: player_started(editor), 90)
             window = wait_for("visible Coin Quest editor window", editor_window, 90)
-            xdo("windowfocus", window)
+            xdo("windowfocus", "--sync", window)
             xdo("windowsize", window, 1920, 1200)
             wait_for("1920x1200 editor window",
                      lambda: "Geometry: 1920x1200" in xdo("getwindowgeometry", window), 10)
-            time.sleep(1)
             source = lua.read_text(encoding="utf-8")
             lines = source.splitlines()
             if lines.count("speed = 2") != 1:
                 raise ValueError("expected one Coin Quest speed setting")
-            click(window, 350, 250)  # Lua source pane
-            key("Home", ctrl=True)
-            for _ in range(lines.index("speed = 2")):
-                key("Down")
-            key("End")
-            key("BackSpace")
-            key("3")
-            key("s", ctrl=True)
             expected = source.replace("speed = 2", "speed = 3", 1)
-            wait_for("saved speed edit", lambda: lua.read_text(encoding="utf-8") == expected, 15)
+            # In the default 1920x1200 Develop layout, the first line starts
+            # at y=155 and rows are 20 px tall. Clicking after this short line
+            # places the caret at its end regardless of the previous selection.
+            line_y = 165 + 20 * lines.index("speed = 2")
+            for attempt in range(5):
+                click(window, 500, line_y)
+                key("Left", "Shift_L")
+                key("3")
+                key("s", "Control_L")
+                time.sleep(1)
+                saved = lua.read_text(encoding="utf-8")
+                if saved == expected:
+                    break
+                if saved != source:
+                    diff = "".join(unified_diff(expected.splitlines(True), saved.splitlines(True),
+                                                fromfile="expected/game.lua", tofile="saved/game.lua"))
+                    raise RuntimeError("the editor saved a different Lua edit:\n" + diff)
+                print(f"Attempt {attempt + 1}: the editor has not saved the speed edit yet.", flush=True)
+            else:
+                raise RuntimeError("the Lua file still matches the original after five GUI save attempts")
             click(window, 1175, 699)  # Export .gba at 1920x1200
             exported = wait_for("exported cartridge",
                                 lambda: next(project.glob("export-*/game.gba"), None), 600)
@@ -124,6 +136,11 @@ def verify(archive, work, display):
                 raise ValueError(f"GUI export did not move faster: {baseline} -> {edited}")
             print(f"Develop saved speed 3 and exported {exported.stat().st_size} bytes. "
                   f"Right for 16 frames: {baseline} -> {edited}.")
+        except Exception:
+            frame = work / "Xvfb_screen0"
+            if failure_frame and frame.is_file():
+                shutil.copyfile(frame, failure_frame)
+            raise
         finally:
             # Reap the private session even if an export or background compiler
             # is still writing into the temporary user's cache after a failure.
@@ -134,6 +151,7 @@ def verify(archive, work, display):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
+    parser.add_argument("--failure-frame", type=Path, help="save the private X11 screen on failure (XWD)")
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix="mtile-gui-test-") as temp, private_display() as display:
-        verify(args.archive.resolve(), Path(temp), display)
+    with tempfile.TemporaryDirectory(prefix="mtile-gui-test-") as temp, private_display(Path(temp)) as display:
+        verify(args.archive.resolve(), Path(temp), display, args.failure_frame)
