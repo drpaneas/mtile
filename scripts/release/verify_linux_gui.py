@@ -105,15 +105,13 @@ def verify(archive, work, display, failure_frame=None):
             lines = source.splitlines()
             if lines.count("speed = 2") != 1:
                 raise ValueError("expected one Coin Quest speed setting")
-            expected = source.replace("speed = 2", "speed = 3", 1)
-            # In the default 1920x1200 Develop layout, the first line starts
-            # at y=155 and rows are 20 px tall. Clicking after this short line
-            # places the caret at its end regardless of the previous selection.
+            expected = source.replace("speed = 2", "speed = 2+1", 1)
+            # The first Develop row starts at y=155, and rows are 20 px tall.
+            # A click beyond the speed setting puts the caret at the line end.
             line_y = 165 + 20 * lines.index("speed = 2")
+            click(window, 500, line_y)
+            xdo("type", "--delay", 200, "+1")
             for attempt in range(5):
-                click(window, 500, line_y)
-                key("Left", "Shift_L")
-                key("3")
                 key("s", "Control_L")
                 time.sleep(1)
                 saved = lua.read_text(encoding="utf-8")
