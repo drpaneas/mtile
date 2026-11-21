@@ -49,17 +49,18 @@ and export offline. The four guided lessons live in your project's `lessons/`
 folder. [Desktop setup](docs/getting-started.md#using-a-desktop-bundle) ·
 [Your first game](docs/first-game.md)
 
-**Using the terminal?** Enable the [bundled `mtile` command](docs/getting-started.md#use-mtile-in-a-terminal).
-From a folder where you keep projects, create, build and open another copy of Coin Quest.
+**Using the terminal?** Open the extracted folder containing the launcher and
+`examples/` and enable the [bundled `mtile` command](docs/getting-started.md#use-mtile-in-a-terminal).
+Open Hello from that folder. Close the editor, then build its cartridge.
 
 ```sh
-mtile new -template coin-quest mygame
-mtile build mygame
-mtile edit mygame
+mtile edit examples/hello
+mtile build examples/hello
 ```
 
-Your ROM is `mygame/game.gba`. To start with a blank project instead, run
-`mtile new blankgame` with an unused directory name. To compile Mtile itself,
+Your ROM is `examples/hello/game.gba`. To create your own project, run
+`mtile new -template coin-quest mygame` for Coin Quest or `mtile new blankgame`
+for a blank game. Choose an unused directory name. To compile Mtile itself,
 follow [Build the desktop tools](docs/getting-started.md#build-the-desktop-tools).
 
 For an external code editor, [`mtile lsp`](docs/language-server.md) provides

@@ -16,9 +16,11 @@ Under **Assets** on the [latest release](https://github.com/drpaneas/mtile/relea
 | Linux x86-64 | `mtile-linux-amd64.tar.gz` | `Mtile` |
 | Linux ARM64 | `mtile-linux-arm64.tar.gz` | `Mtile` |
 
-Extract the **whole archive**. On Windows, right-click the ZIP and choose
-**Extract All**. Double-click the launcher in the table above. If you move
-Mtile, move the entire extracted folder or the whole Mac app. Linux requires
+Extract the **whole archive** to a folder where you can save changes. On
+Windows, right-click the ZIP and choose **Extract All**. Starting with v0.1.1,
+each platform archive includes an editable `examples/` directory beside the launcher. Double-click the
+launcher in the table above to play Coin Quest. Keep the whole folder together
+when moving Mtile and its examples. Linux requires
 a graphical desktop with X11, OpenGL and audio support. Check the release
 notes for signing details if your operating system prompts on first launch.
 
@@ -71,6 +73,22 @@ Run `mtile doctor` to check the bundled compilers. You can now change to
 any project folder and use `mtile` in this terminal. To keep the command
 available in new terminals, add the full path of the same directory to your
 user's `PATH`.
+
+## Open and build the bundled Hello example
+
+Stay in the extracted folder containing the launcher and `examples/`.
+Run the first command to open Hello. In **Develop**, choose **Build + Reload**,
+click the preview and use the arrow keys to move the sprite. Close the editor
+to return to the terminal, then run the second command to export the ROM.
+
+```sh
+mtile edit examples/hello
+mtile build examples/hello
+```
+
+The build writes `examples/hello/game.gba` in the extracted folder.
+Both commands work offline. The [example catalog](../examples/README.md)
+lists other projects in the same download.
 
 ## Build your first ROM
 

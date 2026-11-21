@@ -150,9 +150,16 @@ class SiteTests(unittest.TestCase):
         self.assertLess(sections.index('using-a-desktop-bundle'), sections.index('build-the-desktop-tools'))
         self.assertIn('use-mtile-in-a-terminal', install.ids)
         self.assertIn(releases, install.links)
+        examples = self.pages[(self.output / 'examples.html').resolve()]
+        for page in (install, examples):
+            content = ''.join(page.text)
+            self.assertIn('mtile edit examples/hello', content)
+            self.assertIn('mtile build examples/hello', content)
+            self.assertIn('examples/hello/game.gba', content)
         for path, page in self.pages.items():
             if path.name == 'examples.html' or path.parent.name == 'guides':
                 self.assertNotIn('go run ./cmd/mtile', ''.join(page.text), path.name)
+                self.assertNotIn('Source code (zip)', ''.join(page.text), path.name)
 
     def test_nested_pages_distinguish_guide_home_from_title_screen(self):
         page = self.pages[(self.output / 'api/btn.html').resolve()]

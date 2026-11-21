@@ -24,8 +24,10 @@ fi
 (cd "$INPUT" && shasum -a 256 -c "$NAME.sha256")
 WORK=$(mktemp -d "$OUTPUT/.sign.XXXXXX")
 trap 'rm -rf "$WORK"' 0
-APP="$WORK/Mtile.app"
-ditto -x -k "$INPUT/$NAME" "$WORK"
+PAYLOAD="$WORK/download"
+mkdir "$PAYLOAD"
+APP="$PAYLOAD/Mtile.app"
+ditto -x -k "$INPUT/$NAME" "$PAYLOAD"
 plutil -replace CFBundleShortVersionString -string "$3" "$APP/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$3" "$APP/Contents/Info.plist"
 
@@ -46,7 +48,8 @@ for program in "$APP"/Contents/toolchains/go/bin/* "$APP"/Contents/toolchains/go
 done
 sign "$APP"
 codesign --verify --deep --strict "$APP"
-ditto -c -k --keepParent "$APP" "$WORK/$NAME"
+# Repack the whole download, including the writable examples beside the app.
+ditto -c -k --sequesterRsrc "$PAYLOAD" "$WORK/$NAME"
 
 if [ -n "${MTILE_MACOS_NOTARY_PROFILE:-}" ]; then
   xcrun notarytool submit "$WORK/$NAME" --keychain-profile "$MTILE_MACOS_NOTARY_PROFILE" \
@@ -58,7 +61,7 @@ if [ -n "${MTILE_MACOS_NOTARY_PROFILE:-}" ]; then
   xcrun stapler staple "$APP"
   xcrun stapler validate "$APP"
   spctl --assess --type execute "$APP"
-  ditto -c -k --keepParent "$APP" "$WORK/stapled.zip"
+  ditto -c -k --sequesterRsrc "$PAYLOAD" "$WORK/stapled.zip"
   mv "$WORK/stapled.zip" "$WORK/$NAME"
 fi
 (cd "$WORK" && shasum -a 256 "$NAME" > "$NAME.sha256")

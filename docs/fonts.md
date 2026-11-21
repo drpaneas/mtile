@@ -179,8 +179,8 @@ under its [existing CC0 license](../fonts/pico-8-wide.otf/license.txt).
 
 ## Try it and verify
 
-[Get the example projects](small-games.md#get-the-example-projects), then run
-these commands from the folder containing `examples`:
+From the extracted desktop folder, use the
+[bundled CLI](getting-started.md#use-mtile-in-a-terminal) to edit or build the font demo.
 
 ```sh
 mtile edit examples/font-demo

@@ -19,7 +19,9 @@ tag points to the tested commit before attaching downloads.
 
 Every archive includes the desktop editor, CLI, headless mGBA player, a
 prebuilt Coin Quest cartridge, the editable starter, the Go SDK and TinyGo's
-GBA compiler and libraries. The first launch creates the user's own project
+GBA compiler and libraries. The editable `examples/` tree sits beside the
+desktop launcher on every platform, including beside `Mtile.app` on macOS.
+The first launch creates the user's own project
 under `mTile Projects/Coin Quest` in their home folder. The editor opens
 the bundled cartridge straight away. On subsequent launches it builds the
 user's saved project. Linux requires a graphical desktop with X11, OpenGL
@@ -65,6 +67,12 @@ run has an empty home, temporary directory, compiler caches and command search
 path. It edits the user copy of `game.lua` from speed 2 to 3, exports with the
 bundled CLI and replays the same Right input in both cartridges. The test
 requires the explorer to move farther in the edited ROM.
+
+The verifier also adds the packaged CLI to `PATH` and runs from the
+extracted folder containing the launcher and `examples/`. With `--launch`
+it checks that `mtile edit examples/hello` opens the Hello editor window.
+It then checks that `mtile build examples/hello` produces a new cartridge
+at `examples/hello/game.gba`.
 
 The workflow additionally denies network access with a macOS sandbox or a
 separate Linux network namespace. On Windows it uses temporary outbound firewall

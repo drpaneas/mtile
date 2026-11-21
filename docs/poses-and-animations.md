@@ -22,8 +22,8 @@ question you encounter; the existing Nerdo exercise is another quick option.
 This example already contains the artwork and registered animations. You can
 see the difference before creating any assets yourself.
 
-[Get the example projects](small-games.md#get-the-example-projects), then run
-this command in the folder containing `examples`:
+From the extracted desktop folder, open Nerdo with the
+[bundled CLI](getting-started.md#use-mtile-in-a-terminal).
 
 ```sh
 mtile edit examples/nerdo

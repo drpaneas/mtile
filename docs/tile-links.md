@@ -22,8 +22,8 @@ the actual Windy Meadow ROM: `map()` plays every linked clip without any
 
 ## Try it
 
-[Get the example projects](small-games.md#get-the-example-projects), then open
-Windy Meadow from the folder containing `examples`:
+Windy Meadow is in the desktop download. From the extracted folder, use the
+[bundled CLI](getting-started.md#use-mtile-in-a-terminal) to open it.
 
 ```sh
 mtile edit examples/tile-links

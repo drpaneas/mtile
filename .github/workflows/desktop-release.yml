@@ -175,6 +175,6 @@ jobs:
             if [ "${#missing[@]}" -gt 0 ]; then gh release upload "$TAG" "${missing[@]}"; fi
           else
             gh release create "$TAG" "${tag_args[@]}" --draft --title "Mtile $TAG" \
-              --notes 'Extract the archive for your desktop, open Mtile and play Coin Quest. Go, TinyGo and the preview player are included.' \
+              --notes 'Extract the archive for your desktop and open Mtile to play Coin Quest. The download includes the examples, Go, TinyGo and the preview player. See the installation guide to open and build Hello from the extracted folder.' \
               ./*.zip ./*.tar.gz ./*.sha256
           fi

@@ -219,6 +219,17 @@ done
 cp "$ROOT/scripts/release/BUNDLE-README.md" "$RESOURCES/README.md"
 cp "$ROOT/LICENSE" "$RESOURCES/LICENSE"
 
+# Ship the public examples from the release revision. A developer checkout
+# can also contain private projects, imported cartridge assets and built ROMs.
+PROJECT_ROOT="$BUNDLE"
+if [ "$GOOS_VALUE" = darwin ]; then
+  # Keep editable projects beside the app, outside its code signature.
+  PROJECT_ROOT="$STAGE"
+  cp "$RESOURCES/README.md" "$RESOURCES/LICENSE" "$PROJECT_ROOT/"
+fi
+git -C "$ROOT" -c core.autocrlf=false archive --format=tar --output="$STAGE/examples.tar" HEAD -- examples
+tar -xf "$STAGE/examples.tar" -C "$PROJECT_ROOT"
+
 {
   printf 'Mtile revision: '
   git -C "$ROOT" rev-parse HEAD
@@ -271,7 +282,7 @@ case "$GOOS_VALUE" in
     codesign --force --sign - "$BUNDLE"
     codesign --verify --deep --strict "$BUNDLE"
     # Store Unix permissions and symlinks for Finder and command-line unzip.
-    (cd "$STAGE" && zip -qyr "$DIST" "$(basename "$BUNDLE")")
+    (cd "$STAGE" && zip -qyr "$DIST" "$(basename "$BUNDLE")" examples README.md LICENSE)
     ;;
 esac
 (cd "$STAGE" && sha256 "$DIST" > "$DIST.sha256")

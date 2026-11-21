@@ -18,13 +18,11 @@ Stop as soon as the idea makes sense.
 
 ## Get the example projects
 
-Coin Quest comes with the desktop download. To get the other games and their
-artwork, open the [GitHub release page](https://github.com/drpaneas/mtile/releases/latest)
-and download **Source code (zip)** under **Assets**. Extract it and open a
-terminal in the extracted folder that contains `examples`. The projects
-are ready to use with the [bundled `mtile` command](getting-started.md#use-mtile-in-a-terminal).
-
-For example, open Tidewalk with:
+The [desktop download](https://github.com/drpaneas/mtile/releases/latest)
+includes all four games, their artwork and their lessons. Open a terminal
+in the extracted folder containing the launcher and `examples/`. Add the
+[bundled CLI to your path](getting-started.md#use-mtile-in-a-terminal), then
+open Tidewalk from that same folder.
 
 ```sh
 mtile edit examples/tidewalk

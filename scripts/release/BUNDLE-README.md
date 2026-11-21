@@ -23,6 +23,40 @@ The project's README and four lessons are also available offline. Open a Lua
 file under `lessons/` in Develop and choose **Run Lesson**. **Back to My Game**
 returns to your own project.
 
+## Open an example from the terminal
+
+Open a terminal in the extracted folder containing the launcher and `examples/`.
+Add the bundled CLI to this terminal's path using the command for your system.
+
+**macOS** (the folder containing `Mtile.app`)
+
+```sh
+export PATH="$PWD/Mtile.app/Contents/MacOS:$PATH"
+```
+
+**Linux** (the folder containing `Mtile`)
+
+```sh
+export PATH="$PWD/bin:$PATH"
+```
+
+**Windows PowerShell** (the folder containing `Mtile.exe`)
+
+```powershell
+$env:Path = "$(Join-Path $PWD 'bin');$env:Path"
+```
+
+In that same folder, open Hello. Close the editor to return to the terminal,
+then run the second command to export the game.
+
+```sh
+mtile edit examples/hello
+mtile build examples/hello
+```
+
+The ROM is `examples/hello/game.gba`. Browse `examples/README.md` for other
+projects in this download.
+
 ## Status and support
 
 Mtile is in early development. It uses a subset of Lua, targets approximately

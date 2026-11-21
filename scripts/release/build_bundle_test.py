@@ -27,6 +27,17 @@ class BundleTest(unittest.TestCase):
         shutil.copyfile(SCRIPT, script)
         self.script = script
         shutil.copytree(SCRIPT.with_name("tinygo-extra"), script.with_name("tinygo-extra"))
+        self.examples = {
+            "examples/README.md": b"Example catalog",
+            "examples/hello/game.lua": b"function draw()\n cls(1)\nend\n",
+            "examples/hello/project.json": b"{}",
+            "examples/hello/assets/tiles.bin": bytes(range(256)),
+            "examples/rooms/shared/level.lua": b"return {}",
+        }
+        for name, data in self.examples.items():
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
         for name in ("LICENSE", "scripts/release/BUNDLE-README.md", "third_party/mgba/LICENSE",
                      "docs/third-party/mgba.md", "cmd/mtile-player/mgba_halt_compat.cmake", "docs/third-party/tinygo.md",
                      "docs/third-party/TinyGo-LICENSE.txt", "runtime/maxmod/COPYING",
@@ -94,11 +105,18 @@ elif '--build' in args:
  (root / ('mtile-player.exe' if os.environ['FAKE_OS'] == 'windows' else 'mtile-player')).write_text('player')
 ''')
         self.write_tool("codesign", "import sys\nassert sys.argv[1] in ('--force', '--verify')\n")
-        self.write_tool("git", '''
-import sys
-if 'rev-parse' in sys.argv: print('a' * 40)
-elif 'status' not in sys.argv: raise SystemExit(2)
-''')
+        # Use a real commit: local generated ROMs and private projects must
+        # never appear in any archive even when present in the checkout.
+        (self.root / ".gitignore").write_text("/relative-output/\n/windows-output/\n/mac output/\n"
+                                              "*.gba\n/examples/private/\n")
+        git = ["git", "-C", str(self.root), "-c", "core.hooksPath=/dev/null"]
+        subprocess.run(git + ["init", "--quiet"], check=True)
+        subprocess.run(git + ["add", "."], check=True)
+        subprocess.run(git + ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.org",
+                              "commit", "--quiet", "--no-gpg-sign", "-m", "Fixture"], check=True)
+        (self.root / "examples/hello/game.gba").write_bytes(b"previous build")
+        (self.root / "examples/private").mkdir()
+        (self.root / "examples/private/game.lua").write_text("local project")
         self.write_tool("curl", "raise SystemExit('unexpected network request')\n")
 
     def write_tool(self, name, source):
@@ -159,6 +177,8 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         self.assertFalse((output / "mtile-linux-amd64/toolchains/tinygo").exists())
 
     def test_relative_output_notices_manifest_and_smoke(self):
+        # Exercise the Linux tarball format even on a macOS test host.
+        self.env["COPYFILE_DISABLE"] = "1"
         output = self.root / "relative-output"
         self.archive(output)
         result = self.run_bundle(Path("relative-output"))
@@ -168,6 +188,8 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         with tarfile.open(archive) as tar:
             tar.extractall(Path(self.temp.name) / "unpacked", filter="data")
         bundle = Path(self.temp.name) / "unpacked/mtile-linux-amd64"
+        self.assertEqual({p.relative_to(bundle).as_posix(): p.read_bytes()
+                          for p in (bundle / "examples").rglob("*") if p.is_file()}, self.examples)
         self.assertTrue(os.access(bundle / "Mtile", os.X_OK))
         self.assertTrue((bundle / "licenses/go-modules/example.org/lib@v1.0.0/LICENSE").is_file())
         self.assertTrue(os.access(bundle / "bin/mtile-editor", os.X_OK))
@@ -191,6 +213,7 @@ elif 'status' not in sys.argv: raise SystemExit(2)
 
     def test_windows_multiconfig_player_location(self):
         self.env.update(GOOS="windows", FAKE_OS="windows")
+        subprocess.run(["git", "-C", str(self.root), "config", "core.autocrlf", "true"], check=True)
         output = self.root / "windows-output"
         self.archive(output, "windows")
         result = self.run_bundle(output)
@@ -198,6 +221,7 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         archive = output / "mtile-windows-amd64.zip"
         self.assert_digest(archive)
         with zipfile.ZipFile(archive) as z:
+            self.assert_zip_examples(z, "mtile-windows-amd64/")
             for name in ("Mtile.exe", "coin-quest.gba", "bin/mtile.exe", "bin/mtile-player.exe",
                          "toolchains/go/bin/go.exe", "toolchains/tinygo/bin/tinygo.exe"):
                 self.assertIn("mtile-windows-amd64/" + name, z.namelist())
@@ -211,6 +235,9 @@ elif 'status' not in sys.argv: raise SystemExit(2)
         archive = output / "mtile-darwin-amd64.zip"
         self.assert_digest(archive)
         with zipfile.ZipFile(archive) as z:
+            self.assert_zip_examples(z)
+            self.assertIn("README.md", z.namelist())
+            self.assertIn("LICENSE", z.namelist())
             contents = "Mtile.app/Contents/"
             info = plistlib.loads(z.read(contents + "Info.plist"))
             self.assertEqual(info["LSMinimumSystemVersion"], "15.0")
@@ -220,6 +247,25 @@ elif 'status' not in sys.argv: raise SystemExit(2)
                          "toolchains/go/bin/go", "toolchains/tinygo/bin/tinygo",
                          "Resources/licenses/GO-BSD-3-CLAUSE.txt"):
                 self.assertIn(contents + name, z.namelist())
+
+        if sys.platform == "darwin":
+            # Exercise the real ditto ZIP operations used for signed releases.
+            signed = self.root / "signed output"
+            signing = subprocess.run(["sh", str(SCRIPT.with_name("sign-macos.sh")), str(archive),
+                                      str(signed), "0.1.1"], capture_output=True, text=True,
+                                     env=dict(self.env, MTILE_MACOS_SIGN_IDENTITY="-", MTILE_MACOS_NOTARY_PROFILE=""),
+                                     timeout=30)
+            self.assertEqual(signing.returncode, 0, signing.stdout + signing.stderr)
+            self.assert_digest(signed / archive.name)
+            with zipfile.ZipFile(signed / archive.name) as z:
+                self.assert_zip_examples(z)
+                info = plistlib.loads(z.read(contents + "Info.plist"))
+                self.assertEqual(info["CFBundleShortVersionString"], "0.1.1")
+
+    def assert_zip_examples(self, archive, prefix=""):
+        self.assertEqual({info.filename.removeprefix(prefix): archive.read(info)
+                          for info in archive.infolist()
+                          if info.filename.startswith(prefix + "examples/") and not info.is_dir()}, self.examples)
 
     def assert_digest(self, archive):
         checksum = hashlib.sha256(archive.read_bytes()).hexdigest()

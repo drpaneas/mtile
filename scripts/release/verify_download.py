@@ -6,6 +6,8 @@ import hashlib
 import os
 from pathlib import Path
 import plistlib
+import shutil
+import signal
 import struct
 import subprocess
 import sys
@@ -96,17 +98,54 @@ def player_started(editor):
     return result.returncode == 0
 
 
-def open_starter(launcher, work, env):
+def hello_window(cli):
+    title = "mtile editor - hello"
+    if os.name == "nt":
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.FindWindowW.restype = ctypes.c_void_p
+        window = user32.FindWindowW(None, title)
+        return window and user32.IsWindowVisible(ctypes.c_void_p(window))
+    if sys.platform == "darwin":
+        # macOS can hide window titles without Screen Recording permission.
+        # Check the on-screen window of the CLI's actual Hello editor process.
+        child = subprocess.run(["pgrep", "-P", str(cli.pid), "-f", "mtile-editor -project .*/examples/hello$"],
+                               capture_output=True, text=True, timeout=10)
+        if child.returncode == 1:
+            return False
+        child.check_returncode()
+        script = """
+        ObjC.import("CoreGraphics")
+        function run(argv) {
+            const info = $.CGWindowListCopyWindowInfo($.kCGWindowListOptionOnScreenOnly, 0)
+            const windows = ObjC.deepUnwrap(ObjC.castRefToObject(info))
+            return windows.some(w => w.kCGWindowOwnerPID == argv[0] && w.kCGWindowLayer == 0 &&
+                                w.kCGWindowBounds.Width > 100 && w.kCGWindowBounds.Height > 100)
+        }
+        """
+        visible = subprocess.check_output(["osascript", "-l", "JavaScript", "-e", script, child.stdout.strip()],
+                                          text=True, timeout=15)
+        return visible.strip() == "true"
+    # The Linux release workflow provides a private X display and xdotool.
+    result = subprocess.run(["xdotool", "search", "--onlyvisible", "--name", "^" + title + "$"],
+                            capture_output=True, text=True, timeout=10)
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f"cannot inspect the editor window: {result.stderr}")
+    return bool(result.stdout.strip())
+
+
+def open_and_wait(command, work, env, ready, label):
     with tempfile.TemporaryFile() as output:
-        editor = subprocess.Popen([launcher], cwd=work, env=env, stdout=output, stderr=output)
+        editor = subprocess.Popen(command, cwd=work, env=env, stdout=output, stderr=output,
+                                  start_new_session=os.name != "nt")
         try:
             deadline = time.monotonic() + 90
             while editor.poll() is None and time.monotonic() < deadline:
-                if player_started(editor):
+                if ready(editor):
                     return
                 time.sleep(0.3)
             output.seek(0)
-            raise RuntimeError("desktop startup failed to open the Coin Quest player: " +
+            raise RuntimeError(f"desktop startup failed to open {label}: " +
                                output.read().decode(errors="replace"))
         finally:
             if editor.poll() is None:
@@ -114,7 +153,7 @@ def open_starter(launcher, work, env):
                     subprocess.run(["taskkill", "/F", "/T", "/PID", str(editor.pid)],
                                    capture_output=True, timeout=30)
                 else:
-                    editor.terminate()
+                    os.killpg(editor.pid, signal.SIGTERM)
                 editor.wait(timeout=20)
 
 
@@ -158,7 +197,7 @@ def verify(archive, launch, block_windows_network):
         project = home / "mTile Projects" / "Coin Quest"
         with windows_offline(install, block_windows_network):
             if launch:
-                open_starter(launcher, work, env)
+                open_and_wait([launcher], work, env, player_started, "the Coin Quest player")
                 print("No-argument desktop launcher opened the Coin Quest player.", flush=True)
             else:
                 subprocess.run([cli, "new", "-template", "coin-quest", project], cwd=work,
@@ -178,6 +217,29 @@ def verify(archive, launch, block_windows_network):
                 raise ValueError(f"the rebuilt game did not move faster: {baseline} -> {edited}")
             print(f"Right for 16 frames: original x={baseline}, edited x={edited}. "
                   f"Exported {export.stat().st_size} bytes.")
+
+            root = install if sys.platform == "darwin" else launcher.parent
+            env["PATH"] = str(tools) + os.pathsep + env["PATH"]
+            if shutil.which(cli.name, path=env["PATH"]) != str(cli):
+                raise RuntimeError("the documented PATH did not select the bundled mtile")
+            # Use the guide's PowerShell on Windows. cmd.exe would search the
+            # current folder first and launch the double-clickable Mtile.exe.
+            command = ["mtile"]
+            if os.name == "nt":
+                command = [shutil.which("powershell.exe"), "-NoProfile", "-NonInteractive", "-Command", "mtile"]
+            example = "examples/hello"
+            rom = root / example / "game.gba"
+            if not (root / example / "game.lua").is_file() or rom.exists():
+                raise ValueError("expected the bundled Hello Lua project without a prebuilt game.gba")
+            if launch:
+                open_and_wait(command + ["edit", example], root, env, hello_window, "the Hello project window")
+                print("mtile edit examples/hello opened the bundled Hello editor window.", flush=True)
+            subprocess.run(command + ["build", example], cwd=root, env=env, check=True, timeout=600)
+            result = rom.read_bytes()
+            if len(result) <= 192 or result[0xB2] != 0x96:
+                raise ValueError(f"invalid GBA cartridge built from {example}")
+            print(f"mtile build examples/hello created {rom.relative_to(root)} "
+                  f"({len(result):,} bytes, SHA-256 {hashlib.sha256(result).hexdigest()}).")
 
 
 if __name__ == "__main__":

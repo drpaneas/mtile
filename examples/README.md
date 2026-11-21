@@ -1,17 +1,17 @@
 # Example projects
 
-Open the [Mtile desktop download](https://github.com/drpaneas/mtile/releases/latest)
-to play [Coin Quest](../docs/first-game.md). The app includes the game, its
-editable art and sound, and four Lua lessons.
+The [Mtile desktop download](https://github.com/drpaneas/mtile/releases/latest)
+includes these example projects. Double-click the launcher to play
+[Coin Quest](https://drpaneas.com/mtile/guides/first-game.html), the starter
+with editable art and sound and four Lua lessons.
 
 ## Run an example
 
-For the other games below, open the [release page](https://github.com/drpaneas/mtile/releases/latest)
-and download **Source code (zip)** under **Assets** for the same version as your
-Mtile app. Extract it and open a terminal in the folder that contains
-`examples/`. These projects run with the [CLI included in the desktop download](../docs/getting-started.md#use-mtile-in-a-terminal).
-
-To open Hello in the editor or export its ROM, run the corresponding command:
+Extract your platform archive and open a terminal in the folder containing the
+Mtile launcher and `examples/`. Add the bundled CLI to your
+[`PATH`](https://drpaneas.com/mtile/guides/install.html#use-mtile-in-a-terminal).
+From that same folder, open Hello in the editor. Close the editor, then run
+the build command to export the ROM.
 
 ```sh
 mtile edit examples/hello
@@ -26,7 +26,7 @@ are the D-pad, Z is A, and X is B. The build command writes
 
 Pick the feature you want; these are independent projects, not a required
 sequence. Each includes original ready artwork, complete runnable lessons,
-and one visible checkpoint at a time. See [choose one small game](../docs/small-games.md).
+and one visible checkpoint at a time. See [choose one small game](https://drpaneas.com/mtile/guides/small-games.html).
 
 | Project | What to learn | What to try |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ and one visible checkpoint at a time. See [choose one small game](../docs/small-
 | [mapdemo](mapdemo/README.md) | Camera, collision, and ROM streaming across a large world |
 | [shared-tile-animation](shared-tile-animation/README.md) | Animate every occurrence of a shared background tile together |
 
-Engineering fixtures live in [testdata/projects](../testdata/projects/README.md);
-ports and private renderer experiments live in [research](../research/README.md).
+Engineering fixtures live in [testdata/projects](https://github.com/drpaneas/mtile/tree/main/testdata/projects).
+Ports and private renderer experiments live in [research](https://github.com/drpaneas/mtile/tree/main/research).
 Their workload constraints differ from teaching examples. Local untracked
 projects are not part of this catalog.
