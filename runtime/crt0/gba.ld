@@ -102,10 +102,12 @@ SECTIONS
         . = ALIGN(4);
         _sbss = .;         /* used by startup code */
         *(.bss)
-        /* ThinLTO can emit Maxmod globals in different orders. Sort their
-         * named sections so the addresses embedded in the ROM are stable. */
+        /* ThinLTO can emit Maxmod globals in different orders. Pack its
+         * player state by alignment, breaking ties by name, then place the
+         * remaining mm globals by name. This stabilizes ROM pointers and
+         * preserves the startup BSS clear length for the audio examples. */
+        *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.bss.mpp_*)))
         *(SORT_BY_NAME(.bss.mm*))
-        *(SORT_BY_NAME(.bss.mpp_*))
         *(.bss.*)
         *(COMMON)
         . = ALIGN(4);

@@ -76,8 +76,9 @@ at `examples/hello/game.gba`.
 
 Each desktop also builds `examples/imported-audio` five times from fresh
 project copies, home directories and compiler caches. The verifier compares
-the cartridges byte for byte and plays the imported WAV and PSG note in the
-packaged emulator. The workflow compares the five platforms' ROM SHA-256
+the cartridges byte for byte. It plays the imported WAV and PSG note and checks
+250 frames of stereo audio against the original recording from the packaged
+emulator. The workflow compares the five platforms' ROM SHA-256
 digests before it creates a draft. Use `--audio-digest FILE` to save the
 digest when running the verifier locally.
 

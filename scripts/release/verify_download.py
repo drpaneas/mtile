@@ -192,9 +192,9 @@ def explorer_position(player, rom, work, env):
 
 def verify_audio_controls(player, rom, work, env):
     def audio(press_a, press_b):
-        buttons = [0] * 212
-        # Stop the song with L, play the imported WAV with A and trigger the PSG note with B.
-        for start, mask in ((76, 512), (118, press_a), (170, press_b)):
+        buttons = [0] * 250
+        # Stop the song, play the WAV and PSG note, then restart the song.
+        for start, mask in ((76, 512), (118, press_a), (170, press_b), (212, 256)):
             buttons[start:start + 3] = [mask] * 3
         return [pcm for _, pcm in play_frames(player, rom, work, env, buttons)]
 
@@ -206,7 +206,12 @@ def verify_audio_controls(player, rom, work, env):
     if (both[:118] != without_a[:118] or both[118:160] == without_a[118:160] or
             both[:170] != without_b[:170] or both[170:] == without_b[170:]):
         raise ValueError("imported-audio playback did not respond to the WAV and PSG buttons")
-    print("The imported WAV and PSG buttons each changed the audio.", flush=True)
+    # Both v0.1.1 ROM layouts produced this exact 48 kHz stereo recording
+    # in the pinned player. The startup BSS clear affects audio timing.
+    digest = hashlib.sha256(b"".join(both)).hexdigest()
+    if digest != "2d0c9e4db2229f654db784d12aa95c80917bf946e4ef8fafc8be005351271b5b":
+        raise ValueError(f"imported-audio PCM differs from the reference recording: {digest}")
+    print(f"Imported WAV and PSG controls passed. 250-frame audio SHA-256: {digest}", flush=True)
 
 
 def verify_audio_builds(root, work, tools, command, player):
