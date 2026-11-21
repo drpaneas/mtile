@@ -1,10 +1,11 @@
 """Play the Linux download, edit Coin Quest in Develop, and export via its GUI."""
 
 import argparse
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 import os
 from pathlib import Path
 import select
+import signal
 import subprocess
 import tempfile
 import time
@@ -46,6 +47,18 @@ def verify(archive, work, display):
         return subprocess.check_output(["xdotool", *map(str, args)], env=driver_env,
                                        text=True, timeout=10).strip()
 
+    def editor_window():
+        # The player can start before Ebitengine maps the editor's X11 window.
+        # The private display has only this editor, so its title is sufficient
+        # even when the X11 client has no _NET_WM_PID property.
+        result = subprocess.run(["xdotool", "search", "--onlyvisible", "--name",
+                                 "^mtile editor - Coin Quest$"], env=driver_env,
+                                capture_output=True, text=True, timeout=10)
+        if result.returncode == 1 and not result.stderr:
+            return None
+        result.check_returncode()
+        return next(iter(result.stdout.splitlines()), None)
+
     def key(name, ctrl=False):
         if ctrl:
             xdo("keydown", "Control_L")
@@ -65,7 +78,7 @@ def verify(archive, work, display):
         xdo("mouseup", "1")
         time.sleep(0.2)
 
-    with subprocess.Popen([launcher], cwd=work, env=env) as editor:
+    with subprocess.Popen([launcher], cwd=work, env=env, start_new_session=True) as editor:
         def wait_for(label, predicate, timeout):
             deadline = time.monotonic() + timeout
             while time.monotonic() < deadline and editor.poll() is None:
@@ -73,11 +86,15 @@ def verify(archive, work, display):
                 if result:
                     return result
                 time.sleep(0.3)
-            raise RuntimeError(f"editor failed while waiting for {label} (exit {editor.poll()})")
+            windows = subprocess.run(["xdotool", "search", "--onlyvisible", "--name", ".*",
+                                      "getwindowname", "%@"], env=driver_env, capture_output=True,
+                                     text=True, timeout=10)
+            raise RuntimeError(f"waiting for {label}: editor exit={editor.poll()}, "
+                               f"visible window titles={windows.stdout.splitlines()}, {windows.stderr.strip()}")
 
         try:
             wait_for("starter preview", lambda: player_started(editor), 90)
-            window = xdo("search", "--onlyvisible", "--pid", editor.pid).splitlines()[-1]
+            window = wait_for("visible Coin Quest editor window", editor_window, 90)
             xdo("windowfocus", window)
             xdo("windowsize", window, 1920, 1200)
             wait_for("1920x1200 editor window",
@@ -108,7 +125,10 @@ def verify(archive, work, display):
             print(f"Develop saved speed 3 and exported {exported.stat().st_size} bytes. "
                   f"Right for 16 frames: {baseline} -> {edited}.")
         finally:
-            editor.terminate()
+            # Reap the private session even if an export or background compiler
+            # is still writing into the temporary user's cache after a failure.
+            with suppress(ProcessLookupError):
+                os.killpg(editor.pid, signal.SIGKILL)
 
 
 if __name__ == "__main__":
