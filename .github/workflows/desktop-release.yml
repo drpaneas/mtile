@@ -21,7 +21,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        target: &targets [darwin-arm64, darwin-amd64, linux-amd64, linux-arm64, windows-amd64]
+        include: &desktops
           # Upstream v0.42.0 release asset SHA-256 digests.
           - target: darwin-arm64
             runner: macos-15
@@ -109,6 +110,7 @@ jobs:
         with:
           name: audio-digest-${{ matrix.target }}
           path: ${{ env.ARCHIVE }}.audio-digest
+          overwrite: true
           retention-days: 3
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
@@ -118,8 +120,82 @@ jobs:
             ${{ env.ARCHIVE }}
             ${{ env.ARCHIVE }}.sha256
           compression-level: 0
+          overwrite: true
           retention-days: 3
           if-no-files-found: error
+
+  catalog:
+    name: Offline examples (${{ matrix.target }}, group ${{ matrix.shard }})
+    needs: desktop
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        target: *targets
+        shard: [0, 1, 2, 3]
+        include: *desktops
+    env:
+      ARCHIVE: candidate/mtile-${{ matrix.target }}.${{ matrix.ext }}
+      TARGET: ${{ matrix.target }}
+      SHARD: ${{ matrix.shard }}
+      REPORT: results/${{ matrix.target }}-${{ matrix.shard }}.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/release
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: mtile-${{ matrix.target }}
+          path: candidate
+      - name: Enable Windows Firewall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
+      - name: Build each packaged example three times with empty caches
+        shell: bash
+        run: |
+          args=(scripts/release/verify_catalog.py "$ARCHIVE" --target "$TARGET" --shard "$SHARD" --output "$REPORT")
+          case "$RUNNER_OS" in
+            Linux) sudo unshare --net -- sudo -u "$(id -un)" "$(command -v python3)" "${args[@]}" ;;
+            macOS) sandbox-exec -p '(version 1) (allow default) (deny network*)' python3 "${args[@]}" ;;
+            Windows) python "${args[@]}" --block-windows-network ;;
+            *) exit 1 ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: catalog-hashes-${{ matrix.target }}-${{ matrix.shard }}
+          path: ${{ env.REPORT }}
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+  compare-catalog:
+    name: Compare all 300 offline ROM builds
+    needs: catalog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/release
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: catalog-hashes-*
+          path: results
+      - name: Require the same SHA-256 for every build of each example
+        run: python3 scripts/release/compare_catalog.py results --summary "$GITHUB_STEP_SUMMARY" --archive-checksums archives.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-archives
+          path: archives.sha256
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
 
   reproducibility:
     name: Compare imported-audio ROMs across all five desktops
@@ -145,7 +221,7 @@ jobs:
 
   draft:
     if: github.event_name == 'push' || inputs.release_tag != ''
-    needs: reproducibility
+    needs: [reproducibility, compare-catalog]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -159,9 +235,14 @@ jobs:
           path: downloads
           pattern: mtile-*
           merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-archives
+          path: checked
       - name: Verify and attach downloads to a draft
         working-directory: downloads
         run: |
+          sha256sum --strict -c ../checked/archives.sha256
           sha256sum -c ./*.sha256
           # matching-refs returns an empty list for a new tag and can also return
           # longer names with this prefix. Check the exact ref and peel tag objects.

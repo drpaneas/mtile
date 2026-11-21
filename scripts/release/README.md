@@ -4,7 +4,7 @@ The **Desktop release** workflow builds one archive for each target. Choose
 **Run workflow** and leave the release version empty for test downloads.
 To prepare a release, select its branch and enter a version such as `v0.1.0`.
 Once all five builds and offline checks pass, the workflow creates a GitHub
-draft targeting the tested commit and attaches the archives and SHA-256 files.
+draft targeting the tested commit and attaches the verified archives and SHA-256 files.
 Publishing the draft creates its tag if it is new. Pushing an existing version
 tag matching `v*` also runs the workflow. The draft job checks that an existing
 tag points to the tested commit before attaching downloads.
@@ -82,6 +82,22 @@ emulator. The workflow compares the five platforms' ROM SHA-256
 digests before it creates a draft. Use `--audio-digest FILE` to save the
 digest when running the verifier locally.
 
+Before creating or updating the draft, the workflow downloads the five candidate
+archives from the packaging jobs and checks their standalone examples on native
+Windows x64, Linux x64 and ARM64, and macOS Intel and Apple Silicon runners.
+Each runner builds every standalone example three times offline with the bundled
+CLI and toolchain. Each attempt starts with a fresh project copy, home, temporary
+directory and compiler caches. The 20 examples run in four parallel groups per
+platform. `smb3` requires an external NES cartridge and is outside the standalone
+catalog.
+
+The **Compare all 300 offline ROM builds** job lists each example's size and
+SHA-256 in its summary. A missing build, a failed build, or a difference among
+the 15 builds of any example blocks the draft. The draft also checks the five
+archives against the SHA-256 values recorded by the catalog runners before
+attaching them. To exercise the full check, run **Desktop release** with the
+release version empty.
+
 The workflow additionally denies network access with a macOS sandbox or a
 separate Linux network namespace. On Windows it uses temporary outbound firewall
 rules for the extracted executables (`--block-windows-network`, administrator). A Linux headless runner needs
@@ -109,8 +125,10 @@ python3 scripts/release/verify_download.py signed/mtile-darwin-arm64.zip --launc
 
 The script verifies the candidate checksum, signs the nested tools and app,
 submits the ZIP to Apple when a profile is supplied, staples the accepted ticket
-and writes the final ZIP and SHA-256 together. Use a separate output directory
-and attach those files to the draft. For a local signing test, set the identity
+and writes the final ZIP and SHA-256 together. Use a separate output directory.
+When distributing signed packages, supply the final signed archive and its
+checksum in the packaging job before the offline checks and artifact upload.
+For a local signing test, set the identity
 to `-` and leave the notary profile unset.
 
 For Windows use the release publisher's
