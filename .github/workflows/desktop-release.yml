@@ -17,7 +17,7 @@ jobs:
   desktop:
     name: Desktop (${{ matrix.target }})
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
+    timeout-minutes: ${{ startsWith(matrix.target, 'darwin-') && (github.event_name == 'push' || inputs.release_tag != '') && 90 || 45 }}
     strategy:
       fail-fast: false
       matrix:
@@ -49,11 +49,11 @@ jobs:
       TINYGO_SHA256: ${{ matrix.digest }}
       ARCHIVE: dist/mtile-${{ matrix.target }}.${{ matrix.ext }}
     steps:
-      - name: Validate requested release version
-        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+      - name: Validate release version
+        if: github.event_name == 'push' || inputs.release_tag != ''
         shell: bash
         env:
-          TAG: ${{ inputs.release_tag }}
+          TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo 'Expected a version such as v0.1.0' >&2
@@ -75,9 +75,20 @@ jobs:
           sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config xvfb xauth xdotool
       - name: Package desktop archive
         shell: bash
-        run: |
-          sh -n scripts/release/sign-macos.sh
-          sh scripts/release/build-bundle.sh
+        env:
+          PACKAGE_DIR: ${{ runner.os == 'macOS' && (github.event_name == 'push' || inputs.release_tag != '') && 'candidate' || 'dist' }}
+        run: sh scripts/release/build-bundle.sh "$PACKAGE_DIR"
+      - name: Sign, notarize and staple the macOS release download
+        if: runner.os == 'macOS' && (github.event_name == 'push' || inputs.release_tag != '')
+        shell: bash
+        env:
+          TAG: ${{ inputs.release_tag || github.ref_name }}
+          MTILE_MACOS_CERTIFICATE_P12: ${{ secrets.MTILE_MACOS_CERTIFICATE_P12 }}
+          MTILE_MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MTILE_MACOS_CERTIFICATE_PASSWORD }}
+          MTILE_MACOS_NOTARY_KEY_P8: ${{ secrets.MTILE_MACOS_NOTARY_KEY_P8 }}
+          MTILE_MACOS_NOTARY_KEY_ID: ${{ secrets.MTILE_MACOS_NOTARY_KEY_ID }}
+          MTILE_MACOS_NOTARY_ISSUER_ID: ${{ secrets.MTILE_MACOS_NOTARY_ISSUER_ID }}
+        run: bash scripts/release/sign-macos-release.sh "candidate/${ARCHIVE##*/}" dist "${TAG#v}"
       - name: Launch, edit and export with the network disabled (macOS)
         if: runner.os == 'macOS'
         run: sandbox-exec -p '(version 1) (allow default) (deny network*)' python3 scripts/release/verify_download.py "$ARCHIVE" --launch --audio-digest "$ARCHIVE.audio-digest"
@@ -289,6 +300,6 @@ jobs:
             if [ "${#missing[@]}" -gt 0 ]; then gh release upload "$TAG" "${missing[@]}"; fi
           else
             gh release create "$TAG" "${tag_args[@]}" --draft --title "Mtile $TAG" \
-              --notes 'Extract the archive for your desktop and open Mtile to play Coin Quest. The download includes the examples, Go, TinyGo and the preview player. Download examples.sha256 from this release to verify the ROMs built from the 20 standalone examples. The bundled README includes commands for Linux, macOS and Windows.' \
+              --notes 'Extract the archive for your desktop and open Mtile to play Coin Quest. The download includes the examples, Go, TinyGo and the preview player. Download examples.sha256 from this release to verify the ROMs built from the 20 standalone examples. The bundled README includes commands for Linux, macOS and Windows. The Mac packages have a Developer ID Application signature and a stapled Apple notarization ticket.' \
               ./*.zip ./*.tar.gz ./*.sha256
           fi
