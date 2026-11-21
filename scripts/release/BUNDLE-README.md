@@ -57,6 +57,36 @@ mtile build examples/hello
 The ROM is `examples/hello/game.gba`. Browse `examples/README.md` for other
 projects in this download.
 
+## Verify a built example
+
+Download `examples.sha256` from the same GitHub release as your desktop package.
+Save it in the extracted folder beside `examples/`. It lists the expected ROM
+hash for each of the 20 unmodified standalone examples. After running
+`mtile build examples/hello` in that folder, check Hello with the command for
+your system.
+
+**Linux**
+
+```sh
+grep '  examples/hello/game\.gba$' examples.sha256 | sha256sum -c -
+```
+
+**macOS**
+
+```sh
+grep '  examples/hello/game\.gba$' examples.sha256 | shasum -a 256 -c -
+```
+
+**Windows PowerShell**
+
+```powershell
+$hash = (Get-FileHash examples/hello/game.gba -Algorithm SHA256 -ErrorAction Stop).Hash
+if ((Get-Content examples.sha256 -ErrorAction Stop) -notcontains "$hash  examples/hello/game.gba") { throw "Hello checksum mismatch" }
+"examples/hello/game.gba: OK"
+```
+
+To check another example, build it and replace `hello` with its folder name.
+
 ## Status and support
 
 Mtile is in early development. It uses a subset of Lua, targets approximately

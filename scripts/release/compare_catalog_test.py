@@ -24,6 +24,7 @@ class CompareCatalogTest(unittest.TestCase):
         self.reports.mkdir()
         self.summary = root / "summary.md"
         self.checksums = root / "archives.sha256"
+        self.example_checksums = root / "examples.sha256"
         for target in TARGETS:
             for shard in range(SHARDS):
                 records = [
@@ -39,9 +40,11 @@ class CompareCatalogTest(unittest.TestCase):
     def check_command(self, success):
         script = Path(__file__).with_name("compare_catalog.py")
         result = subprocess.run([sys.executable, script, self.reports, "--summary", self.summary,
-                                 "--archive-checksums", self.checksums], capture_output=True, text=True)
+                                 "--archive-checksums", self.checksums, "--example-checksums", self.example_checksums],
+                                capture_output=True, text=True)
         self.assertEqual(result.returncode, 0 if success else 1, result.stdout + result.stderr)
         self.assertEqual(self.checksums.exists(), success)
+        self.assertEqual(self.example_checksums.exists(), success)
         return self.summary.read_text(encoding="utf-8")
 
     def test_all_300_agree_and_bind_the_five_archives(self):
@@ -51,8 +54,11 @@ class CompareCatalogTest(unittest.TestCase):
         expected = {f"{digest(target)}  mtile-{target}." + ("tar.gz" if target.startswith("linux-") else "zip")
                     for target in TARGETS}
         self.assertEqual(set(self.checksums.read_text().splitlines()), expected)
+        examples = "".join(f"{digest(name)}  examples/{name}/game.gba\n" for name in sorted(EXAMPLES))
+        self.assertEqual(self.example_checksums.read_bytes(), examples.encode("ascii"))
 
     def test_one_different_rom_blocks_the_release(self):
+        self.check_command(True)
         record = self.data["records"][1]
         record["sha256"] = digest("changed bytes")
         self.shard.write_text(json.dumps(self.data))

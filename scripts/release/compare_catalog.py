@@ -75,7 +75,7 @@ def compare(directory):
 
     rows = []
     builds = 0
-    matches = 0
+    example_digests = {}
     required = len(TARGETS) * ATTEMPTS
     for name in EXAMPLES:
         observations = results[name]
@@ -91,18 +91,18 @@ def compare(directory):
         elif len(observations) == required:
             byte_count, sha256 = next(iter(groups))
             size, digest = f"{byte_count:,}", f"`{sha256}`"
-            matches += 1
+            example_digests[name] = sha256
         rows.append(f"| `{name}` | {len(observations)}/{required} | {size} | {digest} |")
-    passed = not issues and matches == len(EXAMPLES)
+    passed = not issues and len(example_digests) == len(EXAMPLES)
     lines = [
         "## Offline ROM reproducibility", "",
         f"**{'PASS' if passed else 'FAIL'}** · {builds}/{len(EXAMPLES) * required} valid builds. "
-        f"{matches}/{len(EXAMPLES)} examples produced identical ROM size and SHA-256 across all five packages.", "",
+        f"{len(example_digests)}/{len(EXAMPLES)} examples produced identical ROM size and SHA-256 across all five packages.", "",
         "| Example | Builds | Bytes | SHA-256 |", "| --- | ---: | ---: | --- |", *rows,
     ]
     if issues:
         lines.extend(["", "### Failed checks", "", *["- " + issue for issue in issues]])
-    return passed, "\n".join(lines) + "\n", archives
+    return passed, "\n".join(lines) + "\n", archives, example_digests
 
 
 if __name__ == "__main__":
@@ -110,17 +110,22 @@ if __name__ == "__main__":
     parser.add_argument("directory", type=Path, help="downloaded catalog result artifacts")
     parser.add_argument("--summary", type=Path, required=True, help="write the Markdown report here")
     parser.add_argument("--archive-checksums", type=Path, help="write verified archive checksums on success")
+    parser.add_argument("--example-checksums", type=Path, help="write verified example ROM checksums on success")
     args = parser.parse_args()
-    ok, report, archives = compare(args.directory)
+    ok, report, archives, example_digests = compare(args.directory)
     args.summary.write_text(report, encoding="utf-8")
-    if args.archive_checksums:
-        if ok:
-            lines = []
-            for target, digest in sorted(archives.items()):
-                ext = "tar.gz" if target.startswith("linux-") else "zip"
-                lines.append(f"{digest}  mtile-{target}.{ext}\n")
-            args.archive_checksums.write_text("".join(lines), encoding="ascii", newline="\n")
-        else:
-            args.archive_checksums.unlink(missing_ok=True)
     print(report, end="")
-    raise SystemExit(0 if ok else 1)
+    if not ok:
+        for path in (args.archive_checksums, args.example_checksums):
+            if path is not None:
+                path.unlink(missing_ok=True)
+        raise SystemExit(1)
+    if args.archive_checksums:
+        lines = []
+        for target, digest in sorted(archives.items()):
+            ext = "tar.gz" if target.startswith("linux-") else "zip"
+            lines.append(f"{digest}  mtile-{target}.{ext}\n")
+        args.archive_checksums.write_text("".join(lines), encoding="ascii", newline="\n")
+    if args.example_checksums:
+        lines = [f"{digest}  examples/{name}/game.gba\n" for name, digest in sorted(example_digests.items())]
+        args.example_checksums.write_text("".join(lines), encoding="ascii", newline="\n")

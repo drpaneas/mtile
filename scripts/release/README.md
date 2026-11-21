@@ -93,10 +93,15 @@ catalog.
 
 The **Compare all 300 offline ROM builds** job lists each example's size and
 SHA-256 in its summary. A missing build, a failed build, or a difference among
-the 15 builds of any example blocks the draft. The draft also checks the five
-archives against the SHA-256 values recorded by the catalog runners before
-attaching them. To exercise the full check, run **Desktop release** with the
-release version empty.
+the 15 builds of any example blocks the draft. After the check passes,
+the workflow attaches `examples.sha256` to the release. Its 20
+entries use paths relative to the extracted folder, such as
+`examples/hello/game.gba`. For commands to verify a local build on Linux,
+macOS or Windows, see the [bundle guide](BUNDLE-README.md#verify-a-built-example).
+
+The draft also checks the five archives against the SHA-256 values recorded
+by the catalog runners before attaching them. To exercise the full check, run
+**Desktop release** with the release version empty.
 
 The workflow additionally denies network access with a macOS sandbox or a
 separate Linux network namespace. On Windows it uses temporary outbound firewall

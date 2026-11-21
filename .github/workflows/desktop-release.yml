@@ -188,11 +188,15 @@ jobs:
           pattern: catalog-hashes-*
           path: results
       - name: Require the same SHA-256 for every build of each example
-        run: python3 scripts/release/compare_catalog.py results --summary "$GITHUB_STEP_SUMMARY" --archive-checksums archives.sha256
+        run: |
+          python3 scripts/release/compare_catalog.py results --summary "$GITHUB_STEP_SUMMARY" \
+            --archive-checksums archives.sha256 --example-checksums examples.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: verified-archives
-          path: archives.sha256
+          name: verified-checksums
+          path: |
+            archives.sha256
+            examples.sha256
           if-no-files-found: error
           retention-days: 7
           overwrite: true
@@ -237,13 +241,14 @@ jobs:
           merge-multiple: true
       - uses: actions/download-artifact@v4
         with:
-          name: verified-archives
+          name: verified-checksums
           path: checked
       - name: Verify and attach downloads to a draft
         working-directory: downloads
         run: |
           sha256sum --strict -c ../checked/archives.sha256
-          sha256sum -c ./*.sha256
+          sha256sum -c ./*.zip.sha256 ./*.tar.gz.sha256
+          cp ../checked/examples.sha256 .
           # matching-refs returns an empty list for a new tag and can also return
           # longer names with this prefix. Check the exact ref and peel tag objects.
           refs=$(gh api "repos/$GH_REPO/git/matching-refs/tags/$TAG")
@@ -284,6 +289,6 @@ jobs:
             if [ "${#missing[@]}" -gt 0 ]; then gh release upload "$TAG" "${missing[@]}"; fi
           else
             gh release create "$TAG" "${tag_args[@]}" --draft --title "Mtile $TAG" \
-              --notes 'Extract the archive for your desktop and open Mtile to play Coin Quest. The download includes the examples, Go, TinyGo and the preview player. See the installation guide to open and build Hello from the extracted folder.' \
+              --notes 'Extract the archive for your desktop and open Mtile to play Coin Quest. The download includes the examples, Go, TinyGo and the preview player. Download examples.sha256 from this release to verify the ROMs built from the 20 standalone examples. The bundled README includes commands for Linux, macOS and Windows.' \
               ./*.zip ./*.tar.gz ./*.sha256
           fi
