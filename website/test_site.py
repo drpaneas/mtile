@@ -74,7 +74,7 @@ class SiteTests(unittest.TestCase):
         api = (self.output / 'api/btn.html').read_text()
         self.assertIn('<span class="tok-function">btn</span>(index)', api)
         install = (self.output / 'guides/install.html').read_text()
-        self.assertIn('<span class="tok-function">mtile</span> doctor', install)
+        self.assertIn('<span class="tok-function">go</span> version', install)
 
     def test_highlighting_preserves_copyable_text_and_escaping(self):
         examples = {
