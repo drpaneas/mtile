@@ -157,33 +157,87 @@ def open_and_wait(command, work, env, ready, label):
                 editor.wait(timeout=20)
 
 
-def explorer_position(player, rom, work, env):
-    # Each draw fills the rows behind the 8x8 explorer with a solid color.
-    # Stop well before the first coin. Measure the leftmost visible sprite pixel.
-    commands = bytes([1, 0, 0, 0]) * 75 + bytes([1, 0, 16, 0]) * 16 + bytes([3, 0, 0, 0])
+def play_frames(player, rom, work, env, buttons):
+    commands = b"".join(struct.pack("<BBH", 1, 0, mask) for mask in buttons) + bytes([3, 0, 0, 0])
     packets = subprocess.run([player, rom], input=commands, capture_output=True, cwd=work,
                              env=env, check=True, timeout=60).stdout
     magic, _, width, height, _, _ = struct.unpack_from("<4sHHHHI", packets)
     if (magic, width, height) != (b"GLUP", 240, 160):
         raise ValueError("invalid mGBA handshake")
     offset = 16
-    positions = []
-    for tick in range(91):
+    for tick in range(len(buttons)):
         magic, number, samples, overflow, telemetry = struct.unpack_from("<4sIIII", packets, offset)
         if (magic, number, overflow) != (b"FRAM", tick, 0):
             raise ValueError(f"bad mGBA response at frame {tick}")
         offset += 20
-        if tick in (74, 90):
-            pixels = memoryview(packets)[offset:offset + width * height * 4].cast("I")
-            positions.append(min(x for y in range(72, 80) for x in range(8, 100)
-                                 if pixels[y * width + x] != pixels[y * width]))
-        offset += width * height * 4 + samples * 4 + telemetry
+        pixels_end = offset + width * height * 4
+        audio_end = pixels_end + samples * 4
+        yield memoryview(packets)[offset:pixels_end].cast("I"), packets[pixels_end:audio_end]
+        offset = audio_end + telemetry
     if offset != len(packets):
         raise ValueError("unexpected trailing emulator output")
+
+
+def explorer_position(player, rom, work, env):
+    # Each draw fills the rows behind the 8x8 explorer with a solid color.
+    # Stop well before the first coin. Measure the leftmost visible sprite pixel.
+    frames = play_frames(player, rom, work, env, [0] * 75 + [16] * 16)
+    positions = []
+    for tick, (pixels, _) in enumerate(frames):
+        if tick in (74, 90):
+            positions.append(min(x for y in range(72, 80) for x in range(8, 100)
+                                 if pixels[y * 240 + x] != pixels[y * 240]))
     return positions
 
 
-def verify(archive, launch, block_windows_network):
+def verify_audio_controls(player, rom, work, env):
+    def audio(press_a, press_b):
+        buttons = [0] * 212
+        # Stop the song with L, play the imported WAV with A and trigger the PSG note with B.
+        for start, mask in ((76, 512), (118, press_a), (170, press_b)):
+            buttons[start:start + 3] = [mask] * 3
+        return [pcm for _, pcm in play_frames(player, rom, work, env, buttons)]
+
+    both = audio(1, 2)
+    if len(set(b"".join(both[35:70]))) <= 1:
+        raise ValueError("the imported song did not produce audio before the stop command")
+    without_a = audio(0, 2)
+    without_b = audio(1, 0)
+    if (both[:118] != without_a[:118] or both[118:160] == without_a[118:160] or
+            both[:170] != without_b[:170] or both[170:] == without_b[170:]):
+        raise ValueError("imported-audio playback did not respond to the WAV and PSG buttons")
+    print("The imported WAV and PSG buttons each changed the audio.", flush=True)
+
+
+def verify_audio_builds(root, work, tools, command, player):
+    example = "examples/imported-audio"
+    source = root / example
+    if (source / "game.gba").exists():
+        raise ValueError("expected imported-audio without a prebuilt ROM")
+    baseline = None
+    attempts = 5
+    for attempt in range(1, attempts + 1):
+        with tempfile.TemporaryDirectory(prefix=f"audio {attempt} ", dir=work) as temp:
+            run = Path(temp)
+            project = run / example
+            shutil.copytree(source, project)
+            env = desktop_env(run / "home")
+            env["PATH"] = str(tools) + os.pathsep + env["PATH"]
+            subprocess.run(command + ["build", example], cwd=run, env=env, check=True, timeout=600)
+            rom = project / "game.gba"
+            data = rom.read_bytes()
+            digest = hashlib.sha256(data).hexdigest()
+            print(f"imported-audio build {attempt}: {len(data)} bytes, SHA-256 {digest}", flush=True)
+            if baseline is None:
+                baseline = data
+            elif data != baseline:
+                raise ValueError("clean imported-audio builds produced different ROMs")
+            if attempt == attempts:
+                verify_audio_controls(player, rom, run, env)
+    return digest
+
+
+def verify(archive, launch, block_windows_network, audio_digest=None):
     with tempfile.TemporaryDirectory(prefix="mtile-release-test-") as tmp:
         work = Path(tmp)
         install = work / "Moved Desktop Download"
@@ -240,6 +294,9 @@ def verify(archive, launch, block_windows_network):
                 raise ValueError(f"invalid GBA cartridge built from {example}")
             print(f"mtile build examples/hello created {rom.relative_to(root)} "
                   f"({len(result):,} bytes, SHA-256 {hashlib.sha256(result).hexdigest()}).")
+            digest = verify_audio_builds(root, work, tools, command, player)
+            if audio_digest is not None:
+                audio_digest.write_text(digest + "\n", encoding="ascii", newline="\n")
 
 
 if __name__ == "__main__":
@@ -248,5 +305,6 @@ if __name__ == "__main__":
     parser.add_argument("--launch", action="store_true", help="also open the desktop window (requires a display)")
     parser.add_argument("--block-windows-network", action="store_true",
                         help="temporarily block outbound connections for the extracted executables (administrator)")
+    parser.add_argument("--audio-digest", type=Path, help="write the verified imported-audio ROM SHA-256")
     args = parser.parse_args()
-    verify(args.archive, args.launch, args.block_windows_network)
+    verify(args.archive, args.launch, args.block_windows_network, args.audio_digest)

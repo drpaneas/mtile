@@ -74,6 +74,13 @@ it checks that `mtile edit examples/hello` opens the Hello editor window.
 It then checks that `mtile build examples/hello` produces a new cartridge
 at `examples/hello/game.gba`.
 
+Each desktop also builds `examples/imported-audio` five times from fresh
+project copies, home directories and compiler caches. The verifier compares
+the cartridges byte for byte and plays the imported WAV and PSG note in the
+packaged emulator. The workflow compares the five platforms' ROM SHA-256
+digests before it creates a draft. Use `--audio-digest FILE` to save the
+digest when running the verifier locally.
+
 The workflow additionally denies network access with a macOS sandbox or a
 separate Linux network namespace. On Windows it uses temporary outbound firewall
 rules for the extracted executables (`--block-windows-network`, administrator). A Linux headless runner needs

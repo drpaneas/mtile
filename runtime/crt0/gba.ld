@@ -102,6 +102,10 @@ SECTIONS
         . = ALIGN(4);
         _sbss = .;         /* used by startup code */
         *(.bss)
+        /* ThinLTO can emit Maxmod globals in different orders. Sort their
+         * named sections so the addresses embedded in the ROM are stable. */
+        *(SORT_BY_NAME(.bss.mm*))
+        *(SORT_BY_NAME(.bss.mpp_*))
         *(.bss.*)
         *(COMMON)
         . = ALIGN(4);

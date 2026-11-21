@@ -79,12 +79,12 @@ jobs:
           sh scripts/release/build-bundle.sh
       - name: Launch, edit and export with the network disabled (macOS)
         if: runner.os == 'macOS'
-        run: sandbox-exec -p '(version 1) (allow default) (deny network*)' python3 scripts/release/verify_download.py "$ARCHIVE" --launch
+        run: sandbox-exec -p '(version 1) (allow default) (deny network*)' python3 scripts/release/verify_download.py "$ARCHIVE" --launch --audio-digest "$ARCHIVE.audio-digest"
       - name: Launch, edit and export with the network disabled (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo unshare --net -- sudo -u "$(id -un)" xvfb-run -a \
-            "$(command -v python3)" scripts/release/verify_download.py "$ARCHIVE" --launch
+            "$(command -v python3)" scripts/release/verify_download.py "$ARCHIVE" --launch --audio-digest "$ARCHIVE.audio-digest"
           gui_args=()
           if [[ "$(uname -m)" == aarch64 ]]; then gui_args+=(--reopen-edited); fi
           sudo unshare --net -- sudo -u "$(id -un)" \
@@ -104,7 +104,13 @@ jobs:
       - name: Launch, edit and export with outbound connections blocked (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: python scripts/release/verify_download.py "$ARCHIVE" --launch --block-windows-network
+        run: python scripts/release/verify_download.py "$ARCHIVE" --launch --block-windows-network --audio-digest "$ARCHIVE.audio-digest"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audio-digest-${{ matrix.target }}
+          path: ${{ env.ARCHIVE }}.audio-digest
+          retention-days: 3
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: mtile-${{ matrix.target }}
@@ -115,9 +121,31 @@ jobs:
           retention-days: 3
           if-no-files-found: error
 
+  reproducibility:
+    name: Compare imported-audio ROMs across all five desktops
+    needs: desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: digests
+          pattern: audio-digest-*
+          merge-multiple: true
+      - name: Require one SHA-256 for every target
+        working-directory: digests
+        run: |
+          files=(*.audio-digest)
+          test "${#files[@]}" -eq 5
+          for file in "${files[@]}"; do
+            digest=$(cat "$file")
+            [[ "$digest" =~ ^[0-9a-f]{64}$ ]]
+            printf '%s  %s\n' "$digest" "$file"
+            cmp "${files[0]}" "$file"
+          done
+
   draft:
     if: github.event_name == 'push' || inputs.release_tag != ''
-    needs: desktop
+    needs: reproducibility
     runs-on: ubuntu-latest
     permissions:
       contents: write
