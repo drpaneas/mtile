@@ -130,74 +130,25 @@ size and SHA-256 of each ROM in the run summary. To repeat the check for an
 existing release with an `examples.sha256` asset, choose **Run workflow** on
 `main` and enter its tag.
 
-### First launch from a browser on macOS
-
-Use a fresh Mac of each architecture with Gatekeeper enabled. In the
-[installation guide](https://drpaneas.com/mtile/guides/install.html#using-a-desktop-bundle),
-click the matching ZIP and `examples.sha256` and keep them together in Downloads.
-Leave the ZIP unopened until the test so it exercises the first launch.
-To test the whole Mac offline, save the live installation page and the public
-metadata for the tag while connected, then disconnect the test Mac from the network.
-For example, with the tag under test in `TAG`:
-
-```sh
-curl -fsSL https://drpaneas.com/mtile/guides/install.html -o install.html
-curl -fsSL "https://api.github.com/repos/drpaneas/mtile/releases/tags/$TAG" -o release.json
-```
-
-With the publisher's Apple Developer Team ID in `TEAM_ID`, run the following
-on each Mac. Leave any security prompt unanswered.
-
-```sh
-python3 scripts/release/verify_macos_browser.py --tag "$TAG" --team-id "$TEAM_ID" \
-  --downloads "$HOME/Downloads" --guide-html install.html --release-json release.json
-```
-
-The verifier checks the downloaded bytes against the requested release and
-preserves the browser's quarantine marking. From a fresh extraction it runs
-`mtile build examples/hello` and the guide's `shasum` command with network
-access denied to the build. A passing run prints `examples/hello/game.gba: OK`
-and confirms that the app contains a stapled ticket and that Gatekeeper
-recognizes notarized code from the expected team.
-The packaging job also checks the stapled ticket online against Apple.
-
 ## Before distributing a bundle
 
 Use a clean revision and run the project's [release checklist](../../docs/launch-checklist.md).
-### Signing the two Mac downloads
-
-A versioned **Desktop release** run signs both Mac packages with Developer ID
-Application, submits them to Apple's notary service and staples the accepted
-ticket to each app. The offline checks, draft and published archive checksums
-all use the final ZIPs. Either Mac failing signing or notarization blocks the draft.
-
-Set these repository secrets under **Settings → Secrets and variables → Actions**.
-Use a Developer ID Application certificate exported with its private key and a team
-App Store Connect API key authorized to use the notary service.
-
-| Actions secret | Value |
-| --- | --- |
-| `MTILE_MACOS_CERTIFICATE_P12` | Base64 of the password-protected `.p12` export |
-| `MTILE_MACOS_CERTIFICATE_PASSWORD` | Password for that export |
-| `MTILE_MACOS_NOTARY_KEY_P8` | Base64 of the team's private `.p8` API key |
-| `MTILE_MACOS_NOTARY_KEY_ID` | Key ID for the `.p8` |
-| `MTILE_MACOS_NOTARY_ISSUER_ID` | Issuer ID for that team API key |
-
-The Mac runner imports the signing identity into a temporary keychain. The
-release step signs the bundled CLI, emulator, toolchains and app with a secure
-timestamp and hardened runtime. It checks the signature, stapled ticket and
-Gatekeeper assessment again after extracting the distribution ZIP.
-
-A workflow run with an empty release version still builds local test packages.
-For a local distribution build with an existing signing identity and
-`notarytool` profile, set `MTILE_MACOS_SIGN_IDENTITY` and
-`MTILE_MACOS_NOTARY_PROFILE` and run the following on macOS.
+For a public macOS download, set `MTILE_MACOS_SIGN_IDENTITY` to the signing
+identity in your keychain and `MTILE_MACOS_NOTARY_PROFILE` to your notarytool
+credentials profile. Then run the following on macOS with the release version.
 
 ```sh
-sh scripts/release/sign-macos.sh dist/mtile-darwin-arm64.zip signed 0.1.5
+scripts/release/sign-macos.sh dist/mtile-darwin-arm64.zip signed 0.1.0
+python3 scripts/release/verify_download.py signed/mtile-darwin-arm64.zip --launch
 ```
 
-### Windows signing and desktop checks
+The script verifies the candidate checksum, signs the nested tools and app,
+submits the ZIP to Apple when a profile is supplied, staples the accepted ticket
+and writes the final ZIP and SHA-256 together. Use a separate output directory.
+When distributing signed packages, supply the final signed archive and its
+checksum in the packaging job before the offline checks and artifact upload.
+For a local signing test, set the identity
+to `-` and leave the notary profile unset.
 
 For Windows use the release publisher's
 Authenticode identity as appropriate. Run the verifier on the final signed
