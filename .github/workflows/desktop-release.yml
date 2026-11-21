@@ -85,8 +85,10 @@ jobs:
         run: |
           sudo unshare --net -- sudo -u "$(id -un)" xvfb-run -a \
             "$(command -v python3)" scripts/release/verify_download.py "$ARCHIVE" --launch
+          gui_args=()
+          if [[ "$(uname -m)" == aarch64 ]]; then gui_args+=(--reopen-edited); fi
           sudo unshare --net -- sudo -u "$(id -un)" \
-            "$(command -v python3)" scripts/release/verify_linux_gui.py "$ARCHIVE" --failure-frame "$RUNNER_TEMP/coin-quest.xwd"
+            "$(command -v python3)" scripts/release/verify_linux_gui.py "$ARCHIVE" "${gui_args[@]}" --failure-frame "$RUNNER_TEMP/coin-quest.xwd"
       - name: Save the Linux editor screen if its GUI check fails
         if: failure() && runner.os == 'Linux'
         uses: actions/upload-artifact@v4

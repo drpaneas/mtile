@@ -73,9 +73,11 @@ a virtual display for `--launch`. Omitting that option exercises the same
 edit, export and playback checks on a freshly instantiated CLI project.
 
 On Linux, CI also runs `python3 scripts/release/verify_linux_gui.py ARCHIVE`
-inside the offline namespace. This check starts a private Xvfb display and uses
-xdotool to change the movement speed in Develop, save the source and click
-**Export .gba**. It verifies the changed speed by playing the exported ROM.
+inside the offline namespace. On x64 the test types the movement speed change
+in Develop and saves the Lua file. On ARM64 it opens an existing Coin Quest
+project with an edited Lua file to exercise returning players' changes.
+Both use the editor's **Export .gba** button and verify the new speed by
+playing the exported ROM.
 
 ## Before distributing a bundle
 
