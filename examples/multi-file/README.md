@@ -25,11 +25,11 @@ Top-level `local` state remains persistent in Mtile, so the editor reports
 consume another global slot. Function parameters and locals inside functions
 also do not consume global slots.
 
-Run it from the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/multi-file/
-go run ./cmd/mtile build examples/multi-file/
+mtile edit examples/multi-file/
+mtile build examples/multi-file/
 ```
 
 Click the preview and use the arrow keys to move the sprite. The HUD counts

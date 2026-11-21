@@ -22,8 +22,11 @@ the actual Windy Meadow ROM: `map()` plays every linked clip without any
 
 ## Try it
 
+[Get the example projects](small-games.md#get-the-example-projects), then open
+Windy Meadow from the folder containing `examples`:
+
 ```sh
-go run ./cmd/mtile edit examples/tile-links
+mtile edit examples/tile-links
 ```
 
 1. In **Sprite Lab → Shared tiles**, select tile 4, the pink flower. The

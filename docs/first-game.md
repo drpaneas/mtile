@@ -2,14 +2,10 @@
 
 [Getting started](getting-started.md) · [Documentation index](README.md)
 
-**Coin Quest** is a small, complete game: move an explorer, collect five coins,
-hear each pickup, and restart. It includes original editable sprites and a
-two-note hardware sound effect. Plan for about 15 minutes of learning once
-your tools are installed; first-time builds can take longer.
-
-Your first goal is small: **play it, change its speed, and play again.** The
-lessons below are optional checkpoints you can return to one at a time. You
-do not need to learn the whole API or choose a renderer to begin.
+In **Coin Quest** you move an explorer, collect five coins, hear each pickup,
+and restart. The desktop download includes the game, its editable artwork
+and a two-note hardware sound effect. Allow about 15 minutes to play it,
+change its speed and try it again. The four lessons below are optional.
 
 ![Coin Quest after collecting the first coin, captured from its actual GBA ROM.](media/coin-quest/preview.png)
 
@@ -17,34 +13,19 @@ do not need to learn the whole API or choose a renderer to begin.
 
 ## Check your setup
 
-With a desktop download, extract it and double-click **Mtile**. Play with the
-arrow keys and press Escape when you are ready to try [your first change](#your-first-change).
-
-For a source build, follow the [installation requirements](getting-started.md#requirements), then
-run these commands from your source checkout:
-
-```sh
-go run ./cmd/mtile doctor
-go run ./cmd/mtile new -template coin-quest mygame
-go run ./cmd/mtile build mygame
-go run ./cmd/mtile edit mygame
-```
-
-Keep flags before the project directory. Creation refuses to overwrite an
-existing directory; choose another name if `mygame` already exists.
-
-`doctor` checks the ROM tools and suggests fixes if anything is missing. The
-build and editor commands then check that you can compile and play a game.
-See the [command reference](reference.md#commands) for the full checks.
+[Download Mtile from GitHub Releases](https://github.com/drpaneas/mtile/releases/latest).
+Extract the whole archive, then double-click **Mtile.exe** on Windows,
+**Mtile.app** on Mac, or **Mtile** on Linux. Coin Quest opens in **Develop**.
+Its editable files live in `mTile Projects/Coin Quest` inside your home folder.
+The download includes everything you need to play, change the Lua and export
+a ROM offline. See the [desktop installation guide](getting-started.md#using-a-desktop-bundle)
+for help choosing an archive.
 
 ## Play the complete game
 
-Choose **Develop** → **Build + Reload** and click the GBA preview. Move with
-the arrow keys, collect five coins, then press **Z** (GBA A) to restart.
-Press Escape to return keyboard focus to the editor.
-
-**Checkpoint:** you can move, collect five coins, and restart. You have a
-working game to return to.
+Move with the arrow keys, collect five coins, then press **Z** (GBA A) to
+restart. If the arrows move the text cursor, click the game preview. Press
+Escape when you are ready to edit the code.
 
 ## Your first change
 
@@ -55,14 +36,13 @@ In **Develop**, open `game.lua`. Find `speed = 2` near the top and change it to
 edit → build → play loop you will use for every new feature. Change it back
 to `2` if you prefer the original pace.
 
-**You can stop here.** To share your modified game, select **Export .gba** and
-choose `mygame/game.gba`. Keep the project folder so you can edit it later.
+**You can stop here.** To share your modified game, select **Export .gba**.
+The editor reports where it saved the cartridge. Keep the project folder so
+you can edit it later.
 
 For another small change, recolor sprite **1**, the explorer, in **Sprites**.
-Save and rebuild to see the new artwork. The generated `mygame/README.md`
-has the complete walkthrough, also available
-[here](../internal/build/templates/coin-quest/README.md); it travels with the
-project and works offline.
+Save and rebuild to see the new artwork. Open `README.md` inside your Coin Quest
+project for the complete offline walkthrough.
 
 ## Learn one piece at a time
 

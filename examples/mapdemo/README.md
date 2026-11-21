@@ -75,14 +75,19 @@ The sheet demonstrates the three tile cost classes from
 - **Opaque tiles** use the packed fast path.
 - **Transparent tiles** pay the per-byte transparency cost.
 
-## Regenerate and build
+## Build and play
+
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-python3 examples/mapdemo/gen_map.py
-go run ./cmd/mtile build examples/mapdemo/
+mtile build examples/mapdemo/
+mtile edit examples/mapdemo/
 ```
 
-Run `examples/mapdemo/game.gba` in mGBA. Arrow keys move and A (X with mGBA's
-default keyboard mapping) jumps. Walking through all 136 screens takes a long
+Use **Build + Reload** in the editor and click the preview. The arrow keys
+move and **Z** (GBA A) jumps. The exported ROM is `examples/mapdemo/game.gba`. Walking through all 136 screens takes a long
 time; increasing the movement speed in `game.lua` is useful for traversal
 testing.
+
+To regenerate the supplied map, run `python3 examples/mapdemo/gen_map.py`
+from the same folder and build the project again.

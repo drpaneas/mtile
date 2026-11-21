@@ -17,6 +17,10 @@ ROM, follow the getting-started guide; for a working project, browse the
 
 ## Commands
 
+Use the [CLI included with the desktop download](getting-started.md#use-mtile-in-a-terminal).
+In the examples below, `project-dir` is the path to the folder containing
+your game's `project.json`. Quote paths containing spaces.
+
 ```
 mtile doctor [options]
 mtile new   [options] project-dir

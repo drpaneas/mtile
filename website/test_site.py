@@ -15,7 +15,11 @@ class Page(HTMLParser):
         super().__init__()
         self.links, self.ids, self.h1, self.missing_alt = [], set(), 0, []
         self.elements = []
+        self.text = []
         self.feed(path.read_text())
+
+    def handle_data(self, data):
+        self.text.append(data)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -74,7 +78,7 @@ class SiteTests(unittest.TestCase):
         api = (self.output / 'api/btn.html').read_text()
         self.assertIn('<span class="tok-function">btn</span>(index)', api)
         install = (self.output / 'guides/install.html').read_text()
-        self.assertIn('<span class="tok-function">go</span> version', install)
+        self.assertIn('<span class="tok-function">mtile</span> build mygame', install)
 
     def test_highlighting_preserves_copyable_text_and_escaping(self):
         examples = {
@@ -133,6 +137,23 @@ class SiteTests(unittest.TestCase):
                     self.assertEqual(urljoin(base + 'index.html', route), base + route)
         self.assertEqual(build.DOC_ROUTES[(build.ROOT / 'docs/README.md').resolve()], 'guide.html')
 
+    def test_download_is_primary_and_examples_use_the_installed_cli(self):
+        releases = 'https://github.com/drpaneas/mtile/releases/latest'
+        for route, primary_class in [('index.html', 'selected'), ('guide.html', 'primary')]:
+            page = self.pages[(self.output / route).resolve()]
+            actions = [attrs['href'] for tag, attrs in page.elements
+                       if tag == 'a' and primary_class in attrs.get('class', '').split()]
+            self.assertIn(releases, actions, route)
+
+        install = self.pages[(self.output / 'guides/install.html').resolve()]
+        sections = [attrs['id'] for tag, attrs in install.elements if tag == 'h2' and 'id' in attrs]
+        self.assertLess(sections.index('using-a-desktop-bundle'), sections.index('build-the-desktop-tools'))
+        self.assertIn('use-mtile-in-a-terminal', install.ids)
+        self.assertIn(releases, install.links)
+        for path, page in self.pages.items():
+            if path.name == 'examples.html' or path.parent.name == 'guides':
+                self.assertNotIn('go run ./cmd/mtile', ''.join(page.text), path.name)
+
     def test_nested_pages_distinguish_guide_home_from_title_screen(self):
         page = self.pages[(self.output / 'api/btn.html').resolve()]
         links_by_class = {name: attrs['href'] for tag, attrs in page.elements if tag == 'a'
@@ -167,7 +188,8 @@ class SiteTests(unittest.TestCase):
 
     def test_generated_guides_contain_current_template_and_cli(self):
         self.assertIn('btnp(5)', (self.output / 'guides/first-game.html').read_text())
-        self.assertIn('mtile doctor', (self.output / 'guides/install.html').read_text())
+        install = self.pages[(self.output / 'guides/install.html').resolve()]
+        self.assertIn('mtile doctor', ''.join(install.text))
         self.assertTrue((self.output / 'assets/FONT-LICENSE.txt').is_file())
         self.assertTrue((self.output / '.nojekyll').is_file())
 

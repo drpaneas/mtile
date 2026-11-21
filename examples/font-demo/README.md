@@ -4,9 +4,11 @@ A native GBA text sample with English, modern Greek (including accents) and
 German (including umlauts and ß). It selects `international`, so **one** font
 contains all three repertoires. AUTO selects Mode 4 because the text is UTF-8.
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
-go run ./cmd/mtile edit examples/font-demo
-go run ./cmd/mtile build examples/font-demo
+mtile edit examples/font-demo
+mtile build examples/font-demo
 ```
 
 In the editor:

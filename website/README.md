@@ -76,7 +76,8 @@ editing examples, also check runtime behavior and native asset validation. Updat
 required by [AGENTS.md](../AGENTS.md).
 
 `index.html` is the title/menu screen; `guide.html` is the guide landing page.
-The menu links to the first-game course, guide, examples, and installation.
+The menu leads with the latest desktop release, followed by installation,
+Coin Quest and the examples. The header links directly to the guide.
 The guide keeps the existing lesson, category, API, example, and long-guide
 routes. Its navigation includes a return to the title screen.
 

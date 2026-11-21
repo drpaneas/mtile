@@ -10,10 +10,10 @@ then find your way home. This miniature game teaches one distinction:
 
 ## Play
 
-From the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/lantern-rooms
+mtile edit examples/lantern-rooms
 ```
 
 In **Develop**, choose **Build + Reload**, then click the GBA preview. Hold
@@ -79,7 +79,7 @@ assets are included. Regenerate them with Python's standard library:
 
 ```sh
 python3 examples/lantern-rooms/gen_assets.py
-go run ./cmd/mtile build examples/lantern-rooms
+mtile build examples/lantern-rooms
 ```
 
 Regeneration replaces artwork assets, so keep your edited project separately.

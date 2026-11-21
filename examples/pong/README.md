@@ -16,10 +16,10 @@ paddle, wall, goal, and round-start effects.
 
 ## Build
 
-From the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile build examples/pong
+mtile build examples/pong
 ```
 
 ## Mode 4 table-field benchmark

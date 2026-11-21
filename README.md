@@ -5,7 +5,7 @@
 Write your game, draw its sprites and maps, compose hardware sound, and build
 an actual `.gba` cartridge—all from one desktop editor.
 
-[Get started](#quick-start) · [Documentation](docs/README.md) · [Examples](examples/README.md) · [Contribute](CONTRIBUTING.md)
+[Download Mtile](https://github.com/drpaneas/mtile/releases/latest) · [Get started](#quick-start) · [Documentation](docs/README.md) · [Examples](examples/README.md) · [Contribute](CONTRIBUTING.md)
 
 **New to game development?** [Make your first game with Coin Quest](docs/first-game.md):
 a playable starter with sprites, sound, and four guided lessons.
@@ -40,48 +40,27 @@ and cost checks pass. See [renderer support](docs/render-modes.md) and
 
 ## Quick start
 
-**[Download Mtile for your desktop](https://github.com/drpaneas/mtile/releases/latest).** Extract the archive and double-click **Mtile**. Coin Quest
-opens ready to play. Press Escape to edit `game.lua`, choose **Build + Reload**
-to try your change, then **Export .gba** to take the cartridge with you. Go,
-TinyGo and the preview player are included. [Desktop bundle instructions](docs/getting-started.md#using-a-desktop-bundle).
+1. [Download the archive for your desktop](https://github.com/drpaneas/mtile/releases/latest). Choose Windows x64, macOS Apple Silicon or Intel, or Linux x64 or ARM64.
+2. Extract the whole archive and double-click **Mtile.exe** (Windows), **Mtile.app** (Mac), or **Mtile** (Linux). **Coin Quest** opens ready to play. Move with the arrows, collect five coins, and press Z to restart.
+3. Press Escape to edit `game.lua`. Change `speed = 2` to `speed = 3`, save, and choose **Build + Reload**. Click the preview to try the faster explorer. Choose **Export .gba** to save your game as a cartridge.
 
-**Building from source**
+The download includes Go, TinyGo and the preview player. You can play, edit
+and export offline. The four guided lessons live in your project's `lessons/`
+folder. [Desktop setup](docs/getting-started.md#using-a-desktop-bundle) ·
+[Your first game](docs/first-game.md)
 
-The source workflow requires **Go 1.27.1+** and **TinyGo 0.42.0**. The editor also
-needs **CMake**, a **C compiler**, and platform graphics/audio dependencies.
-Follow [installation](docs/getting-started.md#requirements) for your system.
-
-```sh
-git clone --recurse-submodules https://github.com/drpaneas/mtile.git
-cd mtile
-go run ./cmd/mtile doctor
-go run ./cmd/mtile new -template coin-quest mygame
-go run ./cmd/mtile build mygame
-```
-
-This creates **Coin Quest**, a complete game with editable artwork, sound, and
-four small lessons. Your first ROM is `mygame/game.gba`. Open the project in
-the editor:
+**Using the terminal?** Enable the [bundled `mtile` command](docs/getting-started.md#use-mtile-in-a-terminal).
+From a folder where you keep projects, create, build and open another copy of Coin Quest.
 
 ```sh
-go run ./cmd/mtile edit mygame
+mtile new -template coin-quest mygame
+mtile build mygame
+mtile edit mygame
 ```
 
-Choose **Develop** and press **Build + Reload**. Click the
-GBA preview to play: arrow keys move, Z/X are A/B, and Escape returns focus to
-code. Collect five coins and press Z to restart. The first source-checkout
-preview builds the bundled emulator helper.
-
-**Now make one change:** in `game.lua`, change `speed = 2` to `speed = 3`, save,
-and select **Build + Reload**. The explorer moves faster. Follow
-[Your first game](docs/first-game.md) for the next small step; you can leave
-renderer rules and performance details until you need them.
-
-For a blank project, use `go run ./cmd/mtile new blankgame` with an unused
-directory name. To inspect an existing example, try
-`go run ./cmd/mtile edit examples/hello`.
-The [getting-started guide](docs/getting-started.md) also covers installed
-bundles, command-line builds, and troubleshooting.
+Your ROM is `mygame/game.gba`. To start with a blank project instead, run
+`mtile new blankgame` with an unused directory name. To compile Mtile itself,
+follow [Build the desktop tools](docs/getting-started.md#build-the-desktop-tools).
 
 For an external code editor, [`mtile lsp`](docs/language-server.md) provides
 builtin completion, hover help, and live Lua and renderer diagnostics.

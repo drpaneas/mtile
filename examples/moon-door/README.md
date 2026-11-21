@@ -8,10 +8,10 @@ This miniature teaches one thing: **an action needs its own elapsed time**.
 
 ## Play
 
-From the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/moon-door
+mtile edit examples/moon-door
 ```
 
 In **Develop**, select **Build + Reload** and click the preview. **Z is GBA A**.

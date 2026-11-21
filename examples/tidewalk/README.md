@@ -15,10 +15,10 @@ contains the final lesson so you can play the finished walk immediately.
 
 ## Play first
 
-Run these commands from the mTile repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/tidewalk
+mtile edit examples/tidewalk
 ```
 
 In **Develop**, click **Build + Reload**, then click the preview so it receives

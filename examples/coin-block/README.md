@@ -40,11 +40,11 @@ redraws the framebuffer with the same logical cell value.
 
 ## Run and edit
 
-From the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/coin-block/
-go run ./cmd/mtile build examples/coin-block/
+mtile edit examples/coin-block/
+mtile build examples/coin-block/
 ```
 
 Regenerate the deterministic assets with:
@@ -53,7 +53,9 @@ Regenerate the deterministic assets with:
 python3 examples/coin-block/gen_assets.py
 ```
 
-## Verify and benchmark
+## Verify and benchmark (source checkout)
+
+This optional benchmark uses Go and the native player helper.
 
 The paired renderer benchmark uses the zero-input auto-demo, so it includes
 the active animation, the one-time transition, and the stable used state:

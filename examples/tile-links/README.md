@@ -7,8 +7,10 @@ the `lamp` pose. `map()` draws the linked object at every occurrence.
 
 ![Linked flowers sway while the camera pauses, scrolls right, and returns across Windy Meadow.](../../docs/media/tile-links/play.gif)
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
-go run ./cmd/mtile edit examples/tile-links
+mtile edit examples/tile-links
 ```
 
 **Controls:** left/right scroll; A picks the flower under the cursor.

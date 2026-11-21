@@ -638,18 +638,14 @@ MPL notice are documented in [third-party/mgba.md](third-party/mgba.md).
 
 ## Release dependency policy
 
-The release bundle contains:
+The [desktop download](getting-started.md) includes the editor, Coin Quest,
+the `mtile` CLI, the mGBA preview player, the Go and TinyGo toolchains, the
+embedded GBA runtime, and their license notices. Playing, rebuilding Lua
+and exporting a ROM all work offline. The operating system provides desktop
+graphics and audio. For the CLI location on each platform, see
+[Use mtile in a terminal](getting-started.md#use-mtile-in-a-terminal).
 
-- `bin/mtile`, `bin/mtile-editor`, and the native `bin/mtile-player`;
-- the pinned TinyGo distribution under `toolchains/tinygo`;
-- Mtile's Lua parser/transpiler and embedded GBA runtime;
-- Mtile, mGBA, and TinyGo license notices.
-
-The user installs only a compatible Go distribution as an additional
-language/toolchain dependency. Lua, TinyGo, mGBA, CMake, SDL, and Qt are
-implementation details of the bundle, not separate end-user prerequisites;
-the operating system still provides its normal desktop graphics and audio
-libraries. Maintainers create platform bundles with
+Maintainers create platform bundles with
 [`scripts/release/build-bundle.sh`](../scripts/release/build-bundle.sh).
 
 ## Cartridge font

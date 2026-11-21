@@ -2,11 +2,7 @@
 
 `mtile lsp` provides builtin completion, hover documentation, and live compiler
 diagnostics for mTile's Lua dialect. It runs independently of the native editor
-and does not require TinyGo or an emulator. Install or build the `mtile` binary:
-
-```sh
-go build -o mtile ./cmd/mtile
-```
+and uses the [`mtile` command included in the desktop download](getting-started.md#use-mtile-in-a-terminal).
 
 Configure your editor's LSP client to start that executable with the argument
 `lsp`. The connection uses standard LSP JSON-RPC framing over stdin/stdout;

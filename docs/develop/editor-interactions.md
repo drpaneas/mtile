@@ -16,11 +16,11 @@ The native Develop editor now supports these interactions:
 | Go to document boundaries | Ctrl + Home/End; on macOS, Cmd + Up/Down |
 | Go to line boundaries on macOS | Cmd + Left/Right |
 
-Restart the editor after rebuilding to use these changes. For the Celeste
-tile-canvas experiment, run from the repository root:
+To try these controls, open **Develop**. For an existing game, run this from
+the folder containing its `project.json`:
 
 ```sh
-go run ./cmd/mtile edit -experimental-tilecanvas examples/celeste
+mtile edit .
 ```
 
 ## How the fixes work

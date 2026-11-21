@@ -727,9 +727,11 @@ The earlier scene-specific allocation and measurements remain in the
 Public builds continue to reject/fall back for unsupported raster calls as
 documented above; the experiment is not evidence for wider public eligibility.
 
-For interactive engineering work, `mtile build -experimental-tilecanvas
-examples/celeste` and `mtile edit -experimental-tilecanvas examples/celeste`
-opt only that selected project into the experiment. They use Mode 4 code
+For interactive engineering work with the original locally supplied Celeste
+project, run `mtile build -experimental-tilecanvas examples/celeste` or
+`mtile edit -experimental-tilecanvas examples/celeste` from the folder
+containing that project path. The experiment requires its Lua and artwork.
+These commands opt only the selected project into the experiment. They use Mode 4 code
 generation with the private runtime tag and report the actual Mode 0
 presentation as `experimental-tilecanvas`. This explicit opt-in is not public
 Mode 0/AUTO eligibility; the private composition and resource bounds above still

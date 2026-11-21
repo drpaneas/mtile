@@ -1,24 +1,26 @@
 # Example projects
 
-Start with [Coin Quest](../docs/first-game.md): create a playable game with
-original art, sound, and four complete lesson checkpoints:
+Open the [Mtile desktop download](https://github.com/drpaneas/mtile/releases/latest)
+to play [Coin Quest](../docs/first-game.md). The app includes the game, its
+editable art and sound, and four Lua lessons.
+
+## Run an example
+
+For the other games below, open the [release page](https://github.com/drpaneas/mtile/releases/latest)
+and download **Source code (zip)** under **Assets** for the same version as your
+Mtile app. Extract it and open a terminal in the folder that contains
+`examples/`. These projects run with the [CLI included in the desktop download](../docs/getting-started.md#use-mtile-in-a-terminal).
+
+To open Hello in the editor or export its ROM, run the corresponding command:
 
 ```sh
-go run ./cmd/mtile new -template coin-quest mygame
-go run ./cmd/mtile edit mygame
+mtile edit examples/hello
+mtile build examples/hello
 ```
 
-For the projects below, run these commands from the repository root, replacing
-`hello` with the chosen name:
-
-```sh
-go run ./cmd/mtile edit examples/hello
-go run ./cmd/mtile build examples/hello
-```
-
-In Develop, select Build + Reload and click the preview to give it keyboard
-focus. Arrow keys are the D-pad, Z is A, and X is B. See
-[getting started](../docs/getting-started.md) for dependencies.
+In Develop, select **Build + Reload** and click the preview. The arrow keys
+are the D-pad, Z is A, and X is B. The build command writes
+`examples/hello/game.gba`. Replace `hello` with another project below.
 
 ## Four focused little games
 

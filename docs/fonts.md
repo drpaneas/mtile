@@ -179,9 +179,12 @@ under its [existing CC0 license](../fonts/pico-8-wide.otf/license.txt).
 
 ## Try it and verify
 
+[Get the example projects](small-games.md#get-the-example-projects), then run
+these commands from the folder containing `examples`:
+
 ```sh
-go run ./cmd/mtile edit examples/font-demo
-go run ./cmd/mtile build examples/font-demo
+mtile edit examples/font-demo
+mtile build examples/font-demo
 ```
 
 ![Actual mGBA capture of the demo](media/fonts/demo.png)

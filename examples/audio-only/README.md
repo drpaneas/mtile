@@ -5,6 +5,8 @@ The original sine-wave test assets and bank are the same ones used in the
 Butano comparison; this small listening example omits the benchmark's tick
 counter, so its complete ROM hash is not a measured fixture's ROM hash.
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
 mtile edit examples/audio-only
 ```

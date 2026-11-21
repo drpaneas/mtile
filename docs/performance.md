@@ -838,8 +838,7 @@ You can ask the toolchain to look for some of the patterns taught here:
 mtile lint mygame
 ```
 
-From a source checkout, run `go run ./cmd/mtile lint mygame`. **MTile Lint**
-reports a file and line, explains the repeated work and points back to this
+Replace `mygame` with your project folder. **MTile Lint** reports a file and line, explains the repeated work and points back to this
 guide. Its eight rules cover table creation, numeric-list aliases,
 palette resets, literal map edits, split labels, pixel rectangles and mixed
 slot meanings, and fresh constructions replaced before their results are
@@ -950,9 +949,16 @@ renderer remains enabled.
 
 <h3 id="frame-stability-survey">Frame-stability survey</h3>
 
-`cmd/perfsurvey` builds projects as debug ROMs with their own renderer policy,
-plays a fixed input script in the headless mGBA helper, and reports per-tick
-cycles, missed frames, GC pauses, and IWRAM use from the debug mailbox:
+The survey builds each project as a debug ROM, plays a fixed input script in
+the headless mGBA helper, and reports per-tick cycles, missed frames, GC
+pauses, and IWRAM use.
+
+<details markdown="1">
+<summary>For contributors: reproduce the measurements from source</summary>
+
+The survey uses the repository's `cmd/perfsurvey` tool. With the
+[source build tools](getting-started.md#build-the-desktop-tools) installed,
+run these commands from the repository root.
 
 ```sh
 go run ./cmd/perfsurvey                          # every examples/ project
@@ -961,6 +967,8 @@ go run ./cmd/perfsurvey -input right -spikes 400000 examples/mapdemo
 # the hash files from two runtimes
 go run ./cmd/perfsurvey -renderer mode4 -tick-input -hashes /tmp/frames examples/pong
 ```
+
+</details>
 
 The October 25, 2026 survey (TinyGo 0.42.0, 3,600 frames per project, first
 two seconds excluded) found that every example stays well inside the

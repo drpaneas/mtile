@@ -4,9 +4,11 @@ This small example draws a clockwork surveyor using two saved clips: `idle` (fou
 poses) and `walk` (five poses), both at 6 FPS. It demonstrates animation rather
 than movement or collision: the character stays at `(100, 60)`.
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
-go run ./cmd/mtile edit examples/nerdo
-go run ./cmd/mtile build examples/nerdo
+mtile edit examples/nerdo
+mtile build examples/nerdo
 ```
 
 Build + Reload in Develop, then click the preview. Hold left/right to play

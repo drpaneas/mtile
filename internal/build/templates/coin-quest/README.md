@@ -4,8 +4,9 @@ Collect five coins with your little explorer, hear a chime with every pickup,
 and press A to play again. This project includes original artwork and sound.
 You can edit both in mTile. No external game assets are needed.
 
-**Aim for about 15 minutes after setup.** First-time compiler downloads/builds
-can take longer. You do not need to know Go or GBA hardware registers.
+The [desktop download](https://github.com/drpaneas/mtile/releases/latest) includes
+the editor, preview player, and compilers. You can play, edit Lua, and export
+your game offline.
 
 **First visit? Do sections 1 and 2 only:** play the game, then change its speed
 and see the result. That is a complete first session. The later lessons explain
@@ -15,31 +16,20 @@ one piece at a time when you are ready; you do not need to read them all now.
 
 ## 1. Play the complete game
 
-If you have not created the project yet, run:
+Extract the archive for your platform. Double-click **Mtile.app** on macOS,
+**Mtile.exe** on Windows, or **Mtile** on Linux. Coin Quest opens ready to
+play. Move with the arrow keys and press **Z** (GBA A) to restart after
+collecting five coins. Press **Escape** to return to the code editor.
+
+Your editable game is in `mTile Projects/Coin Quest` in your home folder.
+You can also open or build that project from a terminal. Once the
+[bundled CLI is on your PATH](https://drpaneas.com/mtile/guides/install.html#use-mtile-in-a-terminal),
+run the command you need from the folder containing `game.lua`:
 
 ```sh
-mtile new -template coin-quest mygame
+mtile edit .
+mtile build .
 ```
-
-From a source checkout, use `go run ./cmd/mtile` instead of `mtile`.
-If this README is already inside your generated project, skip creation.
-
-If you use an installed bundle, run these commands from the folder containing
-this project, replacing `mygame` with its directory name:
-
-```sh
-mtile doctor
-mtile build mygame
-mtile edit mygame
-```
-
-From a source checkout, use `go run ./cmd/mtile` in place of `mtile` and run
-commands from the repository root. A project path containing spaces needs quotes.
-`doctor` checks the ROM tools; it does not test the editor's graphics or audio.
-
-Choose **Develop**, then **Build + Reload** (Ctrl/Cmd+R). Click the game preview
-before using the keyboard. The arrow keys move; **Z is GBA A**, which restarts.
-Escape returns focus to the code editor. Use **Export .gba** to write the release ROM.
 
 **Checkpoint:** collect five coins. The counter stops at 5/5 and shows
 “You win” Press Z to reset the counter and position.
@@ -48,8 +38,9 @@ Escape returns focus to the code editor. Use **Export .gba** to write the releas
 
 ## 2. Change one value
 
-In **Develop**, open `game.lua`. Change `speed = 2` to `speed = 3` and build
-again. Click the preview and move with the arrows.
+In **Develop**, open `game.lua`. Change `speed = 2` to `speed = 3`, save,
+and select **Build + Reload**. Click the preview and move with the arrows.
+Use **Export .gba** to save your modified game as a cartridge file.
 
 **Checkpoint:** the explorer moves faster. You have completed the
 edit → build → play loop. Change the speed back to `2` if you prefer.
@@ -156,7 +147,7 @@ or increase the goal. Keep a working copy before making a larger change.
 
 | Symptom | Next step |
 | --- | --- |
-| Build tools are missing | Run `mtile doctor` and follow its fixes. For source use, install Go before running the CLI. |
+| Build tools are missing | Keep the extracted desktop folder together. Run `mtile doctor` to check its toolchain. |
 | The source preview cannot start | Initialize submodules with `git submodule update --init --recursive`; check CMake and your C compiler. |
 | Keys do nothing | Click the GBA preview; Z is A. |
 | The preview is still showing the main game | Open the lesson's tab and click **Run Lesson**. |

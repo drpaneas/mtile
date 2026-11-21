@@ -9,10 +9,10 @@ facing. Its background is already painted in Map Lab.
 
 *Captured from the actual ROM. [Capture details](capture.json).*
 
-Open from the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/moth-study
+mtile edit examples/moth-study
 ```
 
 Select **Develop → Build + Reload**, click the preview, and use the arrow
@@ -98,7 +98,7 @@ It does not paint the scene pixel by pixel at runtime.
 To rebuild the ROM or regenerate the original artwork:
 
 ```sh
-go run ./cmd/mtile build examples/moth-study
+mtile build examples/moth-study
 python3 examples/moth-study/gen_assets.py
 ```
 

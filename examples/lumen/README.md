@@ -17,18 +17,18 @@ Lanterns can be restored in any order; dawn celebrates at the last one you light
 
 ![Lumen running on the GBA](preview.png)
 
-From the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/lumen
-go run ./cmd/mtile build examples/lumen
+mtile edit examples/lumen
+mtile build examples/lumen
 ```
 
 The project explicitly selects **Mode 0**. The build must prove its hardware
 budgets; it cannot silently fall back to Mode 4. To repeat that choice explicitly:
 
 ```sh
-go run ./cmd/mtile build -renderer mode0 examples/lumen
+mtile build -renderer mode0 examples/lumen
 ```
 
 In Develop, select **Build + Reload**, then click the preview for keyboard
@@ -161,10 +161,10 @@ compositions are authored in the artwork generator, which also rebuilds the
 numeric terrain lookups. Hear the music independently with:
 
 ```sh
-go run ./cmd/mtile render-audio -o /tmp/lumen.wav examples/lumen
+mtile render-audio -o /tmp/lumen.wav examples/lumen
 ```
 
-## Verify a complete journey in both renderers
+## Verify a complete journey in both renderers (source checkout)
 
 With the repository's native `mtile-player` built, the optional harness builds
 forced Mode 0 and Mode 4 ROMs and drives them with identical ordinary button

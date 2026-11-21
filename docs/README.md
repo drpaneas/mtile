@@ -4,12 +4,13 @@
 
 You do not need to read this documentation from beginning to end. Start with
 one working game, make one change, and look up features as you need them.
-If your tools are not installed, complete [setup](getting-started.md#requirements)
-first.
+[Download Mtile for your desktop](https://github.com/drpaneas/mtile/releases/latest),
+extract the archive, and double-click **Mtile**. Go, TinyGo and the preview
+player come with the download. See the [installation guide](getting-started.md)
+for help choosing your file.
 
-1. **[Play Coin Quest](first-game.md).** Create the
-   starter, build it, and collect five coins. You have a working game and know
-   how to run it.
+1. **[Play Coin Quest](first-game.md).** The starter opens ready to play.
+   Move with the arrow keys and collect five coins.
 2. **[Make one change](first-game.md#your-first-change).** Change `speed = 2`
    to `speed = 3`, rebuild, and feel the difference. You have completed the
    edit → build → play loop.
@@ -25,7 +26,7 @@ are there when you want to understand the code.
 
 | I want to… | Open… |
 | --- | --- |
-| Install tools or fix the preview | [Getting started](getting-started.md) |
+| Download Mtile or fix the preview | [Getting started](getting-started.md) |
 | Learn movement, pickups, sound, and winning one step at a time | [Your first game](first-game.md) |
 | Learn one new feature in a small working game | [Choose one small game](small-games.md) |
 | Find a button or follow an artwork workflow | [Illustrated IDE guide](ide.md) |

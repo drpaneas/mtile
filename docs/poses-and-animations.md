@@ -22,10 +22,11 @@ question you encounter; the existing Nerdo exercise is another quick option.
 This example already contains the artwork and registered animations. You can
 see the difference before creating any assets yourself.
 
-From the repository root, open it:
+[Get the example projects](small-games.md#get-the-example-projects), then run
+this command in the folder containing `examples`:
 
 ```sh
-go run ./cmd/mtile edit examples/nerdo
+mtile edit examples/nerdo
 ```
 
 1. In **Develop**, select **Build + Reload** and click the game preview.

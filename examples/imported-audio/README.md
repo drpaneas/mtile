@@ -8,6 +8,8 @@ is deliberately a plain background so this example works in both renderers.
 - B plays a CH1 PSG ping over the imported music.
 - L stops the imported song; R restarts it.
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
 mtile edit examples/imported-audio
 ```

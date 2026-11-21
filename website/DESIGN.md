@@ -54,8 +54,8 @@ application, title menu, and guide on the same identity.
 
 ## Routes and source ownership
 
-- `index.html` is the title/menu screen. Its four links lead to the first-game
-  course, the guide, the examples, and installation.
+- `index.html` is the title/menu screen. Its four menu items are the latest desktop
+  release, installation instructions, Coin Quest, and the examples.
 - `guide.html` is the normal guide landing page. Guides, lessons, categories,
   API pages, and examples retain their existing routes.
 - The menu's “Open the guide” link provides direct access to the guide. Guide
@@ -92,8 +92,8 @@ an indigo header, a pale lavender topic sidebar, rounded search and action
 controls, and restrained separators. The chapter navigation connects the two
 views without turning documentation into a simulated game interface.
 
-The landing page leads with a first-game action and an actual mTile game
-capture inside a small console illustration. The learning steps and topic
+The landing page leads with the desktop download and a Coin Quest capture
+inside a small console illustration. A secondary link serves source builders. The learning steps and topic
 index follow in the reading flow. Article pages keep their section table of
 contents when space permits; API identifiers and examples retain their
 monospace treatment.

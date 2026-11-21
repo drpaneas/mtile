@@ -25,8 +25,10 @@ Load restores the saved position in this small coin game.
 
 ## Build and play
 
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
 ```sh
-go run ./cmd/mtile build examples/save-game
+mtile build examples/save-game
 ```
 
 The example uses AUTO, which selects **Mode 4** because its names are dynamic

@@ -10,8 +10,8 @@ You still decide whether the suggested change describes your game.
 mtile lint mygame
 ```
 
-From a source checkout, use `go run ./cmd/mtile lint mygame` instead. You can
-also pass a Lua entry file, for example `mtile lint mygame/game.lua`. With no
+Replace `mygame` with your project folder. You can also pass a Lua entry
+file, for example `mtile lint mygame/game.lua`. With no
 argument it checks the current directory. Put flags **before** the input path.
 
 ## In the IDE

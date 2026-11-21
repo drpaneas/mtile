@@ -27,10 +27,10 @@ map(3,flr(ground_cam/8),   17,0,0,31, 3,0)
 
 ## Explore the planes in Map Lab
 
-Open the example from the repository root:
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
 
 ```sh
-go run ./cmd/mtile edit examples/background-layers
+mtile edit examples/background-layers
 ```
 
 Choose **MAP**. BG0 is the active editing layer by default. The bottom toolbar
@@ -74,17 +74,17 @@ hardware allocation.
 
 ## Build
 
-From the repository root:
+From the same folder:
 
 ```sh
-go run ./cmd/mtile build examples/background-layers/
+mtile build examples/background-layers/
 ```
 
 The project requests `mode0`. To prove that the same logical calls retain
 their painter-order result in the compatibility renderer:
 
 ```sh
-go run ./cmd/mtile build \
+mtile build \
   -renderer mode4 \
   -o /tmp/background-layers-mode4.gba \
   examples/background-layers/

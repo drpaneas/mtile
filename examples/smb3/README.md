@@ -6,17 +6,17 @@ The title, World 1 map, courses, sprites, HUD and sound data are generated local
 
 ## Open and build
 
-From the mTile checkout, import the assets once:
+From the folder containing the [downloaded examples](../README.md#run-an-example), import the assets once:
 
 ```sh
 python3 examples/smb3/build.py "/path/to/mario3.nes" --assets-only
-go run ./cmd/mtile edit examples/smb3
+mtile edit examples/smb3
 ```
 
 Choose **Develop** and press **Run** to build and play the game in the editor. To build the same GBA ROM from the terminal:
 
 ```sh
-go run ./cmd/mtile build examples/smb3
+mtile build examples/smb3
 ```
 
 The output is `examples/smb3/game.gba`. Omitting `--assets-only` from the import command runs the same build after importing. Run the ROM import again when updating from an older revision so the new death fade colors are available.
@@ -59,7 +59,7 @@ lua tools/verify_mechanics.lua
 lua tools/verify_actors.lua
 ```
 
-Build with `go run ./cmd/mtile build -keep-work examples/smb3`. The output prints a work directory containing the matching `game.elf`. With the native player helper and the ARM/LLVM symbol tools on your path:
+Build with `mtile build -keep-work examples/smb3`. The output prints a work directory containing the matching `game.elf`. With the native player helper and the ARM/LLVM symbol tools on your path:
 
 ```sh
 python3 examples/smb3/tools/verify_native.py examples/smb3/game.gba \

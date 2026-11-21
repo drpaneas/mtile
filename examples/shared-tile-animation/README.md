@@ -5,7 +5,13 @@ update changes the first two rows of tile 1 with 16 direct `sset` calls. The
 renderer uploads that single 64-byte tile, and all map occurrences animate
 together. The rest of the tile stays unchanged.
 
-Run `mtile build examples/shared-tile-animation`, then open the resulting ROM.
+From the folder containing the [downloaded examples](../README.md#run-an-example), run:
+
+```sh
+mtile build examples/shared-tile-animation
+```
+
+Open the resulting ROM to see the animation.
 The project uses only existing `sset`, `map`, and `cls` semantics. It does not
 change AUTO selection or add a runtime optimization.
 
