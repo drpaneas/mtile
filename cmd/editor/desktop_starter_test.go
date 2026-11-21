@@ -87,6 +87,40 @@ func TestDesktopStarterMacAppResources(t *testing.T) {
 	}
 }
 
+func TestDesktopStarterEntersDevelopWithOneLaunch(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("MTILE_PLAYER", filepath.Join(home, "missing-player"))
+	t.Setenv("MTILE_TINYGO", filepath.Join(home, "missing-compiler"))
+	bundle := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bundle, "coin-quest.gba"), []byte("cartridge"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, first := range []bool{true, false} {
+		starter, err := openDesktopStarter(filepath.Join(bundle, "Mtile"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		g, err := newGame(starter.projectDir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		g.playDesktopStarter(starter)
+		select {
+		case launch := <-g.runReady:
+			launch.discard()
+			if g.mode != modeCode || !g.developGameFocus || g.runID != 1 ||
+				launch.id != 1 || launch.prebuilt != first {
+				t.Fatalf("first=%t mode=%v focus=%t generation=%d launch=%d prebuilt=%t",
+					first, g.mode, g.developGameFocus, g.runID, launch.id, launch.prebuilt)
+			}
+		case <-time.After(10 * time.Second):
+			t.Fatalf("first=%t: editor did not launch the preview", first)
+		}
+	}
+}
+
 func TestDesktopStarterRunsPackagedROM(t *testing.T) {
 	rom := os.Getenv("MTILE_VERIFY_STARTER_ROM")
 	if rom == "" {

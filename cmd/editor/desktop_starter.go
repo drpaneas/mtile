@@ -54,17 +54,18 @@ func openDesktopStarter(executable string) (desktopStarter, error) {
 }
 
 func (g *Game) playDesktopStarter(starter desktopStarter) {
-	g.developGameFocus = true
-	if starter.rom.ROMPath == "" {
-		// Returning users may have changed code, sprites or any other input.
-		g.startPreviewBuild("", nil, false)
-		return
+	if starter.rom.ROMPath != "" {
+		// Claim the first preview before entering Develop, which otherwise
+		// starts compiling the project when no preview is running.
+		g.runMu.Lock()
+		g.runID++
+		id := g.runID
+		g.runBusy = true
+		g.runStatus = "OPENING COIN QUEST..."
+		g.runMu.Unlock()
+		go g.launchPreviewROM(playLaunch{id: id, result: starter.rom, prebuilt: true})
 	}
-	g.runMu.Lock()
-	g.runID++
-	id := g.runID
-	g.runBusy = true
-	g.runStatus = "OPENING COIN QUEST..."
-	g.runMu.Unlock()
-	go g.launchPreviewROM(playLaunch{id: id, result: starter.rom, prebuilt: true})
+	// On subsequent launches Develop builds the project from its saved inputs.
+	g.setMode(modeCode)
+	g.developGameFocus = true
 }

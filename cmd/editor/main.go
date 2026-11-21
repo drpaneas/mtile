@@ -37,7 +37,6 @@ func main() {
 		log.Fatalf("editor: %v", err)
 	}
 	if starter.projectDir != "" {
-		g.setMode(modeCode)
 		g.playDesktopStarter(starter)
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
