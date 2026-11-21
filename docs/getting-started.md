@@ -6,15 +6,17 @@
 
 ## Using a desktop bundle
 
-Under **Assets** on the [latest release](https://github.com/drpaneas/mtile/releases/latest), choose the archive for your computer.
+Choose your computer's archive from the [latest GitHub release](https://github.com/drpaneas/mtile/releases/latest).
 
 | Your computer | Download | Open after extracting |
 | --- | --- | --- |
-| Windows x64 | `mtile-windows-amd64.zip` | `Mtile.exe` |
-| Mac with Apple Silicon, macOS 14 or later | `mtile-darwin-arm64.zip` | `Mtile.app` |
-| Intel Mac, macOS 15 or later | `mtile-darwin-amd64.zip` | `Mtile.app` |
-| Linux x86-64 | `mtile-linux-amd64.tar.gz` | `Mtile` |
-| Linux ARM64 | `mtile-linux-arm64.tar.gz` | `Mtile` |
+| Windows x64 | [`mtile-windows-amd64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-windows-amd64.zip) | `Mtile.exe` |
+| Mac with Apple Silicon, macOS 14 or later | [`mtile-darwin-arm64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-arm64.zip) | `Mtile.app` |
+| Intel Mac, macOS 15 or later | [`mtile-darwin-amd64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-amd64.zip) | `Mtile.app` |
+| Linux x86-64 | [`mtile-linux-amd64.tar.gz`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-linux-amd64.tar.gz) | `Mtile` |
+| Linux ARM64 | [`mtile-linux-arm64.tar.gz`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-linux-arm64.tar.gz) | `Mtile` |
+
+The latest release also includes [examples.sha256](https://github.com/drpaneas/mtile/releases/latest/download/examples.sha256), the reference checksums for the 20 standalone examples. Save it beside the extracted `examples/` folder to [verify the Hello ROM](#verify-the-hello-rom).
 
 Extract the **whole archive** to a folder where you can save changes. On
 Windows, right-click the ZIP and choose **Extract All**. Starting with v0.1.1,
@@ -77,18 +79,52 @@ user's `PATH`.
 ## Open and build the bundled Hello example
 
 Stay in the extracted folder containing the launcher and `examples/`.
-Run the first command to open Hello. In **Develop**, choose **Build + Reload**,
-click the preview and use the arrow keys to move the sprite. Close the editor
-to return to the terminal, then run the second command to export the ROM.
+To play Hello before building it, open it in the editor.
 
 ```sh
 mtile edit examples/hello
+```
+
+In **Develop**, choose **Build + Reload**, click the preview and use the arrow
+keys to move the sprite. Close the editor to return to the terminal.
+Continue below to build and verify the ROM. The [example catalog](../examples/README.md)
+lists other projects in the same download.
+
+## Verify the Hello ROM
+
+Use the unmodified Hello example and the checksum file from the same
+release as your package. For the latest release, download [examples.sha256](https://github.com/drpaneas/mtile/releases/latest/download/examples.sha256).
+Save it in the extracted folder containing the launcher and `examples/`. Open a terminal there,
+[add the bundled CLI to your PATH](#use-mtile-in-a-terminal), and build Hello.
+The build and checksum check both work offline.
+
+```sh
 mtile build examples/hello
 ```
 
-The build writes `examples/hello/game.gba` in the extracted folder.
-Both commands work offline. The [example catalog](../examples/README.md)
-lists other projects in the same download.
+Check the resulting `examples/hello/game.gba` with the command for your system.
+
+**Windows PowerShell**
+
+```powershell
+$hash = (Get-FileHash examples/hello/game.gba -Algorithm SHA256 -ErrorAction Stop).Hash
+if ((Get-Content examples.sha256 -ErrorAction Stop) -notcontains "$hash  examples/hello/game.gba") { throw "Hello checksum mismatch" }
+"examples/hello/game.gba: OK"
+```
+
+**Linux**
+
+```sh
+grep '  examples/hello/game\.gba$' examples.sha256 | sha256sum -c -
+```
+
+**macOS**
+
+```sh
+grep '  examples/hello/game\.gba$' examples.sha256 | shasum -a 256 -c -
+```
+
+A matching build prints `examples/hello/game.gba: OK`.
 
 ## Build your first ROM
 

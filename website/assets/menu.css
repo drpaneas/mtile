@@ -183,7 +183,9 @@ a {
 .screen-tip {
   font-size:10px;
   color:#aeb3c6;
-  margin:15px 0 0
+  margin:15px 0 0;
+  text-decoration:underline;
+  text-underline-offset:3px
 }
 
 .bezel-label {

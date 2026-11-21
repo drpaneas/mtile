@@ -1610,7 +1610,8 @@ h1,h2 {color:#584277}
 .welcome {padding-top:38px;padding-bottom:38px;gap:55px;grid-template-columns:1.15fr 1fr;min-height:470px}
 .welcome h1 {font-size:49px;font-weight:750;line-height:1.13;color:#584277;letter-spacing:-.035em;max-width:540px}
 .welcome p {max-width:430px;color:#665b71}
-.start-scene {margin-top:22px}
+.start-scene {margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
+.start-scene .text-link {margin:0;text-decoration:underline;text-underline-offset:3px}
 .character-cue {display:block;font-size:12px;color:#776487;font-weight:400;margin-bottom:11px}
 .button.primary {background:#71549a;color:#fff8ed;border-radius:12px;box-shadow:0 6px 14px #72509322;padding:14px 20px;border:0}
 .button.primary:hover {background:#5e4386;filter:none}

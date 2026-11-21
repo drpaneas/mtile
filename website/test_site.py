@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 import json
 import importlib.util
 from pathlib import Path
+import re
 import unittest
 from urllib.parse import unquote, urljoin, urlsplit
 from xml.etree import ElementTree
@@ -139,17 +140,33 @@ class SiteTests(unittest.TestCase):
 
     def test_download_is_primary_and_examples_use_the_installed_cli(self):
         releases = 'https://github.com/drpaneas/mtile/releases/latest'
+        checksums = releases + '/download/examples.sha256'
         for route, primary_class in [('index.html', 'selected'), ('guide.html', 'primary')]:
             page = self.pages[(self.output / route).resolve()]
             actions = [attrs['href'] for tag, attrs in page.elements
                        if tag == 'a' and primary_class in attrs.get('class', '').split()]
             self.assertIn(releases, actions, route)
+            self.assertIn(checksums, page.links, route)
+            self.assertIn('guides/install.html#verify-the-hello-rom', page.links, route)
 
-        install = self.pages[(self.output / 'guides/install.html').resolve()]
+        install_path = (self.output / 'guides/install.html').resolve()
+        install = self.pages[install_path]
         sections = [attrs['id'] for tag, attrs in install.elements if tag == 'h2' and 'id' in attrs]
         self.assertLess(sections.index('using-a-desktop-bundle'), sections.index('build-the-desktop-tools'))
         self.assertIn('use-mtile-in-a-terminal', install.ids)
         self.assertIn(releases, install.links)
+        self.assertIn(checksums, install.links)
+        self.assertIn('verify-the-hello-rom', sections)
+        verification = install_path.read_text().split('id="verify-the-hello-rom"', 1)[1].split('<h2', 1)[0]
+        snippets = [''.join(ElementTree.fromstring(block).itertext()).strip()
+                    for block in re.findall(r'<pre>.*?</pre>', verification, re.DOTALL)]
+        self.assertIn('mtile build examples/hello', snippets)
+        bundle = (build.ROOT / 'scripts/release/BUNDLE-README.md').read_text()
+        guide = bundle.split('## Verify a built example\n', 1)[1].split('\n## ', 1)[0]
+        commands = re.findall(r'```(?:sh|powershell)\n(.*?)\n```', guide, re.DOTALL)
+        self.assertEqual(len(commands), 3)
+        for command in commands:
+            self.assertIn(command, snippets)
         examples = self.pages[(self.output / 'examples.html').resolve()]
         for page in (install, examples):
             content = ''.join(page.text)
