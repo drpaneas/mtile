@@ -1,8 +1,8 @@
 # TinyGo component
 
-Mtile release bundles contain a pinned TinyGo 0.42.0 compiler so users do
-not install TinyGo separately. The host Go distribution remains an end-user
-requirement because TinyGo uses its standard library and build metadata.
+Mtile desktop bundles include TinyGo 0.42.0 and the Go SDK used to build
+the release. TinyGo uses the included Go standard library and build tools.
+The archive contains the Go license in `licenses/GO-BSD-3-CLAUSE.txt`.
 
 The release builder downloads the official platform archive, requires and
 checks the maintainer-provided SHA-256 digest, verifies the executable's

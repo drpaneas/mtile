@@ -183,7 +183,7 @@ func runNew(args []string, out io.Writer) error {
 func runBuild(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("build", flag.ContinueOnError)
 	output := flags.String("o", "", "output ROM path (default: project-dir/game.gba)")
-	tinygo := flags.String("tinygo", "", "TinyGo executable (default: PATH)")
+	tinygo := flags.String("tinygo", "", "TinyGo executable (default: MTILE_TINYGO, bundled compiler, or PATH)")
 	runtimeDir := flags.String("runtime", "", "mtile runtime directory")
 	keepWork := flags.Bool("keep-work", false, "keep the temporary generated build workspace")
 	rendererName := flags.String("renderer", "", "override project renderer: mode4, mode0, or auto")
@@ -332,8 +332,12 @@ func editorCommand(explicit, projectDir string) (command string, args []string, 
 
 func findSiblingEditor(executable string) (string, bool) {
 	directory := filepath.Dir(executable)
+	suffix := ""
+	if runtime.GOOS == "windows" {
+		suffix = ".exe"
+	}
 	for _, name := range []string{"mtile-editor", "editor"} {
-		candidate := filepath.Join(directory, name)
+		candidate := filepath.Join(directory, name+suffix)
 		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
 			return candidate, true
 		}

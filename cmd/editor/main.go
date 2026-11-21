@@ -8,6 +8,7 @@ import (
 	"errors"
 	"flag"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,9 +18,27 @@ func main() {
 	dir := flag.String("project", ".", "path to the native asset project directory")
 	flag.Parse()
 
+	var starter desktopStarter
+	if len(os.Args) == 1 {
+		executable, err := os.Executable()
+		if err != nil {
+			log.Fatal(err)
+		}
+		starter, err = openDesktopStarter(executable)
+		if err != nil {
+			log.Fatalf("editor: %v", err)
+		}
+		if starter.projectDir != "" {
+			*dir = starter.projectDir
+		}
+	}
 	g, err := newGame(*dir)
 	if err != nil {
 		log.Fatalf("editor: %v", err)
+	}
+	if starter.projectDir != "" {
+		g.setMode(modeCode)
+		g.playDesktopStarter(starter)
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowSizeLimits(minimumScreenWidth, minimumScreenHeight, -1, -1)

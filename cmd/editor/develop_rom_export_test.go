@@ -2,14 +2,38 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/emulator"
 )
+
+func TestDevelopExportWithoutFilePicker(t *testing.T) {
+	project := t.TempDir()
+	if runtime.GOOS == "linux" {
+		t.Setenv("PATH", t.TempDir())
+		if _, err := chooseDevelopExportROMPath(context.Background(), project); !errors.Is(err, errNoExportPicker) {
+			t.Fatalf("expected automatic export, got %v", err)
+		}
+	}
+	first, err := createDevelopExportPath(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := createDevelopExportPath(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == second || filepath.Dir(filepath.Dir(first)) != project || filepath.Base(first) != "game.gba" {
+		t.Fatalf("expected unique project-local game.gba destinations, got %s and %s", first, second)
+	}
+}
 
 func TestDevelopROMExportMatchesCLI(t *testing.T) {
 	if os.Getenv("MTILE_VERIFY_ROM_EXPORT") == "" {
@@ -37,6 +61,10 @@ func TestDevelopROMExportMatchesCLI(t *testing.T) {
 	}
 	if !bytes.Equal(read(release), read(cli)) {
 		t.Fatal("export differs from the CLI release build")
+	}
+	automatic, err := buildDevelopReleaseROM(project, "")
+	if err != nil || automatic.ROMPath == release || !bytes.Equal(read(automatic.ROMPath), read(cli)) {
+		t.Fatalf("automatic export failed: %+v, %v", automatic, err)
 	}
 	preview, err := developPreviewROMPath(project)
 	if err != nil {

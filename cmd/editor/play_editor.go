@@ -16,13 +16,14 @@ import (
 )
 
 type playLaunch struct {
-	id      uint64
-	session *emulator.Session
-	result  build.Result
-	helper  string
-	romDir  string
-	lesson  string
-	err     error
+	id       uint64
+	session  *emulator.Session
+	result   build.Result
+	helper   string
+	romDir   string
+	lesson   string
+	prebuilt bool
+	err      error
 }
 
 func (launch playLaunch) discard() {
@@ -166,15 +167,17 @@ func (g *Game) startPreviewBuild(lesson string, overlay map[string]string, save 
 			_ = os.RemoveAll(romDir)
 			return
 		}
-		helper, err := emulator.ResolveHelper()
-		if err != nil {
-			g.deliverPlayLaunch(playLaunch{id: runID, result: result, romDir: romDir, err: err})
-			return
-		}
-		session, err := emulator.Start(helper, result.ROMPath)
-		g.deliverPlayLaunch(playLaunch{id: runID, session: session, result: result, helper: helper, romDir: romDir, lesson: lesson, err: err})
+		g.launchPreviewROM(playLaunch{id: runID, result: result, romDir: romDir, lesson: lesson})
 	}()
 	return true
+}
+
+func (g *Game) launchPreviewROM(launch playLaunch) {
+	launch.helper, launch.err = emulator.ResolveHelper()
+	if launch.err == nil {
+		launch.session, launch.err = emulator.Start(launch.helper, launch.result.ROMPath)
+	}
+	g.deliverPlayLaunch(launch)
 }
 
 func (g *Game) blockPreviewBuild(phase build.Phase) {
@@ -434,6 +437,11 @@ func (g *Game) setPreviewBuildReport(launch playLaunch) {
 	g.runReportID = launch.id
 	g.runROMPath = result.ROMPath
 	g.runROMSize = result.ROMSize
+	if launch.prebuilt {
+		// The shipped cartridge has no local build report or generated source.
+		g.runMemoryReady = false
+		return
+	}
 	g.runEWRAMUsed = result.EWRAMUsed
 	g.runEWRAMFree = result.EWRAMFree
 	g.runIWRAMUsed = result.IWRAMUsed

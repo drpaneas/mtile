@@ -5,6 +5,7 @@ fonts, and tools retain their upstream licenses.
 
 | Component | Used for | Notice |
 | --- | --- | --- |
+| Go SDK | Standard library and tools used by the bundled compiler | [Go license](https://go.dev/LICENSE), included as `licenses/GO-BSD-3-CLAUSE.txt` |
 | TinyGo | Native GBA compilation; included in desktop bundles | [Component notice](tinygo.md), [license](TinyGo-LICENSE.txt) |
 | mGBA | Headless editor preview; pinned Git submodule | [Component notice](mgba.md), [upstream license](https://github.com/mgba-emu/mgba/blob/1c61b54208ca6266129d0f2394c04bd8c44f98c5/LICENSE) |
 | Maxmod (BlocksDS fork) | Imported tracker music and WAV effects on GBA | [Component notice](maxmod.md), [ISC license](../../runtime/maxmod/COPYING) |

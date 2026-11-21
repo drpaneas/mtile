@@ -21,19 +21,27 @@ func addDirectAudioTarget(tinygoRoot, runtimeDir, targetPath string, format int)
 	root := filepath.Join(runtimeDir, "maxmod")
 	files := []string{"bridge.c", "src/core/mas.c", "src/core/mas_arm.c", "src/core/effect.c", "src/gba/main_gba.c", "src/gba/mixer.c", "src/gba/mixer_asm.S"}
 	extra, _ := target["extra-files"].([]any)
+	flags, _ := target["cflags"].([]any)
+	bundled := len(extra) > 0 && extra[0] == "targets/mtile/startup.S"
+	if bundled {
+		flags = append(flags, "-I"+runtimeDir)
+	}
 	for _, file := range files {
 		path := filepath.Join(root, filepath.FromSlash(file))
 		if _, err = os.Stat(path); err != nil {
 			return fmt.Errorf("locate Maxmod source: %w", err)
 		}
-		rel, err := filepath.Rel(tinygoRoot, path)
-		if err != nil {
-			return err
+		if bundled {
+			extra = append(extra, "targets/mtile/"+filepath.Base(file))
+		} else {
+			rel, err := filepath.Rel(tinygoRoot, path)
+			if err != nil {
+				return err
+			}
+			extra = append(extra, filepath.ToSlash(rel))
 		}
-		extra = append(extra, filepath.ToSlash(rel))
 	}
 	target["extra-files"] = extra
-	flags, _ := target["cflags"].([]any)
 	for _, flag := range []string{"-std=gnu23", "-D__GBA__", "-I" + filepath.Join(root, "include"), "-Wno-unknown-attributes", "-Wno-ignored-attributes"} {
 		flags = append(flags, flag)
 	}

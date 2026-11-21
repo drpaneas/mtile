@@ -23,8 +23,11 @@ func ResolveHelper() (string, error) {
 		name += ".exe"
 	}
 	if self, err := os.Executable(); err == nil {
-		if path, err := executableFile(filepath.Join(filepath.Dir(self), name)); err == nil {
-			return path, nil
+		dir := filepath.Dir(self)
+		for _, candidate := range []string{filepath.Join(dir, name), filepath.Join(dir, "bin", name)} {
+			if path, err := executableFile(candidate); err == nil {
+				return path, nil
+			}
 		}
 	}
 	if path, err := exec.LookPath(name); err == nil {

@@ -6,9 +6,8 @@ This page gets your tools ready and opens **Coin Quest**, a complete starter
 game. Once it runs, continue with [one small code change](first-game.md#your-first-change).
 You can return to the remaining setup details when you need them.
 
-Start with a source checkout. This guide does not assume a published binary
-release is available. If you already have a maintainer-built desktop bundle,
-see [using a bundle](#using-a-desktop-bundle).
+If you have a desktop download, start with [opening the bundle](#using-a-desktop-bundle).
+For a source checkout, follow the requirements below.
 
 ## Requirements
 
@@ -16,9 +15,9 @@ see [using a bundle](#using-a-desktop-bundle).
 | --- | --- |
 | Build a ROM from source | Go 1.27.1+ and TinyGo 0.42.0 on `PATH` |
 | Open the source-checkout editor | The above, CMake, a C compiler, and OS graphics/audio support |
-| Use a desktop bundle | Go 1.27.1+ and OS graphics/audio support; TinyGo and the emulator helper are bundled |
+| Use a desktop bundle | Desktop graphics and audio support on the target OS. Go, TinyGo and the player are included |
 
-Install [Go](https://go.dev/doc/install) and the pinned
+For a source checkout, install [Go](https://go.dev/doc/install) and the pinned
 [TinyGo 0.42.0 release](https://github.com/tinygo-org/tinygo/releases/tag/v0.42.0).
 Check that both are available:
 
@@ -128,26 +127,21 @@ frontend are embedded; source builds still need TinyGo on `PATH`.
 
 ## Using a desktop bundle
 
-Unpack the bundle for your OS and architecture. Keep `bin/` and `toolchains/`
-together, and add its `bin/` directory to `PATH`. Do not move just the `mtile`
-executable: the sibling editor/player and bundled compiler are part of the
-installation.
+Download the archive for your operating system and processor from
+[GitHub Releases](https://github.com/drpaneas/mtile/releases/latest) and extract it. Double-click
+**Mtile.app** on macOS, **Mtile.exe** on Windows, or **Mtile** on Linux. The
+macOS archives target macOS 14 or later on Apple Silicon and macOS 15 or later
+on Intel. The Linux build uses the desktop's X11, OpenGL and audio libraries.
 
-```sh
-mtile doctor
-mtile new -template coin-quest mygame
-mtile build mygame
-mtile edit mygame
-```
+Coin Quest opens in Develop with the game ready for arrow-key input. Press
+Escape to edit. Your project is saved in **mTile Projects/Coin Quest** inside
+your home folder and reopens on the next launch. Change `speed = 2` to
+`speed = 3` in `game.lua`, save, and choose **Build + Reload**. **Export .gba**
+writes your modified game to a cartridge file. All of this works offline.
 
-Continue with [Play the complete game](first-game.md#play-the-complete-game),
-then change its movement speed. To start with an empty project instead, use
-`mtile new blankgame` with an unused directory name.
-
-The bundle supplies TinyGo, the Mtile runtime, and the mGBA helper. Go remains
-a host dependency. You do not need a separate Lua installation, mGBA frontend,
-CMake, SDL, or Qt to use the bundle. Build instructions for maintainers are in
-[the release guide](../scripts/release/README.md).
+The CLI is also available under `bin/` on Linux and Windows and inside
+`Mtile.app/Contents/MacOS/` on macOS. The [release guide](../scripts/release/README.md)
+describes how maintainers build and test the archives.
 
 ## Common setup problems
 

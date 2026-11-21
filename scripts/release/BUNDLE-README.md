@@ -2,32 +2,26 @@
 
 Build native Game Boy Advance games in Lua.
 
-## Install
+## Open Coin Quest
 
-Install Go 1.27.1 or newer from https://go.dev/doc/install. Unpack this directory
-somewhere permanent and add its `bin/` directory to `PATH`. Keep `bin/` and
-`toolchains/` together. TinyGo, the editor, and the mGBA preview helper are
-included; do not move only the `mtile` executable.
+Extract the whole download. On macOS, double-click **Mtile.app**. On Windows,
+open the extracted folder and double-click **Mtile.exe**. On Linux, open
+**Mtile** in the extracted folder. Keep the folder together when moving it.
 
-## Make a game
+Mtile opens Coin Quest in **Develop**. Move with the arrow keys, collect five
+coins and press Z to restart. Press Escape to give keyboard focus to the code.
+Your editable copy lives in **mTile Projects/Coin Quest** in your home folder.
 
-```sh
-mtile doctor
-mtile new -template coin-quest mygame
-mtile build mygame
-mtile edit mygame
-```
+Change `speed = 2` to `speed = 3` in `game.lua`, save, then press
+**Build + Reload**. Click the preview and try moving again. The first rebuild
+can take a little longer while the included compilers prepare their caches.
+Choose **Export .gba** to save the modified game as a Game Boy Advance ROM.
+You can play, rebuild and export offline. The archive includes Go, TinyGo and
+the mGBA preview helper.
 
-The ROM is `mygame/game.gba`. In the editor, choose Develop and use
-Build + Reload after editing `game.lua`. Click the preview to play: arrow keys
-are the D-pad, Z/X are A/B, and Escape returns focus to the editor.
-
-Collect five coins and press Z to restart. `mygame/README.md` is an offline
-walkthrough, with four runnable checkpoints under `mygame/lessons/`.
-For a blank project, use `mtile new` without `-template coin-quest`.
-
-`mtile help` lists commands; `mtile build -h` lists build options.
-The first build can take longer while compiler/runtime caches are prepared.
+The project's README and four lessons are also available offline. Open a Lua
+file under `lessons/` in Develop and choose **Run Lesson**. **Back to My Game**
+returns to your own project.
 
 ## Status and support
 

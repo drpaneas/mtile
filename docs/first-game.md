@@ -17,7 +17,10 @@ do not need to learn the whole API or choose a renderer to begin.
 
 ## Check your setup
 
-Follow the [installation requirements](getting-started.md#requirements), then
+With a desktop download, extract it and double-click **Mtile**. Play with the
+arrow keys and press Escape when you are ready to try [your first change](#your-first-change).
+
+For a source build, follow the [installation requirements](getting-started.md#requirements), then
 run these commands from your source checkout:
 
 ```sh
@@ -27,7 +30,6 @@ go run ./cmd/mtile build mygame
 go run ./cmd/mtile edit mygame
 ```
 
-Using an installed desktop bundle? Replace `go run ./cmd/mtile` with `mtile`.
 Keep flags before the project directory. Creation refuses to overwrite an
 existing directory; choose another name if `mygame` already exists.
 

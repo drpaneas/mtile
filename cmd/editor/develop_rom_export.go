@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/drpaneas/mtile/internal/build"
 	"github.com/drpaneas/mtile/internal/editor"
@@ -95,7 +98,8 @@ func (g *Game) pumpDevelopROMExport() {
 		g.romExport.cancel()
 		g.romExport.ready, g.romExport.cancel, g.romExport.label = nil, nil, ""
 		g.requestRender()
-		if result.err != nil {
+		automatic := errors.Is(result.err, errNoExportPicker)
+		if result.err != nil && !automatic {
 			g.setROMExportMessage("export: " + result.err.Error())
 			return
 		}
@@ -104,7 +108,7 @@ func (g *Game) pumpDevelopROMExport() {
 			g.setROMExportMessage(fmt.Sprintf("Exported %s (%s)", result.build.ROMPath, developRendererName(result.build.Renderer.String())))
 			return
 		}
-		if result.destination == "" {
+		if result.destination == "" && !automatic {
 			return // Cancelled chooser or successful folder reveal.
 		}
 		if !g.prepareCodeForBuild() {
@@ -135,5 +139,38 @@ func buildDevelopReleaseROM(projectDir, outputPath string) (build.Result, error)
 		return build.Result{}, err
 	}
 	service.UseProjectRenderer = true
-	return service.Build(projectDir, outputPath)
+	if outputPath != "" {
+		return service.Build(projectDir, outputPath)
+	}
+	path, err := createDevelopExportPath(projectDir)
+	if err != nil {
+		return build.Result{}, err
+	}
+	result, err := service.Build(projectDir, path)
+	if err != nil {
+		_ = os.Remove(filepath.Dir(path))
+	}
+	return result, err
+}
+
+func createDevelopExportPath(projectDir string) (string, error) {
+	// A desktop without a save dialog can still export with one click. Each
+	// export owns its directory so simultaneous builds never replace a ROM.
+	projectDir, err := filepath.Abs(projectDir)
+	if err != nil {
+		return "", err
+	}
+	cache, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	dir, err := os.MkdirTemp(projectDir, "export-*")
+	if err != nil {
+		return "", fmt.Errorf("create ROM export directory: %w", err)
+	}
+	path, err := validateDevelopExportROMPath(developPreviewCacheDir(cache), filepath.Join(dir, "game.gba"))
+	if err != nil {
+		_ = os.Remove(dir)
+	}
+	return path, err
 }

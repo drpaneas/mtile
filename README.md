@@ -40,6 +40,13 @@ and cost checks pass. See [renderer support](docs/render-modes.md) and
 
 ## Quick start
 
+**[Download Mtile for your desktop](https://github.com/drpaneas/mtile/releases/latest).** Extract the archive and double-click **Mtile**. Coin Quest
+opens ready to play. Press Escape to edit `game.lua`, choose **Build + Reload**
+to try your change, then **Export .gba** to take the cartridge with you. Go,
+TinyGo and the preview player are included. [Desktop bundle instructions](docs/getting-started.md#using-a-desktop-bundle).
+
+**Building from source**
+
 The source workflow requires **Go 1.27.1+** and **TinyGo 0.42.0**. The editor also
 needs **CMake**, a **C compiler**, and platform graphics/audio dependencies.
 Follow [installation](docs/getting-started.md#requirements) for your system.

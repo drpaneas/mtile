@@ -12,9 +12,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/drpaneas/mtile/internal/assetsync"
+	"github.com/drpaneas/mtile/internal/hostexec"
 	"github.com/drpaneas/mtile/internal/sourcebundle"
 	"github.com/drpaneas/mtile/internal/transpiler"
 	runtimebundle "github.com/drpaneas/mtile/runtime"
@@ -344,7 +346,9 @@ func (s Service) Build(projectDir, outputPath string) (result Result, err error)
 		linkReport.StaticStrings = runtimebundle.MaxStaticStrings
 	}
 	s.emit(PhaseLinkELF, "Linking analysis ELF and memory map")
-	if err := s.runTinyGo(workDir, targetPath, elfPath, mapPath, linkReport); err != nil {
+	// TinyGo splits -extldflags on spaces. The linker runs in workDir, which
+	// may include a user name with spaces, so pass its local map file name.
+	if err := s.runTinyGo(workDir, targetPath, elfPath, filepath.Base(mapPath), linkReport); err != nil {
 		return result, fmt.Errorf("link ELF: %w", err)
 	}
 	symbols, err := ParseLinkerMap(mapPath)
@@ -641,7 +645,7 @@ func checkedAssetProduct(a, b int, name string) (uint64, error) {
 }
 
 func (s Service) writeWorkspace(workDir string, generated string) error {
-	module := "module mtile-generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => " + filepath.ToSlash(s.RuntimeDir) + "\n"
+	module := "module mtile-generated\n\ngo 1.27.1\n\nrequire github.com/drpaneas/mtile/runtime v0.0.0\n\nreplace github.com/drpaneas/mtile/runtime => " + strconv.Quote(filepath.ToSlash(s.RuntimeDir)) + "\n"
 	if err := os.WriteFile(filepath.Join(workDir, "go.mod"), []byte(module), 0o644); err != nil {
 		return fmt.Errorf("write generated go.mod: %w", err)
 	}
@@ -671,8 +675,10 @@ func (s Service) runTinyGo(workDir, targetPath, outputPath, mapPath string, repo
 	}
 	args = append(args, "-o", outputPath, ".")
 	cmd := exec.Command(s.TinyGoBin, args...)
+	hostexec.Background(cmd)
 	cmd.Dir = workDir
-	cmd.Env = setEnv(os.Environ(), "GOWORK", "off")
+	_, env := ToolchainEnvironment(s.TinyGoBin)
+	cmd.Env = setEnv(env, "GOWORK", "off")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		text := strings.TrimSpace(string(output))
@@ -775,7 +781,8 @@ func setEnv(env []string, key, value string) []string {
 	result := make([]string, 0, len(env)+1)
 	replaced := false
 	for _, entry := range env {
-		if strings.HasPrefix(entry, prefix) {
+		entryKey, _, _ := strings.Cut(entry, "=")
+		if entryKey == key || runtime.GOOS == "windows" && strings.EqualFold(entryKey, key) {
 			if !replaced {
 				result = append(result, prefix+value)
 				replaced = true

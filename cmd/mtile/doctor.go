@@ -29,10 +29,12 @@ func supportedGoVersion(output string) bool {
 	return version.IsValid(match[1]) && version.Compare(match[1], "go1.27.1") >= 0
 }
 
-func doctorCommandOutput(command string, args ...string) (string, error) {
+func doctorCommandOutput(env []string, command string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	output, err := exec.CommandContext(ctx, command, args...).CombinedOutput()
+	cmd := exec.CommandContext(ctx, command, args...)
+	cmd.Env = env
+	output, err := cmd.CombinedOutput()
 	if ctx.Err() != nil {
 		return "", fmt.Errorf("%s timed out after 10 seconds", filepath.Base(command))
 	}
@@ -58,30 +60,31 @@ func runDoctor(args []string, out io.Writer) error {
 		failed = true
 		_, _ = fmt.Fprintf(out, "FAIL %s: %s\n     Fix: %s\n", name, detail, fix)
 	}
-	goVersion, err := doctorCommandOutput("go", "version")
+	service, setupErr := build.NewService(*tinygo, "")
+	goBin, env := build.ToolchainEnvironment(service.TinyGoBin)
+	goVersion, err := doctorCommandOutput(env, goBin, "version")
 	if err != nil {
-		fail("Go", err.Error(), "install Go 1.27.1 or newer from https://go.dev/dl/, then reopen your terminal")
+		fail("Go", err.Error(), "restore the complete desktop bundle, or install Go 1.27.1 or newer for a source checkout")
 	} else if !supportedGoVersion(goVersion) {
 		fail("Go", goVersion, "install a stable Go release, version 1.27.1 or newer")
 	} else {
 		_, _ = fmt.Fprintln(out, "OK   Go:", goVersion)
 	}
-	service, err := build.NewService(*tinygo, "")
-	if err != nil {
+	if setupErr != nil {
 		fix := "keep the desktop bundle together, or install TinyGo 0.42.0; use -tinygo /path/to/tinygo or MTILE_TINYGO to select it"
-		if errors.Is(err, os.ErrPermission) {
+		if errors.Is(setupErr, os.ErrPermission) {
 			fix = "check access to the reported path; your account must be able to read the toolchain and write its mTile runtime cache"
 		}
-		fail("Build setup", err.Error(), fix)
+		fail("Build setup", setupErr.Error(), fix)
 	} else {
-		version, versionErr := doctorCommandOutput(service.TinyGoBin, "version")
+		version, versionErr := doctorCommandOutput(env, service.TinyGoBin, "version")
 		if versionErr != nil {
 			fail("TinyGo", versionErr.Error(), "check the executable path and permissions; install the TinyGo 0.42.0 archive for your OS and CPU")
 		} else if !strings.HasPrefix(version, "tinygo version "+supportedTinyGo+" ") {
 			fail("TinyGo", version, "select TinyGo 0.42.0, the release tested with mTile")
 		} else {
 			_, _ = fmt.Fprintf(out, "OK   TinyGo: %s\n     %s\n", version, service.TinyGoBin)
-			root, rootErr := doctorCommandOutput(service.TinyGoBin, "env", "TINYGOROOT")
+			root, rootErr := doctorCommandOutput(env, service.TinyGoBin, "env", "TINYGOROOT")
 			if rootErr != nil || root == "" {
 				fail("GBA target", fmt.Sprintf("cannot locate TinyGo resources: %v", rootErr), "reinstall the complete toolchain; check TINYGOROOT if you set it")
 			} else if info, statErr := os.Stat(filepath.Join(root, "targets", "gameboy-advance.json")); statErr != nil || info.IsDir() {

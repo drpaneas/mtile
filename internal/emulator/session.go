@@ -10,6 +10,8 @@ import (
 	"io"
 	"os/exec"
 	"sync"
+
+	"github.com/drpaneas/mtile/internal/hostexec"
 )
 
 const (
@@ -129,6 +131,7 @@ func Start(helperPath, romPath string) (*Session, error) {
 		return nil, errors.New("ROM path is empty")
 	}
 	cmd := exec.Command(helperPath, romPath)
+	hostexec.Background(cmd)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err

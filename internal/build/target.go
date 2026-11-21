@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/drpaneas/mtile/internal/hostexec"
 	"github.com/drpaneas/mtile/runtime/gbatarget"
 )
 
@@ -72,22 +73,42 @@ func generateTarget(tinygoRoot, runtimeDir, startupName, outputPath string) erro
 	if err != nil {
 		return fmt.Errorf("prepare GBA startup: %w", err)
 	}
-	if !bytes.Equal(asm, bound) {
-		// TinyGo also builds ELF files directly from this target. Bind the
-		// cartridge header before linking so every output gets the same bytes.
-		startup, err = filepath.Abs(filepath.Join(filepath.Dir(outputPath), ".mtile-crt0", filepath.Base(outputPath)+".s"))
+	const startupWrapper = "targets/mtile/startup.S"
+	if _, err := os.Stat(filepath.Join(tinygoRoot, startupWrapper)); err == nil {
+		// TinyGo joins extra-files to TINYGOROOT. On Windows the generated
+		// assembly can live on another drive, so the bundled assembler input
+		// includes it using an ordinary Clang include directory.
+		dir, err := filepath.Abs(filepath.Join(filepath.Dir(outputPath), ".mtile-crt0", filepath.Base(outputPath)))
 		if err != nil {
 			return err
 		}
-		if err := atomicWrite(startup, bound, 0o644); err != nil {
+		if err := atomicWrite(filepath.Join(dir, "mtile-gba-startup.s"), bound, 0o644); err != nil {
 			return err
 		}
+		flags, _ := target["cflags"].([]any)
+		target["cflags"] = append(flags, "-I"+dir)
+		target["extra-files"] = []string{startupWrapper, "src/runtime/asm_arm.S"}
+	} else {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("read bundled startup wrapper: %w", err)
+		}
+		if !bytes.Equal(asm, bound) {
+			// TinyGo also builds ELF files directly from this target. Bind the
+			// cartridge header before linking so every output gets the same bytes.
+			startup, err = filepath.Abs(filepath.Join(filepath.Dir(outputPath), ".mtile-crt0", filepath.Base(outputPath)+".s"))
+			if err != nil {
+				return err
+			}
+			if err := atomicWrite(startup, bound, 0o644); err != nil {
+				return err
+			}
+		}
+		relStartup, err := filepath.Rel(tinygoRoot, startup)
+		if err != nil {
+			return fmt.Errorf("make startup path relative to TinyGo root: %w", err)
+		}
+		target["extra-files"] = []string{filepath.ToSlash(relStartup), "src/runtime/asm_arm.S"}
 	}
-	relStartup, err := filepath.Rel(tinygoRoot, startup)
-	if err != nil {
-		return fmt.Errorf("make startup path relative to TinyGo root: %w", err)
-	}
-	target["extra-files"] = []string{filepath.ToSlash(relStartup), "src/runtime/asm_arm.S"}
 	target["linkerscript"] = linker
 
 	encoded, err := json.MarshalIndent(target, "", "\t")
@@ -103,6 +124,8 @@ func generateTarget(tinygoRoot, runtimeDir, startupName, outputPath string) erro
 
 func discoverTinyGoRoot(tinygoBin string) (string, error) {
 	cmd := exec.Command(tinygoBin, "env", "TINYGOROOT")
+	hostexec.Background(cmd)
+	_, cmd.Env = ToolchainEnvironment(tinygoBin)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("tinygo env TINYGOROOT: %w", err)

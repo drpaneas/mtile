@@ -46,6 +46,8 @@ func prepareDevelopPreviewROM(cacheDir, projectDir string) (string, error) {
 	return filepath.Join(dir, "preview.gba"), nil
 }
 
+var errNoExportPicker = errors.New("no desktop save dialog installed")
+
 // chooseDevelopExportROMPath returns an empty path when the dialog is dismissed.
 func chooseDevelopExportROMPath(parent context.Context, projectDir string) (string, error) {
 	ctx, cancel := context.WithTimeout(parent, 5*time.Minute)
@@ -90,7 +92,7 @@ if ($picker.ShowDialog() -eq 'OK') { [Console]::Write($picker.FileName) }`
 		} else if tool, err := exec.LookPath("kdialog"); err == nil {
 			cmd = exec.CommandContext(ctx, tool, "--getsavefilename", destination, "*.gba *.GBA", "--title", title)
 		} else {
-			return "", errors.New("the export file picker needs zenity or kdialog; use mtile build to export from the terminal")
+			return "", errNoExportPicker
 		}
 	}
 	output, err := cmd.Output()

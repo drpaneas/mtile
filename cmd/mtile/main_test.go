@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -577,14 +578,19 @@ func TestEditorCommandFallsBackToEnvVar(t *testing.T) {
 
 func TestFindSiblingEditorPrefersNamedBinaryAndAcceptsGoBuildName(t *testing.T) {
 	directory := t.TempDir()
-	if err := os.WriteFile(filepath.Join(directory, "editor"), []byte("editor"), 0o644); err != nil {
+	suffix := ""
+	if runtime.GOOS == "windows" {
+		suffix = ".exe"
+	}
+	fallback := filepath.Join(directory, "editor"+suffix)
+	if err := os.WriteFile(fallback, []byte("editor"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	got, ok := findSiblingEditor(filepath.Join(directory, "mtile"))
-	if !ok || got != filepath.Join(directory, "editor") {
+	if !ok || got != fallback {
 		t.Fatalf("findSiblingEditor without named binary = %q, %v", got, ok)
 	}
-	preferred := filepath.Join(directory, "mtile-editor")
+	preferred := filepath.Join(directory, "mtile-editor"+suffix)
 	if err := os.WriteFile(preferred, []byte("named editor"), 0o644); err != nil {
 		t.Fatal(err)
 	}

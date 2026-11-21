@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -26,6 +27,41 @@ func TestDoctorGoVersion(t *testing.T) {
 		if got := supportedGoVersion(output); got != want {
 			t.Errorf("supportedGoVersion(%q) = %v, want %v", output, got, want)
 		}
+	}
+}
+
+func TestDoctorUsesGoAndTinyGoFromRelocatedBundle(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("fake SDK executables use a POSIX shell")
+	}
+	tools := filepath.Join(t.TempDir(), "Moved Mtile", "toolchains")
+	goRoot := filepath.Join(tools, "go")
+	tinyRoot := filepath.Join(tools, "tinygo")
+	for _, dir := range []string{filepath.Join(goRoot, "bin"), filepath.Join(tinyRoot, "bin"), filepath.Join(tinyRoot, "targets")} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(tinyRoot, "targets", "gameboy-advance.json"), []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	goScript := "#!/bin/sh\n[ \"$GOROOT\" = \"$EXPECTED_GO_ROOT\" ] && [ \"$GOTOOLCHAIN\" = local ] || exit 1\necho 'go version go1.27.1 fixture'\n"
+	if err := os.WriteFile(filepath.Join(goRoot, "bin", "go"), []byte(goScript), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	tinyGo := filepath.Join(tinyRoot, "bin", "tinygo")
+	tinyScript := "#!/bin/sh\ngo version >/dev/null || exit 1\ncase $1 in version) echo 'tinygo version 0.42.0 fixture';; env) echo \"$TINYGOROOT\";; esac\n"
+	if err := os.WriteFile(tinyGo, []byte(tinyScript), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("EXPECTED_GO_ROOT", goRoot)
+	t.Setenv("PATH", t.TempDir())
+	t.Setenv("GOROOT", "unrelated SDK")
+	t.Setenv("TINYGOROOT", "unrelated SDK")
+	t.Setenv("GOTOOLCHAIN", "auto")
+	var out bytes.Buffer
+	if err := run([]string{"doctor", "-tinygo", tinyGo}, &out, &out); err != nil {
+		t.Fatalf("bundled doctor: %v\n%s", err, out.String())
 	}
 }
 
