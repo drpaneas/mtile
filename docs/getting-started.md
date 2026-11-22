@@ -11,8 +11,8 @@ Choose your computer's archive from the [latest GitHub release](https://github.c
 | Your computer | Download | Open after extracting |
 | --- | --- | --- |
 | Windows x64 | [`mtile-windows-amd64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-windows-amd64.zip) | `Mtile.exe` |
-| Mac with Apple Silicon, macOS 14 or later | [`mtile-darwin-arm64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-arm64.zip) | `Mtile.app` |
-| Intel Mac, macOS 15 or later | [`mtile-darwin-amd64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-amd64.zip) | `Mtile.app` |
+| Mac with Apple Silicon, macOS 14 or later | [`mtile-darwin-arm64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-arm64.zip) | `Mtile.app` · [If macOS blocks it](#first-open-on-mac) |
+| Intel Mac, macOS 15 or later | [`mtile-darwin-amd64.zip`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-darwin-amd64.zip) | `Mtile.app` · [If macOS blocks it](#first-open-on-mac) |
 | Linux x86-64 | [`mtile-linux-amd64.tar.gz`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-linux-amd64.tar.gz) | `Mtile` |
 | Linux ARM64 | [`mtile-linux-arm64.tar.gz`](https://github.com/drpaneas/mtile/releases/latest/download/mtile-linux-arm64.tar.gz) | `Mtile` |
 
@@ -23,8 +23,16 @@ Windows, right-click the ZIP and choose **Extract All**. Starting with v0.1.1,
 each platform archive includes an editable `examples/` directory beside the launcher. Double-click the
 launcher in the table above to play Coin Quest. Keep the whole folder together
 when moving Mtile and its examples. Linux requires
-a graphical desktop with X11, OpenGL and audio support. Check the release
-notes for signing details if your operating system prompts on first launch.
+a graphical desktop with X11, OpenGL and audio support.
+
+### First open on Mac
+
+1. In Finder, double-click `Mtile.app` in the extracted folder. Keep it beside `examples/`.
+2. If macOS says it cannot verify Mtile or its developer, dismiss the alert with **Done** or **Cancel**. For the official GitHub download linked above, open **Apple menu → System Settings → Privacy & Security**.
+3. Scroll to **Security** and find the message naming Mtile. Click **Open Anyway**, authenticate on your Mac if asked, and confirm **Open**. If the message has disappeared, try opening `Mtile.app` again.
+
+To try the CLI, [build Hello offline and verify its checksum](#verify-the-hello-rom).
+For other warnings, see [Apple’s guide to opening downloaded apps](https://support.apple.com/en-us/102445).
 
 ## Play and edit
 
